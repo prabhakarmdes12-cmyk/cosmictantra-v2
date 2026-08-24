@@ -16,6 +16,7 @@ import { chitiSensory } from '../lib/chitiAudio';
   { href: '/profile', label: 'Cosmic ID + Profile' },
   { href: '/daily', label: 'Daily Cosmic Forecast' },
   { href: '/dashboard', label: 'Scholar’s Desk' },
+  { href: '/pandit/workspace', label: 'Pandit Workspace' },
   { href: '/payments/test', label: 'Payments Test' },
   { href: '/darshan', label: 'Live Darshan' },
   { href: '/library', label: 'Vedic Library' },
