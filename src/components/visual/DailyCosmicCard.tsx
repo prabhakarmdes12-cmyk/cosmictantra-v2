@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Calendar, Star, Clock, ArrowRight, Share2, Plus, AlertTriangle, Award, Download } from 'lucide-react';
 import AstronomicalProofDrawer from './AstronomicalProofDrawer';
+import { RitualCard, RitualDrawer } from './RitualTransition';
 
 interface DailyPrediction {
   date: string;
@@ -41,13 +42,15 @@ export default function DailyCosmicCard({
   onAddToCalendar, 
   onShareWhatsApp 
 }: DailyCosmicCardProps) {
+  const [showDrawer, setShowDrawer] = useState(false);
+  
   const scoreColor = 
     prediction.auspiciousScore >= 80 ? 'text-emerald-600 bg-emerald-100' :
     prediction.auspiciousScore >= 60 ? 'text-amber-600 bg-amber-100' :
     'text-rose-600 bg-rose-100';
 
   return (
-    <div className={`group relative rounded-3xl border overflow-hidden transition-all duration-300 hover:shadow-xl
+    <RitualCard className={`group relative rounded-3xl border overflow-hidden transition-all duration-300 hover:shadow-xl
       ${isToday 
         ? 'border-[#D4AF37] shadow-lg scale-[1.01]' 
         : 'border-[#8E6F1D]/25 dark:border-[#D4AF37]/30'
@@ -188,17 +191,27 @@ export default function DailyCosmicCard({
         </button>
       </div>
 
-      {/* Astronomical Proof Drawer */}
+      {/* Astronomical Proof Drawer with Ritual Animation */}
       <div className="px-6 pb-6">
-        <AstronomicalProofDrawer
-          julianDay={2460523.5}
-          ayanamsha="24° 16' 42\""
-          localSiderealTime="14h 32m 18s"
-          coordinates="25.5941°N, 85.1376°E"
-          tithi={prediction.tithi || 'Shukla Ekadashi'}
-          nakshatra={prediction.moonNakshatra}
-        />
+        <button 
+          onClick={() => setShowDrawer(!showDrawer)}
+          className="flex w-full items-center justify-between text-xs font-mono-data tracking-wider text-[#8E6F1D] hover:text-[#1C1917] mb-2"
+        >
+          <span>खगोलीय प्रमाण (Astronomical Proof)</span>
+          <span>{showDrawer ? '▲' : '▼'}</span>
+        </button>
+        
+        <RitualDrawer isOpen={showDrawer}>
+          <AstronomicalProofDrawer
+            julianDay={2460523.5}
+            ayanamsha="24° 16' 42\""
+            localSiderealTime="14h 32m 18s"
+            coordinates="25.5941°N, 85.1376°E"
+            tithi={prediction.tithi || 'Shukla Ekadashi'}
+            nakshatra={prediction.moonNakshatra}
+          />
+        </RitualDrawer>
       </div>
-    </div>
+    </RitualCard>
   );
 }
