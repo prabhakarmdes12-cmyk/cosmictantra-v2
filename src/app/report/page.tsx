@@ -132,38 +132,31 @@ export default function WrittenFolioReport() {
     doc.setTextColor(dark);
     doc.text('Moon (current) → Jupiter (Nov 2026) → Saturn (Mar 2028) → Mercury (2029)', 20, 165);
 
-    // === SATVIK UPAYA + RECOMMENDED REMEDIES ===
+    // === SATVIK UPAYA + RECOMMENDED REMEDIES (Dynamic) ===
     doc.setFontSize(12);
     doc.setTextColor(gold);
     doc.text('सात्त्विक उपाय — Recommended Remedies', 20, 175);
 
-    // Upaya Recommendation Cards (simulated from UpayaRecommendationCard)
-    doc.setFontSize(9);
-    doc.setTextColor(dark);
+    // Dynamic Upaya Recommendations
+    const upayas = [
+      { type: 'Gemstone', name: 'Blue Sapphire (Neelam) 4.25ct', partner: 'Kashi Ratna Bhandar', price: '₹18,500', cert: 'GIA Certified' },
+      { type: 'Rudraksha', name: '14 Mukhi Rudraksha (Nepali)', partner: 'Shri Rudraksha Kendra', price: '₹4,800', cert: 'X-ray Verified' },
+      { type: 'Pooja', name: 'Shani Shanti Anusthan', partner: 'Kashi Vishwanath Seva Samiti', price: '₹7,500', cert: 'Temple Authorized' },
+    ];
 
-    // Card 1
-    doc.setFillColor(250, 247, 242);
-    doc.rect(20, 182, 170, 22, 'F');
-    doc.setDrawColor(gold);
-    doc.rect(20, 182, 170, 22);
-    doc.text('Gemstone: Blue Sapphire (Neelam) — 4.25 carat', 25, 189);
-    doc.text('Kashi Ratna Bhandar  •  ₹18,500  •  GIA Certified', 25, 195);
-
-    // Card 2
-    doc.setFillColor(250, 247, 242);
-    doc.rect(20, 208, 170, 22, 'F');
-    doc.setDrawColor(gold);
-    doc.rect(20, 208, 170, 22);
-    doc.text('Rudraksha: 14 Mukhi (Nepali) — Career & Protection', 25, 215);
-    doc.text('Shri Rudraksha Kendra  •  ₹4,800  •  X-ray Verified', 25, 221);
-
-    // Card 3
-    doc.setFillColor(250, 247, 242);
-    doc.rect(20, 234, 170, 22, 'F');
-    doc.setDrawColor(gold);
-    doc.rect(20, 234, 170, 22);
-    doc.text('Pooja: Shani Shanti Anusthan at Kashi Vishwanath', 25, 241);
-    doc.text('Kashi Vishwanath Seva Samiti  •  ₹7,500', 25, 247);
+    let yUpaya = 183;
+    upayas.forEach((u, index) => {
+      doc.setFillColor(250, 247, 242);
+      doc.rect(20, yUpaya, 170, 20, 'F');
+      doc.setDrawColor(gold);
+      doc.rect(20, yUpaya, 170, 20);
+      
+      doc.setFontSize(9);
+      doc.setTextColor(dark);
+      doc.text(`${u.type}: ${u.name}`, 25, yUpaya + 7);
+      doc.text(`${u.partner} • ${u.price} • ${u.cert}`, 25, yUpaya + 14);
+      yUpaya += 23;
+    });
 
     // === FINAL RECOMMENDATION BOX ===
     doc.setFillColor(250, 247, 242);
