@@ -33,8 +33,8 @@ export default function MuhuratDiscovery({ onOpenConsultation, lang = 'en', them
           </div>
         </div>
 
-        {/* 6 Event Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 font-mono-data">
+        {/* 6 Event Cards with AI Moment Imagery */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 font-mono-data">
           {MUHURAT_EVENTS.map((event) => {
             const Icon = event.icon;
             const isAssisted = event.status === 'Practitioner Assisted';
@@ -42,46 +42,63 @@ export default function MuhuratDiscovery({ onOpenConsultation, lang = 'en', them
             return (
               <div
                 key={event.id}
-                className="p-6 rounded-2xl bg-[#FFFFFF] dark:bg-[#090B14] border border-black/[0.08] dark:border-[#D4AF37]/20 hover:border-[#D4AF37]/50 transition-all flex flex-col justify-between shadow-xs hover:shadow-lg"
+                className="group rounded-2xl bg-[#FFFFFF] dark:bg-[#090B14] border border-black/[0.08] dark:border-[#D4AF37]/25 hover:border-[#D4AF37]/60 overflow-hidden transition-all duration-300 flex flex-col justify-between shadow-md hover:shadow-2xl"
               >
                 <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-8 h-8 rounded-lg bg-[#FAF7F2] dark:bg-[#05060A] border border-black/[0.08] dark:border-[#D4AF37]/30 flex items-center justify-center text-[#8E6F1D] dark:text-[#D4AF37]">
+                  {/* Card Image Banner */}
+                  <div className="relative h-44 sm:h-48 w-full overflow-hidden">
+                    <img 
+                      src={event.image} 
+                      alt={event.title} 
+                      className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#FFFFFF] dark:from-[#090B14] via-[#090B14]/40 to-transparent" />
+                    
+                    {/* Status Badge */}
+                    <div className="absolute top-3 right-3 z-10">
+                      <span className={`text-[9px] px-2.5 py-1 rounded-full border uppercase tracking-wider font-bold backdrop-blur-md shadow-xs ${
+                        isAssisted 
+                          ? 'text-[#FFFFFF] bg-[#826315]/85 dark:bg-[#D4AF37]/90 text-[#060709] border-[#D4AF37]' 
+                          : 'text-[#FFFFFF] bg-[#0D5A37]/85 border-[#34d399]'
+                      }`}>
+                        {event.status}
+                      </span>
+                    </div>
+
+                    {/* Category Icon Badge */}
+                    <div className="absolute bottom-3 left-3 z-10 w-9 h-9 rounded-xl bg-[#FFFFFF]/90 dark:bg-[#080A12]/90 backdrop-blur-md border border-black/[0.1] dark:border-[#D4AF37]/40 flex items-center justify-center text-[#826315] dark:text-[#E5C378] shadow-sm">
                       <Icon className="w-4 h-4" />
                     </div>
-                    <span className={`text-[9px] px-2 py-0.5 rounded border uppercase tracking-wider font-bold ${
-                      isAssisted 
-                        ? 'text-[#8E6F1D] dark:text-[#D4AF37] bg-[#8E6F1D]/10 dark:bg-[#D4AF37]/10 border-[#8E6F1D]/30 dark:border-[#D4AF37]/30' 
-                        : 'text-[#0F6B43] dark:text-[#34d399] bg-[#10b981]/10 border-[#10b981]/30'
-                    }`}>
-                      {event.status}
-                    </span>
                   </div>
 
-                  <h3 className="font-editorial text-lg font-bold text-[#1C1917] dark:text-[#EFECE6] mb-1">
-                    {event.title}
-                  </h3>
-                  
-                  <p className="text-xs text-[#57524A] dark:text-[#AAA49A] leading-relaxed mb-4">
-                    {event.desc}
-                  </p>
+                  <div className="p-5 space-y-3">
+                    <h3 className="font-editorial text-xl font-bold text-[#1C1917] dark:text-[#EFECE6] group-hover:text-[#826315] dark:group-hover:text-[#E5C378] transition-colors">
+                      {event.title}
+                    </h3>
+                    
+                    <p className="text-xs text-[#57524A] dark:text-[#AAA49A] leading-relaxed line-clamp-2">
+                      {event.desc}
+                    </p>
 
-                  <div className="p-3 rounded-lg bg-[#FAF7F2] dark:bg-[#05060A] border border-black/[0.06] dark:border-white/[0.06] text-[11px] text-[#8E6F1D] dark:text-[#D4AF37]/90 mb-4 font-bold">
-                    {event.suggestedWindow}
+                    <div className="p-3 rounded-xl bg-[#FAF7F2] dark:bg-[#05060A] border border-black/[0.06] dark:border-white/[0.06] text-[11px] text-[#826315] dark:text-[#E5C378] font-bold">
+                      {event.suggestedWindow}
+                    </div>
                   </div>
                 </div>
 
-                <button
-                  onClick={() => {
-                    chitiSensory.playTick();
-                    analytics.track(ANALYTICS_EVENTS.MUHURAT_CATEGORY_SELECTED, { category: event.title });
-                    onOpenConsultation(`Personalised Muhurat for ${event.title}`);
-                  }}
-                  className="w-full py-2.5 rounded-lg bg-[#FAF7F2] dark:bg-[#06070C] border border-black/[0.08] dark:border-[#D4AF37]/30 hover:bg-white dark:hover:bg-[#101322] hover:border-[#D4AF37] text-xs font-bold text-[#1C1917] dark:text-[#EFECE6] transition-colors flex items-center justify-center gap-1.5"
-                >
-                  <span>{t.requestBtn}</span>
-                  <ArrowRight className="w-3.5 h-3.5 text-[#8E6F1D] dark:text-[#D4AF37]" />
-                </button>
+                <div className="px-5 pb-5 pt-1">
+                  <button
+                    onClick={() => {
+                      chitiSensory.playTick();
+                      analytics.track(ANALYTICS_EVENTS.MUHURAT_CATEGORY_SELECTED, { category: event.title });
+                      onOpenConsultation(`Personalised Muhurat for ${event.title}`);
+                    }}
+                    className="w-full py-3 rounded-xl bg-[#FAF7F2] dark:bg-[#06070C] border border-black/[0.1] dark:border-[#D4AF37]/35 hover:bg-[#826315] dark:hover:bg-[#D4AF37] hover:text-white dark:hover:text-[#060709] text-xs font-bold text-[#1C1917] dark:text-[#EFECE6] transition-all flex items-center justify-center gap-2 shadow-xs group/btn"
+                  >
+                    <span>{t.requestBtn}</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-[#826315] dark:text-[#E5C378] group-hover/btn:text-current transition-colors" />
+                  </button>
+                </div>
               </div>
             );
           })}

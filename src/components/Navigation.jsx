@@ -120,25 +120,25 @@ export default function Navigation({
         </nav>
 
         {/* Right Controls: High-Contrast Language, Theme, Location, Search, and CTA */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           
-          {/* Language Toggle (Hindi / English) */}
+          {/* Desktop Language Toggle (Hindi / English) */}
           <button
             onClick={handleLangSwitch}
             aria-label="Toggle Language"
             title={lang === 'en' ? 'Switch to हिन्दी (Hindi)' : 'Switch to English'}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-black/[0.12] dark:border-white/[0.12] bg-[#FFFFFF] dark:bg-[#0D0F18] text-xs font-mono-data text-[#181512] dark:text-[#F5F2EB] hover:border-[#826315] dark:hover:border-[#D4AF37] transition-all shadow-xs"
+            className="hidden md:flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-black/[0.12] dark:border-white/[0.12] bg-[#FFFFFF] dark:bg-[#0D0F18] text-xs font-mono-data text-[#181512] dark:text-[#F5F2EB] hover:border-[#826315] dark:hover:border-[#D4AF37] transition-all shadow-xs"
           >
             <Languages className="w-3.5 h-3.5 text-[#826315] dark:text-[#E5C378]" />
             <span className="font-bold">{lang === 'en' ? 'हिन्दी' : 'ENG'}</span>
           </button>
 
-          {/* High-Contrast Day / Night Theme Toggle Button */}
+          {/* Desktop High-Contrast Day / Night Theme Toggle Button */}
           <button
             onClick={handleThemeSwitch}
             aria-label="Toggle Day / Night Mode"
             title={theme === 'dark' ? 'Switch to Subah-e-Banaras (Day Mode)' : 'Switch to Kashi Sandhya (Night Mode)'}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-black/[0.12] dark:border-white/[0.12] bg-[#FFFFFF] dark:bg-[#0D0F18] text-xs font-mono-data text-[#181512] dark:text-[#F5F2EB] hover:border-[#826315] dark:hover:border-[#D4AF37] transition-all shadow-xs"
+            className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-black/[0.12] dark:border-white/[0.12] bg-[#FFFFFF] dark:bg-[#0D0F18] text-xs font-mono-data text-[#181512] dark:text-[#F5F2EB] hover:border-[#826315] dark:hover:border-[#D4AF37] transition-all shadow-xs"
           >
             {theme === 'dark' ? (
               <>
@@ -160,11 +160,11 @@ export default function Navigation({
               analytics.track(ANALYTICS_EVENTS.LOCATION_CHANGED);
               onOpenCitySelector();
             }}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-black/[0.12] dark:border-white/[0.12] bg-[#FFFFFF] dark:bg-[#0D0F18] text-[11px] font-mono-data text-[#826315] dark:text-[#E5C378] hover:border-[#826315] dark:hover:border-[#D4AF37] transition-all shadow-xs font-bold"
+            className="flex items-center gap-1 px-2 py-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border border-black/[0.12] dark:border-white/[0.12] bg-[#FFFFFF] dark:bg-[#0D0F18] text-[10px] sm:text-[11px] font-mono-data text-[#826315] dark:text-[#E5C378] hover:border-[#826315] dark:hover:border-[#D4AF37] transition-all shadow-xs font-bold shrink-0"
             title="Change geographic coordinate anchor"
           >
-            <MapPin className="w-3 h-3 text-[#A6461D] dark:text-[#E2825B]" />
-            <span className="max-w-[70px] sm:max-w-[100px] truncate">{currentCity.name}</span>
+            <MapPin className="w-3 h-3 text-[#A6461D] dark:text-[#E2825B] shrink-0" />
+            <span className="max-w-[60px] xs:max-w-[80px] sm:max-w-[100px] truncate">{currentCity.name}</span>
           </button>
 
           {/* Search Trigger */}
@@ -175,7 +175,7 @@ export default function Navigation({
               onOpenSearch();
             }}
             aria-label="Search Vedic Knowledge"
-            className="p-2 rounded-lg border border-black/[0.12] dark:border-white/[0.12] bg-[#FFFFFF] dark:bg-[#0D0F18] text-[#4A443B] dark:text-[#C4BEB3] hover:text-[#181512] dark:hover:text-white hover:border-[#826315] dark:hover:border-[#D4AF37] transition-all shadow-xs"
+            className="hidden sm:flex p-2 rounded-lg border border-black/[0.12] dark:border-white/[0.12] bg-[#FFFFFF] dark:bg-[#0D0F18] text-[#4A443B] dark:text-[#C4BEB3] hover:text-[#181512] dark:hover:text-white hover:border-[#826315] dark:hover:border-[#D4AF37] transition-all shadow-xs"
           >
             <Search className="w-3.5 h-3.5" />
           </button>
@@ -212,7 +212,7 @@ export default function Navigation({
               chitiSensory.playTick();
               setMobileMenuOpen(!mobileMenuOpen);
             }}
-            className="lg:hidden p-2 rounded-lg border border-black/[0.12] dark:border-white/[0.12] bg-[#FFFFFF] dark:bg-[#0D0F18] text-[#181512] dark:text-[#F5F2EB]"
+            className="lg:hidden p-2 rounded-lg border border-black/[0.12] dark:border-white/[0.12] bg-[#FFFFFF] dark:bg-[#0D0F18] text-[#181512] dark:text-[#F5F2EB] shrink-0"
             aria-label="Open navigation menu"
           >
             {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}

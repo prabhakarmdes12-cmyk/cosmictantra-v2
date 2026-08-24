@@ -17,7 +17,7 @@ export default function HeroSection({
   const t = TRANSLATIONS[lang]?.hero || TRANSLATIONS.en.hero;
 
   return (
-    <section className="relative pt-12 pb-20 lg:pt-24 lg:pb-28 border-b border-black/[0.1] dark:border-white/[0.08] hero-varanasi-bg transition-colors duration-250 overflow-hidden">
+    <section className="relative pt-36 pb-16 sm:pt-40 lg:pt-24 lg:pb-28 border-b border-black/[0.1] dark:border-white/[0.08] hero-varanasi-bg transition-colors duration-250 overflow-hidden min-h-[90vh] sm:min-h-[85vh] lg:min-h-0 flex flex-col justify-end lg:block">
       {/* Background Video Layer with Poster Fallback */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <video
@@ -25,57 +25,57 @@ export default function HeroSection({
           loop
           muted
           playsInline
-          className="w-full h-full object-cover object-center opacity-55 dark:opacity-45 transition-opacity"
+          className="w-full h-full object-cover object-center opacity-65 dark:opacity-55 transition-opacity"
           poster="/varanasi-ghats-hero.jpg"
         >
           <source src="/kashi-hero-video.mp4" type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-gradient-to-r from-[#FAF7F2]/95 via-[#FAF7F2]/75 to-[#FAF7F2]/90 dark:from-[#060709]/95 dark:via-[#060709]/70 dark:to-[#060709]/92" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#FAF7F2]/60 to-[#FAF7F2]/95 dark:via-[#060709]/60 dark:to-[#060709]/95 lg:bg-gradient-to-r lg:from-[#FAF7F2]/95 lg:via-[#FAF7F2]/75 lg:to-[#FAF7F2]/90 lg:dark:from-[#060709]/95 lg:dark:via-[#060709]/70 lg:dark:to-[#060709]/92" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
         
         {/* Varanasi Editorial Split Horizon */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-14 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
           
           {/* Left Column: Serious Vedic Product Front */}
-          <div className="lg:col-span-7 space-y-7">
+          <div className="lg:col-span-7 space-y-5 sm:space-y-7">
             
             {/* Sacred Kashi Sanskrit Micro-Label */}
-            <div className="inline-flex items-center gap-3 px-3.5 py-1.5 rounded-full border border-[#826315]/35 dark:border-[#D4AF37]/40 bg-[#FFFFFF]/95 dark:bg-[#080A12]/90 backdrop-blur-md text-[11px] font-mono-data uppercase tracking-[0.2em] text-[#826315] dark:text-[#E5C378] shadow-xs font-bold">
+            <div className="inline-flex flex-wrap items-center gap-2 sm:gap-3 px-3.5 py-1.5 rounded-full border border-[#826315]/35 dark:border-[#D4AF37]/40 bg-[#FFFFFF]/95 dark:bg-[#080A12]/90 backdrop-blur-md text-[10px] sm:text-[11px] font-mono-data uppercase tracking-[0.16em] sm:tracking-[0.2em] text-[#826315] dark:text-[#E5C378] shadow-xs font-bold max-w-full">
               <span className="flex items-center gap-1.5 text-[#A6461D] dark:text-[#F0A554]">
-                <Flame className="w-3.5 h-3.5 text-[#E29A48] animate-pulse" />
-                <span>{t.kashiBadge}</span>
+                <Flame className="w-3.5 h-3.5 text-[#E29A48] animate-pulse shrink-0" />
+                <span className="truncate">{t.kashiBadge}</span>
               </span>
-              <span className="opacity-30">•</span>
-              <span className="text-[#4A443B] dark:text-[#C4BEB3]">{t.categoryTag}</span>
+              <span className="opacity-30 hidden xs:inline">•</span>
+              <span className="text-[#4A443B] dark:text-[#C4BEB3] truncate">{t.categoryTag}</span>
             </div>
 
             {/* Main Headline */}
-            <div className="space-y-3">
-              <h1 className="font-editorial text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-[#181512] dark:text-[#F5F2EB] leading-[1.08]">
+            <div className="space-y-2 sm:space-y-3">
+              <h1 className="font-editorial text-clamp-hero font-bold text-[#181512] dark:text-[#F5F2EB]">
                 {t.headline1} <br />
                 <span className="text-[#826315] dark:text-[#E5C378]">{t.headline2}</span>
               </h1>
-              <p className="text-lg sm:text-xl text-[#4A443B] dark:text-[#C4BEB3] font-normal leading-relaxed pt-1 font-editorial italic">
+              <p className="text-base sm:text-xl text-[#4A443B] dark:text-[#C4BEB3] font-normal leading-relaxed pt-1 font-editorial italic">
                 {t.subtitle}
               </p>
             </div>
 
             {/* Sub-text */}
-            <p className="text-sm sm:text-base text-[#4A443B] dark:text-[#C4BEB3] max-w-xl leading-relaxed">
+            <p className="text-xs sm:text-base text-[#4A443B] dark:text-[#C4BEB3] max-w-xl leading-relaxed">
               {t.description}
             </p>
 
-            {/* Primary Action Buttons */}
-            <div className="pt-2 flex flex-wrap items-center gap-3.5">
+            {/* Primary Action Buttons (Vertical Stack on Mobile, Row on Desktop) */}
+            <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-3.5 w-full">
               <button
                 onClick={() => {
                   chitiSensory.playTick();
                   analytics.track(ANALYTICS_EVENTS.TODAY_PANCHANG_OPENED, { source: 'HERO_PRIMARY' });
                   onCreateKundali();
                 }}
-                className="px-6 py-3.5 rounded-lg text-xs sm:text-sm font-mono-data uppercase tracking-wider font-bold bg-[#826315] dark:bg-[#D4AF37] text-white dark:text-[#060709] hover:bg-[#965B18] dark:hover:bg-[#E5C378] hover:shadow-lg transition-all flex items-center gap-2"
+                className="w-full sm:w-auto px-6 py-3.5 rounded-lg text-xs sm:text-sm font-mono-data uppercase tracking-wider font-bold bg-[#826315] dark:bg-[#D4AF37] text-white dark:text-[#060709] hover:bg-[#965B18] dark:hover:bg-[#E5C378] hover:shadow-lg transition-all flex items-center justify-center gap-2 min-h-[44px]"
               >
                 <span>{t.createKundali}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -87,7 +87,7 @@ export default function HeroSection({
                   analytics.track(ANALYTICS_EVENTS.TODAY_PANCHANG_OPENED, { source: 'HERO_SECONDARY' });
                   onExplorePanchang();
                 }}
-                className="px-6 py-3.5 rounded-lg text-xs sm:text-sm font-mono-data uppercase tracking-wider font-bold bg-[#FFFFFF] dark:bg-[#0D0F1A] backdrop-blur-md border border-black/[0.15] dark:border-[#D4AF37]/35 text-[#181512] dark:text-[#F5F2EB] hover:border-[#826315] dark:hover:border-[#D4AF37] hover:text-[#826315] dark:hover:text-[#E5C378] transition-all shadow-xs"
+                className="w-full sm:w-auto px-6 py-3.5 rounded-lg text-xs sm:text-sm font-mono-data uppercase tracking-wider font-bold bg-[#FFFFFF] dark:bg-[#0D0F1A] backdrop-blur-md border border-black/[0.15] dark:border-[#D4AF37]/35 text-[#181512] dark:text-[#F5F2EB] hover:border-[#826315] dark:hover:border-[#D4AF37] hover:text-[#826315] dark:hover:text-[#E5C378] transition-all shadow-xs flex items-center justify-center min-h-[44px]"
               >
                 <span>{t.seePanchang}</span>
               </button>
@@ -98,14 +98,14 @@ export default function HeroSection({
                   analytics.track(ANALYTICS_EVENTS.ASK_JYOTISHI_CLICKED, { source: 'HERO_TEXT' });
                   onOpenConsultation();
                 }}
-                className="text-xs font-mono-data uppercase tracking-wider text-[#A6461D] dark:text-[#E2825B] hover:text-[#826315] dark:hover:text-[#E5C378] transition-colors py-2 px-1 underline-offset-4 hover:underline flex items-center gap-1 font-bold"
+                className="w-full sm:w-auto text-xs font-mono-data uppercase tracking-wider text-[#A6461D] dark:text-[#E2825B] hover:text-[#826315] dark:hover:text-[#E5C378] transition-colors py-2 px-1 underline-offset-4 hover:underline flex items-center justify-center sm:justify-start gap-1 font-bold min-h-[44px]"
               >
                 <span>{t.askScholar}</span>
               </button>
             </div>
 
             {/* Classical Footnote */}
-            <div className="pt-4 flex items-center gap-2.5 text-[11px] font-mono-data text-[#696256] dark:text-[#8E887E] border-t border-black/[0.1] dark:border-white/[0.08]">
+            <div className="pt-3 sm:pt-4 flex items-center gap-2.5 text-[10px] sm:text-[11px] font-mono-data text-[#696256] dark:text-[#8E887E] border-t border-black/[0.1] dark:border-white/[0.08]">
               <ShieldCheck className="w-3.5 h-3.5 text-[#826315] dark:text-[#E5C378] shrink-0" />
               <span>{t.footerNote}</span>
             </div>

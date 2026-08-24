@@ -8,7 +8,8 @@ export const MUHURAT_EVENTS = [
     nature: 'High Complexity',
     status: 'Practitioner Assisted',
     suggestedWindow: 'Upcoming Auspicious Windows: Nov 18, Nov 24, Dec 02 (2026)',
-    icon: Heart
+    icon: Heart,
+    image: '/images/muhurat/vivah.jpg'
   },
   {
     id: 'griha-pravesh',
@@ -17,7 +18,8 @@ export const MUHURAT_EVENTS = [
     nature: 'Solar & Lunar Harmony',
     status: 'Practitioner Assisted',
     suggestedWindow: 'Favorable Tithis: Shukla Panchami, Saptami, Dashami',
-    icon: Home
+    icon: Home,
+    image: '/images/muhurat/grihapravesh.jpg'
   },
   {
     id: 'business',
@@ -26,7 +28,8 @@ export const MUHURAT_EVENTS = [
     nature: 'Enterprise Timing',
     status: 'Practitioner Assisted',
     suggestedWindow: 'Optimal: Pushya, Rohini, Uttara Phalguni with strong Mercury/Jupiter',
-    icon: Briefcase
+    icon: Briefcase,
+    image: '/images/muhurat/business.jpg'
   },
   {
     id: 'vehicle',
@@ -35,7 +38,8 @@ export const MUHURAT_EVENTS = [
     nature: 'Choghadiya & Hora',
     status: 'Deterministic Calculation',
     suggestedWindow: 'Shubh / Amrit Choghadiyas on Wednesday or Friday',
-    icon: Car
+    icon: Car,
+    image: '/images/muhurat/vehicle.jpg'
   },
   {
     id: 'property',
@@ -44,7 +48,8 @@ export const MUHURAT_EVENTS = [
     nature: 'Bhoomi Karaka Alignment',
     status: 'Practitioner Assisted',
     suggestedWindow: 'Consult Jyotishi for individual Moon-Chandra Bala verification',
-    icon: Compass
+    icon: Compass,
+    image: '/images/muhurat/property.jpg'
   },
   {
     id: 'namkaran',
@@ -53,6 +58,7 @@ export const MUHURAT_EVENTS = [
     nature: 'Samskara Timing',
     status: 'Deterministic Calculation',
     suggestedWindow: 'Auspicious on Anuradha, Punarvasu, Magha, Uttara Ashadha',
-    icon: UserCheck
+    icon: UserCheck,
+    image: '/images/muhurat/namkaran.jpg'
   }
 ];

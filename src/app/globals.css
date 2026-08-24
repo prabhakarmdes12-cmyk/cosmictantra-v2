@@ -28,12 +28,46 @@
   --text-muted: #D1C9BF;
 }
 
-body {
+*, ::before, ::after {
+  box-sizing: border-box;
+}
+
+html, body {
   min-height: 100vh;
+  width: 100%;
+  max-width: 100%;
   margin: 0;
   padding: 0;
   font-family: 'Inter', 'Noto Sans Devanagari', sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Global Responsive Container System */
+.chiti-container {
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  padding-inline: clamp(16px, 4.5vw, 72px);
+  box-sizing: border-box;
+}
+
+/* Enforce 16px minimum font size on inputs to avoid unwanted mobile browser zoom */
+@media (max-width: 767px) {
+  input, select, textarea, .chiti-input {
+    font-size: 16px !important;
+  }
+}
+
+/* Fluid Editorial Typography Clamps */
+.text-clamp-hero {
+  font-size: clamp(1.85rem, 7vw, 3.75rem);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+
+.text-clamp-title {
+  font-size: clamp(1.4rem, 4.5vw, 2.5rem);
+  line-height: 1.2;
 }
 
 /* Devanagari & Editorial Serif Typography Fallback */
