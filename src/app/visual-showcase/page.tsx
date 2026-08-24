@@ -5,6 +5,7 @@ import CosmicIdCard from '@/components/visual/CosmicIdCard';
 import WhatsAppDeliveryCard from '@/components/visual/WhatsAppDeliveryCard';
 import OtpVerificationModal from '@/components/visual/OtpVerificationModal';
 import PaymentTestPanel from '@/components/visual/PaymentTestPanel';
+import CosmicTantraLogo, { CosmicTantraEmblem } from '@/components/visual/CosmicTantraLogo';
 
 export default function VisualShowcase() {
   const [showOtp, setShowOtp] = useState(false);
@@ -36,6 +37,19 @@ export default function VisualShowcase() {
           <div className="flex justify-center gap-3 mt-6">
             <a href="/profile" className="px-6 py-3 rounded-2xl bg-[#1C1917] text-white text-sm font-semibold">Open Profile Experience →</a>
             <a href="/payments/test" className="px-6 py-3 rounded-2xl border border-[#D4AF37]/40 text-sm font-semibold">Payments Test Suite</a>
+          </div>
+        </div>
+
+        {/* Master Brand Logo & Astrolabe Emblem */}
+        <div className="mb-16 rounded-3xl border border-[#D4AF37]/40 bg-gradient-to-br from-white via-[#FAF7F2] to-[#F5EEDC] dark:from-[#0B0C12] dark:via-[#121420] dark:to-[#0B0C12] p-8 shadow-sm">
+          <div className="mb-4 text-xs tracking-[2px] text-[#8E6F1D] font-mono">MASTER VECTOR BRAND MARK (LOGO/COSCMICTANTRA_LOGO.SVG)</div>
+          <div className="flex flex-wrap items-center justify-around gap-8 py-6">
+            <CosmicTantraLogo size="lg" />
+            <div className="flex items-center gap-6">
+              <CosmicTantraEmblem className="w-16 h-16" />
+              <CosmicTantraEmblem className="w-12 h-12" />
+              <CosmicTantraEmblem className="w-8 h-8" />
+            </div>
           </div>
         </div>
 

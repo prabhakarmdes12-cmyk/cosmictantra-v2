@@ -4,6 +4,8 @@ import { ShieldCheck, Lock, X } from 'lucide-react';
 import { TRANSLATIONS } from '../lib/translations';
 import { chitiSensory } from '../lib/chitiAudio';
 
+import CosmicTantraLogo from './visual/CosmicTantraLogo';
+
 export default function Footer({ onOpenCapabilityModal, onOpenConsultation, onNavigateSection, lang = 'en', theme = 'dark' }) {
   const [showPractitionerLogin, setShowPractitionerLogin] = useState(false);
   const t = TRANSLATIONS[lang]?.footer || TRANSLATIONS.en.footer;
@@ -15,17 +17,7 @@ export default function Footer({ onOpenCapabilityModal, onOpenConsultation, onNa
         {/* Top Brand & Mission */}
         <div className="flex flex-col lg:flex-row justify-between items-start pb-12 border-b border-black/[0.08] dark:border-white/[0.06] gap-8">
           <div className="space-y-3 max-w-sm">
-            <div className="flex items-center gap-2.5">
-              <div className="w-6 h-6 rounded border border-[#8E6F1D]/40 dark:border-[#D4AF37]/40 bg-[#FFFFFF] dark:bg-[#0C0D12] flex items-center justify-center shadow-xs">
-                <svg viewBox="0 0 100 100" className="w-3.5 h-3.5 text-[#8E6F1D] dark:text-[#D4AF37]">
-                  <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" strokeWidth="4" />
-                  <polygon points="50,10 90,50 50,90 10,50" fill="none" stroke="#E2C485" strokeWidth="4" />
-                </svg>
-              </div>
-              <span className="font-editorial text-base font-bold tracking-widest text-[#1C1917] dark:text-[#EFECE6]">
-                COSMICTANTRA
-              </span>
-            </div>
+            <CosmicTantraLogo subtitle="VEDIC PRECISION • 2026" size="sm" />
             <p className="text-xs text-[#645D54] dark:text-[#6B6760] leading-relaxed">
               {t.tagline}
             </p>

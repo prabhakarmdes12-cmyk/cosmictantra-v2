@@ -20,6 +20,8 @@ import { chitiSensory } from '../lib/chitiAudio';
   { href: '/library', label: 'Vedic Library' },
 ];
 
+import CosmicTantraLogo from './visual/CosmicTantraLogo';
+
 export default function Navigation({
   currentCity,
   onOpenCitySelector,
@@ -62,31 +64,14 @@ export default function Navigation({
         {/* Brand Anchor */}
         <a 
           href="#" 
-          className="flex items-center gap-3 group shrink-0 focus:outline-none"
+          className="focus:outline-none"
           onClick={(e) => {
             e.preventDefault();
             chitiSensory.playTick();
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
         >
-          {/* Astrolabe Emblem */}
-          <div className="w-8 h-8 rounded-lg border border-[#826315]/40 dark:border-[#D4AF37]/50 bg-[#FFFFFF] dark:bg-[#0C0D12] flex items-center justify-center group-hover:border-[#D4AF37] transition-colors shadow-xs">
-            <svg viewBox="0 0 100 100" className="w-4 h-4 text-[#826315] dark:text-[#E5C378]">
-              <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" strokeWidth="3" strokeDasharray="3 3" />
-              <polygon points="50,6 94,50 50,94 6,50" fill="none" stroke="#D4AF37" strokeWidth="4" />
-              <circle cx="50" cy="50" r="16" fill="none" stroke="#6366F1" strokeWidth="3" />
-              <circle cx="50" cy="50" r="3" fill="#D97736" />
-            </svg>
-          </div>
-          
-          <div className="flex flex-col">
-            <span className="font-editorial text-base sm:text-lg font-bold tracking-[0.16em] text-[#181512] dark:text-[#F5F2EB] uppercase group-hover:text-[#826315] dark:group-hover:text-[#E5C378] transition-colors">
-              COSMICTANTRA
-            </span>
-            <span className="text-[9px] uppercase tracking-[0.24em] text-[#826315] dark:text-[#D4AF37] font-mono-data font-bold">
-              {t.brandSubtitle}
-            </span>
-          </div>
+          <CosmicTantraLogo subtitle={t.brandSubtitle} size="md" />
         </a>
 
         {/* Primary Desktop Nav */}
