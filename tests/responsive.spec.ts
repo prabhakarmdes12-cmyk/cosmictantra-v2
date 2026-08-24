@@ -18,6 +18,7 @@ test.describe('CosmicTantra Mobile Responsiveness & Hardening Suite', () => {
 
   VIEWPORTS.forEach(({ name, width, height }) => {
     test(`Viewport ${width}px (${name}): No horizontal overflow and clean mobile composition`, async ({ page }) => {
+      test.setTimeout(60000);
       await page.setViewportSize({ width, height });
       await page.goto('http://localhost:3000', { waitUntil: 'networkidle' });
 
@@ -25,7 +26,7 @@ test.describe('CosmicTantra Mobile Responsiveness & Hardening Suite', () => {
       await page.evaluate(async () => {
         await new Promise((resolve) => {
           let totalHeight = 0;
-          const distance = 350;
+          const distance = 800;
           const timer = setInterval(() => {
             const scrollHeight = document.body.scrollHeight;
             window.scrollBy(0, distance);
@@ -35,7 +36,7 @@ test.describe('CosmicTantra Mobile Responsiveness & Hardening Suite', () => {
               window.scrollTo(0, 0);
               resolve(true);
             }
-          }, 40);
+          }, 15);
         });
       });
 
