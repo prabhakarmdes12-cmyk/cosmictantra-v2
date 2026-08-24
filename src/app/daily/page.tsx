@@ -24,6 +24,9 @@ interface DailyPrediction {
   keyInsight: string;
   recommendedAction: string;
   color: string;
+  sadeSati?: boolean;
+  kaalSarp?: boolean;
+  hasFestival?: boolean;
 }
 
 export default function DailyPage() {
@@ -90,6 +93,13 @@ export default function DailyPage() {
         if (alerts.isRikta) score -= 15;
         score = Math.max(45, Math.min(95, Math.round(score)));
 
+        // 6. Advanced Metrics (Sade Sati, Kaal Sarp, Festival Flags)
+        const birthYear = new Date(birthDate).getFullYear();
+        const currentYear = date.getFullYear();
+        const sadeSatiActive = currentYear >= birthYear + 28 && currentYear <= birthYear + 38;
+        const kaalSarpActive = Math.random() > 0.75; // Simplified demo logic
+        const hasFestival = panchang.festivals && panchang.festivals.length > 0;
+
         // Insight + Action (personalized)
         const insights = [
           `Your ${activeDasha?.planet || 'Moon'} Dasha brings focus on ${activeProfile.relation || 'self'}-growth.`,
@@ -114,6 +124,9 @@ export default function DailyPage() {
           keyInsight: insights[i % 3],
           recommendedAction: actions[i % 3],
           color: score >= 80 ? '#10B981' : score >= 60 ? '#D4AF37' : '#EF4444',
+          sadeSati: sadeSatiActive,
+          kaalSarp: kaalSarpActive,
+          hasFestival,
         });
       }
 

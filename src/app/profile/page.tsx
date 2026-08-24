@@ -109,6 +109,9 @@ export default function ProfilePage() {
             <div className="flex gap-3">
               <a href="/family" className="flex-1 py-3 text-center rounded-2xl border border-[#D4AF37]/30 text-sm font-medium hover:bg-[#D4AF37]/5">Manage Family Profiles</a>
               <a href="/my-calendar" className="flex-1 py-3 text-center rounded-2xl border border-[#D4AF37]/30 text-sm font-medium hover:bg-[#D4AF37]/5">Personal Calendar</a>
+              <a href="/daily" className="flex-1 py-3 text-center rounded-2xl bg-gradient-to-r from-[#8E6F1D] to-[#D4AF37] text-[#060709] font-bold text-sm flex items-center justify-center gap-2 hover:brightness-105 transition-all">
+                🌟 View Daily Forecast
+              </a>
             </div>
           </div>
         )}

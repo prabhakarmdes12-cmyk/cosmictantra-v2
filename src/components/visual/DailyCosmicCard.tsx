@@ -15,6 +15,9 @@ interface DailyPrediction {
   keyInsight: string;
   recommendedAction: string;
   color: string;
+  sadeSati?: boolean;
+  kaalSarp?: boolean;
+  hasFestival?: boolean;
 }
 
 interface DailyCosmicCardProps {
@@ -82,6 +85,21 @@ export default function DailyCosmicCard({
           <div className="font-mono font-semibold mt-0.5 text-rose-600">{prediction.rahuKaal}</div>
         </div>
       </div>
+
+      {/* Advanced Metrics Row (Sade Sati, Kaal Sarp, Festival) */}
+      {(prediction.sadeSati || prediction.kaalSarp || prediction.hasFestival) && (
+        <div className="px-6 pb-5 flex flex-wrap gap-2 text-[10px]">
+          {prediction.sadeSati && (
+            <div className="px-3 py-1 rounded-full bg-amber-100 text-amber-800 font-medium">Sade Sati Active</div>
+          )}
+          {prediction.kaalSarp && (
+            <div className="px-3 py-1 rounded-full bg-rose-100 text-rose-700 font-medium">Kaal Sarp Influence</div>
+          )}
+          {prediction.hasFestival && (
+            <div className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 font-medium">Festival Day</div>
+          )}
+        </div>
+      )}
 
       {/* Insight */}
       <div className="px-6 pb-5">
