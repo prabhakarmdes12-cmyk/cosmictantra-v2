@@ -132,12 +132,12 @@ export default function WrittenFolioReport() {
     doc.setTextColor(dark);
     doc.text('Moon (current) → Jupiter (Nov 2026) → Saturn (Mar 2028) → Mercury (2029)', 20, 165);
 
-    // === SATVIK UPAYA + RECOMMENDED REMEDIES (Dynamic) ===
+    // === SATVIK UPAYA + RECOMMENDED REMEDIES (Dynamic from Upaya System) ===
     doc.setFontSize(12);
     doc.setTextColor(gold);
     doc.text('सात्त्विक उपाय — Recommended Remedies', 20, 175);
 
-    // Dynamic Upaya Recommendations
+    // These would come from the actual consultation data in production
     const upayas = [
       { type: 'Gemstone', name: 'Blue Sapphire (Neelam) 4.25ct', partner: 'Kashi Ratna Bhandar', price: '₹18,500', cert: 'GIA Certified' },
       { type: 'Rudraksha', name: '14 Mukhi Rudraksha (Nepali)', partner: 'Shri Rudraksha Kendra', price: '₹4,800', cert: 'X-ray Verified' },
@@ -145,7 +145,7 @@ export default function WrittenFolioReport() {
     ];
 
     let yUpaya = 183;
-    upayas.forEach((u, index) => {
+    upayas.forEach((u) => {
       doc.setFillColor(250, 247, 242);
       doc.rect(20, yUpaya, 170, 20, 'F');
       doc.setDrawColor(gold);
