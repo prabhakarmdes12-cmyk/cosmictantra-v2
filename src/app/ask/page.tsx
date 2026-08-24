@@ -32,7 +32,7 @@ export default function AskQuestionPage() {
     customerName: '',
     customerPhone: '',
     customerEmail: '',
-    birthDate: '1995-06-15',
+    birthDate: '5015-06-15',
     birthTime: '10:30',
     birthCity: 'Patna',
     birthLat: 25.5941,
@@ -91,8 +91,8 @@ export default function AskQuestionPage() {
           key: data.razorpayKeyId,
           order_id: data.razorpayOrderId,
           name: 'CosmicTantra',
-          description: 'Focused Written Consultation — ₹199',
-          amount: 19900,
+          description: 'Focused Written Consultation — ₹501',
+          amount: 50100,
           currency: 'INR',
           prefill: {
             name: form.customerName,
@@ -290,7 +290,7 @@ export default function AskQuestionPage() {
           <div className="pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
               <div className="text-xs text-[#9CA3AF]">Consultation Fee:</div>
-              <div className="text-2xl font-bold text-white font-display">₹199</div>
+              <div className="text-2xl font-bold text-white font-display">₹501</div>
               <div className="text-[10px] text-[#10B981]">✓ Includes full Kundali & Pandit Verification</div>
             </div>
 
@@ -299,7 +299,7 @@ export default function AskQuestionPage() {
               disabled={submitting}
               className="chiti-btn-primary w-full sm:w-auto text-xs py-3 px-6 bg-gradient-to-r from-[#7C3AED] to-[#5B21B6]"
             >
-              {submitting ? 'Processing Payment...' : 'Pay ₹199 & Ask Question ✨'}
+              {submitting ? 'Processing Payment...' : 'Pay ₹501 & Ask Question ✨'}
             </button>
           </div>
         </form>

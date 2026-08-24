@@ -70,7 +70,7 @@ export default function MyDaysPanchang({ kundali }: { kundali?: any }) {
 
             {pe.isCautionDay && (
               <Link href="/ask" className="chiti-btn-primary py-2.5 px-5 text-xs bg-gradient-to-r from-red-600 to-amber-600 text-white font-bold shrink-0">
-                Caution Day! Consult Pandit Ji — ₹199 <ArrowRight className="w-4 h-4" />
+                Caution Day! Consult Pandit Ji — ₹501 <ArrowRight className="w-4 h-4" />
               </Link>
             )}
           </div>

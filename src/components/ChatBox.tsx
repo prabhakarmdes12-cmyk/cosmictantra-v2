@@ -122,7 +122,7 @@ export default function ChatBox({ kundali }: { kundali?: any }) {
               href="/ask"
               className="chiti-btn-primary py-3 px-6 text-xs w-full justify-center bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-black font-bold shadow-[0_0_20px_rgba(245,158,11,0.3)]"
             >
-              Consult Senior Pandit Ji — ₹199 <ArrowRight className="w-4 h-4" />
+              Consult Senior Pandit Ji — ₹501 <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         )}

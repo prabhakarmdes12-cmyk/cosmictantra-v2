@@ -40,13 +40,13 @@ export default function AppLandingPage() {
   const [panchangData, setPanchangData] = useState(() => calculatePanchang(new Date(), DEFAULT_CITY));
   const [kundaliData, setKundaliData] = useState(null);
 
-  // Day/Night & Language State (Chiti UDS v3 compliant)
+  // Day/Night & Language State (Chiti UDS v3 compliant — Light/Day mode default)
   const [theme, setTheme] = useState(() => {
-    if (typeof window === 'undefined') return 'dark';
+    if (typeof window === 'undefined') return 'light';
     try {
-      return localStorage.getItem('cosmictantra_theme') || 'dark';
+      return localStorage.getItem('cosmictantra_theme') || 'light';
     } catch {
-      return 'dark';
+      return 'light';
     }
   });
 
@@ -237,7 +237,7 @@ export default function AppLandingPage() {
           theme={theme}
         />
 
-        {/* 14. ₹199 Consultation Offer & 5-Stage Transparent Pipeline */}
+        {/* 14. ₹501 Consultation Offer & 5-Stage Transparent Pipeline */}
         <ConsultationOffer
           onOpenConsultation={handleOpenConsultation}
           lang={lang}

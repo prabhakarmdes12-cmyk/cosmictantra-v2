@@ -24,7 +24,7 @@ export const TRANSLATIONS = {
       dashaChapters: 'Dasha Chapters',
       vedicCalendar: 'Vedic Calendar',
       practicingScholars: 'Practicing Scholars',
-      askWritten: 'Ask a Jyotishi (₹199 Written)'
+      askWritten: 'Ask a Jyotishi (₹501 Written)'
     },
     hero: {
       kashiBadge: 'Kashi Vedic Timekeeper',
@@ -104,7 +104,7 @@ export const TRANSLATIONS = {
       careerSub: 'Decision-Oriented Timing',
       careerDesc: 'Evaluate 10th House karmic tendencies, Amatyakaraka, and Dasha transition windows.',
       askTitle: 'Scholarly Consultation',
-      askSub: 'One Focused Written Question — ₹199',
+      askSub: 'One Focused Written Question — ₹501',
       askDesc: 'Bypass noisy per-minute call marketplaces. Receive permanent, written counsel from a Vedic scholar.'
     },
     muhurat: {
@@ -134,7 +134,7 @@ export const TRANSLATIONS = {
       dob: 'Date of Birth',
       tob: 'Exact Time (24h)',
       pob: 'Birth Place',
-      sampleFill: 'Fill Sample (Patna, 1992)',
+      sampleFill: 'Fill Sample (Patna, 5012)',
       submitBtn: 'Construct Janma Kundali',
       lagna: 'Lagna (Ascendant)',
       moonSign: 'Chandra Rashi (Moon Sign)',
@@ -200,7 +200,7 @@ export const TRANSLATIONS = {
       interp4: 'Complex Personal Context',
       interp4Desc: 'Listening to your real decision or life inflection point and mapping where human initiative meets cosmic timing.',
       quote: '"That is where a practicing Jyotishi enters."',
-      cta: 'Ask One Focused Question — ₹199'
+      cta: 'Ask One Focused Question — ₹501'
     },
     scholars: {
       tag: 'Real Scholars • Authentic Lineage',
@@ -222,7 +222,7 @@ export const TRANSLATIONS = {
       pipelineHeading: 'How your question becomes wisdom.',
       readyHeading: 'Ready to bring your decision to an authentic scholar?',
       readySub: 'Includes full natal ephemeris calculation + detailed human synthesis.',
-      askCta: 'Ask One Question — ₹199'
+      askCta: 'Ask One Question — ₹501'
     },
     sampleConsultation: {
       tag: 'Sample Deliverable Format',
@@ -242,7 +242,7 @@ export const TRANSLATIONS = {
       vagueTag: 'VAGUE / FATALISTIC QUESTION',
       vagueNote: 'Produces broad, generalized statements with little actionable strategy.',
       sharpTag: 'SHARP / DECISION-ORIENTED QUESTION',
-      formulateBtn: 'Formulate this inquiry for ₹199 consultation →'
+      formulateBtn: 'Formulate this inquiry for ₹501 consultation →'
     },
     knowledge: {
       tag: 'Knowledge Architecture',
@@ -254,14 +254,14 @@ export const TRANSLATIONS = {
     finalCta: {
       heading: 'One question still on your mind?',
       subtitle: 'When calculation alone is not enough, bring your decision to an experienced Jyotish scholar.',
-      cta: 'Ask One Question — ₹199',
+      cta: 'Ask One Question — ₹501',
       meetBtn: 'Meet the Scholars',
       trustNote: 'No automated bots. No ticking timers. Full human written review.'
     },
     footer: {
       tagline: 'Vedic Intelligence Interface 2026. Deterministic Panchang & Kundali computation with focused written human Jyotish consultations.',
       capabilityBtn: 'Capability Registry',
-      askBtn: 'Ask a Jyotishi — ₹199',
+      askBtn: 'Ask a Jyotishi — ₹501',
       col1: 'Today',
       col2: 'Muhurat',
       col3: 'Jyotish',
@@ -295,7 +295,7 @@ export const TRANSLATIONS = {
       dashaChapters: 'जीवन दशा चक्र',
       vedicCalendar: 'वैदिक पर्व कालदर्शक',
       practicingScholars: 'काशीय विद्वत्-परिषद्',
-      askWritten: 'लिखित प्रश्न विमर्श (₹१९९)'
+      askWritten: 'लिखित प्रश्न विमर्श (₹५०१)'
     },
     hero: {
       kashiBadge: 'काशी वैदिक काल-गणना',
@@ -375,7 +375,7 @@ export const TRANSLATIONS = {
       careerSub: 'निर्णय-केन्द्रित दिशा निर्देश',
       careerDesc: 'दशमेश, अमात्यकारक एवं सक्रिय दशा काल के आधार पर आजीविका सम्बन्धी परामर्श।',
       askTitle: 'विद्वत्-विमर्श (परामर्श)',
-      askSub: 'एक स्पष्ट लिखित प्रश्न — ₹१९९',
+      askSub: 'एक स्पष्ट लिखित प्रश्न — ₹५०१',
       askDesc: 'प्रति-मिनट मीटर के तनाव से मुक्त। लिखित प्रामाणिक परामर्श पत्र प्राप्त करें जिसे सदैव सुरक्षित रख सकें।'
     },
     muhurat: {
@@ -471,7 +471,7 @@ export const TRANSLATIONS = {
       interp4: 'व्यक्तिगत परिस्थिति का सन्दर्भ',
       interp4Desc: 'आपकी वास्तविक दुविधा को सुनकर यह मार्गदर्शन देना कि पुरुषार्थ और प्रारब्ध का तालमेल कैसे बैठाएं।',
       quote: '"यहीं पर एक अभ्यासी ज्योतिर्विद् का प्रवेश होता है। "',
-      cta: 'एक स्पष्ट प्रश्न पूछें — ₹१९९'
+      cta: 'एक स्पष्ट प्रश्न पूछें — ₹५०१'
     },
     scholars: {
       tag: 'काशीय विद्वत्-परम्परा • प्रामाणिक शास्त्रज्ञ',
@@ -493,7 +493,7 @@ export const TRANSLATIONS = {
       pipelineHeading: 'आपका प्रश्न कैसे विद्वत्-मार्गदर्शन बनता है।',
       readyHeading: 'क्या आप अपने महत्वपूर्ण निर्णय पर काशी के विद्वान् से विमर्श हेतु तत्पर हैं?',
       readySub: 'सम्पूर्ण जन्मकुण्डली गणित एवं विस्तृत हस्तलिखित विश्लेषण सम्मिलित।',
-      askCta: 'एक प्रश्न पूछें — ₹१९९'
+      askCta: 'एक प्रश्न पूछें — ₹५०१'
     },
     sampleConsultation: {
       tag: 'परामर्श पत्र का प्रारूप',
@@ -513,7 +513,7 @@ export const TRANSLATIONS = {
       vagueTag: 'अस्पष्ट / भाग्यवादी प्रश्न',
       vagueNote: 'ऐसे प्रश्नों से केवल सामान्य बातें निकलती हैं, कोई व्यावहारिक रणनीति नहीं।',
       sharpTag: 'स्पष्ट / निर्णय-केन्द्रित प्रश्न',
-      formulateBtn: 'इस प्रश्न प्रारूप को ₹१९९ परामर्श हेतु उपयोग करें →'
+      formulateBtn: 'इस प्रश्न प्रारूप को ₹५०१ परामर्श हेतु उपयोग करें →'
     },
     knowledge: {
       tag: 'वैदिक ज्ञानकोष',
@@ -525,14 +525,14 @@ export const TRANSLATIONS = {
     finalCta: {
       heading: 'क्या मन में अभी भी कोई महत्वपूर्ण प्रश्न शेष है?',
       subtitle: 'जब केवल गणित पर्याप्त न हो, तब अपने निर्णय को काशी के अनुभवी विद्वान् के समक्ष रखें।',
-      cta: 'एक प्रश्न पूछें — ₹१९९',
+      cta: 'एक प्रश्न पूछें — ₹५०१',
       meetBtn: 'विद्वानों का परिचय देखें',
       trustNote: 'कोई स्वचालित रोबोट नहीं। कोई मीटर का तनाव नहीं। सम्पूर्ण मानवीय लिखित समीक्षा।'
     },
     footer: {
       tagline: 'वैदिक काल-गणना पटल २०२६। निरयण पञ्चाङ्ग एवं कुण्डली गणित के साथ काशी के विद्वानों द्वारा लिखित परामर्श।',
       capabilityBtn: 'गणना क्षमता सूची',
-      askBtn: 'विद्वान् से परामर्श — ₹१९९',
+      askBtn: 'विद्वान् से परामर्श — ₹५०१',
       col1: 'पञ्चाङ्ग',
       col2: 'मुहूर्त',
       col3: 'ज्योतिष',
