@@ -3,8 +3,11 @@
 import React from 'react';
 import { Download, Printer } from 'lucide-react';
 import jsPDF from 'jspdf';
+import { getActiveProfile } from '@/lib/profileStore';
 
 export default function WrittenFolioReport() {
+  const profile = getActiveProfile();
+
   const handleDownloadPDF = () => {
     const doc = new jsPDF({
       orientation: 'portrait',
@@ -12,66 +15,98 @@ export default function WrittenFolioReport() {
       format: 'a4'
     });
 
-    // Colors
     const gold = '#8E6F1D';
     const dark = '#1C1917';
-    const parchment = '#FAF7F2';
 
-    // Header
+    // === HEADER ===
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(11);
     doc.setTextColor(gold);
-    doc.text('श्री काशी विश्वनाथो विजयते', 105, 20, { align: 'center' });
+    doc.text('श्री काशी विश्वनाथो विजयते', 105, 18, { align: 'center' });
 
-    doc.setFontSize(28);
+    doc.setFontSize(26);
     doc.setTextColor(dark);
-    doc.text('CosmicTantra', 105, 32, { align: 'center' });
+    doc.text('CosmicTantra', 105, 28, { align: 'center' });
 
-    doc.setFontSize(10);
-    doc.setTextColor('#665E55');
-    doc.text('Lahiri Ephemeris • Verified Scholarly Written Folio', 105, 39, { align: 'center' });
-
-    // Divider
-    doc.setDrawColor(gold);
-    doc.setLineWidth(0.5);
-    doc.line(20, 45, 190, 45);
-
-    // Seeker Info
-    doc.setFontSize(11);
-    doc.setTextColor(dark);
-    doc.text('Seeker: Priya Sharma', 20, 55);
-    doc.text('Folio ID: CT-2026-0825-001', 190, 55, { align: 'right' });
-
-    // Question
-    doc.setFontSize(12);
-    doc.text('Question:', 20, 68);
-    doc.setFontSize(11);
-    doc.text('Will changing my business direction in the next six months be favourable for my long-term financial growth?', 20, 75, { maxWidth: 170 });
-
-    // Synthesis Box
-    doc.setFillColor(250, 247, 242);
-    doc.rect(20, 90, 170, 85, 'F');
-    doc.setDrawColor(gold);
-    doc.rect(20, 90, 170, 85);
-
-    doc.setFontSize(13);
-    doc.setTextColor(gold);
-    doc.text('विद्वत्-विवेचना (Scholarly Synthesis)', 25, 100);
-
-    doc.setFontSize(11);
-    doc.setTextColor(dark);
-    const synthesisText = `Your current Moon Mahadasha (42% complete) supports nurturing and creative ventures. The upcoming Jupiter Antardasha (starting November 2026) brings strong expansion energy in the 10th and 11th houses. This is an auspicious window for strategic pivots.`;
-    doc.text(synthesisText, 25, 110, { maxWidth: 160 });
-
-    doc.setFontSize(11);
-    doc.setTextColor(gold);
-    doc.text('Recommended Action: Perform a small Lakshmi-Ganesh puja before initiating major changes.', 25, 155, { maxWidth: 160 });
-
-    // Footer
     doc.setFontSize(9);
     doc.setTextColor('#665E55');
-    doc.text('Verified by Pt. Vidyadhar Shastri • Sampurnanand Sanskrit University', 105, 270, { align: 'center' });
-    doc.text('© CosmicTantra 2026 • Chitra Paksha (Lahiri) Sidereal Mathematics', 105, 276, { align: 'center' });
+    doc.text('Lahiri Ephemeris • Verified Scholarly Written Folio', 105, 34, { align: 'center' });
+
+    doc.setDrawColor(gold);
+    doc.setLineWidth(0.6);
+    doc.line(20, 40, 190, 40);
+
+    // === SEEKER INFO ===
+    doc.setFontSize(10);
+    doc.setTextColor(dark);
+    doc.text(`Seeker: ${profile?.name || 'Priya Sharma'}`, 20, 48);
+    doc.text(`Cosmic ID: ${profile?.cosmicId || 'CT-4821'}`, 190, 48, { align: 'right' });
+    doc.text(`Folio ID: CT-2026-0825-001`, 20, 54);
+    doc.text(`Date: 25 August 2026`, 190, 54, { align: 'right' });
+
+    // === QUESTION ===
+    doc.setFontSize(11);
+    doc.text('Question:', 20, 65);
+    doc.setFontSize(10);
+    doc.text('Will changing my business direction in the next six months be favourable for my long-term financial growth?', 20, 72, { maxWidth: 170 });
+
+    // === KUNDALI SUMMARY ===
+    doc.setFontSize(12);
+    doc.setTextColor(gold);
+    doc.text('कुण्डली सारांश (Kundali Summary)', 20, 88);
+
+    doc.setFontSize(10);
+    doc.setTextColor(dark);
+    doc.text(`Lagna: Vrishabha (Taurus)    |    Moon: Rohini Nakshatra    |    Current Dasha: Moon Mahadasha (42%)`, 20, 95);
+
+    // === SYNTHESIS ===
+    doc.setFillColor(250, 247, 242);
+    doc.rect(20, 102, 170, 72, 'F');
+    doc.setDrawColor(gold);
+    doc.rect(20, 102, 170, 72);
+
+    doc.setFontSize(12);
+    doc.setTextColor(gold);
+    doc.text('विद्वत्-विवेचना (Scholarly Synthesis)', 25, 110);
+
+    doc.setFontSize(10);
+    doc.setTextColor(dark);
+    const synthesis = `Your current Moon Mahadasha supports nurturing and creative ventures. The upcoming Jupiter Antardasha (Nov 2026) brings strong expansion in the 10th and 11th houses. This is a highly auspicious window for strategic business pivots. The 7th and 11th house connections indicate positive outcomes in partnerships and gains.`;
+    doc.text(synthesis, 25, 118, { maxWidth: 160 });
+
+    // === DASHA TIMELINE ===
+    doc.setFontSize(12);
+    doc.setTextColor(gold);
+    doc.text('विंशोत्तरी दशा (Current Vimshottari Dasha)', 20, 185);
+
+    doc.setFontSize(10);
+    doc.setTextColor(dark);
+    doc.text(`Moon Mahadasha → Jupiter Antardasha (Nov 2026 – Mar 2028) → Strong growth phase`, 20, 192);
+
+    // === SATVIK UPAYA ===
+    doc.setFontSize(12);
+    doc.setTextColor(gold);
+    doc.text('सात्त्विक उपाय (Satvik Upaya)', 20, 205);
+
+    doc.setFontSize(10);
+    doc.setTextColor(dark);
+    doc.text('• Daily recitation of Shri Sukta (11 times) before sunrise', 20, 212);
+    doc.text('• Offer yellow flowers to Lord Vishnu on Thursdays', 20, 218);
+    doc.text('• Perform small Lakshmi-Ganesh puja before initiating major changes', 20, 224);
+
+    // === RECOMMENDATION ===
+    doc.setFontSize(11);
+    doc.setTextColor(gold);
+    doc.text('Recommended Action:', 20, 235);
+    doc.setFontSize(10);
+    doc.setTextColor(dark);
+    doc.text('This is an excellent window for strategic business direction change. Proceed with planning in October–November 2026.', 20, 242, { maxWidth: 170 });
+
+    // === FOOTER ===
+    doc.setFontSize(8);
+    doc.setTextColor('#665E55');
+    doc.text('Verified by Pt. Vidyadhar Shastri • Sampurnanand Sanskrit University, Varanasi', 105, 270, { align: 'center' });
+    doc.text('© CosmicTantra 2026 • Chitra Paksha (Lahiri) Sidereal Mathematics • शुभ दक्षिणा ₹५०१', 105, 276, { align: 'center' });
 
     doc.save('CosmicTantra-Written-Folio.pdf');
   };
