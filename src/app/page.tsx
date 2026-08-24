@@ -8,10 +8,10 @@ import { calculateVimshottariDasha, getCurrentDasha } from '@/engines/dashaEngin
 import { calculatePanchang } from '@/engines/panchang.js';
 import NorthIndianChart from '@/components/NorthIndianChart.jsx';
 import SwargaLok from '@/components/SwargaLok.jsx';
-import KarmaWheel from '@/components/KarmaWheel.tsx';
-import DestinyTimeline from '@/components/DestinyTimeline.tsx';
-import ChatBox from '@/components/ChatBox.tsx';
-import MyDaysPanchang from '@/components/MyDaysPanchang.tsx';
+import KarmaWheel from '@/components/KarmaWheel';
+import DestinyTimeline from '@/components/DestinyTimeline';
+import ChatBox from '@/components/ChatBox';
+import MyDaysPanchang from '@/components/MyDaysPanchang';
 
 interface Practitioner {
   id: string;
