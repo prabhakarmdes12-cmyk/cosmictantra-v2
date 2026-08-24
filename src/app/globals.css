@@ -5,15 +5,20 @@
 @tailwind utilities;
 
 :root {
-  --bg-deep: #FAF7F2;
-  --bg-mid: #F2ECDE;
-  --bg-card: rgba(255, 255, 255, 0.92);
-  --border-subtle: rgba(130, 99, 21, 0.25);
-  --accent-purple: #4F46E5;
-  --accent-gold: #826315;
-  --accent-green: #0D5A37;
-  --text-main: #181512;
-  --text-muted: #4A443B;
+  /* Sacred Daylight Palette (Pandit-Ready Default) */
+  --bg-deep: #FAF7F2;          /* Sacred Temple Parchment */
+  --bg-mid: #F4EFE6;           /* Sandalwood / Ivory Surface */
+  --bg-card: rgba(255, 255, 255, 0.95);
+  --border-subtle: rgba(142, 111, 29, 0.22); /* Temple Brass Gold */
+
+  --text-main: #1C1917;        /* Deep Stone Charcoal (WCAG AAA > 14:1) */
+  --text-body: #44403C;        /* Warm Dark Slate */
+  --text-muted: #665E55;       /* Earth Ochre Muted */
+
+  --accent-gold: #8E6F1D;      /* Deep Banaras Gold */
+  --accent-saffron: #9A3412;   /* Auspicious Sindoor / Saffron */
+  --accent-emerald: #065F46;   /* Shubh Green (Tithi/Abhijit) */
+  --accent-vermilion: #991B1B; /* Rahu Kaal Warning */
 }
 
 .dark {
