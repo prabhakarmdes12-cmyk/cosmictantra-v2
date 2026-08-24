@@ -40,24 +40,10 @@ export default function AppLandingPage() {
   const [panchangData, setPanchangData] = useState(() => calculatePanchang(new Date(), DEFAULT_CITY));
   const [kundaliData, setKundaliData] = useState(null);
 
-  // Day/Night & Language State (Chiti UDS v3 compliant — Light/Day mode default)
-  const [theme, setTheme] = useState(() => {
-    if (typeof window === 'undefined') return 'light';
-    try {
-      return localStorage.getItem('cosmictantra_theme') || 'light';
-    } catch {
-      return 'light';
-    }
-  });
-
-  const [lang, setLang] = useState(() => {
-    if (typeof window === 'undefined') return 'en';
-    try {
-      return localStorage.getItem('cosmictantra_lang') || 'en';
-    } catch {
-      return 'en';
-    }
-  });
+  // Day/Night & Language State (Chiti UDS v3 compliant — Light/Day mode default, SSR-safe)
+  const [theme, setTheme] = useState('light');
+  const [lang, setLang] = useState('en');
+  const [isClientMounted, setIsClientMounted] = useState(false);
 
   // Modals state
   const [isCityModalOpen, setIsCityModalOpen] = useState(false);
@@ -66,8 +52,24 @@ export default function AppLandingPage() {
   const [isConsultationModalOpen, setIsConsultationModalOpen] = useState(false);
   const [consultationPrompt, setConsultationPrompt] = useState('');
 
+  // Sync client-persisted preferences on mount to eliminate SSR hydration mismatch
+  useEffect(() => {
+    setIsClientMounted(true);
+    try {
+      const savedTheme = localStorage.getItem('cosmictantra_theme');
+      if (savedTheme === 'light' || savedTheme === 'dark') {
+        setTheme(savedTheme);
+      }
+      const savedLang = localStorage.getItem('cosmictantra_lang');
+      if (savedLang === 'en' || savedLang === 'hi') {
+        setLang(savedLang);
+      }
+    } catch {}
+  }, []);
+
   // Sync theme class to root html
   useEffect(() => {
+    if (!isClientMounted) return;
     const root = document.documentElement;
     if (theme === 'light') {
       root.classList.remove('dark');
@@ -79,14 +81,15 @@ export default function AppLandingPage() {
     try {
       localStorage.setItem('cosmictantra_theme', theme);
     } catch {}
-  }, [theme]);
+  }, [theme, isClientMounted]);
 
-  // Sync language
+  // Sync language to localStorage
   useEffect(() => {
+    if (!isClientMounted) return;
     try {
       localStorage.setItem('cosmictantra_lang', lang);
     } catch {}
-  }, [lang]);
+  }, [lang, isClientMounted]);
 
   // Update panchang when city changes
   useEffect(() => {
