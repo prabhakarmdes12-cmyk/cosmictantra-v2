@@ -8,6 +8,16 @@ import CosmicIdCard from '@/components/visual/CosmicIdCard';
 import TrustBar from '@/components/visual/TrustBar';
 import Link from 'next/link';
 
+// Family member mini card
+function FamilyMiniCard({ profile }: { profile: any }) {
+  return (
+    <div className="p-4 rounded-2xl border border-[#8E6F1D]/15 bg-white dark:bg-[#0A0C12]">
+      <div className="font-semibold">{profile.name}</div>
+      <div className="text-xs text-[#857E74]">{profile.relation} • {profile.birthDate}</div>
+    </div>
+  );
+}
+
 export default function ScholarDashboard() {
   const [activeProfile, setActiveProfile] = useState<any>(null);
   const [familyCount, setFamilyCount] = useState(0);
@@ -107,7 +117,6 @@ export default function ScholarDashboard() {
               <Link href="/daily" className="text-sm text-[#8E6F1D] hover:underline flex items-center gap-1">View All 3 Days <ArrowRight className="w-4 h-4" /></Link>
             </div>
             <div className="grid md:grid-cols-3 gap-6">
-              {/* Mini version of today's card */}
               <DailyCosmicCard
                 prediction={{
                   date: "25 Aug",
@@ -133,6 +142,22 @@ export default function ScholarDashboard() {
                 }}
                 isToday={true}
               />
+            </div>
+          </div>
+
+          {/* Family Dashboard (Priority 5 - Quick Win) */}
+          <div className="lg:col-span-12 mt-8">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-xs tracking-[2px] text-[#8E6F1D] font-mono">YOUR PARIVAAR • FAMILY PROFILES</div>
+              <Link href="/family" className="text-sm text-[#8E6F1D] hover:underline">Manage All →</Link>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {getProfiles().slice(0, 4).map((p, index) => (
+                <FamilyMiniCard key={index} profile={p} />
+              ))}
+              {getProfiles().length === 0 && (
+                <div className="col-span-4 text-center py-8 text-[#857E74]">No family profiles yet. <Link href="/family" className="text-[#8E6F1D]">Add members →</Link></div>
+              )}
             </div>
           </div>
         </div>
