@@ -6,9 +6,9 @@ import { Calendar, Users, ArrowRight } from 'lucide-react';
 import DailyCosmicCard from '@/components/visual/DailyCosmicCard';
 import { getActiveProfile, getProfiles } from '@/lib/profileStore';
 import { calculatePanchang } from '@/lib/panchang';
-import { calculateVimshottariDasha, getCurrentDasha } from '@/lib/dashaEngine';
+import { calculateVimshottariDasha, getCurrentDasha } from '@/engines/dashaEngine.js';
 import { calculateKundali } from '@/lib/astrologyEngine';
-import { getVedicAlerts } from '@/lib/vedicAlerts';
+import { getDayAlerts } from '@/lib/vedicAlerts';
 import TrustBar from '@/components/visual/TrustBar';
 import Link from 'next/link';
 
@@ -66,39 +66,42 @@ export default function DailyPage() {
         // Use profile birth data for personalization
         const birthDate = activeProfile.birthDate || '1995-06-15';
         const birthTime = activeProfile.birthTime || '10:30';
-        const lat = activeProfile.birthLat || 25.5941;
-        const lon = activeProfile.birthLon || 85.1376;
-        const tz = activeProfile.timezone || 5.5;
+        const lat = activeProfile.birthLat || activeProfile.lat || 25.5941;
+        const lon = activeProfile.birthLon || activeProfile.lng || 85.1376;
+        const tz = activeProfile.timezone || activeProfile.tz || 5.5;
+        const city = activeProfile.birthCity || 'Patna';
 
         // 1. Calculate Panchang for the day
-        const panchang = calculatePanchang(date, lat, lon, tz);
+        const panchang = calculatePanchang(date, { name: city, lat, lng: lon, tz } as any);
 
         // 2. Calculate Kundali (for Lagna + Moon Nakshatra)
         const kundali = calculateKundali(birthDate, birthTime, lat, lon, tz);
 
         // 3. Dasha
-        const moonNak = (kundali.planets as any)?.Moon?.nakshatra?.name || 'Rohini';
+        const moonNak = (kundali.planets as any)?.Moon?.nakshatra || { name: 'Rohini', index: 3, pada: 1 };
         const dashaList = calculateVimshottariDasha(moonNak, new Date(birthDate));
         const activeDasha = getCurrentDasha(dashaList, date);
 
         // 4. Vedic Alerts (Rahu Kaal etc.)
-        const alerts = getVedicAlerts(date, lat, lon, tz);
-        const rahuKaal = alerts.rahuKaal || '09:00–10:30';
-        const abhijit = alerts.abhijit || '11:45–12:30';
+        const dayAlerts = getDayAlerts(date, { name: city, lat, lng: lon, tz } as any);
+        const alertsList = dayAlerts?.alerts || [];
+        const rahuKaal = (alertsList.find((a: any) => a.type === 'RAHU_KAAL' || a.title?.includes('Rahu')) as any)?.detail || '09:00–10:30';
+        const abhijit = (alertsList.find((a: any) => a.type === 'ABHIJIT' || a.title?.includes('Abhijit')) as any)?.detail || '11:45–12:30';
+        const isRikta = alertsList.some((a: any) => a.type === 'RIKTA' || a.title?.includes('Rikta'));
 
         // 5. Personalized Auspicious Score (heuristic)
         let score = 72;
-        if (panchang.tithi.includes('Shukla')) score += 8;
+        if (panchang.tithi?.paksha === 'Shukla') score += 8;
         if (activeDasha?.planet === 'Jupiter' || activeDasha?.planet === 'Venus') score += 10;
-        if (alerts.isRikta) score -= 15;
+        if (isRikta) score -= 15;
         score = Math.max(45, Math.min(95, Math.round(score)));
 
         // 6. Advanced Metrics (Sade Sati, Kaal Sarp, Festival Flags)
         const birthYear = new Date(birthDate).getFullYear();
         const currentYear = date.getFullYear();
         const sadeSatiActive = currentYear >= birthYear + 28 && currentYear <= birthYear + 38;
-        const kaalSarpActive = Math.random() > 0.75; // Simplified demo logic
-        const hasFestival = panchang.festivals && panchang.festivals.length > 0;
+        const kaalSarpActive = false;
+        const hasFestival = alertsList.some((a: any) => a.type === 'FESTIVAL' || a.title?.includes('Festival'));
 
         // Insight + Action (personalized)
         const insights = [

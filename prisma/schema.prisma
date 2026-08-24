@@ -155,11 +155,14 @@ model AstrologyConsultation {
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
 
-  practitioner AstrologyConsultant?  @relation(fields: [practitionerId], references: [id], onDelete: SetNull)
-  auditLogs    AstrologyAuditLog[]
+  customerProfileId    String?
+  customerProfile      AstrologyCustomerProfile? @relation(fields: [customerProfileId], references: [id], onDelete: SetNull)
+  practitioner         AstrologyConsultant?      @relation(fields: [practitionerId], references: [id], onDelete: SetNull)
+  auditLogs            AstrologyAuditLog[]
 
   @@index([projectId, status])
   @@index([practitionerId])
+  @@index([customerProfileId])
   @@index([isTestCase])
 }
 

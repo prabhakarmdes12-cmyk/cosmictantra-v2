@@ -36,10 +36,7 @@ export default function FamilyPage() {
 
         {/* Premium Cosmic ID Card */}
         <div className="mt-10">
-          <CosmicIdCard 
-            profile={demoCosmicProfile} 
-            onManageFamily={() => window.location.href = '#family-manager'} 
-          />
+          <CosmicIdCard profile={demoCosmicProfile} />
         </div>
 
         {/* Family Manager Section */}
