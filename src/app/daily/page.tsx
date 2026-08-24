@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar, Users, ArrowRight } from 'lucide-react';
 import DailyCosmicCard from '@/components/visual/DailyCosmicCard';
+import WhatsAppShareCard from '@/components/visual/WhatsAppShareCard';
 import { getActiveProfile, getProfiles } from '@/lib/profileStore';
 import { calculatePanchang } from '@/lib/panchang';
 import { calculateVimshottariDasha, getCurrentDasha } from '@/lib/dashaEngine';
@@ -231,8 +232,25 @@ END:VCALENDAR`;
                 isToday={index === 0}
                 onAddToCalendar={() => handleAddToCalendar(pred)}
                 onShareWhatsApp={() => handleShareWhatsApp(pred)}
+                onShareCard={() => openShareCard(pred)}
               />
             ))}
+          </div>
+        )}
+
+        {/* 9:16 WhatsApp Share Modal */}
+        {showShareCard && shareCardData && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setShowShareCard(false)}>
+            <div onClick={e => e.stopPropagation()}>
+              <WhatsAppShareCard {...shareCardData} onDownload={() => {
+                // Simple download simulation
+                const link = document.createElement('a');
+                link.download = `cosmictantra-${shareCardData.date}.png`;
+                // In real implementation: use html2canvas
+                alert('9:16 card downloaded (demo)');
+                setShowShareCard(false);
+              }} />
+            </div>
           </div>
         )}
 
