@@ -112,46 +112,46 @@ export default function WrittenFolioReport() {
   };
 
   return (
-    <main className="min-h-screen bg-[#FAF7F2] py-12 px-6">
-      <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-8">
-          <div className="inline px-4 py-1 rounded-full bg-[#8E6F1D]/10 text-[#8E6F1D] text-xs tracking-[3px]">WRITTEN FOLIO PREVIEW</div>
-          <h1 className="font-editorial text-5xl font-bold mt-3 tracking-tight">Vedic Decision Synthesis</h1>
-          <p className="text-[#57524A] mt-2">शुभ दक्षिणा ₹५०१ • Permanent Written Counsel</p>
+    <main className="min-h-screen bg-[#FAF7F2] py-12 px-6 print:bg-white">
+      <div className="max-w-3xl mx-auto print:max-w-none">
+        <div className="text-center mb-8 print:mb-4">
+          <div className="inline px-4 py-1 rounded-full bg-[#8E6F1D]/10 text-[#8E6F1D] text-xs tracking-[3px] print:hidden">WRITTEN FOLIO PREVIEW</div>
+          <h1 className="font-editorial text-5xl font-bold mt-3 tracking-tight print:text-4xl">Vedic Decision Synthesis</h1>
+          <p className="text-[#57524A] mt-2 print:text-sm">शुभ दक्षिणा ₹५०१ • Permanent Written Counsel</p>
         </div>
 
-        {/* Preview Card */}
-        <div className="rounded-3xl border border-[#8E6F1D]/30 bg-white p-10 shadow-xl">
-          <div className="text-center border-b pb-8">
+        {/* Preview Card — Print Optimized */}
+        <div className="rounded-3xl border border-[#8E6F1D]/30 bg-white p-10 shadow-xl print:shadow-none print:border print:rounded-none print:p-8 print:max-w-[210mm]">
+          <div className="text-center border-b pb-8 print:pb-6">
             <div className="text-xs tracking-[4px] text-[#8E6F1D]">श्री काशी विश्वनाथो विजयते</div>
-            <div className="font-editorial text-4xl mt-2">CosmicTantra</div>
-            <div className="text-xs text-[#857E74] mt-1">Lahiri Ephemeris • Verified Scholarly Written Folio</div>
+            <div className="font-editorial text-4xl mt-2 print:text-3xl">CosmicTantra</div>
+            <div className="text-xs text-[#857E74] mt-1 print:text-[10px]">Lahiri Ephemeris • Verified Scholarly Written Folio</div>
           </div>
 
-          <div className="mt-8 text-sm">
+          <div className="mt-8 text-sm print:mt-6">
             <div className="flex justify-between text-xs text-[#857E74]">
               <div><strong>Seeker:</strong> Priya Sharma</div>
               <div><strong>Folio ID:</strong> CT-2026-0825-001</div>
             </div>
-            <div className="mt-6 text-[#1C1917]">
+            <div className="mt-6 text-[#1C1917] print:mt-4">
               <strong>Question:</strong> Will changing my business direction in the next six months be favourable for my long-term financial growth?
             </div>
           </div>
 
-          <div className="mt-10 p-8 border border-[#8E6F1D]/20 bg-[#FAF7F2] rounded-2xl">
+          <div className="mt-10 p-8 border border-[#8E6F1D]/20 bg-[#FAF7F2] rounded-2xl print:mt-8 print:p-6 print:bg-white print:border-[#8E6F1D]">
             <div className="font-semibold text-[#8E6F1D]">विद्वत्-विवेचना (Scholarly Synthesis)</div>
-            <p className="mt-4 text-[#44403C] leading-relaxed">
+            <p className="mt-4 text-[#44403C] leading-relaxed print:mt-3">
               Your current Moon Mahadasha (42% complete) supports nurturing and creative ventures. 
               The upcoming Jupiter Antardasha (starting November 2026) brings strong expansion energy 
               in the 10th and 11th houses. This is an auspicious window for strategic pivots...
             </p>
-            <div className="mt-6 text-sm font-medium text-[#8E6F1D]">
+            <div className="mt-6 text-sm font-medium text-[#8E6F1D] print:mt-4">
               Recommended Action: Perform a small Lakshmi-Ganesh puja before initiating major changes.
             </div>
           </div>
         </div>
 
-        <div className="mt-8 flex justify-center gap-4">
+        <div className="mt-8 flex justify-center gap-4 print:hidden">
           <button 
             onClick={handleDownloadPDF}
             className="flex items-center gap-2 px-8 py-4 rounded-2xl bg-[#8E6F1D] text-white font-semibold text-sm"
@@ -166,7 +166,7 @@ export default function WrittenFolioReport() {
           </button>
         </div>
 
-        <p className="text-center text-xs text-[#857E74] mt-6">This document carries the dignity of a traditional written counsel. Keep it safely.</p>
+        <p className="text-center text-xs text-[#857E74] mt-6 print:mt-4">This document carries the dignity of a traditional written counsel. Keep it safely.</p>
       </div>
     </main>
   );
