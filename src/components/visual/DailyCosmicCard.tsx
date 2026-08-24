@@ -202,14 +202,19 @@ export default function DailyCosmicCard({
         </button>
         
         <RitualDrawer isOpen={showDrawer}>
-          <AstronomicalProofDrawer
-            julianDay={2460523.5}
-            ayanamsha="24° 16' 42\""
-            localSiderealTime="14h 32m 18s"
-            coordinates="25.5941°N, 85.1376°E"
-            tithi={prediction.tithi || 'Shukla Ekadashi'}
-            nakshatra={prediction.moonNakshatra}
-          />
+        <AstronomicalProofDrawer
+          julianDay={2460523.5}
+          ayanamsha="24° 16' 42\""
+          localSiderealTime="14h 32m 18s"
+          coordinates="25.5941°N, 85.1376°E"
+          tithi={prediction.tithi || 'Shukla Ekadashi'}
+          nakshatra={prediction.moonNakshatra}
+          lagna={prediction.lagna}
+          moonLongitude="42° 18' 45\""
+          sunLongitude="128° 45' 12\""
+          houseCusps="1st: 42° | 7th: 222°"
+          planetaryLongitudes="Moon 42° • Sun 128° • Mars 195°"
+        />
         </RitualDrawer>
       </div>
     </RitualCard>

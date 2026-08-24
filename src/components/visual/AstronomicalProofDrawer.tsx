@@ -10,6 +10,12 @@ interface AstronomicalProofDrawerProps {
   coordinates: string;
   tithi: string;
   nakshatra: string;
+  // Advanced fields
+  lagna?: string;
+  moonLongitude?: string;
+  sunLongitude?: string;
+  houseCusps?: string;
+  planetaryLongitudes?: string;
 }
 
 export default function AstronomicalProofDrawer({
@@ -19,6 +25,11 @@ export default function AstronomicalProofDrawer({
   coordinates,
   tithi,
   nakshatra,
+  lagna = 'Vrishabha',
+  moonLongitude = '42° 18\' 45"',
+  sunLongitude = '128° 45\' 12"',
+  houseCusps = '1st: 42° | 7th: 222°',
+  planetaryLongitudes = 'Moon 42° • Sun 128° • Mars 195°',
 }: AstronomicalProofDrawerProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -36,8 +47,8 @@ export default function AstronomicalProofDrawer({
       </button>
 
       {isOpen && (
-        <div className="mt-4 rounded-2xl bg-[#FAF7F2] dark:bg-[#11131C] p-5 text-xs space-y-3 border border-[#8E6F1D]/15 font-mono-data">
-          <div className="grid grid-cols-2 gap-y-3 text-[#57524A] dark:text-[#AAA49A]">
+        <div className="mt-4 rounded-2xl bg-[#FAF7F2] dark:bg-[#11131C] p-6 text-xs space-y-4 border border-[#8E6F1D]/15 font-mono-data">
+          <div className="grid grid-cols-2 gap-y-4 text-[#57524A] dark:text-[#AAA49A]">
             <div>Julian Day Number</div>
             <div className="font-semibold text-[#1C1917] dark:text-white">{julianDay.toFixed(5)}</div>
 
@@ -55,6 +66,22 @@ export default function AstronomicalProofDrawer({
 
             <div>नक्षत्र (Nakshatra)</div>
             <div className="font-semibold text-[#1C1917] dark:text-white">{nakshatra}</div>
+
+            {/* Advanced Fields */}
+            <div>Lagna (Ascendant)</div>
+            <div className="font-semibold text-[#1C1917] dark:text-white">{lagna}</div>
+
+            <div>Chandra Sphuta (Moon)</div>
+            <div className="font-semibold text-[#1C1917] dark:text-white">{moonLongitude}</div>
+
+            <div>Surya Sphuta (Sun)</div>
+            <div className="font-semibold text-[#1C1917] dark:text-white">{sunLongitude}</div>
+
+            <div>House Cusps</div>
+            <div className="font-semibold text-[#1C1917] dark:text-white">{houseCusps}</div>
+
+            <div>Key Planetary Longitudes</div>
+            <div className="font-semibold text-[#1C1917] dark:text-white">{planetaryLongitudes}</div>
           </div>
 
           <div className="pt-3 border-t border-[#8E6F1D]/15 text-[10px] text-[#857E74]">
