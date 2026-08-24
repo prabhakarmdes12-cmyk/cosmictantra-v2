@@ -61,69 +61,71 @@ export default function Navigation({
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-black/[0.1] dark:border-white/[0.08] bg-[#F8F5EE]/95 dark:bg-[#060709]/95 backdrop-blur-md transition-colors duration-250">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-3 sm:gap-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2 sm:gap-4 relative">
         
-        {/* Brand Anchor */}
-        <a 
-          href="#" 
-          className="focus:outline-none"
-          onClick={(e) => {
-            e.preventDefault();
-            chitiSensory.playTick();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-        >
-          <CosmicTantraLogo subtitle={t.brandSubtitle} size="md" />
-        </a>
-
-        {/* Primary Desktop Nav */}
-        <nav className="hidden lg:flex items-center gap-5 xl:gap-7 text-xs font-mono-data tracking-wider uppercase text-[#332E27] dark:text-[#EAE6DF] font-bold">
-          <button 
-            onClick={() => handleNavClick('panchang-section', 'TODAY_PANCHANG')}
-            className="hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none"
+        {/* Left Section: Primary Desktop Nav & Mobile Menu Toggle */}
+        <div className="flex items-center gap-3 lg:gap-5 flex-1 justify-start">
+          {/* Mobile Menu Button on Left */}
+          <button
+            onClick={() => {
+              chitiSensory.playTick();
+              setMobileMenuOpen(!mobileMenuOpen);
+            }}
+            className="lg:hidden p-2 rounded-lg border border-black/[0.12] dark:border-white/[0.12] bg-[#FFFFFF] dark:bg-[#0D0F18] text-[#181512] dark:text-[#F5F2EB] shrink-0"
+            aria-label="Open navigation menu"
           >
-            {t.nav.today}
-          </button>
-          <button 
-            onClick={() => handleNavClick('muhurat-section', 'MUHURAT')}
-            className="hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none"
-          >
-            {t.nav.muhurat}
-          </button>
-          <button 
-            onClick={() => handleNavClick('kundali-section', 'KUNDALI')}
-            className="hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none"
-          >
-            {t.nav.kundali}
-          </button>
-          <button 
-            onClick={() => handleNavClick('dasha-section', 'DASHA')}
-            className="hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none"
-          >
-            {t.nav.dasha}
-          </button>
-          <button 
-            onClick={() => handleNavClick('festival-section', 'FESTIVALS')}
-            className="hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none"
-          >
-            {t.nav.festivals}
-          </button>
-          <button 
-            onClick={() => handleNavClick('practitioners-section', 'JYOTISHI')}
-            className="hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none"
-          >
-            {t.nav.scholars}
-          </button>
-          <button 
-            onClick={() => handleNavClick('swarga-lok-section', 'SWARGA_LOK')}
-            className="hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none text-[#826315] dark:text-[#F0C968]"
-          >
-            {t.nav.observatory}
+            {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           </button>
 
-          {/* Tools Dropdown (public utility + growth pages) */}
-          <div className="relative group">
-            <button className="flex items-center gap-1 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none">
+          {/* Primary Desktop Nav Links (Left side) */}
+          <nav className="hidden lg:flex items-center gap-4 xl:gap-6 text-xs font-mono-data tracking-wider uppercase text-[#332E27] dark:text-[#EAE6DF] font-bold">
+            <button 
+              onClick={() => handleNavClick('panchang-section', 'TODAY_PANCHANG')}
+              className="hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none"
+            >
+              {t.nav.today}
+            </button>
+            <button 
+              onClick={() => handleNavClick('muhurat-section', 'MUHURAT')}
+              className="hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none"
+            >
+              {t.nav.muhurat}
+            </button>
+            <button 
+              onClick={() => handleNavClick('kundali-section', 'KUNDALI')}
+              className="hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none"
+            >
+              {t.nav.kundali}
+            </button>
+            <button 
+              onClick={() => handleNavClick('dasha-section', 'DASHA')}
+              className="hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none"
+            >
+              {t.nav.dasha}
+            </button>
+          </nav>
+        </div>
+
+        {/* Center: Prominent Brand Anchor (Centered & Slightly Bigger) */}
+        <div className="flex items-center justify-center shrink-0">
+          <a 
+            href="#" 
+            className="focus:outline-none flex items-center justify-center"
+            onClick={(e) => {
+              e.preventDefault();
+              chitiSensory.playTick();
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          >
+            <CosmicTantraLogo subtitle={t.brandSubtitle} size="lg" />
+          </a>
+        </div>
+
+        {/* Right Section: Tools, Language, Theme, Location, and CTA */}
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-1 justify-end shrink-0">
+          {/* Tools Dropdown (Desktop) */}
+          <div className="relative group hidden xl:block">
+            <button className="flex items-center gap-1 text-xs font-mono-data tracking-wider uppercase text-[#332E27] dark:text-[#EAE6DF] font-bold hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none mr-2">
               <Compass className="w-3.5 h-3.5" />
               <span>Tools</span>
             </button>
@@ -138,11 +140,7 @@ export default function Navigation({
               </div>
             </div>
           </div>
-        </nav>
 
-        {/* Right Controls: High-Contrast Language, Theme, Location, Search, and CTA */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          
           {/* Desktop Language Toggle (Hindi / English) */}
           <button
             onClick={handleLangSwitch}
@@ -225,18 +223,6 @@ export default function Navigation({
           >
             <span>{t.nav.askJyotishi}</span>
             <ArrowUpRight className="w-3 h-3" />
-          </button>
-
-          {/* Mobile Toggle */}
-          <button
-            onClick={() => {
-              chitiSensory.playTick();
-              setMobileMenuOpen(!mobileMenuOpen);
-            }}
-            className="lg:hidden p-2 rounded-lg border border-black/[0.12] dark:border-white/[0.12] bg-[#FFFFFF] dark:bg-[#0D0F18] text-[#181512] dark:text-[#F5F2EB] shrink-0"
-            aria-label="Open navigation menu"
-          >
-            {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           </button>
         </div>
       </div>
