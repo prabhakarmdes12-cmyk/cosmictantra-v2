@@ -59,6 +59,103 @@ export default function WrittenFolioReport() {
     doc.setTextColor(dark);
     doc.text(`Lagna: Vrishabha (Taurus)    |    Moon: Rohini Nakshatra    |    Current Dasha: Moon Mahadasha (42%)`, 20, 95);
 
+    // === VISUAL NORTH INDIAN KUNDALI CHART ===
+    doc.setFontSize(11);
+    doc.setTextColor(gold);
+    doc.text('जन्मकुण्डली (North Indian Style)', 20, 103);
+
+    const chartX = 25;
+    const chartY = 112;
+    const boxSize = 36;
+
+    doc.setDrawColor(gold);
+    doc.setLineWidth(0.7);
+    
+    // Outer square
+    doc.rect(chartX, chartY, boxSize * 3, boxSize * 3);
+    
+    // Horizontal & Vertical lines
+    doc.line(chartX, chartY + boxSize, chartX + boxSize * 3, chartY + boxSize);
+    doc.line(chartX, chartY + boxSize * 2, chartX + boxSize * 3, chartY + boxSize * 2);
+    doc.line(chartX + boxSize, chartY, chartX + boxSize, chartY + boxSize * 3);
+    doc.line(chartX + boxSize * 2, chartY, chartX + boxSize * 2, chartY + boxSize * 3);
+    
+    // Diagonals (North Indian style)
+    doc.line(chartX, chartY, chartX + boxSize, chartY + boxSize);
+    doc.line(chartX + boxSize * 2, chartY, chartX + boxSize * 3, chartY + boxSize);
+    doc.line(chartX, chartY + boxSize * 2, chartX + boxSize, chartY + boxSize * 3);
+    doc.line(chartX + boxSize * 2, chartY + boxSize * 2, chartX + boxSize * 3, chartY + boxSize * 3);
+
+    // Planet labels
+    doc.setFontSize(7);
+    doc.setTextColor(dark);
+    doc.text('Su', chartX + 15, chartY + 7);
+    doc.text('Mo', chartX + 15, chartY + 13);
+    doc.text('Ma', chartX + 4, chartY + 20);
+    doc.text('Ju', chartX + 15, chartY + 27);
+    doc.text('Sa', chartX + 15, chartY + 33);
+    doc.text('Ve', chartX + 42, chartY + 20);
+    doc.text('Me', chartX + 42, chartY + 27);
+
+    // === PLANETARY POSITIONS TABLE ===
+    doc.setFontSize(11);
+    doc.setTextColor(gold);
+    doc.text('ग्रह स्पष्ट (Planetary Positions)', 20, 103);
+
+    doc.setFontSize(9);
+    doc.setTextColor(dark);
+    const planets = [
+      ['Planet', 'Sign', 'Degree', 'House'],
+      ['Sun', 'Magha', '128° 45\'', '10th'],
+      ['Moon', 'Rohini', '42° 18\'', '1st'],
+      ['Mars', 'Scorpio', '195° 12\'', '7th'],
+      ['Mercury', 'Virgo', '165° 33\'', '5th'],
+      ['Jupiter', 'Pisces', '352° 07\'', '11th'],
+      ['Venus', 'Libra', '182° 44\'', '6th'],
+      ['Saturn', 'Capricorn', '285° 19\'', '9th'],
+    ];
+
+    let y = 110;
+    planets.forEach((row, i) => {
+      if (i === 0) doc.setFontSize(8).setTextColor(gold);
+      else doc.setFontSize(9).setTextColor(dark);
+      doc.text(row.join('     '), 22, y);
+      y += 5;
+    });
+
+    // === VIMSHOTTARI DASHA TIMELINE ===
+    doc.setFontSize(11);
+    doc.setTextColor(gold);
+    doc.text('विंशोत्तरी दशा (Vimshottari Dasha Timeline)', 20, 158);
+
+    doc.setFontSize(9);
+    doc.setTextColor(dark);
+    doc.text('Moon (current) → Jupiter (Nov 2026) → Saturn (Mar 2028) → Mercury (2029)', 20, 165);
+
+    // === SATVIK UPAYA ===
+    doc.setFontSize(12);
+    doc.setTextColor(gold);
+    doc.text('सात्त्विक उपाय (Satvik Upaya)', 20, 175);
+
+    doc.setFontSize(10);
+    doc.setTextColor(dark);
+    doc.text('• Daily recitation of Shri Sukta (11 times) before sunrise', 20, 182);
+    doc.text('• Offer yellow flowers to Lord Vishnu on Thursdays', 20, 188);
+    doc.text('• Perform small Lakshmi-Ganesh puja before initiating major changes', 20, 194);
+
+    // === FINAL RECOMMENDATION BOX ===
+    doc.setFillColor(250, 247, 242);
+    doc.rect(20, 202, 170, 28, 'F');
+    doc.setDrawColor(gold);
+    doc.rect(20, 202, 170, 28);
+
+    doc.setFontSize(11);
+    doc.setTextColor(gold);
+    doc.text('Recommended Action', 25, 210);
+    doc.setFontSize(10);
+    doc.setTextColor(dark);
+    doc.text('This is an excellent window for strategic business direction change. Proceed with planning in October–November 2026.', 25, 218, { maxWidth: 160 });
+
     // === SYNTHESIS ===
     doc.setFillColor(250, 247, 242);
     doc.rect(20, 102, 170, 72, 'F');
