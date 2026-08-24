@@ -20,7 +20,7 @@ export default function HeroSection({
   const t = TRANSLATIONS[lang]?.hero || TRANSLATIONS.en.hero;
 
   return (
-    <section className="relative pt-16 pb-16 sm:pt-20 lg:pt-20 lg:pb-24 border-b border-black/[0.1] dark:border-white/[0.08] transition-colors duration-250 overflow-hidden">
+    <section id="hero-section" className="relative pt-16 pb-16 sm:pt-20 lg:pt-20 lg:pb-24 border-b border-black/[0.1] dark:border-white/[0.08] transition-colors duration-250 overflow-hidden">
       {/* Clean Edge-to-Edge Background Video Layer */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <video

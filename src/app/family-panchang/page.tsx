@@ -29,7 +29,7 @@ export default function FamilyPanchang() {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {profiles.map((profile, index) => (
+          {profiles.map((profile: any, index: number) => (
             <div key={index} className="bg-white rounded-3xl border border-[#8E6F1D]/20 p-7">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-[#8E6F1D]/10 flex items-center justify-center">

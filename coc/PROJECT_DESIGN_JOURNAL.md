@@ -39,11 +39,12 @@ Prior to this implementation, generic spiritual apps suffered from "AI template 
 
 | Rejected AI-Template Trope | CosmicTantra 2026 Luxury Editorial Decision | Rationale |
 | :--- | :--- | :--- |
-| **Pervasive Purple/Violet Gradient Blobs** | Replaced with **Kashi Sandhya** palette: Ganga midnight obsidian (`#060709`, `#080A12`), antique temple gold (`#D4AF37`), and terracotta (`#C86D46`). | Establishes gravity, luxury, and spiritual antiquity rather than generic SaaS aesthetics. |
+| **Pervasive Purple/Violet Gradient Blobs** | Replaced with **Subah-e-Banaras (Day)** & **Kashi Sandhya (Night)** palettes: Parchment ivory (`#FAF7F2`), Ganga midnight obsidian (`#060709`, `#080A12`), antique temple gold (`#D4AF37`, `#8E6F1D`), and terracotta (`#C86D46`). | Establishes gravity, luxury, and spiritual antiquity rather than generic SaaS aesthetics. |
 | **Repetitive 3-Box Grids with Icons in Circles** | Replaced with an **Asymmetrical Broadsheet Directory**, tabular astronomical dossiers, and stepped ghat time ribbons. | B2C users consume diverse content rhythms; identical cards cause visual numbness. |
 | **Gimmicky Animated Particle Storms** | Replaced with a **Canvas2D-accelerated astronomical celestial sphere** plotting 27 Nakshatras and the ecliptic plane. | Renders true astronomical mechanics without GPU memory bloat or battery drain. |
 | **Fake Social Proof ("5M Users", "4.9/5 Stars")** | Enforced the **Absolute Truth Invariant**: persisted/calculated data only. Unsupported logic honestly declared. | Institutional credibility is built on computational precision and real scholars, not invented numbers. |
 | **Per-Minute Ticking Call Timers** | Replaced with a **Fixed ₹199 Written Consultation Folio** and a transparent 5-Stage Human Pipeline. | Traditional call marketplaces monetize user anxiety. Written counsel provides permanent, contemplative value. |
+| **Giant SaaS Card Containerisation** | Replaced with **Edge-to-Edge Observatory Canvas** where floating editorial typography meets a dominant physical-feel **Cosmic Now Digital Astronomical Dial**. | Creates the feeling of a serious Vedic astronomical instrument room rather than a generic SaaS template. |
 
 ---
 
@@ -52,27 +53,29 @@ Prior to this implementation, generic spiritual apps suffered from "AI template 
 The page is structured as a continuous diurnal and philosophical journey:
 
 ```
-[01. PRE-DAWN / USHA]      → Deep Ganga midnight indigo & starry sidereal field
+[01. OBSERVATORY CANVAS]    → Edge-to-edge Kashi atmosphere with live Varanasi video & subtle scrim
            ↓
-[02. SUNRISE / PRATAH]     → Warm solar amber (#E29A48) & living Panchang time ribbon
+[02. COSMIC NOW DIAL]       → Signature Digital Astronomical Dial with live Vedic Day Arc & needle marker
            ↓
-[03. DAYLIGHT / INTENT]    → Asymmetrical Kashi Vidwat Parishad workspace directory
+[03. DAYLIGHT / INTENT]     → Asymmetrical Kashi Vidwat Parishad workspace directory (5 pathways)
            ↓
-[04. SACRED SHIFT]         → "The Panchang describes the moment. Your Kundali describes your relationship with it."
+[04. SACRED SHIFT]          → "The Panchang describes the moment. Your Kundali describes your relationship with it."
            ↓
-[05. INDIVIDUAL GEOMETRY]  → Hand-inscribed North Indian Janma Patrika blueprint & 9-Graha dossier
+[05. INDIVIDUAL GEOMETRY]   → Hand-inscribed North Indian Janma Patrika blueprint & 9-Graha dossier
            ↓
-[06. LIFE TIMING]          → 120-Year Vimshottari Dasha River (Mahadasha → Antardasha → Pratyantardasha)
+[06. LIFE TIMING]           → 120-Year Vimshottari Dasha River (Mahadasha → Antardasha → Pratyantardasha)
            ↓
-[07. BRAND THEATRE]        → Historic 18th-century Man Singh Observatory (Man Mahal Ghat, Varanasi)
+[07. COMPUTATIONAL BOUNDARY] → Calculation is not interpretation: Algorithms calculate, Jyotishis interpret
            ↓
-[08. COMPUTATIONAL BOUNDARY] → What algorithms calculate vs What requires human scholar discernment
+[08. HUMAN WISDOM]          → Verified practicing Jyotish scholars, biographies, and specialties
            ↓
-[09. HUMAN WISDOM]         → Banaras Hindu University scholars, lineages, and masterclass videos
+[09. AARTI & STOTRA LIBRARY] → 50 verified sacred texts with Devanagari Sanskrit & phonetic transliteration
            ↓
-[10. COMMERCIAL OFFER]     → ₹199 focused written question model & 5-stage transparent pipeline
+[10. UPAYA & REMEDY ENGINE] → Classical planetary remedies with dynamic recommendation folios
            ↓
-[11. NOCTURNAL CLOSE]      → Quiet dark cosmic contemplation: "One question still on your mind?"
+[11. COMMERCIAL OFFER]      → ₹199 focused written question model & 5-stage transparent pipeline
+           ↓
+[12. INSTITUTIONAL FOOTER]  → Comprehensive 6-column deep Vedic information architecture
 ```
 
 ---

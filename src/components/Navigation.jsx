@@ -246,7 +246,7 @@ export default function Navigation({
 
       {/* Mobile Drawer with Contrast Controls */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-b border-black/[0.1] dark:border-white/[0.08] bg-[#F8F5EE] dark:bg-[#090B14] px-5 py-6 space-y-4">
+        <div id="mobile-nav-drawer" className="lg:hidden border-b border-black/[0.1] dark:border-white/[0.08] bg-[#F8F5EE] dark:bg-[#090B14] px-5 py-6 space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-black/[0.08] dark:border-white/[0.08]">
             <button
               onClick={handleLangSwitch}

@@ -94,12 +94,24 @@ export default function CosmicNow() {
           <span>🌇 Sunset {panchang.sunset}</span>
         </div>
 
-        {/* Arc Progress Bar */}
-        <div className="w-full bg-black/60 h-2 rounded-full overflow-hidden relative border border-white/10">
-          <div
-            className="h-full bg-gradient-to-r from-amber-500 via-purple-500 to-amber-500 transition-all duration-1000"
-            style={{ width: `${sunProgress}%` }}
-          />
+        {/* Arc Progress Bar with Indicator */}
+        <div className="relative w-full pt-3 pb-1 my-1">
+          <div className="w-full bg-black/60 h-2.5 rounded-full overflow-hidden relative border border-white/10">
+            <div
+              className="h-full bg-gradient-to-r from-amber-500 via-[#D4AF37] to-amber-600 transition-all duration-1000"
+              style={{ width: `${sunProgress}%` }}
+            />
+          </div>
+          {/* Needle Pin Marker */}
+          <div 
+            className="absolute top-0 -translate-x-1/2 flex flex-col items-center pointer-events-none transition-all duration-700 z-20"
+            style={{ left: `${Math.max(4, Math.min(96, sunProgress))}%` }}
+          >
+            <div className="px-1.5 py-0.5 rounded-full bg-[#D4AF37] text-[8px] font-mono font-bold text-black shadow-xs mb-0.5">
+              NOW
+            </div>
+            <div className="w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-t-[4px] border-t-[#D4AF37]" />
+          </div>
         </div>
         <div className="text-[10px] text-[#A78BFA] mt-2 font-mono">
           Current Vedic Period: <strong className="text-white">{panchang.tithi?.paksha} • {panchang.vara?.day}</strong>

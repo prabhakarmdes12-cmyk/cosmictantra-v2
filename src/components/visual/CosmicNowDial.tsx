@@ -33,51 +33,100 @@ export default function CosmicNowDial({
 
   if (!panchangData) return null;
 
-  // Real astronomical timings
-  const sunriseDate = panchangData.sunrise instanceof Date ? panchangData.sunrise : new Date(panchangData.sunrise || Date.now());
-  const sunsetDate = panchangData.sunset instanceof Date ? panchangData.sunset : new Date(panchangData.sunset || Date.now());
+  // Real astronomical sunrise and sunset strings
+  const sunriseStr = panchangData.sun?.sunrise || (panchangData.sunrise instanceof Date ? panchangData.sunrise.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '05:35 AM');
+  const sunsetStr = panchangData.sun?.sunset || (panchangData.sunset instanceof Date ? panchangData.sunset.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '06:18 PM');
   
-  const riseMs = sunriseDate.getTime();
-  const setMs = sunsetDate.getTime();
-  
-  // Format sunrise / sunset strings
-  const sunriseStr = sunriseDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
-  const sunsetStr = sunsetDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+  // Extract sunrise and sunset in minutes from midnight
+  let sunriseMinutes = 5 * 60 + 35; // default 05:35 AM
+  let sunsetMinutes = 18 * 60 + 18; // default 06:18 PM
 
-  // Calculate real solar progress along diurnal arc (0% at sunrise to 100% at sunset)
-  let solarArcPercent = 50;
-  let isDaytime = true;
-  let periodTag = 'DAYLIGHT (SHUBH HORA)';
+  if (panchangData.sun?.sunriseDate instanceof Date) {
+    sunriseMinutes = panchangData.sun.sunriseDate.getHours() * 60 + panchangData.sun.sunriseDate.getMinutes();
+  } else if (typeof sunriseStr === 'string') {
+    const match = sunriseStr.match(/(\d+):(\d+)\s*(AM|PM)?/i);
+    if (match) {
+      let h = parseInt(match[1], 10);
+      const m = parseInt(match[2], 10);
+      const ampm = match[3]?.toUpperCase();
+      if (ampm === 'PM' && h < 12) h += 12;
+      if (ampm === 'AM' && h === 12) h = 0;
+      sunriseMinutes = h * 60 + m;
+    }
+  }
+
+  if (panchangData.sun?.sunsetDate instanceof Date) {
+    sunsetMinutes = panchangData.sun.sunsetDate.getHours() * 60 + panchangData.sun.sunsetDate.getMinutes();
+  } else if (typeof sunsetStr === 'string') {
+    const match = sunsetStr.match(/(\d+):(\d+)\s*(AM|PM)?/i);
+    if (match) {
+      let h = parseInt(match[1], 10);
+      const m = parseInt(match[2], 10);
+      const ampm = match[3]?.toUpperCase();
+      if (ampm === 'PM' && h < 12) h += 12;
+      if (ampm === 'AM' && h === 12) h = 0;
+      sunsetMinutes = h * 60 + m;
+    }
+  }
+
+  // Current local time minutes from midnight
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  // Continuum Position Mapping:
+  // PRE-DAWN (0% to 25%) -> SUNRISE (25%) -> MIDDAY (50%) -> SUNSET (75%) -> NIGHT (75% to 100%)
+  let solarArcPercent = 20;
+  let activeMilestone = 'PRE-DAWN';
+  let isDaytime = false;
+  let periodTag = 'USHA KALA (PRE-DAWN)';
   let isWarning = false;
 
-  if (nowMs < riseMs) {
+  if (currentMinutes < sunriseMinutes) {
+    // Night to Pre-Dawn transition before sunrise (00:00 -> sunrise)
     isDaytime = false;
-    solarArcPercent = Math.max(0, Math.min(100, ((nowMs - (riseMs - 86400000 / 2)) / (riseMs - (riseMs - 86400000 / 2))) * 100));
+    solarArcPercent = Math.max(5, (currentMinutes / sunriseMinutes) * 25);
+    activeMilestone = 'PRE-DAWN';
     periodTag = 'USHA KALA (PRE-DAWN)';
-  } else if (nowMs > setMs) {
-    isDaytime = false;
-    solarArcPercent = 100;
-    periodTag = 'SANDHYA / RATRI (NIGHT)';
-  } else {
+  } else if (currentMinutes <= sunsetMinutes) {
+    // Daytime progression between sunrise (25%) and sunset (75%)
     isDaytime = true;
-    solarArcPercent = Math.max(0, Math.min(100, ((nowMs - riseMs) / (setMs - riseMs)) * 100));
-    
-    // Check if in Rahu Kaal or Abhijit Muhurat
-    if (panchangData.timings?.rahuStart && panchangData.timings?.rahuEnd) {
-      const rStart = new Date(panchangData.timings.rahuStart).getTime();
-      const rEnd = new Date(panchangData.timings.rahuEnd).getTime();
-      if (nowMs >= rStart && nowMs <= rEnd) {
-        periodTag = 'RAHU KAAL (AVOID NEW BEGINNINGS)';
-        isWarning = true;
-      }
+    const dayProgress = (currentMinutes - sunriseMinutes) / Math.max(1, (sunsetMinutes - sunriseMinutes));
+    solarArcPercent = 25 + dayProgress * 50;
+
+    if (currentMinutes < sunriseMinutes + 45) {
+      activeMilestone = 'SUNRISE';
+      periodTag = 'PRATAH SANDHYA (SUNRISE)';
+    } else if (currentMinutes > sunsetMinutes - 45) {
+      activeMilestone = 'SUNSET';
+      periodTag = 'SAYAHNA SANDHYA (SUNSET)';
+    } else {
+      activeMilestone = 'MIDDAY';
+      periodTag = 'DAYLIGHT (SHUBH HORA)';
     }
-    
-    if (!isWarning && panchangData.timings?.abhijitStart && panchangData.timings?.abhijitEnd) {
-      const aStart = new Date(panchangData.timings.abhijitStart).getTime();
-      const aEnd = new Date(panchangData.timings.abhijitEnd).getTime();
-      if (nowMs >= aStart && nowMs <= aEnd) {
-        periodTag = 'ABHIJIT MUHURAT (HIGH HARMONY)';
-      }
+  } else {
+    // Post-sunset to Midnight (sunset to 24:00)
+    isDaytime = false;
+    const nightProgress = (currentMinutes - sunsetMinutes) / Math.max(1, (1440 - sunsetMinutes));
+    solarArcPercent = Math.min(95, 75 + nightProgress * 25);
+    activeMilestone = 'NIGHT';
+    periodTag = 'SANDHYA / RATRI (NIGHT)';
+  }
+
+  // Check if current time falls in Rahu Kaal window
+  if (panchangData.timings?.rahuStart && panchangData.timings?.rahuEnd) {
+    const rStart = new Date(panchangData.timings.rahuStart).getTime();
+    const rEnd = new Date(panchangData.timings.rahuEnd).getTime();
+    if (nowMs >= rStart && nowMs <= rEnd) {
+      periodTag = 'RAHU KAAL (AVOID NEW BEGINNINGS)';
+      isWarning = true;
+    }
+  }
+
+  if (!isWarning && panchangData.timings?.abhijitStart && panchangData.timings?.abhijitEnd) {
+    const aStart = new Date(panchangData.timings.abhijitStart).getTime();
+    const aEnd = new Date(panchangData.timings.abhijitEnd).getTime();
+    if (nowMs >= aStart && nowMs <= aEnd) {
+      periodTag = 'ABHIJIT MUHURAT (HIGH HARMONY)';
     }
   }
 
@@ -148,31 +197,64 @@ export default function CosmicNowDial({
       {/* Signature Vedic Day Arc Instrument */}
       <div className="relative z-10 p-4 sm:p-5 rounded-2xl bg-white/90 dark:bg-[#070910]/95 border border-[#8E6F1D]/20 dark:border-[#D4AF37]/30 mb-4.5 shadow-inner">
         <div className="flex items-center justify-between text-[10px] font-mono-data text-[#696256] dark:text-[#A6A095] mb-2 uppercase tracking-widest">
-          <span className="flex items-center gap-1"><Sun className="w-3 h-3 text-amber-500" /> Rise {sunriseStr}</span>
-          <span className="font-bold text-[#1C1917] dark:text-[#F5F2EB]">{isDaytime ? 'Diurnal Solar Transit' : 'Nocturnal Transit'}</span>
-          <span className="flex items-center gap-1"><Moon className="w-3 h-3 text-indigo-400" /> Set {sunsetStr}</span>
+          <span className="flex items-center gap-1 font-semibold text-[#C26E22] dark:text-[#F0A554]">
+            <Sun className="w-3.5 h-3.5 text-amber-500" /> Rise {sunriseStr}
+          </span>
+          <span className="font-bold text-[#1C1917] dark:text-[#F5F2EB] px-2 py-0.5 rounded bg-black/[0.04] dark:bg-white/[0.06]">
+            {isDaytime ? '☀ Diurnal Solar Transit' : '☾ Nocturnal Transit'}
+          </span>
+          <span className="flex items-center gap-1 font-semibold text-[#4F46E5] dark:text-[#A5B4FC]">
+            <Moon className="w-3.5 h-3.5 text-indigo-400" /> Set {sunsetStr}
+          </span>
         </div>
 
-        {/* Arc Progress Track */}
-        <div className="relative w-full h-3 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden border border-black/10 dark:border-white/10">
-          {/* Active Period Gradient */}
-          <div
-            className={`h-full transition-all duration-700 ${
-              isWarning 
-                ? 'bg-gradient-to-r from-amber-500 via-rose-500 to-amber-600' 
-                : 'bg-gradient-to-r from-[#C26E22] via-[#D4AF37] to-[#8E6F1D]'
-            }`}
-            style={{ width: `${solarArcPercent}%` }}
-          />
+        {/* Current Time Needle Track Container */}
+        <div className="relative w-full pt-4 pb-2">
+          {/* Timeline Bar Track */}
+          <div className="relative w-full h-3 rounded-full bg-black/10 dark:bg-white/10 p-0.5 border border-black/15 dark:border-white/15">
+            {/* Active Progress Fill */}
+            <div
+              className={`h-full rounded-full transition-all duration-700 ${
+                isWarning 
+                  ? 'bg-gradient-to-r from-amber-500 via-rose-500 to-amber-600' 
+                  : 'bg-gradient-to-r from-[#C26E22] via-[#D4AF37] to-[#8E6F1D]'
+              }`}
+              style={{ width: `${solarArcPercent}%` }}
+            />
+          </div>
+
+          {/* Current Time Indicator Needle Pin */}
+          <div 
+            className="absolute top-0 -translate-x-1/2 flex flex-col items-center pointer-events-none transition-all duration-700 z-30"
+            style={{ left: `${Math.max(4, Math.min(96, solarArcPercent))}%` }}
+          >
+            {/* Live Indicator Pill Label */}
+            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-[#1C1917] dark:bg-[#F5F2EB] text-[8.5px] font-mono-data font-bold text-white dark:text-[#06070B] shadow-md whitespace-nowrap mb-0.5 border border-[#D4AF37]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B] animate-ping" />
+              <span>NOW {liveTime ? liveTime.slice(0, 5) : ''}</span>
+            </div>
+            {/* Needle Arrow */}
+            <div className="w-0 h-0 border-l-[3.5px] border-l-transparent border-r-[3.5px] border-r-transparent border-t-[5px] border-t-[#1C1917] dark:border-t-[#F5F2EB]" />
+          </div>
         </div>
 
-        {/* 5 Vedic Diurnal Milestones */}
-        <div className="flex items-center justify-between text-[8.5px] sm:text-[9.5px] font-mono-data text-[#857E74] dark:text-[#8E877B] mt-2 px-0.5">
-          <span>PRE-DAWN</span>
-          <span>SUNRISE</span>
-          <span className="font-bold text-[#8E6F1D] dark:text-[#F0C968]">MIDDAY</span>
-          <span>SUNSET</span>
-          <span>NIGHT</span>
+        {/* 5 Vedic Diurnal Milestones with Active Highlighting */}
+        <div className="grid grid-cols-5 text-center text-[8px] sm:text-[9px] font-mono-data mt-1.5 px-0.5 gap-1">
+          <span className={`py-1 rounded-md transition-all ${activeMilestone === 'PRE-DAWN' ? 'font-bold text-[#8E6F1D] dark:text-[#F0C968] bg-[#D4AF37]/20 border border-[#D4AF37]/40 shadow-xs' : 'text-[#857E74] dark:text-[#8E877B] opacity-70'}`}>
+            PRE-DAWN
+          </span>
+          <span className={`py-1 rounded-md transition-all ${activeMilestone === 'SUNRISE' ? 'font-bold text-[#8E6F1D] dark:text-[#F0C968] bg-[#D4AF37]/20 border border-[#D4AF37]/40 shadow-xs' : 'text-[#857E74] dark:text-[#8E877B] opacity-70'}`}>
+            SUNRISE
+          </span>
+          <span className={`py-1 rounded-md transition-all ${activeMilestone === 'MIDDAY' ? 'font-bold text-[#8E6F1D] dark:text-[#F0C968] bg-[#D4AF37]/20 border border-[#D4AF37]/40 shadow-xs' : 'text-[#857E74] dark:text-[#8E877B] opacity-70'}`}>
+            MIDDAY
+          </span>
+          <span className={`py-1 rounded-md transition-all ${activeMilestone === 'SUNSET' ? 'font-bold text-[#8E6F1D] dark:text-[#F0C968] bg-[#D4AF37]/20 border border-[#D4AF37]/40 shadow-xs' : 'text-[#857E74] dark:text-[#8E877B] opacity-70'}`}>
+            SUNSET
+          </span>
+          <span className={`py-1 rounded-md transition-all ${activeMilestone === 'NIGHT' ? 'font-bold text-[#8E6F1D] dark:text-[#F0C968] bg-[#D4AF37]/20 border border-[#D4AF37]/40 shadow-xs' : 'text-[#857E74] dark:text-[#8E877B] opacity-70'}`}>
+            NIGHT
+          </span>
         </div>
 
         {/* Live Active Period Badge */}
