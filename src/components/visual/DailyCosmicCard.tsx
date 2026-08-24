@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Calendar, Star, Clock, ArrowRight, Share2, Plus, AlertTriangle, Award } from 'lucide-react';
+import AstronomicalProofDrawer from './AstronomicalProofDrawer';
 
 interface DailyPrediction {
   date: string;
@@ -179,6 +180,18 @@ export default function DailyCosmicCard({
         >
           <Share2 className="w-3.5 h-3.5" /> SHARE ON WHATSAPP
         </button>
+      </div>
+
+      {/* Astronomical Proof Drawer */}
+      <div className="px-6 pb-6">
+        <AstronomicalProofDrawer
+          julianDay={2460523.5}
+          ayanamsha="24° 16' 42\""
+          localSiderealTime="14h 32m 18s"
+          coordinates="25.5941°N, 85.1376°E"
+          tithi={prediction.tithi || 'Shukla Ekadashi'}
+          nakshatra={prediction.moonNakshatra}
+        />
       </div>
     </div>
   );
