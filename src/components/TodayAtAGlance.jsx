@@ -264,15 +264,26 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
               <button
                 onClick={() => {
                   chitiSensory.playTick();
-                  navigator.clipboard.writeText(
-                    `✨ CosmicTantra Kashi Vedic Time (${panchangData.city})\n• Tithi: ${panchangData.tithi.fullName}\n• Nakshatra: ${panchangData.nakshatra.name}\n• Rahu Kaal: ${panchangData.timings.rahuKalam}\n• Abhijit: ${panchangData.timings.abhijitMuhurat}\nCalculated at cosmictantra.com`
-                  );
-                  alert('Vedic daily card copied to clipboard for WhatsApp & Stories!');
+                  const shareText = `✨ CosmicTantra Kashi Panchang (${panchangData.city})\n• Tithi: ${panchangData.tithi.fullName}\n• Nakshatra: ${panchangData.nakshatra.name}\n• Rahu Kaal: ${panchangData.timings.rahuKalam}\n• Abhijit Muhurat: ${panchangData.timings.abhijitMuhurat}\n\nSee full Vedic ephemeris: https://cosmictantra.chiti.tech`;
+                  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, '_blank');
                   setShowShareModal(false);
                 }}
-                className="flex-1 py-2.5 rounded-lg bg-[#826315] dark:bg-[#D4AF37] text-white dark:text-[#060709] font-bold text-xs uppercase hover:bg-[#965B18] dark:hover:bg-[#E5C378] transition-colors"
+                className="flex-1 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#1EBE57] text-white font-bold text-xs uppercase transition-colors flex items-center justify-center gap-1.5 shadow-sm"
               >
-                Copy for WhatsApp
+                <span>Share on WhatsApp</span>
+              </button>
+              <button
+                onClick={() => {
+                  chitiSensory.playTick();
+                  navigator.clipboard.writeText(
+                    `✨ CosmicTantra Kashi Vedic Time (${panchangData.city})\n• Tithi: ${panchangData.tithi.fullName}\n• Nakshatra: ${panchangData.nakshatra.name}\n• Rahu Kaal: ${panchangData.timings.rahuKalam}\n• Abhijit: ${panchangData.timings.abhijitMuhurat}\nhttps://cosmictantra.chiti.tech`
+                  );
+                  alert('Vedic daily card copied to clipboard!');
+                  setShowShareModal(false);
+                }}
+                className="px-3.5 py-2.5 rounded-xl bg-[#826315] dark:bg-[#D4AF37] text-white dark:text-[#060709] font-bold text-xs uppercase hover:bg-[#965B18] dark:hover:bg-[#E5C378] transition-colors"
+              >
+                Copy Text
               </button>
               <button
                 onClick={() => {
