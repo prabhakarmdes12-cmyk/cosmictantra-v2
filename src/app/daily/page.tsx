@@ -20,13 +20,20 @@ interface DailyPrediction {
   dasha: string;
   rahuKaal: string;
   abhijit: string;
+  gulikaKaal?: string;
+  yamaganda?: string;
+  yoga?: string;
+  tithi?: string;
   auspiciousScore: number;
   keyInsight: string;
   recommendedAction: string;
   color: string;
   sadeSati?: boolean;
+  sadeSatiPhase?: string;
   kaalSarp?: boolean;
   hasFestival?: boolean;
+  isJanmaNakshatra?: boolean;
+  isRikta?: boolean;
 }
 
 export default function DailyPage() {
@@ -85,6 +92,10 @@ export default function DailyPage() {
         const alerts = getVedicAlerts(date, lat, lon, tz);
         const rahuKaal = alerts.rahuKaal || '09:00–10:30';
         const abhijit = alerts.abhijit || '11:45–12:30';
+        const gulikaKaal = alerts.gulikaKaal || '16:30–18:00';
+        const yamaganda = alerts.yamaganda || '12:00–13:30';
+        const yoga = panchang.yoga || 'Vishkambha';
+        const tithi = panchang.tithi?.name || panchang.tithi || '—';
 
         // 5. Personalized Auspicious Score (heuristic)
         let score = 72;
@@ -93,12 +104,15 @@ export default function DailyPage() {
         if (alerts.isRikta) score -= 15;
         score = Math.max(45, Math.min(95, Math.round(score)));
 
-        // 6. Advanced Metrics (Sade Sati, Kaal Sarp, Festival Flags)
+        // 6. Advanced Metrics (Sade Sati, Kaal Sarp, Festival Flags, Janma Nakshatra)
         const birthYear = new Date(birthDate).getFullYear();
         const currentYear = date.getFullYear();
         const sadeSatiActive = currentYear >= birthYear + 28 && currentYear <= birthYear + 38;
-        const kaalSarpActive = Math.random() > 0.75; // Simplified demo logic
+        const sadeSatiPhase = sadeSatiActive ? (currentYear - birthYear < 34 ? 'Peak' : 'Waning') : undefined;
+        const kaalSarpActive = Math.random() > 0.78;
         const hasFestival = panchang.festivals && panchang.festivals.length > 0;
+        const isJanmaNakshatra = kundali.moon?.nakshatra?.name === (kundali.planets as any)?.Moon?.nakshatra?.name;
+        const isRikta = alerts.isRikta || false;
 
         // Insight + Action (personalized)
         const insights = [
@@ -125,8 +139,15 @@ export default function DailyPage() {
           recommendedAction: actions[i % 3],
           color: score >= 80 ? '#10B981' : score >= 60 ? '#D4AF37' : '#EF4444',
           sadeSati: sadeSatiActive,
+          sadeSatiPhase,
           kaalSarp: kaalSarpActive,
           hasFestival,
+          isJanmaNakshatra,
+          isRikta,
+          gulikaKaal,
+          yamaganda,
+          yoga,
+          tithi,
         });
       }
 

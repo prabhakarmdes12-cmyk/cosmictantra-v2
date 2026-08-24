@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Calendar, Star, Clock, ArrowRight, Share2, Plus } from 'lucide-react';
+import { Calendar, Star, Clock, ArrowRight, Share2, Plus, AlertTriangle, Award } from 'lucide-react';
 
 interface DailyPrediction {
   date: string;
@@ -11,13 +11,20 @@ interface DailyPrediction {
   dasha: string;
   rahuKaal: string;
   abhijit: string;
+  gulikaKaal?: string;
+  yamaganda?: string;
+  yoga?: string;
+  tithi?: string;
   auspiciousScore: number;
   keyInsight: string;
   recommendedAction: string;
   color: string;
   sadeSati?: boolean;
+  sadeSatiPhase?: string;
   kaalSarp?: boolean;
   hasFestival?: boolean;
+  isJanmaNakshatra?: boolean;
+  isRikta?: boolean;
 }
 
 interface DailyCosmicCardProps {
@@ -81,25 +88,63 @@ export default function DailyCosmicCard({
           <div className="font-semibold mt-0.5">{prediction.dasha}</div>
         </div>
         <div>
-          <div className="text-[#857E74] text-xs tracking-wider">RAHU KAAL</div>
-          <div className="font-mono font-semibold mt-0.5 text-rose-600">{prediction.rahuKaal}</div>
+          <div className="text-[#857E74] text-xs tracking-wider">TITHI</div>
+          <div className="font-semibold mt-0.5">{prediction.tithi || '—'}</div>
         </div>
       </div>
 
-      {/* Advanced Metrics Row (Sade Sati, Kaal Sarp, Festival) */}
-      {(prediction.sadeSati || prediction.kaalSarp || prediction.hasFestival) && (
-        <div className="px-6 pb-5 flex flex-wrap gap-2 text-[10px]">
-          {prediction.sadeSati && (
-            <div className="px-3 py-1 rounded-full bg-amber-100 text-amber-800 font-medium">Sade Sati Active</div>
-          )}
-          {prediction.kaalSarp && (
-            <div className="px-3 py-1 rounded-full bg-rose-100 text-rose-700 font-medium">Kaal Sarp Influence</div>
-          )}
-          {prediction.hasFestival && (
-            <div className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 font-medium">Festival Day</div>
-          )}
+      {/* Inauspicious Windows */}
+      <div className="px-6 pb-5 grid grid-cols-2 gap-3 text-xs">
+        <div className="rounded-2xl bg-rose-50 dark:bg-rose-950/30 p-3">
+          <div className="flex items-center gap-1.5 text-rose-600 font-medium mb-1">
+            <Clock className="w-3.5 h-3.5" /> RAHU KAAL
+          </div>
+          <div className="font-mono text-rose-700 dark:text-rose-400">{prediction.rahuKaal}</div>
         </div>
-      )}
+        <div className="rounded-2xl bg-rose-50 dark:bg-rose-950/30 p-3">
+          <div className="flex items-center gap-1.5 text-rose-600 font-medium mb-1">
+            <Clock className="w-3.5 h-3.5" /> GULIKA KAAL
+          </div>
+          <div className="font-mono text-rose-700 dark:text-rose-400">{prediction.gulikaKaal || '—'}</div>
+        </div>
+      </div>
+
+      {/* Advanced Metrics Badges */}
+      <div className="px-6 pb-5 flex flex-wrap gap-2 text-[10px]">
+        {prediction.sadeSati && (
+          <div className="px-3 py-1 rounded-full bg-amber-100 text-amber-800 font-medium flex items-center gap-1">
+            <AlertTriangle className="w-3 h-3" /> Sade Sati {prediction.sadeSatiPhase || ''}
+          </div>
+        )}
+        {prediction.kaalSarp && (
+          <div className="px-3 py-1 rounded-full bg-rose-100 text-rose-700 font-medium flex items-center gap-1">
+            <AlertTriangle className="w-3 h-3" /> Kaal Sarp Yoga
+          </div>
+        )}
+        {prediction.isJanmaNakshatra && (
+          <div className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 font-medium flex items-center gap-1">
+            <Award className="w-3 h-3" /> Janma Nakshatra Day
+          </div>
+        )}
+        {prediction.hasFestival && (
+          <div className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 font-medium">Festival / Vrat</div>
+        )}
+        {prediction.isRikta && (
+          <div className="px-3 py-1 rounded-full bg-orange-100 text-orange-700 font-medium">Rikta Tithi</div>
+        )}
+      </div>
+
+      {/* Yoga & Abhijit */}
+      <div className="px-6 pb-5 grid grid-cols-2 gap-4 text-xs border-t border-[#D4AF37]/10 pt-4">
+        <div>
+          <div className="text-[#857E74] text-xs tracking-wider">YOGA</div>
+          <div className="font-semibold">{prediction.yoga || '—'}</div>
+        </div>
+        <div>
+          <div className="text-[#857E74] text-xs tracking-wider">ABHIJIT MUHURAT</div>
+          <div className="font-mono font-semibold text-emerald-600">{prediction.abhijit}</div>
+        </div>
+      </div>
 
       {/* Insight */}
       <div className="px-6 pb-5">
