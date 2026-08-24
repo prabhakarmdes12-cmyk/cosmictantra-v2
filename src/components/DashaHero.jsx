@@ -52,14 +52,14 @@ export default function DashaHero({ kundaliData, onOpenConsultation, lang = 'en'
         </div>
 
         {/* Signature 03: Full-Width 120-Year Vimshottari Dasha River */}
-        <div className="rounded-2xl bg-[#FFFFFF] dark:bg-[#0B0C10] border border-black/[0.08] dark:border-white/[0.08] p-6 mb-8 overflow-x-auto shadow-xl transition-colors duration-300">
-          <div className="text-[10px] font-mono-data uppercase tracking-widest text-[#857E74] dark:text-[#6B6760] mb-4 flex items-center justify-between min-w-[760px]">
+        <div className="w-full max-w-full rounded-2xl bg-[#FFFFFF] dark:bg-[#0B0C10] border border-black/[0.08] dark:border-white/[0.08] p-4 sm:p-6 mb-8 shadow-xl transition-colors duration-300 min-w-0 overflow-hidden">
+          <div className="text-[10px] font-mono-data uppercase tracking-widest text-[#857E74] dark:text-[#6B6760] mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
             <span>{t.riverTitle}</span>
             <span>{t.moonLon}: {moonLongitude.toFixed(2)}°</span>
           </div>
 
           {/* 9 Mahadasha Timeline Blocks */}
-          <div className="grid grid-cols-9 gap-2 min-w-[760px] font-mono-data">
+          <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-9 gap-2 w-full font-mono-data">
             {dashaData.mahadashas.map((md) => {
               const isSelected = selectedMD.lord === md.lord;
               const lordDisplayName = lang === 'hi' ? md.lordHi : md.lord;

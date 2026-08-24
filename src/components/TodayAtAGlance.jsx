@@ -77,14 +77,14 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
         </div>
 
         {/* Signature 01: Varanasi Stepped Ghat Diurnal Timeline */}
-        <div className="rounded-2xl bg-[#FFFFFF] dark:bg-[#090B14] border border-black/[0.1] dark:border-[#D4AF37]/30 p-6 mb-10 overflow-x-auto shadow-xl transition-colors duration-250">
-          <div className="text-[10px] font-mono-data uppercase tracking-widest text-[#696256] dark:text-[#8E887E] mb-4 flex items-center justify-between min-w-[720px] font-bold">
+        <div className="w-full max-w-full rounded-2xl bg-[#FFFFFF] dark:bg-[#090B14] border border-black/[0.1] dark:border-[#D4AF37]/30 p-4 sm:p-6 mb-10 shadow-xl transition-colors duration-250 min-w-0 overflow-hidden">
+          <div className="text-[10px] font-mono-data uppercase tracking-widest text-[#696256] dark:text-[#8E887E] mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-1 font-bold">
             <span className="text-[#826315] dark:text-[#E5C378]">{t.diurnalTitle} — {panchangData.city}</span>
             <span>{t.dashashwamedh}</span>
           </div>
 
           {/* Time Sequence Blocks */}
-          <div className="grid grid-cols-5 gap-3 min-w-[720px]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 w-full">
             
             {/* Sunrise */}
             <div className="p-4 rounded-xl bg-[#FAF7F2] dark:bg-[#06070C] border border-[#A6461D]/30 dark:border-[#E2825B]/35">

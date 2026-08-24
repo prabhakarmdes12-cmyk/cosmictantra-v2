@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildICS } from '@/lib/vedicAlerts';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * ICS export for the personal Vedic calendar (no DB, no auth — stateless).
  * Query: name, birthDate, birthTime, lat, lng, tz, birthCity, days (default 90).
