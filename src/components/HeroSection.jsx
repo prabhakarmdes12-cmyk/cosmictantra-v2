@@ -30,7 +30,8 @@ export default function HeroSection({
         >
           <source src="/kashi-hero-video.mp4" type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#FAF7F2]/60 to-[#FAF7F2]/95 dark:via-[#060709]/60 dark:to-[#060709]/95 lg:bg-gradient-to-r lg:from-[#FAF7F2]/95 lg:via-[#FAF7F2]/75 lg:to-[#FAF7F2]/90 lg:dark:from-[#060709]/95 lg:dark:via-[#060709]/70 lg:dark:to-[#060709]/92" />
+        {/* Pandit-Ready Dawn Illumination (Sacred Banaras Morning Light) */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#FFFDF9] via-[#FAF7F2] to-[#F5EEDC] dark:via-[#060709]/60 dark:to-[#060709]/95 lg:bg-gradient-to-r lg:from-[#FFFDF9]/95 lg:via-[#FAF7F2]/75 lg:to-[#F5EEDC]/90 lg:dark:from-[#060709]/95 lg:dark:via-[#060709]/70 lg:dark:to-[#060709]/92" />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
