@@ -1,0 +1,26 @@
+# CosmicTantra — Vedic Intelligence & Technology-Assisted Jyotish Operations
+
+> CosmicTantra is a high-precision Vedic astronomical intelligence platform and technology-assisted Jyotish service. It operates at the intersection of Sidereal Ephemeris mathematics, Lahiri Ayanamsha precession correction, and human-verified traditional scholar consultations.
+
+## Core Capabilities
+
+- **Daily Panchang & Ephemeris Engine**: Accurate sidereal calculation of Tithi, Nakshatra, Yoga, Karana, Rahu Kaal, Yamaganda, Gulika Kaal, Abhijit Muhurat, Hora, and Choghadiya for any geographic latitude and longitude.
+- **2026 Muhurat Discovery**: Algorithmic electional astrology (Muhurat) for Vivah (Marriage), Griha Pravesh (Housewarming), Business Launch, Property Registry, Namkaran, and Vehicle Delivery.
+- **Janma Kundali & Vimshottari Dasha**: North Indian SVG Rasi chart generation, Lagna calculation, 9 Grahas in 12 Bhavas, and 120-year hierarchical Vimshottari Dasha timeline (Mahadasha, Antardasha, Pratyantardasha).
+- **3D Navagraha Sky Observatory**: Interactive sidereal ecliptic model displaying the 9 Grahas (Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn, Rahu, Ketu) and 27 Nakshatras based on 18th-century stone Jantar Mantar architecture.
+- **5-Stage Verified Practitioner Pipeline**: Technology-assisted consultation service connecting users with traditional Jyotish scholars in Varanasi, Haridwar, Kanchipuram, and Ujjain.
+
+## Calculation Philosophy
+
+- **Ayanamsha**: Chitra Paksha (Lahiri Standard) with ±0.01° precision.
+- **House System**: Equal House / Sripati Padas.
+- **Chart Style**: North Indian Diamond Chart (Lagna-centric Rasi Chakra).
+- **Data Governance**: Computation is strictly decoupled from interpretation. All calculations are immutable mathematical invariants.
+
+## Key Services & URLs
+
+- **Homepage & Ephemeris Engine**: https://cosmictantra.chiti.tech
+- **Ask a Jyotishi (Written Consultation)**: https://cosmictantra.chiti.tech/ask
+- **Case Audit & Scholar Operations**: https://cosmictantra.chiti.tech/astrology/cases
+- **Verified Scholars Directory**: https://cosmictantra.chiti.tech/astrology/practitioners
+- **Practitioner Onboarding**: https://cosmictantra.chiti.tech/pandit
