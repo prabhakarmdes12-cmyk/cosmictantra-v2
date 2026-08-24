@@ -1,0 +1,180 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum OnboardingStatus {
+  INVITED
+  IN_PROGRESS
+  COMPLETED
+  PAUSED
+}
+
+enum AstrologySpecialty {
+  KUNDALI
+  MARRIAGE
+  CAREER
+  BUSINESS
+  REMEDIES
+  VASTU
+  SPIRITUAL
+  PANCHANG
+  NUMEROLOGY
+  OTHER
+}
+
+enum ConsultationStatus {
+  DRAFT
+  PAYMENT_PENDING
+  PAID
+  CALCULATING
+  AI_DRAFT_READY
+  ASSIGNED
+  PANDIT_REVIEW
+  APPROVED
+  DELIVERY_READY
+  DELIVERED
+  CALCULATION_FAILED
+  AI_FAILED
+  REVIEW_REJECTED
+  DELIVERY_FAILED
+  REFUNDED
+}
+
+model AstrologyPractitionerInvite {
+  id           String    @id @default(uuid())
+  token        String    @unique
+  projectId    String    @default("cosmic-tantra")
+  name         String
+  phone        String
+  email        String?
+  languages    String[]  @default(["Hindi", "English"])
+  internalNote String?
+  expiresAt    DateTime
+  usedAt       DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([token])
+  @@index([phone])
+}
+
+model AstrologyConsultant {
+  id                   String             @id @default(uuid())
+  publicId             String?            @default(uuid())
+  projectId            String             @default("cosmic-tantra")
+  name                 String?            // Legacy field
+  photo                String?            // Legacy field
+  fullName             String             @default("Pandit Ji")
+  displayName          String             @default("Pandit Ji")
+  phone                String             @default("")
+  email                String?
+  city                 String             @default("Varanasi")
+  state                String             @default("Uttar Pradesh")
+  languages            String[]           @default(["Hindi", "English"])
+  expertise            String[]           @default(["Kundali"])
+  yearsExperience      Int                @default(0)
+  experience           String?            // Legacy field
+  location             String?            // Legacy field
+  bio                  String?            // Legacy field
+  biography            String?
+  tradition            String?
+  qualifications       String?
+  profilePhoto         String?            @default("🧙")
+  specialty            AstrologySpecialty @default(KUNDALI)
+  pricePerSession      Int                @default(199)
+  durationMinutes      Int                @default(30)
+  badges               String[]           @default(["Verified Practitioner"])
+  rating               Float              @default(5.0)
+  reviewCount          Int                @default(0)
+  isVerified           Boolean            @default(true)
+  onboardingStatus     OnboardingStatus   @default(COMPLETED)
+  isActive             Boolean            @default(true)
+  aiReviewConsent      Boolean            @default(true)
+  videoContentInterest Boolean            @default(false)
+  onboardedAt          DateTime           @default(now())
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  auditLogs     AstrologyAuditLog[]
+  consultations AstrologyConsultation[]
+
+  @@index([projectId])
+  @@index([phone])
+  @@index([onboardingStatus])
+}
+
+model AstrologyConsultation {
+  id                   String             @id @default(uuid())
+  publicId             String             @unique @default(uuid())
+  projectId            String             @default("cosmic-tantra")
+  practitionerId       String?
+  isTestCase           Boolean            @default(false)
+  orderType            String             @default("STANDARD_PAID") // STANDARD_PAID, INTERNAL_TEST
+  status               ConsultationStatus @default(DRAFT)
+  
+  // Customer Inputs
+  customerName         String
+  customerPhone        String?
+  customerEmail        String?
+  customerQuestion     String
+  birthDate            DateTime
+  birthTime            String             @default("10:30")
+  birthCity            String             @default("Patna")
+  birthLat             Float              @default(25.5941)
+  birthLon             Float              @default(85.1376)
+  timezone             Float              @default(5.5)
+
+  // Immutable Calculation Output
+  calculationSnapshot  Json?
+  calculationVersion   String?            @default("v34")
+
+  // AI Working Draft Output
+  aiDraft              String?
+  aiModel              String?            @default("claude-sonnet-4-20250514")
+  promptVersion        String?            @default("v34")
+
+  // Human Practitioner Verified Output
+  practitionerFinal    String?
+  practitionerNotes    String?
+  approvedBy           String?
+  approvedAt           DateTime?
+
+  // Payment & Delivery
+  paymentProvider      String?            @default("INTERNAL_TEST")
+  paymentStatus        String             @default("PENDING")
+  amount               Int                @default(199)
+  deliveryChannel      String?            @default("WHATSAPP")
+  deliveredAt          DateTime?
+
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  practitioner AstrologyConsultant?  @relation(fields: [practitionerId], references: [id], onDelete: SetNull)
+  auditLogs    AstrologyAuditLog[]
+
+  @@index([projectId, status])
+  @@index([practitionerId])
+  @@index([isTestCase])
+}
+
+model AstrologyAuditLog {
+  id             String   @id @default(uuid())
+  practitionerId String?
+  consultationId String?
+  eventType      String
+  actorType      String   @default("SYSTEM") // ADMIN, PANDIT, SYSTEM, CUSTOMER
+  payload        Json?
+  createdAt      DateTime @default(now())
+
+  practitioner   AstrologyConsultant?   @relation(fields: [practitionerId], references: [id], onDelete: SetNull)
+  consultation   AstrologyConsultation? @relation(fields: [consultationId], references: [id], onDelete: SetNull)
+
+  @@index([practitionerId])
+  @@index([consultationId])
+  @@index([eventType])
+}
