@@ -5,16 +5,22 @@
 
 export const TRANSLATIONS = {
   en: {
-    brandSubtitle: 'Vedic Precision • 2026',
+    brandSubtitle: 'VEDIC PRECISION',
     nav: {
       today: 'Panchang',
       muhurat: 'Muhurat',
       kundali: 'Kundali',
+      jyotishi: 'Jyotishi',
+      explore: 'Explore',
       dasha: 'Dasha',
       festivals: 'Calendar',
       scholars: 'Scholars',
       observatory: 'Observatory',
-      askJyotishi: 'Ask a Jyotishi',
+      milan: 'Kundali Milan',
+      numerology: 'Numerology',
+      tools: 'Tools',
+      methodology: 'Methodology',
+      askJyotishi: 'Ask a Jyotishi →',
       changeLocation: 'Change Location',
       search: 'Search',
       capability: 'Capability Registry',
@@ -24,7 +30,7 @@ export const TRANSLATIONS = {
       dashaChapters: 'Dasha Chapters',
       vedicCalendar: 'Vedic Calendar',
       practicingScholars: 'Practicing Scholars',
-      askWritten: 'Request Scholarly Written Folio (शुभ दक्षिणा ₹५०१)'
+      askWritten: 'Request Scholarly Written Folio'
     },
     hero: {
       kashiBadge: 'Kashi Vedic Timekeeper',
@@ -32,11 +38,13 @@ export const TRANSLATIONS = {
       headline1: 'Vedic Precision.',
       headline2: 'Human Wisdom.',
       subtitle: 'Understand the day. Understand your chart. Ask when it matters.',
-      description: 'Rooted in the unbroken astronomical scholarship of Varanasi. Location-aware Vedic time, deterministic sidereal chart ephemeris, and focused written guidance reviewed by practicing Jyotish scholars.',
-      createKundali: 'Create My Kundali',
-      seePanchang: "See Today's Panchang",
-      askScholar: 'Ask a Scholar →',
-      footerNote: 'Chitra Paksha (Lahiri) Sidereal Mathematics. Banaras Hindu University scholarly tradition.',
+      description: 'Built on classical Jyotish calculation methods, location-aware Vedic time, Lahiri sidereal calculations, and interpretation reviewed by practicing Jyotish professionals.',
+      seePanchang: "SEE TODAY'S PANCHANG →",
+      createKundali: 'CREATE MY KUNDALI →',
+      askScholar: 'Ask a Jyotishi →',
+      yourVedicDay: 'YOUR VEDIC DAY',
+      personaliseMyDay: 'PERSONALISE MY DAY →',
+      footerNote: 'Chitra Paksha (Lahiri) Sidereal Mathematics • Classical astronomical calculation methods',
       cosmicNow: 'Cosmic Now',
       cosmicNowSub: 'Kashi Astronomical Dial',
       diurnalArc: 'Diurnal Solar Arc',
@@ -50,7 +58,7 @@ export const TRANSLATIONS = {
       rahuKaal: 'Rahu Kaal',
       abhijit: 'Abhijit',
       viewAllTimes: 'Panchang →',
-      ephemerisStamp: 'Banaras Ephemeris 2026'
+      ephemerisStamp: 'Sidereal Ephemeris'
     },
     panchang: {
       tag: 'Kashi Panchang • Diurnal Ephemeris',
@@ -276,16 +284,22 @@ export const TRANSLATIONS = {
   },
 
   hi: {
-    brandSubtitle: 'वैदिक खगोल • २०२६',
+    brandSubtitle: 'वैदिक खगोल शुद्धता',
     nav: {
       today: 'पञ्चाङ्ग',
       muhurat: 'मुहूर्त',
       kundali: 'जन्मकुण्डली',
+      jyotishi: 'ज्योतिर्विद्',
+      explore: 'अन्वेषण',
       dasha: 'विंशोत्तरी दशा',
       festivals: 'पर्व तालिका',
       scholars: 'विद्वत्-परिषद्',
       observatory: 'वेधशाला',
-      askJyotishi: 'विद्वान् से परामर्श',
+      milan: 'कुण्डली मिलान',
+      numerology: 'अंक ज्योतिष',
+      tools: 'उपकरण',
+      methodology: 'गणना पद्धति',
+      askJyotishi: 'विद्वान् से परामर्श →',
       changeLocation: 'स्थान बदलें',
       search: 'खोजें',
       capability: 'गणना क्षमता सूची',
@@ -294,8 +308,8 @@ export const TRANSLATIONS = {
       janmaKundali: 'जन्मकुण्डली निर्माण',
       dashaChapters: 'जीवन दशा चक्र',
       vedicCalendar: 'वैदिक पर्व कालदर्शक',
-      practicingScholars: 'काशीय विद्वत्-परिषद्',
-      askWritten: 'लिखित प्रश्न विमर्श (₹५०१)'
+      practicingScholars: 'अभ्यासरत विद्वत्-परिषद्',
+      askWritten: 'लिखित विद्वत्-परामर्श'
     },
     hero: {
       kashiBadge: 'काशी वैदिक काल-गणना',
@@ -303,11 +317,13 @@ export const TRANSLATIONS = {
       headline1: 'वैदिक शुद्धता।',
       headline2: 'मानवीय प्रज्ञा।',
       subtitle: 'दिन को समझें। अपनी कुण्डली को जानें। जब जीवन का निर्णय हो, तब पूछें।',
-      description: 'वाराणसी की अक्षुण्ण खगोलीय परम्परा पर आधारित। अक्षांश-संवेदनशील वैदिक समय, निरयण ग्रह स्पष्टीकरण एवं अनुभवी ज्योतिर्विदों द्वारा हस्ताक्षरित प्रामाणिक लिखित मार्गदर्शन।',
-      createKundali: 'मेरी कुण्डली बनाएं',
-      seePanchang: 'आज का पञ्चाङ्ग देखें',
-      askScholar: 'विद्वान् से पूछें →',
-      footerNote: 'चित्रा पक्ष (लाहिड़ी) निरयण गणित। काशी हिन्दू विश्वविद्यालय एवं सम्पूर्णानन्द विद्वत्-परम्परा।',
+      description: 'शास्त्रीय ज्योतिषीय गणना पद्धतियों, स्थान-संवेदनशील वैदिक समय, लाहिड़ी निरयण ग्रह स्पष्टीकरण एवं अनुभवी ज्योतिर्विदों द्वारा सत्यापित लिखित मार्गदर्शन पर आधारित।',
+      seePanchang: 'आज का पञ्चाङ्ग देखें →',
+      createKundali: 'मेरी कुण्डली बनाएं →',
+      askScholar: 'विद्वान् से परामर्श →',
+      yourVedicDay: 'आपका वैदिक दिन',
+      personaliseMyDay: 'मेरी कुण्डली अनुसार देखें →',
+      footerNote: 'चित्रा पक्ष (लाहिड़ी) निरयण गणित • प्रामाणिक खगोलीय गणना पद्धति',
       cosmicNow: 'प्रत्यक्ष खगोल वेध',
       cosmicNowSub: 'काशीय सौर घटी',
       diurnalArc: 'अहोरात्र सौर चाप',
@@ -321,7 +337,7 @@ export const TRANSLATIONS = {
       rahuKaal: 'राहुकाल',
       abhijit: 'अभिजित',
       viewAllTimes: 'सम्पूर्ण पञ्चाङ्ग →',
-      ephemerisStamp: 'काशी पञ्चाङ्ग २०२६'
+      ephemerisStamp: 'निरयण पञ्चाङ्ग'
     },
     panchang: {
       tag: 'काशीय पञ्चाङ्ग • अहोरात्र खगोल',

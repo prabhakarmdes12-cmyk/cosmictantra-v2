@@ -148,14 +148,14 @@ export default function CosmicTantraLogo({
   const sizeStyles = {
     sm: { emblem: 'w-7 h-7', title: 'text-sm tracking-[0.16em]', sub: 'text-[8px] tracking-[0.24em]' },
     md: { emblem: 'w-8 h-8 sm:w-9 sm:h-9', title: 'text-sm sm:text-base tracking-[0.18em]', sub: 'text-[8px] sm:text-[9px] tracking-[0.26em]' },
-    lg: { emblem: 'w-11 h-11', title: 'text-lg sm:text-xl tracking-[0.2em]', sub: 'text-[10px] tracking-[0.28em]' },
-    xl: { emblem: 'w-14 h-14', title: 'text-2xl sm:text-3xl tracking-[0.22em]', sub: 'text-[12px] tracking-[0.3em]' },
+    lg: { emblem: 'w-10 h-10 sm:w-11 sm:h-11', title: 'text-base sm:text-lg lg:text-xl tracking-[0.22em]', sub: 'text-[9px] sm:text-[10px] tracking-[0.28em]' },
+    xl: { emblem: 'w-14 h-14', title: 'text-2xl sm:text-3xl tracking-[0.24em]', sub: 'text-[12px] tracking-[0.3em]' },
   }[size];
 
   return (
     <div className={`inline-flex items-center gap-2.5 sm:gap-3 group select-none ${className}`}>
       {/* Astrolabe Emblem Frame */}
-      <div className="relative p-1 rounded-xl bg-gradient-to-br from-white/95 to-[#FAF7F2]/95 dark:from-[#11131E] dark:to-[#090B14] border border-[#8E6F1D]/30 dark:border-[#D4AF37]/50 shadow-xs group-hover:border-[#D4AF37] transition-all">
+      <div className="relative p-1.5 rounded-xl bg-gradient-to-br from-white/95 to-[#FAF7F2]/95 dark:from-[#11131E] dark:to-[#090B14] border border-[#8E6F1D]/30 dark:border-[#D4AF37]/50 shadow-xs group-hover:border-[#D4AF37] transition-all">
         <CosmicTantraEmblem className={sizeStyles.emblem} />
       </div>
 
@@ -165,7 +165,7 @@ export default function CosmicTantraLogo({
           COSMICTANTRA
         </span>
         <span className={`font-mono-data font-bold text-[#8E6F1D] dark:text-[#D4AF37] uppercase opacity-95 leading-none mt-0.5 ${sizeStyles.sub}`}>
-          {subtitle}
+          {subtitle || 'VEDIC PRECISION'}
         </span>
       </div>
     </div>

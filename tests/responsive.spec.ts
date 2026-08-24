@@ -61,12 +61,12 @@ test.describe('CosmicTantra Mobile Responsiveness & Hardening Suite', () => {
       await expect(videoBg).toBeVisible();
 
       // 4. Hero Headline & CTAs Reachable
-      const createKundaliBtn = page.locator('button:has-text("CREATE MY KUNDALI")').first();
       const panchangBtn = page.locator('button:has-text("SEE TODAY\'S PANCHANG")').first();
-      const askScholarBtn = page.locator('button:has-text("ASK A SCHOLAR")').first();
+      const createKundaliBtn = page.locator('button:has-text("CREATE MY KUNDALI")').first();
+      const askScholarBtn = page.locator('button:has-text("JYOTISHI")').first();
 
-      await expect(createKundaliBtn).toBeVisible();
       await expect(panchangBtn).toBeVisible();
+      await expect(createKundaliBtn).toBeVisible();
       await expect(askScholarBtn).toBeVisible();
 
       // Take screenshot for visual regression verification
@@ -87,7 +87,7 @@ test.describe('CosmicTantra Mobile Responsiveness & Hardening Suite', () => {
     await menuToggleBtn.click();
 
     // Verify Mobile Drawer content
-    const todayNavBtn = page.locator('button:has-text("TODAY\'S PANCHANG")').first();
+    const todayNavBtn = page.locator('button:has-text("PANCHANG")').first();
     await expect(todayNavBtn).toBeVisible();
   });
 });

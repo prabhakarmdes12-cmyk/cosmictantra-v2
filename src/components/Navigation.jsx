@@ -77,7 +77,7 @@ export default function Navigation({
             {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           </button>
 
-          {/* Primary Desktop Nav Links (Left side) */}
+          {/* Primary Desktop Nav Links (4 Core Items + Explore Dropdown) */}
           <nav className="hidden lg:flex items-center gap-4 xl:gap-6 text-xs font-mono-data tracking-wider uppercase text-[#332E27] dark:text-[#EAE6DF] font-bold">
             <button 
               onClick={() => handleNavClick('panchang-section', 'TODAY_PANCHANG')}
@@ -98,11 +98,59 @@ export default function Navigation({
               {t.nav.kundali}
             </button>
             <button 
-              onClick={() => handleNavClick('dasha-section', 'DASHA')}
+              onClick={() => handleNavClick('practitioners-section', 'JYOTISHI')}
               className="hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none"
             >
-              {t.nav.dasha}
+              {t.nav.jyotishi || 'Jyotishi'}
             </button>
+
+            {/* Explore ▾ Dropdown */}
+            <div className="relative group">
+              <button className="flex items-center gap-1 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none">
+                <span>{t.nav.explore || 'Explore'}</span>
+                <span className="text-[9px] opacity-70">▾</span>
+              </button>
+              <div className="absolute left-0 top-full pt-2.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                <div className="w-56 p-2 rounded-xl border border-[#826315]/25 dark:border-[#D4AF37]/30 bg-[#FFFFFF] dark:bg-[#0B0D14] shadow-2xl space-y-0.5">
+                  <button
+                    onClick={() => handleNavClick('dasha-section', 'DASHA')}
+                    className="w-full text-left px-3 py-1.5 rounded-lg text-[11px] font-bold text-[#332E27] dark:text-[#EAE6DF] hover:bg-[#D4AF37]/10 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors"
+                  >
+                    {t.nav.dasha} Chapters
+                  </button>
+                  <button
+                    onClick={() => handleNavClick('festival-section', 'FESTIVALS')}
+                    className="w-full text-left px-3 py-1.5 rounded-lg text-[11px] font-bold text-[#332E27] dark:text-[#EAE6DF] hover:bg-[#D4AF37]/10 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors"
+                  >
+                    {t.nav.festivals}
+                  </button>
+                  <Link
+                    href="/kundali-milan"
+                    className="block px-3 py-1.5 rounded-lg text-[11px] font-bold text-[#332E27] dark:text-[#EAE6DF] hover:bg-[#D4AF37]/10 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors"
+                  >
+                    {t.nav.milan || 'Kundali Milan'}
+                  </Link>
+                  <Link
+                    href="/numerology/name"
+                    className="block px-3 py-1.5 rounded-lg text-[11px] font-bold text-[#332E27] dark:text-[#EAE6DF] hover:bg-[#D4AF37]/10 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors"
+                  >
+                    {t.nav.numerology || 'Numerology'}
+                  </Link>
+                  <button
+                    onClick={() => handleNavClick('swarga-lok-section', 'SWARGA_LOK')}
+                    className="w-full text-left px-3 py-1.5 rounded-lg text-[11px] font-bold text-[#826315] dark:text-[#F0C968] hover:bg-[#D4AF37]/10 transition-colors"
+                  >
+                    {t.nav.observatory} (3D)
+                  </button>
+                  <button
+                    onClick={() => handleNavClick('methodology-section', 'METHODOLOGY')}
+                    className="w-full text-left px-3 py-1.5 rounded-lg text-[11px] font-bold text-[#332E27] dark:text-[#EAE6DF] hover:bg-[#D4AF37]/10 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors"
+                  >
+                    {t.nav.methodology || 'Methodology'}
+                  </button>
+                </div>
+              </div>
+            </div>
           </nav>
         </div>
 
@@ -121,26 +169,8 @@ export default function Navigation({
           </a>
         </div>
 
-        {/* Right Section: Tools, Language, Theme, Location, and CTA */}
+        {/* Right Section: Language, Theme, Location, Search, and Primary CTA */}
         <div className="flex items-center gap-1.5 sm:gap-2 flex-1 justify-end shrink-0">
-          {/* Tools Dropdown (Desktop) */}
-          <div className="relative group hidden xl:block">
-            <button className="flex items-center gap-1 text-xs font-mono-data tracking-wider uppercase text-[#332E27] dark:text-[#EAE6DF] font-bold hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none mr-2">
-              <Compass className="w-3.5 h-3.5" />
-              <span>Tools</span>
-            </button>
-            <div className="absolute right-0 top-full pt-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-              <div className="w-56 p-2 rounded-xl border border-[#826315]/25 dark:border-[#D4AF37]/25 bg-[#FFFFFF] dark:bg-[#0B0D12] shadow-xl">
-                {TOOL_LINKS.map(l => (
-                  <Link key={l.href} href={l.href}
-                    className="block px-3 py-2 rounded-lg text-[11px] font-bold text-[#332E27] dark:text-[#EAE6DF] hover:bg-[#D4AF37]/10 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors">
-                    {l.label}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-
           {/* Desktop Language Toggle (Hindi / English) */}
           <button
             onClick={handleLangSwitch}
@@ -199,20 +229,7 @@ export default function Navigation({
             <Search className="w-3.5 h-3.5" />
           </button>
 
-          {/* Capability Registry Trigger */}
-          <button
-            onClick={() => {
-              chitiSensory.playTick();
-              onOpenCapabilityModal();
-            }}
-            aria-label="Capability Registry"
-            title="Truth Invariant & Capability Registry"
-            className="hidden md:flex p-2 rounded-lg border border-black/[0.12] dark:border-white/[0.12] bg-[#FFFFFF] dark:bg-[#0D0F18] text-[#826315] dark:text-[#E5C378] hover:border-[#D4AF37] transition-all shadow-xs"
-          >
-            <Shield className="w-3.5 h-3.5" />
-          </button>
-
-          {/* Primary Action */}
+          {/* Primary Action Button */}
           <button
             onClick={() => {
               chitiSensory.playTick();
