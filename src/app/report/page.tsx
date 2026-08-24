@@ -132,16 +132,38 @@ export default function WrittenFolioReport() {
     doc.setTextColor(dark);
     doc.text('Moon (current) → Jupiter (Nov 2026) → Saturn (Mar 2028) → Mercury (2029)', 20, 165);
 
-    // === SATVIK UPAYA ===
+    // === SATVIK UPAYA + RECOMMENDED REMEDIES ===
     doc.setFontSize(12);
     doc.setTextColor(gold);
-    doc.text('सात्त्विक उपाय (Satvik Upaya)', 20, 175);
+    doc.text('सात्त्विक उपाय — Recommended Remedies', 20, 175);
 
-    doc.setFontSize(10);
+    // Upaya Recommendation Cards (simulated from UpayaRecommendationCard)
+    doc.setFontSize(9);
     doc.setTextColor(dark);
-    doc.text('• Daily recitation of Shri Sukta (11 times) before sunrise', 20, 182);
-    doc.text('• Offer yellow flowers to Lord Vishnu on Thursdays', 20, 188);
-    doc.text('• Perform small Lakshmi-Ganesh puja before initiating major changes', 20, 194);
+
+    // Card 1
+    doc.setFillColor(250, 247, 242);
+    doc.rect(20, 182, 170, 22, 'F');
+    doc.setDrawColor(gold);
+    doc.rect(20, 182, 170, 22);
+    doc.text('Gemstone: Blue Sapphire (Neelam) — 4.25 carat', 25, 189);
+    doc.text('Kashi Ratna Bhandar  •  ₹18,500  •  GIA Certified', 25, 195);
+
+    // Card 2
+    doc.setFillColor(250, 247, 242);
+    doc.rect(20, 208, 170, 22, 'F');
+    doc.setDrawColor(gold);
+    doc.rect(20, 208, 170, 22);
+    doc.text('Rudraksha: 14 Mukhi (Nepali) — Career & Protection', 25, 215);
+    doc.text('Shri Rudraksha Kendra  •  ₹4,800  •  X-ray Verified', 25, 221);
+
+    // Card 3
+    doc.setFillColor(250, 247, 242);
+    doc.rect(20, 234, 170, 22, 'F');
+    doc.setDrawColor(gold);
+    doc.rect(20, 234, 170, 22);
+    doc.text('Pooja: Shani Shanti Anusthan at Kashi Vishwanath', 25, 241);
+    doc.text('Kashi Vishwanath Seva Samiti  •  ₹7,500', 25, 247);
 
     // === FINAL RECOMMENDATION BOX ===
     doc.setFillColor(250, 247, 242);
