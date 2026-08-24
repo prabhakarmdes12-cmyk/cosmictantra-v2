@@ -17,7 +17,22 @@ export default function HeroSection({
   const t = TRANSLATIONS[lang]?.hero || TRANSLATIONS.en.hero;
 
   return (
-    <section className="relative pt-12 pb-20 lg:pt-24 lg:pb-28 border-b border-black/[0.1] dark:border-white/[0.08] hero-varanasi-bg transition-colors duration-250">
+    <section className="relative pt-12 pb-20 lg:pt-24 lg:pb-28 border-b border-black/[0.1] dark:border-white/[0.08] hero-varanasi-bg transition-colors duration-250 overflow-hidden">
+      {/* Background Video Layer with Poster Fallback */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover object-center opacity-55 dark:opacity-45 transition-opacity"
+          poster="/varanasi-ghats-hero.jpg"
+        >
+          <source src="/kashi-hero-video.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-r from-[#FAF7F2]/95 via-[#FAF7F2]/75 to-[#FAF7F2]/90 dark:from-[#060709]/95 dark:via-[#060709]/70 dark:to-[#060709]/92" />
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Varanasi Editorial Split Horizon */}
