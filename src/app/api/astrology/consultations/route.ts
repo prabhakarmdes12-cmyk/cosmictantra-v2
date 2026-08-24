@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { verifyAdminAuth, maskCustomerPII } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
+    const isAdmin = verifyAdminAuth(req);
+
     const consultations = await db.astrologyConsultation.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
@@ -13,11 +16,14 @@ export async function GET(req: NextRequest) {
             id: true,
             displayName: true,
             profilePhoto: true,
-            phone: true,
+            phone: isAdmin,
           },
         },
       },
     });
+
+    // Mask PII if not authenticated as Admin
+    const safeConsultations = consultations.map(c => maskCustomerPII(c, isAdmin));
 
     const stats = {
       total: consultations.length,
@@ -28,8 +34,9 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      consultations,
+      consultations: safeConsultations,
       stats,
+      authenticated: isAdmin,
     });
   } catch (error: any) {
     console.error('Fetch consultations error:', error);

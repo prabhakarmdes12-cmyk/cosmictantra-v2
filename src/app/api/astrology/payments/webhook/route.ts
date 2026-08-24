@@ -1,21 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { calculateKundali } from '@/engines/astrologyEngine.js';
+import { calculateKundali } from '@/lib/astrologyEngine.js';
 import { calculateVimshottariDasha, getCurrentDasha } from '@/engines/dashaEngine.js';
 import { calculatePanchang } from '@/engines/panchang.js';
 import { buildSystemPrompt, generateRemedies } from '@/engines/guruAI.js';
+import { verifyRazorpaySignature, verifyAdminAuth } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { consultationId, paymentId, razorpayOrderId, razorpayPaymentId, event } = body;
+    const rawBody = await req.text();
+    let body: any = {};
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json({ success: false, error: 'Invalid JSON payload' }, { status: 400 });
+    }
 
+    const { consultationId, paymentId, razorpayOrderId, razorpayPaymentId, razorpaySignature } = body;
     const targetId = consultationId || body?.payload?.payment?.entity?.notes?.consultationId;
 
     if (!targetId) {
       return NextResponse.json(
         { success: false, error: 'Target consultation ID missing from payment webhook payload.' },
         { status: 400 }
+      );
+    }
+
+    // Security Verification: Check signature or admin auth
+    const rzpHeaderSignature = req.headers.get('x-razorpay-signature');
+    const isWebhookSignatureValid = verifyRazorpaySignature(rawBody, rzpHeaderSignature);
+    const isClientSignatureValid = razorpaySignature ? verifyRazorpaySignature(`${razorpayOrderId}|${razorpayPaymentId}`, razorpaySignature) : false;
+    const isAdmin = verifyAdminAuth(req);
+
+    // If neither valid signature nor admin auth, and not explicitly running in local dev with test payment
+    const isLocalDevTest = process.env.NODE_ENV === 'development' && paymentId?.startsWith('pay_demo_');
+
+    if (!isWebhookSignatureValid && !isClientSignatureValid && !isAdmin && !isLocalDevTest) {
+      return NextResponse.json(
+        { success: false, error: 'Payment signature verification failed. Unauthorized webhook execution.' },
+        { status: 401 }
       );
     }
 
@@ -50,7 +73,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Step 2: Execute protected astrology calculations
+    // Step 2: Execute canonical astrology calculations
     const birthDateStr = consultation.birthDate.toISOString().slice(0, 10);
     const lat = consultation.birthLat;
     const lon = consultation.birthLon;
@@ -58,10 +81,11 @@ export async function POST(req: NextRequest) {
     const bTime = consultation.birthTime;
 
     const kundali = calculateKundali(birthDateStr, bTime, lat, lon, tz);
-    const dashaList = calculateVimshottariDasha(kundali.planets.Moon.nakshatra, new Date(birthDateStr));
+    const moonNak = (kundali.planets as any).Moon.nakshatra;
+    const dashaList = calculateVimshottariDasha(moonNak, new Date(birthDateStr));
     const activeDasha = getCurrentDasha(dashaList, new Date());
     const todayPanchang = calculatePanchang(new Date(), lat, lon, tz);
-    const remedies = generateRemedies(kundali);
+    const remedies = generateRemedies(kundali as any);
 
     const calculationSnapshot = {
       kundali,
@@ -73,19 +97,19 @@ export async function POST(req: NextRequest) {
     };
 
     // Step 3: Generate AI Working Draft
-    const systemPrompt = buildSystemPrompt('en', kundali);
+    const systemPrompt = buildSystemPrompt('en', kundali as any);
     let aiDraftText = `[AI-Prepared Working Draft — Practitioner Verification Required]
 
 1. PLANETARY & LAGNA SUMMARY:
-- Lagna: ${kundali.lagna.rasiName} (${kundali.lagna.nakshatra.name} Nakshatra)
-- Sun in ${kundali.planets.Sun.rasiName} (House ${kundali.planets.Sun.house})
-- Moon in ${kundali.planets.Moon.rasiName} (House ${kundali.planets.Moon.house}, ${kundali.planets.Moon.nakshatra.name} Nakshatra)
+- Lagna: ${kundali.lagna.rashiName} (${kundali.lagna.nakshatra.name} Nakshatra)
+- Sun in ${(kundali.planets as any).Sun.rashiName} (House ${(kundali.planets as any).Sun.house})
+- Moon in ${(kundali.planets as any).Moon.rashiName} (House ${(kundali.planets as any).Moon.house}, ${(kundali.planets as any).Moon.nakshatra.name} Nakshatra)
 - Active Dasha: ${activeDasha.planet} Mahadasha (${activeDasha.percentDone}% complete)
 
 2. ASTROLOGICAL ANALYSIS FOR QUESTION:
 Question: "${consultation.customerQuestion}"
-- Career/Business House (10th): Ruled by ${kundali.houses[9].rasiName}.
-- Financial Gain House (11th): ${kundali.houses[10].rasiName}.
+- Career/Business House (10th): Ruled by ${kundali.houses[9].rashiName}.
+- Financial Gain House (11th): ${kundali.houses[10].rashiName}.
 - Current planetary influence under ${activeDasha.planet} Dasha suggests strategic alignment before taking major capital decisions.
 
 3. SUGGESTED VERIFIED REMEDIES:

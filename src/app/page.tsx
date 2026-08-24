@@ -6,7 +6,9 @@ import { calculatePanchang } from '@/lib/panchang';
 import { calculateKundali } from '@/lib/astrologyEngine';
 import { analytics, ANALYTICS_EVENTS } from '@/lib/analytics';
 
-// Component Imports
+import dynamic from 'next/dynamic';
+
+// Primary Above-the-Fold Components (Eager)
 import Navigation from '@/components/Navigation';
 import PersonalisationBridge from '@/components/PersonalisationBridge';
 import HeroSection from '@/components/HeroSection';
@@ -17,7 +19,6 @@ import FestivalStrip from '@/components/FestivalStrip';
 import WorldToYouTransition from '@/components/WorldToYouTransition';
 import KundaliExperience from '@/components/KundaliExperience';
 import DashaHero from '@/components/DashaHero';
-import SwargaLok from '@/components/SwargaLok';
 import MethodologySection from '@/components/MethodologySection';
 import PractitionersSection from '@/components/PractitionersSection';
 import ConsultationOffer from '@/components/ConsultationOffer';
@@ -27,11 +28,12 @@ import KnowledgeGraphSection from '@/components/KnowledgeGraphSection';
 import FinalChapterCta from '@/components/FinalChapterCta';
 import Footer from '@/components/Footer';
 
-// Modals
-import CitySelectorModal from '@/components/CitySelectorModal';
-import CosmicSearchModal from '@/components/CosmicSearchModal';
-import CapabilityRegistryModal from '@/components/CapabilityRegistryModal';
-import ConsultationModal from '@/components/ConsultationModal';
+// Dynamic Load for Heavy WebGL Canvas & Modals
+const SwargaLok = dynamic(() => import('@/components/SwargaLok'), { ssr: false });
+const CitySelectorModal = dynamic(() => import('@/components/CitySelectorModal'), { ssr: false });
+const CosmicSearchModal = dynamic(() => import('@/components/CosmicSearchModal'), { ssr: false });
+const CapabilityRegistryModal = dynamic(() => import('@/components/CapabilityRegistryModal'), { ssr: false });
+const ConsultationModal = dynamic(() => import('@/components/ConsultationModal'), { ssr: false });
 
 export default function AppLandingPage() {
   const [currentCity, setCurrentCity] = useState(DEFAULT_CITY);

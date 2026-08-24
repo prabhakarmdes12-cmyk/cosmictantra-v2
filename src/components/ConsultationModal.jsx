@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, ShieldCheck, CheckCircle2, ArrowRight } from 'lucide-react';
+import { X, ShieldCheck, CheckCircle2, ArrowRight, Loader2 } from 'lucide-react';
 import { analytics, ANALYTICS_EVENTS } from '../lib/analytics';
 import { chitiSensory } from '../lib/chitiAudio';
 
@@ -13,16 +13,22 @@ export default function ConsultationModal({
 }) {
   const [formData, setFormData] = useState({
     name: '',
+    phone: '',
     email: '',
     birthDate: kundaliData?.meta?.birthDate || '1995-05-15',
     birthTime: kundaliData?.meta?.birthTime || '14:30',
     birthPlace: kundaliData?.meta?.locationName || 'Dhanbad, Jharkhand',
+    birthLat: kundaliData?.meta?.latitude || 23.7957,
+    birthLon: kundaliData?.meta?.longitude || 86.4304,
+    timezone: kundaliData?.meta?.timezone || 5.5,
     category: 'Career & Business Decision',
     question: initialQuestion || '',
     language: lang === 'hi' ? 'Hindi (शुद्ध हिंदी विवेचना)' : 'English Synthesis'
   });
 
   const [step, setStep] = useState('FORM'); // 'FORM' | 'CONFIRM' | 'SUCCESS'
+  const [loading, setLoading] = useState(false);
+  const [consultationResult, setConsultationResult] = useState(null);
 
   if (!isOpen) return null;
 
@@ -33,10 +39,54 @@ export default function ConsultationModal({
     setStep('CONFIRM');
   };
 
-  const handleCompleteOrder = () => {
+  const handleCompleteOrder = async () => {
     chitiSensory.playTick();
+    setLoading(true);
     analytics.track(ANALYTICS_EVENTS.PAYMENT_COMPLETED, { amount: 199, category: formData.category });
-    setStep('SUCCESS');
+
+    try {
+      // Create Consultation Order in DB
+      const res = await fetch('/api/astrology/consultations/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerName: formData.name,
+          customerPhone: formData.phone || '+919876543210',
+          customerEmail: formData.email,
+          customerQuestion: formData.question,
+          birthDate: formData.birthDate,
+          birthTime: formData.birthTime,
+          birthCity: formData.birthPlace,
+          birthLat: formData.birthLat,
+          birthLon: formData.birthLon,
+          timezone: formData.timezone,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        // Trigger verification webhook
+        await fetch('/api/astrology/payments/webhook', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            consultationId: data.consultationId,
+            paymentId: `pay_demo_${Date.now()}`,
+            event: 'payment.captured',
+          }),
+        });
+
+        setConsultationResult(data);
+        setStep('SUCCESS');
+      } else {
+        alert(data.error || 'Failed to submit consultation order.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -71,7 +121,7 @@ export default function ConsultationModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="text-[#57524A] dark:text-[#8E8A82] font-bold">
-                  {lang === 'hi' ? 'पूरा नाम' : 'Full Name'}
+                  {lang === 'hi' ? 'पूरा नाम' : 'Full Name'} *
                 </label>
                 <input
                   type="text"
@@ -85,118 +135,92 @@ export default function ConsultationModal({
 
               <div className="space-y-1">
                 <label className="text-[#57524A] dark:text-[#8E8A82] font-bold">
-                  {lang === 'hi' ? 'ईमेल (परामर्श पत्र प्राप्ति हेतु)' : 'Email (For Written Report)'}
+                  {lang === 'hi' ? 'व्हाट्सएप / फोन' : 'WhatsApp / Phone'} *
                 </label>
                 <input
-                  type="email"
+                  type="tel"
                   required
-                  placeholder="name@domain.com"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="+91 9876543210"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   className="w-full px-3 py-2 rounded-lg bg-[#FAF7F2] dark:bg-[#060709] border border-black/[0.1] dark:border-white/[0.1] text-xs text-[#1C1917] dark:text-[#EFECE6] focus:outline-none focus:border-[#D4AF37]"
                 />
               </div>
             </div>
 
-            {/* Birth Details */}
-            <div className="p-3.5 rounded-xl bg-[#FAF7F2] dark:bg-[#060709] border border-black/[0.06] dark:border-white/[0.06] space-y-2.5">
-              <div className="text-[10px] text-[#8E6F1D] dark:text-[#D4AF37] flex items-center justify-between font-bold">
-                <span>{lang === 'hi' ? 'जन्म विवरण (सटीक निरयण खगोल गणना हेतु)' : 'Exact Birth Coordinates (For Deterministic Ephemeris)'}</span>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                <div>
-                  <label className="text-[#857E74] dark:text-[#6B6760] text-[10px]">{lang === 'hi' ? 'जन्म तिथि' : 'Date of Birth'}</label>
-                  <input
-                    type="date"
-                    required
-                    value={formData.birthDate}
-                    onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-[#0B0C11] border border-black/[0.08] dark:border-white/[0.08] text-xs text-[#1C1917] dark:text-[#EFECE6]"
-                  />
-                </div>
-                <div>
-                  <label className="text-[#857E74] dark:text-[#6B6760] text-[10px]">{lang === 'hi' ? 'जन्म समय' : 'Time of Birth'}</label>
-                  <input
-                    type="time"
-                    required
-                    value={formData.birthTime}
-                    onChange={(e) => setFormData({ ...formData, birthTime: e.target.value })}
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-[#0B0C11] border border-black/[0.08] dark:border-white/[0.08] text-xs text-[#1C1917] dark:text-[#EFECE6]"
-                  />
-                </div>
-                <div>
-                  <label className="text-[#857E74] dark:text-[#6B6760] text-[10px]">{lang === 'hi' ? 'जन्म स्थान' : 'Birth Place'}</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.birthPlace}
-                    onChange={(e) => setFormData({ ...formData, birthPlace: e.target.value })}
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-[#0B0C11] border border-black/[0.08] dark:border-white/[0.08] text-xs text-[#1C1917] dark:text-[#EFECE6]"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Category & Language */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-[#57524A] dark:text-[#8E8A82] font-bold">
-                  {lang === 'hi' ? 'निर्णय कार्यक्षेत्र' : 'Decision Domain'}
-                </label>
-                <select
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg bg-[#FAF7F2] dark:bg-[#060709] border border-black/[0.1] dark:border-white/[0.1] text-xs text-[#1C1917] dark:text-[#EFECE6]"
-                >
-                  <option>Career & Business Decision</option>
-                  <option>Marriage & Relationship Guidance</option>
-                  <option>Personalised Muhurat Selection</option>
-                  <option>Dasha Transition & Timing</option>
-                  <option>Health & Ancestral Remedies</option>
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[#57524A] dark:text-[#8E8A82] font-bold">
-                  {lang === 'hi' ? 'परामर्श भाषा' : 'Report Delivery Language'}
-                </label>
-                <select
-                  value={formData.language}
-                  onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg bg-[#FAF7F2] dark:bg-[#060709] border border-black/[0.1] dark:border-white/[0.1] text-xs text-[#1C1917] dark:text-[#EFECE6]"
-                >
-                  <option>Hindi (शुद्ध हिंदी विवेचना)</option>
-                  <option>English Synthesis</option>
-                  <option>Marathi (मराठी)</option>
-                  <option>Gujarati (ગુજરાતી)</option>
-                  <option>Bengali (বাংলা)</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Specific Question */}
             <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <label className="text-[#57524A] dark:text-[#8E8A82] font-bold">
-                  {lang === 'hi' ? 'आपका विशिष्ट प्रश्न' : 'Your Specific Question'}
-                </label>
-                <span className="text-[10px] text-[#4848A8] dark:text-[#8B8BF5]">
-                  {lang === 'hi' ? 'यथासम्भव स्पष्ट लिखें' : 'Be as precise as possible'}
-                </span>
-              </div>
-              <textarea
-                required
-                rows={3}
-                placeholder={lang === 'hi' ? 'उदा. मैं अक्टूबर में नया उद्यम आरम्भ करने की योजना बना रहा हूँ। मेरे दशमेश एवं गुरु दशा के अनुसार यह समय कैसा रहेगा?' : 'Example: I am considering switching to a new venture in October. What does my 10th lord and active Dasha indicate?'}
-                value={formData.question}
-                onChange={(e) => setFormData({ ...formData, question: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-lg bg-[#FAF7F2] dark:bg-[#060709] border border-black/[0.1] dark:border-white/[0.1] text-xs text-[#1C1917] dark:text-[#EFECE6] focus:outline-none focus:border-[#D4AF37]"
+              <label className="text-[#57524A] dark:text-[#8E8A82] font-bold">
+                {lang === 'hi' ? 'ईमेल (परामर्श पत्र प्राप्ति हेतु)' : 'Email (For Written Report)'}
+              </label>
+              <input
+                type="email"
+                placeholder="name@domain.com"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="w-full px-3 py-2 rounded-lg bg-[#FAF7F2] dark:bg-[#060709] border border-black/[0.1] dark:border-white/[0.1] text-xs text-[#1C1917] dark:text-[#EFECE6] focus:outline-none focus:border-[#D4AF37]"
               />
             </div>
 
-            {/* Price Row */}
-            <div className="p-3 rounded-xl bg-[#FAF7F2] dark:bg-[#060709] border border-[#8E6F1D]/30 dark:border-[#D4AF37]/30 flex items-center justify-between">
+            {/* Birth Details */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <label className="text-[#57524A] dark:text-[#8E8A82] font-bold">
+                  {lang === 'hi' ? 'जन्म तिथि' : 'Birth Date'} *
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={formData.birthDate}
+                  onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg bg-[#FAF7F2] dark:bg-[#060709] border border-black/[0.1] dark:border-white/[0.1] text-xs text-[#1C1917] dark:text-[#EFECE6] focus:outline-none focus:border-[#D4AF37]"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[#57524A] dark:text-[#8E8A82] font-bold">
+                  {lang === 'hi' ? 'जन्म समय' : 'Birth Time'} *
+                </label>
+                <input
+                  type="time"
+                  required
+                  value={formData.birthTime}
+                  onChange={(e) => setFormData({ ...formData, birthTime: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg bg-[#FAF7F2] dark:bg-[#060709] border border-black/[0.1] dark:border-white/[0.1] text-xs text-[#1C1917] dark:text-[#EFECE6] focus:outline-none focus:border-[#D4AF37]"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[#57524A] dark:text-[#8E8A82] font-bold">
+                  {lang === 'hi' ? 'जन्म स्थान' : 'Birth Place'} *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="City, State"
+                  value={formData.birthPlace}
+                  onChange={(e) => setFormData({ ...formData, birthPlace: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg bg-[#FAF7F2] dark:bg-[#060709] border border-black/[0.1] dark:border-white/[0.1] text-xs text-[#1C1917] dark:text-[#EFECE6] focus:outline-none focus:border-[#D4AF37]"
+                />
+              </div>
+            </div>
+
+            {/* Question */}
+            <div className="space-y-1">
+              <label className="text-[#57524A] dark:text-[#8E8A82] font-bold">
+                {lang === 'hi' ? 'आपका मुख्य प्रश्न या जिज्ञासा' : 'Your Question / Life Inquiry'} *
+              </label>
+              <textarea
+                required
+                rows={3}
+                placeholder={lang === 'hi' ? 'कृपया अपनी परिस्थिति या निर्णय के बारे में स्पष्ट प्रश्न लिखें...' : 'Describe your specific decision, career dilemma, or timing inquiry...'}
+                value={formData.question}
+                onChange={(e) => setFormData({ ...formData, question: e.target.value })}
+                className="w-full px-3 py-2 rounded-lg bg-[#FAF7F2] dark:bg-[#060709] border border-black/[0.1] dark:border-white/[0.1] text-xs text-[#1C1917] dark:text-[#EFECE6] focus:outline-none focus:border-[#D4AF37]"
+              />
+            </div>
+
+            {/* Price Banner */}
+            <div className="p-3 rounded-xl bg-[#FAF7F2] dark:bg-[#060709] border border-black/[0.08] dark:border-white/[0.08] flex items-center justify-between">
               <div>
                 <div className="font-bold text-sm text-[#1C1917] dark:text-[#EFECE6]">
                   {lang === 'hi' ? 'निश्चित दक्षिणा: ₹१९९' : 'Honorarium: ₹199'}
@@ -227,7 +251,7 @@ export default function ConsultationModal({
               </div>
               <div className="grid grid-cols-2 gap-2 text-[#57524A] dark:text-[#AAA49A]">
                 <div><span className="text-[#857E74] dark:text-[#6B6760]">{lang === 'hi' ? 'जिज्ञासु:' : 'Seeker:'}</span> {formData.name}</div>
-                <div><span className="text-[#857E74] dark:text-[#6B6760]">{lang === 'hi' ? 'ईमेल:' : 'Email:'}</span> {formData.email}</div>
+                <div><span className="text-[#857E74] dark:text-[#6B6760]">{lang === 'hi' ? 'फोन:' : 'Phone:'}</span> {formData.phone}</div>
                 <div><span className="text-[#857E74] dark:text-[#6B6760]">{lang === 'hi' ? 'जन्म समय:' : 'Birth:'}</span> {formData.birthDate} at {formData.birthTime}</div>
                 <div><span className="text-[#857E74] dark:text-[#6B6760]">{lang === 'hi' ? 'स्थान:' : 'Place:'}</span> {formData.birthPlace}</div>
                 <div><span className="text-[#857E74] dark:text-[#6B6760]">{lang === 'hi' ? 'क्षेत्र:' : 'Domain:'}</span> {formData.category}</div>
@@ -246,16 +270,25 @@ export default function ConsultationModal({
 
             <div className="flex gap-2.5">
               <button
+                disabled={loading}
                 onClick={() => setStep('FORM')}
                 className="px-4 py-2 rounded-lg bg-[#FAF7F2] dark:bg-[#0B0C11] border border-black/[0.08] dark:border-white/[0.08] text-xs text-[#1C1917] dark:text-[#EFECE6]"
               >
                 {lang === 'hi' ? 'संशोधन करें' : 'Edit'}
               </button>
               <button
+                disabled={loading}
                 onClick={handleCompleteOrder}
-                className="flex-1 py-2.5 rounded-lg bg-[#D4AF37] text-[#060709] font-bold text-xs uppercase tracking-wider hover:bg-[#E5C378] transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+                className="flex-1 py-2.5 rounded-lg bg-[#D4AF37] text-[#060709] font-bold text-xs uppercase tracking-wider hover:bg-[#E5C378] transition-colors flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50"
               >
-                <span>{lang === 'hi' ? 'पुष्टि करें एवं परामर्श भेजें (₹१९९)' : 'Confirm & Request Consultation (₹199)'}</span>
+                {loading ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>{lang === 'hi' ? 'प्रक्रिया जारी...' : 'Processing...'}</span>
+                  </>
+                ) : (
+                  <span>{lang === 'hi' ? 'पुष्टि करें एवं परामर्श भेजें (₹१९९)' : 'Confirm & Request Consultation (₹199)'}</span>
+                )}
               </button>
             </div>
           </div>
@@ -271,10 +304,15 @@ export default function ConsultationModal({
             </h4>
             <p className="text-xs text-[#57524A] dark:text-[#8E8A82] max-w-sm mx-auto leading-relaxed">
               {lang === 'hi'
-                ? `आपकी कुण्डली का खगोलीय विवरण दर्ज हो चुका है। हस्ताक्षरित परामर्श पत्र आपके ईमेल ${formData.email} पर प्रेषित किया जाएगा।`
-                : `Your chart parameters and inquiry have been registered. You will receive your complete written folio at ${formData.email}.`
+                ? `आपकी कुण्डली का खगोलीय विवरण दर्ज हो चुका है। हस्ताक्षरित परामर्श पत्र आपके ईमेल ${formData.email || 'अथवा व्हाट्सएप'} पर प्रेषित किया जाएगा।`
+                : `Your chart parameters and inquiry have been registered. You will receive your complete written folio at ${formData.email || 'your registered number'}.`
               }
             </p>
+            {consultationResult?.publicId && (
+              <div className="inline-block px-3 py-1 rounded bg-[#FAF7F2] dark:bg-[#0C0D14] border border-black/[0.1] dark:border-white/[0.1] text-[10px] text-[#8E6F1D] dark:text-[#D4AF37] font-bold">
+                Case ID: {consultationResult.publicId}
+              </div>
+            )}
             <div className="pt-2">
               <button
                 onClick={() => {
