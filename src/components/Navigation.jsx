@@ -14,6 +14,7 @@ import { chitiSensory } from '../lib/chitiAudio';
   { href: '/my-calendar', label: 'My Vedic Calendar' },
   { href: '/family', label: 'Family Profiles' },
   { href: '/profile', label: 'Cosmic ID + Profile' },
+  { href: '/daily', label: 'Daily Cosmic Forecast' },
   { href: '/payments/test', label: 'Payments Test' },
   { href: '/darshan', label: 'Live Darshan' },
   { href: '/library', label: 'Vedic Library' },
