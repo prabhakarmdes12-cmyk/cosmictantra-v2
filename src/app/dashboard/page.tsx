@@ -19,14 +19,26 @@ function FamilyMiniCard({ profile }: { profile: any }) {
 }
 
 export default function ScholarDashboard() {
-  const [activeProfile, setActiveProfile] = useState<any>(null);
-  const [familyCount, setFamilyCount] = useState(0);
+  const [activeProfile, setActiveProfileState] = useState<any>(null);
+  const [allProfiles, setAllProfiles] = useState<any[]>([]);
+
+  const refreshProfiles = () => {
+    const profiles = getProfiles();
+    setAllProfiles(profiles);
+    const current = getActiveProfile() || profiles[0] || null;
+    setActiveProfileState(current);
+  };
 
   useEffect(() => {
-    const profile = getActiveProfile() || getProfiles()[0] || null;
-    setActiveProfile(profile);
-    setFamilyCount(getProfiles().length);
+    refreshProfiles();
   }, []);
+
+  const switchProfile = (profileId: string) => {
+    import('@/lib/profileStore').then(({ setActiveProfileId }) => {
+      setActiveProfileId(profileId);
+      refreshProfiles();
+    });
+  };
 
   if (!activeProfile) {
     return (
@@ -59,15 +71,35 @@ export default function ScholarDashboard() {
         </div>
 
         <div className="mt-10 grid lg:grid-cols-12 gap-8">
-          {/* Cosmic ID Card */}
+          {/* Profile Switcher + Cosmic ID Card */}
           <div className="lg:col-span-5">
+            {/* Multi-profile Switcher (Priority 10) */}
+            {allProfiles.length > 1 && (
+              <div className="mb-4">
+                <div className="text-xs tracking-widest text-[#8E6F1D] mb-2">SWITCH PROFILE</div>
+                <div className="flex flex-wrap gap-2">
+                  {allProfiles.map((p, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => switchProfile(p.id)}
+                      className={`px-4 py-1.5 text-xs rounded-2xl border transition-all ${activeProfile?.id === p.id 
+                        ? 'bg-[#8E6F1D] text-white border-[#8E6F1D]' 
+                        : 'border-[#8E6F1D]/30 hover:bg-[#8E6F1D]/10'}`}
+                    >
+                      {p.name} {p.relation !== 'Self' && `(${p.relation})`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <CosmicIdCard 
               profile={{
                 whatsappPhone: activeProfile.whatsappPhone || '+919876543210',
                 fullName: activeProfile.name,
                 cosmicId: activeProfile.cosmicId,
                 consentGiven: true,
-                familyMembersCount: familyCount
+                familyMembersCount: allProfiles.length
               }} 
               onManageFamily={() => window.location.href = '/family'}
             />
