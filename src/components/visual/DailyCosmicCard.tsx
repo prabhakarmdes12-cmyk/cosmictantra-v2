@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Calendar, Star, Clock, ArrowRight, Share2, Plus, AlertTriangle, Award } from 'lucide-react';
+import { Calendar, Star, Clock, ArrowRight, Share2, Plus, AlertTriangle, Award, Download } from 'lucide-react';
 import AstronomicalProofDrawer from './AstronomicalProofDrawer';
 
 interface DailyPrediction {
@@ -179,6 +179,12 @@ export default function DailyCosmicCard({
           className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-[#25D366] text-white text-xs font-semibold hover:bg-[#128C7E] active:scale-[0.985] transition-all"
         >
           <Share2 className="w-3.5 h-3.5" /> SHARE ON WHATSAPP
+        </button>
+        <button 
+          onClick={() => (window as any).openShareCard?.()}
+          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl border border-[#D4AF37]/30 text-xs font-semibold hover:bg-[#D4AF37]/10 active:scale-[0.985] transition-all"
+        >
+          <Download className="w-3.5 h-3.5" /> 9:16 CARD
         </button>
       </div>
 
