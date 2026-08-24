@@ -95,8 +95,8 @@ export default function ConsultationModal({
         key: data.razorpayKeyId,
         order_id: data.razorpayOrderId,
         name: 'CosmicTantra',
-        description: 'Focused Written Consultation — ₹199',
-        amount: 19900,
+        description: 'Focused Written Consultation — ₹501',
+        amount: 50100,
         currency: 'INR',
         prefill: { name: formData.name, email: formData.email || undefined, contact: formData.phone },
         handler: async (response) => {
@@ -141,7 +141,7 @@ export default function ConsultationModal({
         <div className="flex items-center justify-between border-b border-black/[0.08] dark:border-white/[0.08] pb-3">
           <div>
             <div className="text-[9px] uppercase text-[#8E6F1D] dark:text-[#D4AF37] font-bold">
-              {lang === 'hi' ? 'लिखित विद्वत्-परामर्श • निश्चित दक्षिणा ₹१९९' : 'FOCUSED WRITTEN COUNSEL • ₹199'}
+              {lang === 'hi' ? 'लिखित विद्वत्-परामर्श • निश्चित दक्षिणा ₹५०१' : 'FOCUSED WRITTEN COUNSEL • ₹501'}
             </div>
             <h3 className="font-editorial text-xl font-bold text-[#1C1917] dark:text-[#EFECE6] mt-0.5">
               {lang === 'hi' ? 'काशी के विद्वान् से परामर्श प्राप्त करें' : 'Consult a Practicing Scholar'}
@@ -267,7 +267,7 @@ export default function ConsultationModal({
             <div className="p-3 rounded-xl bg-[#FAF7F2] dark:bg-[#060709] border border-black/[0.08] dark:border-white/[0.08] flex items-center justify-between">
               <div>
                 <div className="font-bold text-sm text-[#1C1917] dark:text-[#EFECE6]">
-                  {lang === 'hi' ? 'निश्चित दक्षिणा: ₹१९९' : 'Honorarium: ₹199'}
+                  {lang === 'hi' ? 'निश्चित दक्षिणा: ₹५०१' : 'Honorarium: ₹501'}
                 </div>
                 <div className="text-[10px] text-[#857E74] dark:text-[#6B6760]">
                   {lang === 'hi' ? 'खगोलीय गणना + विद्वत्-विवेचन पत्र सम्मिलित' : 'Includes Sidereal Ephemeris + Scholar Review'}
@@ -331,7 +331,7 @@ export default function ConsultationModal({
                     <span>{lang === 'hi' ? 'प्रक्रिया जारी...' : 'Processing...'}</span>
                   </>
                 ) : (
-                  <span>{lang === 'hi' ? 'पुष्टि करें एवं परामर्श भेजें (₹१९९)' : 'Confirm & Request Consultation (₹199)'}</span>
+                  <span>{lang === 'hi' ? 'पुष्टि करें एवं परामर्श भेजें (₹५०१)' : 'Confirm & Request Consultation (₹501)'}</span>
                 )}
               </button>
             </div>

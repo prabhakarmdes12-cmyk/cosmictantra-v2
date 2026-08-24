@@ -42,11 +42,11 @@ export default function AppLandingPage() {
 
   // Day/Night & Language State (Chiti UDS v3 compliant)
   const [theme, setTheme] = useState(() => {
-    if (typeof window === 'undefined') return 'dark';
+    if (typeof window === 'undefined') return 'light';
     try {
-      return localStorage.getItem('cosmictantra_theme') || 'dark';
+      return localStorage.getItem('cosmictantra_theme') || 'light';
     } catch {
-      return 'dark';
+      return 'light';
     }
   });
 

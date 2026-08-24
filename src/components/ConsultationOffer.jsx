@@ -15,7 +15,7 @@ export default function ConsultationOffer({ onOpenConsultation, lang = 'en', the
     },
     {
       step: '०२',
-      title: 'निश्चित दक्षिणा — ₹१९९',
+      title: 'निश्चित दक्षिणा — ₹५०१',
       desc: 'प्रति मिनट मीटर का कोई तनाव नहीं। शान्ति से विचार कर प्रश्न पूछने की पूर्ण स्वतन्त्रता।'
     },
     {
@@ -41,7 +41,7 @@ export default function ConsultationOffer({ onOpenConsultation, lang = 'en', the
     },
     {
       step: '02',
-      title: 'Fixed Price — ₹199',
+      title: 'Fixed Price — ₹501',
       desc: 'No ticking per-minute timers. No anxiety of rushing conversation. Flat transparent honorarium.'
     },
     {

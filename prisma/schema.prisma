@@ -87,7 +87,7 @@ model AstrologyConsultant {
   qualifications       String?
   profilePhoto         String?            @default("🧙")
   specialty            AstrologySpecialty @default(KUNDALI)
-  pricePerSession      Int                @default(199)
+  pricePerSession      Int                @default(501)
   durationMinutes      Int                @default(30)
   badges               String[]           @default(["Verified Practitioner"])
   rating               Float              @default(5.0)
