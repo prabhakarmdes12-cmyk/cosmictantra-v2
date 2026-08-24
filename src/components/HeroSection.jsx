@@ -17,21 +17,19 @@ export default function HeroSection({
   const t = TRANSLATIONS[lang]?.hero || TRANSLATIONS.en.hero;
 
   return (
-    <section className="relative pt-24 pb-16 sm:pt-28 lg:pt-20 lg:pb-24 border-b border-black/[0.1] dark:border-white/[0.08] hero-varanasi-bg transition-colors duration-250">
-      {/* Background Video Layer with Poster Fallback */}
+    <section className="relative pt-24 pb-16 sm:pt-28 lg:pt-20 lg:pb-24 border-b border-black/[0.1] dark:border-white/[0.08] transition-colors duration-250">
+      {/* Clean Background Video Layer */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <video
           autoPlay
           loop
           muted
           playsInline
-          className="w-full h-full object-cover object-center opacity-65 dark:opacity-55 transition-opacity"
+          className="w-full h-full object-cover object-center"
           poster="/varanasi-ghats-hero.jpg"
         >
           <source src="/kashi-hero-video.mp4" type="video/mp4" />
         </video>
-        {/* Pandit-Ready Dawn Illumination (Sacred Banaras Morning Light) */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#FFFDF9] via-[#FAF7F2] to-[#F5EEDC] dark:via-[#060709]/60 dark:to-[#060709]/95 lg:bg-gradient-to-r lg:from-[#FFFDF9]/95 lg:via-[#FAF7F2]/75 lg:to-[#F5EEDC]/90 lg:dark:from-[#060709]/95 lg:dark:via-[#060709]/70 lg:dark:to-[#060709]/92" />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
@@ -39,8 +37,8 @@ export default function HeroSection({
         {/* Varanasi Editorial Split Horizon */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
           
-          {/* Left Column: Serious Vedic Product Front */}
-          <div className="lg:col-span-7 space-y-5 sm:space-y-7">
+          {/* Left Column: Serious Vedic Product Front with Glassmorphic Legibility */}
+          <div className="lg:col-span-7 space-y-5 sm:space-y-7 p-6 sm:p-8 rounded-3xl bg-white/85 dark:bg-[#07080C]/85 backdrop-blur-md border border-[#8E6F1D]/20 dark:border-[#D4AF37]/30 shadow-2xl">
             
             {/* Sacred Kashi Sanskrit Micro-Label */}
             <div className="inline-flex flex-wrap items-center gap-2 sm:gap-3 px-3.5 py-1.5 rounded-full border border-[#826315]/35 dark:border-[#D4AF37]/50 bg-[#FFFFFF]/95 dark:bg-[#0D0F1E]/95 backdrop-blur-md text-[10px] sm:text-[11px] font-mono-data uppercase tracking-[0.16em] sm:tracking-[0.2em] text-[#826315] dark:text-[#F0C968] shadow-xs font-bold max-w-full">
