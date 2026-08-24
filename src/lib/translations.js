@@ -24,7 +24,7 @@ export const TRANSLATIONS = {
       dashaChapters: 'Dasha Chapters',
       vedicCalendar: 'Vedic Calendar',
       practicingScholars: 'Practicing Scholars',
-      askWritten: 'Ask a Jyotishi (₹501 Written)'
+      askWritten: 'Request Scholarly Written Folio (शुभ दक्षिणा ₹५०१)'
     },
     hero: {
       kashiBadge: 'Kashi Vedic Timekeeper',
@@ -103,9 +103,9 @@ export const TRANSLATIONS = {
       careerTitle: 'Career & Enterprise',
       careerSub: 'Decision-Oriented Timing',
       careerDesc: 'Evaluate 10th House karmic tendencies, Amatyakaraka, and Dasha transition windows.',
-      askTitle: 'Scholarly Consultation',
-      askSub: 'One Focused Written Question — ₹501',
-      askDesc: 'Bypass noisy per-minute call marketplaces. Receive permanent, written counsel from a Vedic scholar.'
+      askTitle: 'विद्वत्-विवेचना (Scholarly Written Folio)',
+      askSub: 'One Focused Written Question — शुभ दक्षिणा ₹५०१',
+      askDesc: 'Receive Permanent Written Counsel (अक्षुण्ण लिखित परामर्श) from a practicing Jyotish scholar.'
     },
     muhurat: {
       tag: 'Elective Astrology (Muhurat Shastra)',
@@ -222,7 +222,7 @@ export const TRANSLATIONS = {
       pipelineHeading: 'How your question becomes wisdom.',
       readyHeading: 'Ready to bring your decision to an authentic scholar?',
       readySub: 'Includes full natal ephemeris calculation + detailed human synthesis.',
-      askCta: 'Ask One Question — ₹501'
+      askCta: 'Offer शुभ दक्षिणा ₹५०१ & Submit Inquiry'
     },
     sampleConsultation: {
       tag: 'Sample Deliverable Format',
@@ -254,7 +254,7 @@ export const TRANSLATIONS = {
     finalCta: {
       heading: 'One question still on your mind?',
       subtitle: 'When calculation alone is not enough, bring your decision to an experienced Jyotish scholar.',
-      cta: 'Ask One Question — ₹501',
+      cta: 'Offer शुभ दक्षिणा ₹५०१ & Submit Inquiry',
       meetBtn: 'Meet the Scholars',
       trustNote: 'No automated bots. No ticking timers. Full human written review.'
     },
