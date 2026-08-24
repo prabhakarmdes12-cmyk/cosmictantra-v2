@@ -4,6 +4,7 @@ import React from 'react';
 import { Download, Printer } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { getActiveProfile } from '@/lib/profileStore';
+import { getSmartUpayaRecommendations } from '@/lib/upayaEngine';
 
 export default function WrittenFolioReport() {
   const profile = getActiveProfile();
@@ -132,16 +133,32 @@ export default function WrittenFolioReport() {
     doc.setTextColor(dark);
     doc.text('Moon (current) → Jupiter (Nov 2026) → Saturn (Mar 2028) → Mercury (2029)', 20, 165);
 
-    // === SATVIK UPAYA ===
+    // === SMART UPAYA RECOMMENDATIONS (from Upaya Engine) ===
     doc.setFontSize(12);
     doc.setTextColor(gold);
-    doc.text('सात्त्विक उपाय (Satvik Upaya)', 20, 175);
+    doc.text('सात्त्विक उपाय — Recommended Remedies', 20, 175);
 
-    doc.setFontSize(10);
-    doc.setTextColor(dark);
-    doc.text('• Daily recitation of Shri Sukta (11 times) before sunrise', 20, 182);
-    doc.text('• Offer yellow flowers to Lord Vishnu on Thursdays', 20, 188);
-    doc.text('• Perform small Lakshmi-Ganesh puja before initiating major changes', 20, 194);
+    // Use the Smart Engine
+    const smartUpayas = getSmartUpayaRecommendations(
+      'Vrishabha',
+      'Rohini',
+      'Moon Mahadasha',
+      'Will changing my business direction in the next six months be favourable for my long-term financial growth?'
+    );
+
+    let yUpaya = 183;
+    smartUpayas.forEach((u) => {
+      doc.setFillColor(250, 247, 242);
+      doc.rect(20, yUpaya, 170, 20, 'F');
+      doc.setDrawColor(gold);
+      doc.rect(20, yUpaya, 170, 20);
+      
+      doc.setFontSize(9);
+      doc.setTextColor(dark);
+      doc.text(`${u.type}: ${u.name}`, 25, yUpaya + 7);
+      doc.text(`${u.reason} • ${u.priceRange}`, 25, yUpaya + 14);
+      yUpaya += 23;
+    });
 
     // === FINAL RECOMMENDATION BOX ===
     doc.setFillColor(250, 247, 242);
