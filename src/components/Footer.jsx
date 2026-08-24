@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { ShieldCheck, Lock, X } from 'lucide-react';
 import { TRANSLATIONS } from '../lib/translations';
 import { chitiSensory } from '../lib/chitiAudio';
@@ -55,7 +56,7 @@ export default function Footer({ onOpenCapabilityModal, onOpenConsultation, onNa
         </div>
 
         {/* Deep 6-Column Navigation Map */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 py-12 border-b border-black/[0.08] dark:border-white/[0.06]">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-8 py-12 border-b border-black/[0.08] dark:border-white/[0.06]">
           
           {/* Col 1: TODAY */}
           <div className="space-y-2.5">
@@ -129,7 +130,24 @@ export default function Footer({ onOpenCapabilityModal, onOpenConsultation, onNa
             </ul>
           </div>
 
-          {/* Col 6: PORTAL */}
+          {/* Col 6: TOOLS & RESOURCES */}
+          <div className="space-y-2.5">
+            <div className="text-[11px] uppercase tracking-wider text-[#1C1917] dark:text-[#EFECE6] font-bold">
+              Tools
+            </div>
+            <ul className="space-y-1.5 text-xs">
+              <li><Link href="/numerology/name" className="hover:text-black dark:hover:text-white transition-colors">Name Numerology</Link></li>
+              <li><Link href="/numerology/business-name" className="hover:text-black dark:hover:text-white transition-colors">Business Name Check</Link></li>
+              <li><Link href="/numerology/baby-names" className="hover:text-black dark:hover:text-white transition-colors">Baby Names by Star</Link></li>
+              <li><Link href="/kundali-milan" className="hover:text-black dark:hover:text-white transition-colors">Kundali Milan</Link></li>
+              <li><Link href="/my-calendar" className="hover:text-black dark:hover:text-white transition-colors">My Vedic Calendar</Link></li>
+              <li><Link href="/family" className="hover:text-black dark:hover:text-white transition-colors">Family Profiles</Link></li>
+              <li><Link href="/darshan" className="hover:text-black dark:hover:text-white transition-colors">Live Darshan</Link></li>
+              <li><Link href="/library" className="hover:text-black dark:hover:text-white transition-colors">Vedic Library</Link></li>
+            </ul>
+          </div>
+
+          {/* Col 7: PORTAL */}
           <div className="space-y-2.5">
             <div className="text-[11px] uppercase tracking-wider text-[#1C1917] dark:text-[#EFECE6] font-bold">
               {t.col6}

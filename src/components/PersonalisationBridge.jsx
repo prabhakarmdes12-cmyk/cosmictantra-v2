@@ -18,7 +18,7 @@ export default function PersonalisationBridge({ kundaliData, onClearProfile, lan
           <div className="hidden md:flex items-center gap-3 text-[#57524A] dark:text-[#AAA49A]">
             <span>{lang === 'hi' ? 'लग्न:' : 'Lagna:'} <strong className="text-[#1C1917] dark:text-[#EFECE6]">{kundaliData.lagna.rashiName} ({kundaliData.lagna.degreeStr})</strong></span>
             <span>•</span>
-            <span>{lang === 'hi' ? 'चन्द्र नक्षत्र:' : 'Moon:'} <strong className="text-[#1C1917] dark:text-[#EFECE6]">{kundaliData.moon.nakshatra} P{kundaliData.moon.pada}</strong></span>
+            <span>{lang === 'hi' ? 'चन्द्र नक्षत्र:' : 'Moon:'} <strong className="text-[#1C1917] dark:text-[#EFECE6]">{(kundaliData.moon.nakshatra?.name ?? kundaliData.moon.nakshatra)} P{kundaliData.moon.pada}</strong></span>
           </div>
         </div>
 

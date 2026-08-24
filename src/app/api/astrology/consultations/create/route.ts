@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { createRazorpayOrder, getRazorpayClientKey } from '@/lib/razorpay';
 
 export async function POST(req: NextRequest) {
   try {
@@ -72,12 +73,37 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Create a real Razorpay Order when configured (money only captured after
+    // the client returns a verified signature to /payments/verify).
+    let razorpayOrderId = null;
+    let razorpayKeyId = null;
+    try {
+      const order = await createRazorpayOrder(19900, `consultation_${consultation.id}`, {
+        consultationId: consultation.id,
+        publicId: consultation.publicId,
+      });
+      if (order?.id) {
+        razorpayOrderId = order.id;
+        razorpayKeyId = getRazorpayClientKey();
+        await db.astrologyConsultation.update({
+          where: { id: consultation.id },
+          data: { paymentProvider: 'RAZORPAY', paymentStatus: 'PENDING' },
+        });
+      }
+    } catch (orderErr) {
+      // Order creation failing should not silently fake success — return explicit status
+      console.error('Razorpay order creation failed:', orderErr);
+    }
+
     return NextResponse.json({
       success: true,
       consultationId: consultation.id,
       publicId: consultation.publicId,
       amount: 199,
       currency: 'INR',
+      checkoutEnabled: Boolean(razorpayOrderId),
+      razorpayOrderId,
+      razorpayKeyId,
     });
   } catch (error: any) {
     console.error('Create consultation error:', error);

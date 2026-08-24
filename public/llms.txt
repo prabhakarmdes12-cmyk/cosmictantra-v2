@@ -24,3 +24,21 @@
 - **Case Audit & Scholar Operations**: https://cosmictantra.chiti.tech/astrology/cases
 - **Verified Scholars Directory**: https://cosmictantra.chiti.tech/astrology/practitioners
 - **Practitioner Onboarding**: https://cosmictantra.chiti.tech/pandit
+
+## Free Interactive Tools
+
+- **Name Numerology Calculator** (Namank, Mulank, Bhagyank, Chaldean/Pythagorean): https://cosmictantra.chiti.tech/numerology/name
+- **Business Name Numerology Calculator**: https://cosmictantra.chiti.tech/numerology/business-name
+- **Mobile Number Numerology**: https://cosmictantra.chiti.tech/numerology/mobile-number
+- **Baby Names by Janma Nakshatra**: https://cosmictantra.chiti.tech/numerology/baby-names
+- **Kundali Milan (36-point Ashtakoota)**: https://cosmictantra.chiti.tech/kundali-milan
+- **Personal Vedic Calendar (alerts + ICS feed)**: https://cosmictantra.chiti.tech/my-calendar
+- **Family Profiles (Cosmic Profiles)**: https://cosmictantra.chiti.tech/family
+- **Live Temple Darshan**: https://cosmictantra.chiti.tech/darshan
+- **Vedic Library**: https://cosmictantra.chiti.tech/library
+
+## Daily Programmatic Pages
+
+- **City Panchang** (Patna, Varanasi, Dhanbad, Delhi, Mumbai, ...): https://cosmictantra.chiti.tech/panchang/{city-id}
+- **Daily Rashifal (12 rashis)**: https://cosmictantra.chiti.tech/rashifal/{sign-id}
+- **2026 Festival & Vrat Pages**: https://cosmictantra.chiti.tech/festivals/{festival-id}

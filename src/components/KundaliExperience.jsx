@@ -181,7 +181,7 @@ export default function KundaliExperience({
                   {kundaliData.lagna.rashiName} ({kundaliData.lagna.rashiEn})
                 </div>
                 <div className="text-xs text-[#4848A8] dark:text-[#8B8BF5] mt-1">
-                  {kundaliData.lagna.degreeStr} • Lord: {kundaliData.lagna.lord} • {kundaliData.lagna.nakshatra} (P{kundaliData.lagna.pada})
+                  {kundaliData.lagna.degreeStr} • Lord: {kundaliData.lagna.lord} • {(kundaliData.lagna.nakshatra?.name ?? kundaliData.lagna.nakshatra)} (P{kundaliData.lagna.pada})
                 </div>
               </div>
 
@@ -191,7 +191,7 @@ export default function KundaliExperience({
                   {kundaliData.moon.rashiName} ({kundaliData.moon.rashiEn})
                 </div>
                 <div className="text-xs text-[#57524A] dark:text-[#AAA49A] mt-1">
-                  {kundaliData.moon.degreeStr} • Nakshatra: {kundaliData.moon.nakshatra} (P{kundaliData.moon.pada})
+                  {kundaliData.moon.degreeStr} • Nakshatra: {(kundaliData.moon.nakshatra?.name ?? kundaliData.moon.nakshatra)} (P{kundaliData.moon.pada})
                 </div>
               </div>
 
@@ -431,7 +431,7 @@ export default function KundaliExperience({
                             {planet.dignity}
                           </span>
                           <div className="text-[9px] text-[#4848A8] dark:text-[#8B8BF5] mt-0.5">
-                            {planet.nakshatra} P{planet.pada}
+                            {(planet.nakshatra?.name ?? planet.nakshatra)} P{planet.pada}
                           </div>
                         </div>
                       </div>

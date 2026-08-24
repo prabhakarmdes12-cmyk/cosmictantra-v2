@@ -3,6 +3,23 @@ import { X, ShieldCheck, CheckCircle2, ArrowRight, Loader2 } from 'lucide-react'
 import { analytics, ANALYTICS_EVENTS } from '../lib/analytics';
 import { chitiSensory } from '../lib/chitiAudio';
 
+let rzpScriptPromise = null;
+function loadRazorpayCheckout() {
+  if (typeof window === 'undefined') return Promise.resolve(null);
+  const w = window;
+  if (w.Razorpay) return Promise.resolve(w.Razorpay);
+  if (!rzpScriptPromise) {
+    rzpScriptPromise = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      s.onload = () => resolve(w.Razorpay);
+      s.onerror = () => reject(new Error('Razorpay checkout failed to load'));
+      document.body.appendChild(s);
+    });
+  }
+  return rzpScriptPromise;
+}
+
 export default function ConsultationModal({
   isOpen,
   onClose,
@@ -42,10 +59,9 @@ export default function ConsultationModal({
   const handleCompleteOrder = async () => {
     chitiSensory.playTick();
     setLoading(true);
-    analytics.track(ANALYTICS_EVENTS.PAYMENT_COMPLETED, { amount: 199, category: formData.category });
 
     try {
-      // Create Consultation Order in DB
+      // Step 1: Create Consultation Order + real Razorpay order (server-side)
       const res = await fetch('/api/astrology/consultations/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -64,23 +80,51 @@ export default function ConsultationModal({
       });
 
       const data = await res.json();
-      if (data.success) {
-        // Trigger verification webhook
-        await fetch('/api/astrology/payments/webhook', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            consultationId: data.consultationId,
-            paymentId: `pay_demo_${Date.now()}`,
-            event: 'payment.captured',
-          }),
-        });
-
-        setConsultationResult(data);
-        setStep('SUCCESS');
-      } else {
+      if (!data.success) {
         alert(data.error || 'Failed to submit consultation order.');
+        return;
       }
+      if (!data.checkoutEnabled || !data.razorpayOrderId || !data.razorpayKeyId) {
+        alert(`Order created (${data.consultationId}). Payment gateway is not configured yet — our team will contact you on WhatsApp.`);
+        return;
+      }
+
+      // Step 2: open Razorpay Checkout
+      const Razorpay = await loadRazorpayCheckout();
+      const rzp = new Razorpay({
+        key: data.razorpayKeyId,
+        order_id: data.razorpayOrderId,
+        name: 'CosmicTantra',
+        description: 'Focused Written Consultation — ₹199',
+        amount: 19900,
+        currency: 'INR',
+        prefill: { name: formData.name, email: formData.email || undefined, contact: formData.phone },
+        handler: async (response) => {
+          analytics.track(ANALYTICS_EVENTS.PAYMENT_COMPLETED, { amount: 199, category: formData.category });
+          // Step 3: server-side HMAC verify, then pipeline starts
+          const vRes = await fetch('/api/astrology/payments/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              consultationId: data.consultationId,
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+            }),
+          });
+          const vData = await vRes.json();
+          if (vData.success) {
+            setConsultationResult({ ...data, verified: true });
+            setStep('SUCCESS');
+          } else {
+            alert(vData.error || 'Payment verification failed — our team has been notified.');
+          }
+        },
+        modal: { ondismiss: () => setLoading(false) },
+        theme: { color: '#D4AF37' },
+      });
+      rzp.on('payment.failed', () => { setLoading(false); alert('Payment failed. No money was deducted.'); });
+      rzp.open();
     } catch (err) {
       console.error(err);
       alert('Network error. Please try again.');

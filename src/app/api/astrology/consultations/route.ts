@@ -23,13 +23,13 @@ export async function GET(req: NextRequest) {
     });
 
     // Mask PII if not authenticated as Admin
-    const safeConsultations = consultations.map(c => maskCustomerPII(c, isAdmin));
+    const safeConsultations = consultations.map((c: any) => maskCustomerPII(c, isAdmin));
 
     const stats = {
       total: consultations.length,
-      testCases: consultations.filter(c => c.isTestCase).length,
-      pendingReview: consultations.filter(c => c.status === 'PANDIT_REVIEW' || c.status === 'ASSIGNED').length,
-      approved: consultations.filter(c => c.status === 'APPROVED' || c.status === 'DELIVERY_READY' || c.status === 'DELIVERED').length,
+      testCases: consultations.filter((c: any) => c.isTestCase).length,
+      pendingReview: consultations.filter((c: any) => c.status === 'PANDIT_REVIEW' || c.status === 'ASSIGNED').length,
+      approved: consultations.filter((c: any) => c.status === 'APPROVED' || c.status === 'DELIVERY_READY' || c.status === 'DELIVERED').length,
     };
 
     return NextResponse.json({

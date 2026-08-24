@@ -1,8 +1,21 @@
 import React, { useState } from 'react';
-import { Search, MapPin, Shield, Menu, X, ArrowUpRight, Sun, Moon, Languages } from 'lucide-react';
+import Link from 'next/link';
+import { Search, MapPin, Shield, Menu, X, ArrowUpRight, Sun, Moon, Languages, Compass } from 'lucide-react';
 import { analytics, ANALYTICS_EVENTS } from '../lib/analytics';
 import { TRANSLATIONS } from '../lib/translations';
 import { chitiSensory } from '../lib/chitiAudio';
+
+const TOOL_LINKS = [
+  { href: '/numerology/name', label: 'Name Numerology' },
+  { href: '/numerology/business-name', label: 'Business Name' },
+  { href: '/numerology/mobile-number', label: 'Mobile Number' },
+  { href: '/numerology/baby-names', label: 'Baby Names' },
+  { href: '/kundali-milan', label: 'Kundali Milan' },
+  { href: '/my-calendar', label: 'My Vedic Calendar' },
+  { href: '/family', label: 'Family Profiles' },
+  { href: '/darshan', label: 'Live Darshan' },
+  { href: '/library', label: 'Vedic Library' },
+];
 
 export default function Navigation({
   currentCity,
@@ -117,6 +130,24 @@ export default function Navigation({
           >
             {t.nav.observatory}
           </button>
+
+          {/* Tools Dropdown (public utility + growth pages) */}
+          <div className="relative group">
+            <button className="flex items-center gap-1 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none">
+              <Compass className="w-3.5 h-3.5" />
+              <span>Tools</span>
+            </button>
+            <div className="absolute right-0 top-full pt-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+              <div className="w-56 p-2 rounded-xl border border-[#826315]/25 dark:border-[#D4AF37]/25 bg-[#FFFFFF] dark:bg-[#0B0D12] shadow-xl">
+                {TOOL_LINKS.map(l => (
+                  <Link key={l.href} href={l.href}
+                    className="block px-3 py-2 rounded-lg text-[11px] font-bold text-[#332E27] dark:text-[#EAE6DF] hover:bg-[#D4AF37]/10 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors">
+                    {l.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
         </nav>
 
         {/* Right Controls: High-Contrast Language, Theme, Location, Search, and CTA */}
@@ -278,6 +309,26 @@ export default function Navigation({
             >
               {t.nav.practicingScholars}
             </button>
+            <Link href="/kundali-milan" onClick={() => setMobileMenuOpen(false)}
+              className="text-left px-3 py-2.5 rounded-lg bg-white dark:bg-[#111320] text-[#181512] dark:text-[#F5F2EB] border border-black/[0.08] dark:border-white/[0.06]">
+              Kundali Milan
+            </Link>
+            <Link href="/numerology/name" onClick={() => setMobileMenuOpen(false)}
+              className="text-left px-3 py-2.5 rounded-lg bg-white dark:bg-[#111320] text-[#181512] dark:text-[#F5F2EB] border border-black/[0.08] dark:border-white/[0.06]">
+              Numerology
+            </Link>
+            <Link href="/my-calendar" onClick={() => setMobileMenuOpen(false)}
+              className="text-left px-3 py-2.5 rounded-lg bg-white dark:bg-[#111320] text-[#181512] dark:text-[#F5F2EB] border border-black/[0.08] dark:border-white/[0.06]">
+              My Calendar
+            </Link>
+            <Link href="/darshan" onClick={() => setMobileMenuOpen(false)}
+              className="text-left px-3 py-2.5 rounded-lg bg-white dark:bg-[#111320] text-[#181512] dark:text-[#F5F2EB] border border-black/[0.08] dark:border-white/[0.06]">
+              Live Darshan
+            </Link>
+            <Link href="/library" onClick={() => setMobileMenuOpen(false)}
+              className="text-left px-3 py-2.5 rounded-lg bg-white dark:bg-[#111320] text-[#181512] dark:text-[#F5F2EB] border border-black/[0.08] dark:border-white/[0.06]">
+              Vedic Library
+            </Link>
           </div>
 
           <div className="pt-2 flex flex-col gap-2">

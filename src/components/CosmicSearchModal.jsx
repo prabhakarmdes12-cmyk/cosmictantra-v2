@@ -1,9 +1,22 @@
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Search, X, ChevronRight } from 'lucide-react';
 import { JYOTISH_CONCEPTS } from '../lib/knowledgeGraph';
 import { UPCOMING_EVENTS } from '../lib/festivals';
 import { MUHURAT_EVENTS } from '../lib/muhuratData';
 import { chitiSensory } from '../lib/chitiAudio';
+
+const TOOL_ENTRIES = [
+  { title: 'Name Numerology Calculator', desc: 'Namank, Mulank & Bhagyank (Chaldean / Pythagorean)', href: '/numerology/name' },
+  { title: 'Business Name Numerology', desc: 'Lucky brand number & ruling planet', href: '/numerology/business-name' },
+  { title: 'Mobile Number Numerology', desc: 'Vedic digit analysis of your number', href: '/numerology/mobile-number' },
+  { title: 'Baby Names by Nakshatra', desc: 'Namakshara syllable suggestions', href: '/numerology/baby-names' },
+  { title: 'Kundali Milan', desc: '36-point Ashtakoota compatibility', href: '/kundali-milan' },
+  { title: 'My Vedic Calendar', desc: 'Daily avoid/act windows + ICS feed', href: '/my-calendar' },
+  { title: 'Family Profiles', desc: 'One dashboard for the whole parivaar', href: '/family' },
+  { title: 'Live Darshan', desc: 'Temple streams with aarti timings', href: '/darshan' },
+  { title: 'Vedic Library', desc: 'Panchang, dasha & muhurat explained', href: '/library' },
+];
 
 export default function CosmicSearchModal({ isOpen, onClose, onNavigateSection, onOpenConsultation, lang = 'en', theme = 'dark' }) {
   const [query, setQuery] = useState('');
@@ -30,6 +43,12 @@ export default function CosmicSearchModal({ isOpen, onClose, onNavigateSection, 
     MUHURAT_EVENTS.forEach(m => {
       if (m.title.toLowerCase().includes(q) || m.desc.toLowerCase().includes(q)) {
         results.push({ type: 'Muhurat', title: m.title, desc: m.desc, action: () => onNavigateSection('muhurat-section') });
+      }
+    });
+
+    TOOL_ENTRIES.forEach(t => {
+      if (t.title.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q)) {
+        results.push({ type: 'Tool', title: t.title, desc: t.desc, href: t.href });
       }
     });
   }
@@ -89,7 +108,8 @@ export default function CosmicSearchModal({ isOpen, onClose, onNavigateSection, 
               key={idx}
               onClick={() => {
                 chitiSensory.playTick();
-                res.action();
+                if (res.href) window.location.href = res.href;
+                else res.action();
                 onClose();
               }}
               className="p-2.5 rounded-lg bg-[#FAF7F2] dark:bg-[#0B0C11] border border-black/[0.05] dark:border-white/[0.05] hover:border-[#D4AF37]/50 cursor-pointer transition-colors flex items-center justify-between"

@@ -26,9 +26,9 @@ export async function GET(req: NextRequest) {
       pendingInvites,
       stats: {
         total: consultants.length,
-        active: consultants.filter(c => c.isActive && c.onboardingStatus === 'COMPLETED').length,
+        active: consultants.filter((c: any) => c.isActive && c.onboardingStatus === 'COMPLETED').length,
         pendingOnboarding: pendingInvites.length,
-        paused: consultants.filter(c => !c.isActive).length,
+        paused: consultants.filter((c: any) => !c.isActive).length,
       },
     });
   } catch (error: any) {

@@ -1,8 +1,27 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sparkles, ShieldCheck, Clock, CheckCircle2, MessageSquare, HelpCircle, ArrowRight } from 'lucide-react';
+import { getActiveProfile } from '@/lib/profileStore';
+
+// Loads the Razorpay Checkout script once (client-side only)
+let rzpScriptPromise: Promise<any> | null = null;
+function loadRazorpayCheckout() {
+  if (typeof window === 'undefined') return Promise.resolve(null);
+  const w = window as any;
+  if (w.Razorpay) return Promise.resolve(w.Razorpay);
+  if (!rzpScriptPromise) {
+    rzpScriptPromise = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      s.onload = () => resolve((window as any).Razorpay);
+      s.onerror = () => reject(new Error('Razorpay checkout failed to load'));
+      document.body.appendChild(s);
+    });
+  }
+  return rzpScriptPromise;
+}
 
 export default function AskQuestionPage() {
   const router = useRouter();
@@ -19,6 +38,22 @@ export default function AskQuestionPage() {
     timezone: 5.5,
     customerQuestion: '',
   });
+
+  // Prefill from the active family profile (Cosmic Profile)
+  useEffect(() => {
+    const p = getActiveProfile();
+    if (!p) return;
+    setForm(f => ({
+      ...f,
+      customerName: f.customerName || p.name || '',
+      birthDate: f.birthDate || p.birthDate || f.birthDate,
+      birthTime: f.birthTime || p.birthTime || f.birthTime,
+      birthCity: f.birthCity || p.birthCity || f.birthCity,
+      birthLat: f.birthLat || p.lat || f.birthLat,
+      birthLon: f.birthLon || p.lng || f.birthLon,
+      timezone: f.timezone || p.tz || f.timezone,
+    }));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,22 +78,50 @@ export default function AskQuestionPage() {
         return;
       }
 
-      // Step 2: Trigger Payment Webhook (Simulated Razorpay success for testing/production)
-      const payRes = await fetch('/api/astrology/payments/webhook', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          consultationId: data.consultationId,
-          paymentId: 'pay_demo_12345',
-          event: 'payment.captured',
-        }),
-      });
-
-      const payData = await payRes.json();
-      if (payData.success) {
-        router.push(`/ask/success/${data.consultationId}`);
+      if (data.checkoutEnabled && data.razorpayOrderId && data.razorpayKeyId) {
+        // Step 2: Real Razorpay Checkout
+        const Razorpay = await loadRazorpayCheckout();
+        const rzp = new Razorpay({
+          key: data.razorpayKeyId,
+          order_id: data.razorpayOrderId,
+          name: 'CosmicTantra',
+          description: 'Focused Written Consultation — ₹199',
+          amount: 19900,
+          currency: 'INR',
+          prefill: {
+            name: form.customerName,
+            email: form.customerEmail || undefined,
+            contact: form.customerPhone,
+          },
+          handler: async (response: any) => {
+            // Step 3: verify signature server-side, then run the pipeline
+            const verifyRes = await fetch('/api/astrology/payments/verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                consultationId: data.consultationId,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+              }),
+            });
+            const verifyData = await verifyRes.json();
+            if (verifyData.success) {
+              router.push(`/ask/success/${data.consultationId}`);
+            } else {
+              alert(verifyData.error || 'Payment verification failed — our team has been notified.');
+            }
+          },
+          modal: { ondismiss: () => setSubmitting(false) },
+          theme: { color: '#D4AF37' },
+        });
+        rzp.on('payment.failed', () => { setSubmitting(false); alert('Payment failed. No money was deducted.'); });
+        rzp.open();
       } else {
-        alert('Payment verification failed.');
+        // Step 2b: Payment gateway not configured — be honest, never fake success
+        setSubmitting(false);
+        alert('Order created (ID: ' + data.consultationId + '). Payment gateway is not configured yet — our team will contact you on WhatsApp.');
+        return;
       }
     } catch (err) {
       alert('Network error. Please try again.');

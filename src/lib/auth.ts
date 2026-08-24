@@ -3,35 +3,68 @@ import crypto from 'crypto';
 
 /**
  * Authentication and PII Protection Module for CosmicTantra
+ *
+ * SECURITY NOTE (P0-2 resolution):
+ * - Secrets come ONLY from environment variables. There are NO hardcoded fallback
+ *   values. In production, a missing secret FAILS CLOSED (auth denied / webhook
+ *   returns 503 "misconfigured") so security never silently degrades.
+ * - The development-only insecure key exists only when NODE_ENV !== 'production'
+ *   and is clearly marked as non-production.
  */
 
-const ADMIN_SECRET = process.env.ADMIN_SECRET || process.env.ASTROLOGY_ADMIN_KEY || 'cosmic-admin-live-key-2026';
-const RAZORPAY_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET || process.env.RAZORPAY_KEY_SECRET || 'rzp_secret_cosmic_2026';
+export const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
+export function getAdminSecret(): string | null {
+  const s = process.env.ADMIN_SECRET || process.env.ASTROLOGY_ADMIN_KEY || null;
+  if (s) return s;
+  if (IS_PRODUCTION) return null; // fail closed in production
+  return 'dev-only-insecure-key-do-not-use-in-prod';
+}
+
+export function getRazorpayWebhookSecret(): string | null {
+  const s = process.env.RAZORPAY_WEBHOOK_SECRET || process.env.RAZORPAY_KEY_SECRET || null;
+  if (s) return s;
+  if (IS_PRODUCTION) return null; // fail closed in production
+  return 'dev-only-razorpay-secret-do-not-use-in-prod';
+}
 
 /**
  * Verifies if request is authenticated as Admin
  */
 export function verifyAdminAuth(req: NextRequest): boolean {
-  const adminKey = req.headers.get('x-admin-key');
-  const authHeader = req.headers.get('authorization');
+  const adminSecret = getAdminSecret();
+  if (!adminSecret) return false; // production misconfiguration => deny
 
-  if (adminKey && adminKey === ADMIN_SECRET) {
+  // Development bypass is NEVER allowed in production
+  if (!IS_PRODUCTION && req.headers.get('x-dev-bypass') === 'true') {
     return true;
   }
 
+  const adminKey = req.headers.get('x-admin-key');
+  if (adminKey && timingSafeEqual(adminKey, adminSecret)) {
+    return true;
+  }
+
+  const authHeader = req.headers.get('authorization');
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.slice(7).trim();
-    if (token === ADMIN_SECRET) {
+    if (timingSafeEqual(token, adminSecret)) {
       return true;
     }
   }
 
-  // Development bypass when explicitly running in local dev without set headers
-  if (process.env.NODE_ENV === 'development' && req.headers.get('x-dev-bypass') === 'true') {
-    return true;
-  }
-
   return false;
+}
+
+function timingSafeEqual(a: string, b: string): boolean {
+  try {
+    const bufA = Buffer.from(a);
+    const bufB = Buffer.from(b);
+    if (bufA.length !== bufB.length) return false;
+    return crypto.timingSafeEqual(bufA, bufB);
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -51,19 +84,23 @@ export function requireAdminAuth(req: NextRequest): NextResponse | null {
 }
 
 /**
- * Verifies Razorpay Webhook HMAC SHA256 Signature
+ * Verifies Razorpay Webhook HMAC SHA256 Signature.
+ * Returns false (never throws) when the secret is missing, so callers can
+ * respond with an explicit 503 misconfiguration instead of a silent bypass.
  */
 export function verifyRazorpaySignature(rawBody: string, signature: string | null): boolean {
   if (!signature) return false;
+  const secret = getRazorpayWebhookSecret();
+  if (!secret) return false;
 
   try {
     const expectedSignature = crypto
-      .createHmac('sha256', RAZORPAY_WEBHOOK_SECRET)
+      .createHmac('sha256', secret)
       .update(rawBody)
       .digest('hex');
 
-    return crypto.timingSafeEqual(Buffer.from(expectedSignature), Buffer.from(signature));
-  } catch (err) {
+    return timingSafeEqual(expectedSignature, signature);
+  } catch {
     return false;
   }
 }
@@ -90,7 +127,7 @@ export function maskCustomerPII(consultation: any, isAuthorized: boolean = false
 
   if (copy.customerName) {
     const parts = String(copy.customerName).split(' ');
-    copy.customerName = parts.map((part, i) => i === 0 ? part : `${part.slice(0, 1)}***`).join(' ');
+    copy.customerName = parts.map((part, i) => (i === 0 ? part : `${part.slice(0, 1)}***`)).join(' ');
   }
 
   return copy;
