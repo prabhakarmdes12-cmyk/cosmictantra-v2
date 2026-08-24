@@ -52,7 +52,9 @@ export default function DashaHero({ kundaliData, onOpenConsultation, lang = 'en'
         </div>
 
         {/* Signature 03: Full-Width 120-Year Vimshottari Dasha River */}
-        <div className="rounded-2xl bg-[#FFFFFF] dark:bg-[#0B0C10] border border-black/[0.08] dark:border-white/[0.08] p-6 mb-8 overflow-x-auto shadow-xl transition-colors duration-300">
+        <div className="relative rounded-2xl bg-[#FFFFFF] dark:bg-[#0B0C10] border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 p-6 mb-8 overflow-x-auto shadow-xl transition-colors duration-300">
+          {/* Sacred Geometry Dual-Border Accent */}
+          <div className="absolute inset-0 rounded-2xl border border-[#8E6F1D]/10 dark:border-[#D4AF37]/10 pointer-events-none" />
           <div className="text-[10px] font-mono-data uppercase tracking-widest text-[#857E74] dark:text-[#6B6760] mb-4 flex items-center justify-between min-w-[760px]">
             <span>{t.riverTitle}</span>
             <span>{t.moonLon}: {moonLongitude.toFixed(2)}°</span>

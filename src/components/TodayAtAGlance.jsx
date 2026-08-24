@@ -99,7 +99,7 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
             </div>
 
             {/* Morning Choghadiya */}
-            <div className="p-4 rounded-xl bg-[#FAF7F2] dark:bg-[#06070C] border border-black/[0.08] dark:border-white/[0.08]">
+            <div className="p-4 rounded-3xl border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 dark:border-white/[0.08]">
               <div className="text-[11px] font-mono-data text-[#3D3D99] dark:text-[#9E9EF8] font-bold">
                 {t.morningTitle}
               </div>
@@ -150,37 +150,37 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
 
         {/* Tabular Characteristics Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-10 font-mono-data">
-          <div className="p-3.5 rounded-xl bg-[#FFFFFF] dark:bg-[#090B14] border border-black/[0.08] dark:border-white/[0.07] shadow-xs">
+          <div className="p-3.5 rounded-3xl border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 dark:border-white/[0.07] shadow-xs">
             <div className="text-[9px] uppercase tracking-widest text-[#696256] dark:text-[#8E887E] font-bold">Tithi (तिथि)</div>
             <div className="font-bold text-sm text-[#181512] dark:text-[#F5F2EB] mt-1">{panchangData.tithi.name}</div>
             <div className="text-[11px] text-[#826315] dark:text-[#E5C378] mt-0.5 font-bold">{panchangData.tithi.paksha}</div>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-[#FFFFFF] dark:bg-[#090B14] border border-black/[0.08] dark:border-white/[0.07] shadow-xs">
+          <div className="p-3.5 rounded-3xl border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 dark:border-white/[0.07] shadow-xs">
             <div className="text-[9px] uppercase tracking-widest text-[#696256] dark:text-[#8E887E] font-bold">Nakshatra (नक्षत्र)</div>
             <div className="font-bold text-sm text-[#181512] dark:text-[#F5F2EB] mt-1">{panchangData.nakshatra.name}</div>
             <div className="text-[11px] text-[#3D3D99] dark:text-[#9E9EF8] mt-0.5 font-bold">Pada {panchangData.nakshatra.pada}</div>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-[#FFFFFF] dark:bg-[#090B14] border border-black/[0.08] dark:border-white/[0.07] shadow-xs">
+          <div className="p-3.5 rounded-3xl border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 dark:border-white/[0.07] shadow-xs">
             <div className="text-[9px] uppercase tracking-widest text-[#696256] dark:text-[#8E887E] font-bold">Yoga (योग)</div>
             <div className="font-bold text-sm text-[#181512] dark:text-[#F5F2EB] mt-1">{panchangData.yoga.name}</div>
             <div className="text-[11px] text-[#A6461D] dark:text-[#E2825B] mt-0.5 font-bold">Yoga #{panchangData.yoga.number}</div>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-[#FFFFFF] dark:bg-[#090B14] border border-black/[0.08] dark:border-white/[0.07] shadow-xs">
+          <div className="p-3.5 rounded-3xl border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 dark:border-white/[0.07] shadow-xs">
             <div className="text-[9px] uppercase tracking-widest text-[#696256] dark:text-[#8E887E] font-bold">Karana (करण)</div>
             <div className="font-bold text-sm text-[#181512] dark:text-[#F5F2EB] mt-1">{panchangData.karana.name}</div>
             <div className="text-[11px] text-[#4A443B] dark:text-[#C4BEB3] mt-0.5 font-medium">Half Lunar Arc</div>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-[#FFFFFF] dark:bg-[#090B14] border border-black/[0.08] dark:border-white/[0.07] shadow-xs">
+          <div className="p-3.5 rounded-3xl border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 dark:border-white/[0.07] shadow-xs">
             <div className="text-[9px] uppercase tracking-widest text-[#696256] dark:text-[#8E887E] font-bold">Moon (चन्द्र कला)</div>
             <div className="font-bold text-xs text-[#181512] dark:text-[#F5F2EB] mt-1 truncate" title={panchangData.moon.phase}>{panchangData.moon.phase}</div>
             <div className="text-[11px] text-[#3D3D99] dark:text-[#9E9EF8] mt-0.5 font-bold">{panchangData.moon.illumination}% Illum.</div>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-[#FFFFFF] dark:bg-[#090B14] border border-black/[0.08] dark:border-white/[0.07] shadow-xs">
+          <div className="p-3.5 rounded-3xl border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 dark:border-white/[0.07] shadow-xs">
             <div className="text-[9px] uppercase tracking-widest text-[#696256] dark:text-[#8E887E] font-bold">Yamaganda (यमगण्ड)</div>
             <div className="font-bold text-xs text-[#181512] dark:text-[#F5F2EB] mt-1">{panchangData.timings.yamaganda}</div>
             <div className="text-[10px] text-[#821322] dark:text-[#f87171] mt-0.5 font-bold">Secondary Caution</div>

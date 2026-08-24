@@ -49,8 +49,10 @@ export default function DailyCosmicCard({
     <div className={`group relative rounded-3xl border overflow-hidden transition-all duration-300 hover:shadow-xl
       ${isToday 
         ? 'border-[#D4AF37] shadow-lg scale-[1.01]' 
-        : 'border-[#D4AF37]/20 hover:border-[#D4AF37]/40'
+        : 'border-[#8E6F1D]/25 dark:border-[#D4AF37]/30'
       } bg-white dark:bg-[#0A0C12]`}>
+      {/* Sacred Geometry Dual-Border Accent */}
+      <div className="absolute inset-0 rounded-3xl border border-[#8E6F1D]/10 dark:border-[#D4AF37]/10 pointer-events-none" />
       
       {/* Header */}
       <div className="px-6 pt-6 pb-4 flex items-start justify-between">

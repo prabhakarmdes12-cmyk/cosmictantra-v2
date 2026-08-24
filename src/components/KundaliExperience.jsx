@@ -93,7 +93,7 @@ export default function KundaliExperience({
         </div>
 
         {/* Form Matrix */}
-        <div className="max-w-3xl rounded-2xl bg-[#FFFFFF] dark:bg-[#090B14] border border-black/[0.08] dark:border-[#D4AF37]/30 p-6 sm:p-8 mb-12 shadow-2xl transition-colors duration-300">
+        <div className="max-w-3xl rounded-3xl border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 dark:border-[#D4AF37]/30 p-6 sm:p-8 mb-12 shadow-2xl transition-colors duration-300">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               
@@ -185,7 +185,7 @@ export default function KundaliExperience({
                 </div>
               </div>
 
-              <div className="p-5 rounded-2xl bg-[#FFFFFF] dark:bg-[#090B14] border border-black/[0.08] dark:border-white/[0.08] shadow-xs">
+              <div className="p-5 rounded-3xl border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 dark:border-white/[0.08] shadow-xs">
                 <div className="text-[10px] text-[#4848A8] dark:text-[#8B8BF5] uppercase tracking-wider font-bold">{t.moonSign}</div>
                 <div className="font-editorial text-2xl font-bold text-[#1C1917] dark:text-[#EFECE6] mt-1">
                   {kundaliData.moon.rashiName} ({kundaliData.moon.rashiEn})
@@ -195,7 +195,7 @@ export default function KundaliExperience({
                 </div>
               </div>
 
-              <div className="p-5 rounded-2xl bg-[#FFFFFF] dark:bg-[#090B14] border border-black/[0.08] dark:border-white/[0.08] flex flex-col justify-between shadow-xs">
+              <div className="p-5 rounded-3xl border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 dark:border-white/[0.08] flex flex-col justify-between shadow-xs">
                 <div>
                   <div className="text-[10px] text-[#A6461D] dark:text-[#C86D46] uppercase tracking-wider font-bold">{t.ephemerisAnchor}</div>
                   <div className="text-sm font-semibold text-[#1C1917] dark:text-[#EFECE6] mt-1">
@@ -221,7 +221,7 @@ export default function KundaliExperience({
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               
               {/* Left Column: North Indian Kundali SVG Visualizer */}
-              <div className="lg:col-span-7 p-6 rounded-2xl bg-[#FFFFFF] dark:bg-[#080A12] border border-black/[0.08] dark:border-[#D4AF37]/30 shadow-2xl">
+              <div className="lg:col-span-7 p-6 rounded-3xl border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 dark:border-[#D4AF37]/30 shadow-2xl">
                 <div className="flex items-center justify-between mb-4 font-mono-data">
                   <span className="font-editorial text-base font-bold text-[#1C1917] dark:text-[#EFECE6]">
                     {t.chartTitle}
@@ -383,7 +383,7 @@ export default function KundaliExperience({
 
               {/* Right Column: Planetary Ephemeris Dossier */}
               <div className="lg:col-span-5 space-y-4 font-mono-data">
-                <div className="p-5 rounded-2xl bg-[#FFFFFF] dark:bg-[#080A12] border border-black/[0.08] dark:border-[#D4AF37]/30 shadow-xl">
+                <div className="p-5 rounded-3xl border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 dark:border-[#D4AF37]/30 shadow-xl">
                   <div className="flex items-center justify-between mb-4">
                     <span className="font-editorial text-sm font-bold text-[#1C1917] dark:text-[#EFECE6]">
                       {t.grahaTitle}
