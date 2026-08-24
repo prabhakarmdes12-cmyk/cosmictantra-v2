@@ -74,46 +74,46 @@ export default function Navigation({
         </a>
 
         {/* Primary Desktop Nav */}
-        <nav className="hidden lg:flex items-center gap-5 xl:gap-7 text-xs font-mono-data tracking-wider uppercase text-[#4A443B] dark:text-[#C4BEB3] font-semibold">
+        <nav className="hidden lg:flex items-center gap-5 xl:gap-7 text-xs font-mono-data tracking-wider uppercase text-[#332E27] dark:text-[#EAE6DF] font-bold">
           <button 
             onClick={() => handleNavClick('panchang-section', 'TODAY_PANCHANG')}
-            className="hover:text-[#181512] dark:hover:text-white transition-colors py-1 focus:outline-none"
+            className="hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none"
           >
             {t.nav.today}
           </button>
           <button 
             onClick={() => handleNavClick('muhurat-section', 'MUHURAT')}
-            className="hover:text-[#181512] dark:hover:text-white transition-colors py-1 focus:outline-none"
+            className="hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none"
           >
             {t.nav.muhurat}
           </button>
           <button 
             onClick={() => handleNavClick('kundali-section', 'KUNDALI')}
-            className="hover:text-[#181512] dark:hover:text-white transition-colors py-1 focus:outline-none"
+            className="hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none"
           >
             {t.nav.kundali}
           </button>
           <button 
             onClick={() => handleNavClick('dasha-section', 'DASHA')}
-            className="hover:text-[#181512] dark:hover:text-white transition-colors py-1 focus:outline-none"
+            className="hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none"
           >
             {t.nav.dasha}
           </button>
           <button 
             onClick={() => handleNavClick('festival-section', 'FESTIVALS')}
-            className="hover:text-[#181512] dark:hover:text-white transition-colors py-1 focus:outline-none"
+            className="hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none"
           >
             {t.nav.festivals}
           </button>
           <button 
             onClick={() => handleNavClick('practitioners-section', 'JYOTISHI')}
-            className="hover:text-[#181512] dark:hover:text-white transition-colors py-1 focus:outline-none"
+            className="hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none"
           >
             {t.nav.scholars}
           </button>
           <button 
             onClick={() => handleNavClick('swarga-lok-section', 'SWARGA_LOK')}
-            className="hover:text-[#826315] dark:hover:text-[#E5C378] transition-colors py-1 focus:outline-none text-[#826315] dark:text-[#E5C378]"
+            className="hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none text-[#826315] dark:text-[#F0C968]"
           >
             {t.nav.observatory}
           </button>

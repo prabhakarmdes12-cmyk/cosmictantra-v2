@@ -121,10 +121,10 @@ export default function HeroSection({
                 <div className="flex items-center gap-2.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#E29A48] animate-pulse shadow-xs" />
                   <div>
-                    <span className="font-editorial text-base font-bold text-[#181512] dark:text-[#F5F2EB] tracking-wider uppercase block">
+                    <span className="font-editorial text-base sm:text-lg font-bold text-[#181512] dark:text-[#FFFFFF] tracking-wide block leading-snug drop-shadow-xs">
                       {t.cosmicNow}
                     </span>
-                    <span className="text-[9px] font-mono-data text-[#826315] dark:text-[#E5C378] uppercase tracking-widest block font-bold">
+                    <span className="text-[10px] font-mono-data text-[#826315] dark:text-[#F0C968] uppercase tracking-widest block font-extrabold mt-0.5">
                       {t.cosmicNowSub}
                     </span>
                   </div>
@@ -172,42 +172,42 @@ export default function HeroSection({
 
               {/* Telemetry 4-Cell Matrix */}
               <div className="grid grid-cols-2 gap-2.5 text-xs font-mono-data">
-                <div className="p-3 rounded-xl bg-[#FAF7F2] dark:bg-[#0C0E1A] border border-black/[0.08] dark:border-white/[0.06]">
-                  <div className="text-[9px] uppercase tracking-widest text-[#696256] dark:text-[#8E887E] font-bold">{t.tithi}</div>
-                  <div className="font-bold text-[#181512] dark:text-[#F5F2EB] text-sm truncate mt-0.5" title={panchangData.tithi.fullName}>
+                <div className="p-3 rounded-xl bg-[#FAF7F2] dark:bg-[#0C0E1C] border border-black/[0.12] dark:border-[#D4AF37]/35 shadow-xs">
+                  <div className="text-[9px] uppercase tracking-widest text-[#5C5549] dark:text-[#B5ACA0] font-bold">{t.tithi}</div>
+                  <div className="font-bold text-[#181512] dark:text-[#FFFFFF] text-sm sm:text-base truncate mt-0.5" title={panchangData.tithi.fullName}>
                     {panchangData.tithi.name}
                   </div>
-                  <div className="text-[10px] text-[#826315] dark:text-[#E5C378] mt-0.5 font-semibold">
+                  <div className="text-[10px] text-[#826315] dark:text-[#F0C968] mt-0.5 font-extrabold">
                     {panchangData.tithi.paksha} • {panchangData.tithi.progressPercent}%
                   </div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-[#FAF7F2] dark:bg-[#0C0E1A] border border-black/[0.08] dark:border-white/[0.06]">
-                  <div className="text-[9px] uppercase tracking-widest text-[#696256] dark:text-[#8E887E] font-bold">{t.nakshatra}</div>
-                  <div className="font-bold text-[#181512] dark:text-[#F5F2EB] text-sm truncate mt-0.5">
+                <div className="p-3 rounded-xl bg-[#FAF7F2] dark:bg-[#0C0E1C] border border-black/[0.12] dark:border-[#D4AF37]/35 shadow-xs">
+                  <div className="text-[9px] uppercase tracking-widest text-[#5C5549] dark:text-[#B5ACA0] font-bold">{t.nakshatra}</div>
+                  <div className="font-bold text-[#181512] dark:text-[#FFFFFF] text-sm sm:text-base truncate mt-0.5">
                     {panchangData.nakshatra.name}
                   </div>
-                  <div className="text-[10px] text-[#3D3D99] dark:text-[#9E9EF8] mt-0.5 font-semibold">
+                  <div className="text-[10px] text-[#3D3D99] dark:text-[#B0B0FF] mt-0.5 font-extrabold">
                     Pada {panchangData.nakshatra.pada} • Lord: {panchangData.nakshatra.lord}
                   </div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-[#FAF7F2] dark:bg-[#0C0E1A] border border-black/[0.08] dark:border-white/[0.06]">
-                  <div className="text-[9px] uppercase tracking-widest text-[#696256] dark:text-[#8E887E] font-bold">{t.yogaKarana}</div>
-                  <div className="font-bold text-[#181512] dark:text-[#F5F2EB] text-sm truncate mt-0.5">
+                <div className="p-3 rounded-xl bg-[#FAF7F2] dark:bg-[#0C0E1C] border border-black/[0.12] dark:border-[#D4AF37]/35 shadow-xs">
+                  <div className="text-[9px] uppercase tracking-widest text-[#5C5549] dark:text-[#B5ACA0] font-bold">{t.yogaKarana}</div>
+                  <div className="font-bold text-[#181512] dark:text-[#FFFFFF] text-sm sm:text-base truncate mt-0.5">
                     {panchangData.yoga.name}
                   </div>
-                  <div className="text-[10px] text-[#A6461D] dark:text-[#E2825B] mt-0.5 font-semibold">
+                  <div className="text-[10px] text-[#A6461D] dark:text-[#F4A574] mt-0.5 font-extrabold">
                     Karana: {panchangData.karana.name}
                   </div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-[#FAF7F2] dark:bg-[#0C0E1A] border border-black/[0.08] dark:border-white/[0.06]">
-                  <div className="text-[9px] uppercase tracking-widest text-[#696256] dark:text-[#8E887E] font-bold">{t.moonPhase}</div>
-                  <div className="font-bold text-[#181512] dark:text-[#F5F2EB] text-sm truncate mt-0.5">
+                <div className="p-3 rounded-xl bg-[#FAF7F2] dark:bg-[#0C0E1C] border border-black/[0.12] dark:border-[#D4AF37]/35 shadow-xs">
+                  <div className="text-[9px] uppercase tracking-widest text-[#5C5549] dark:text-[#B5ACA0] font-bold">{t.moonPhase}</div>
+                  <div className="font-bold text-[#181512] dark:text-[#FFFFFF] text-sm sm:text-base truncate mt-0.5">
                     {panchangData.moon.phase}
                   </div>
-                  <div className="text-[10px] text-[#3D3D99] dark:text-[#9E9EF8] mt-0.5 font-semibold">
+                  <div className="text-[10px] text-[#3D3D99] dark:text-[#B0B0FF] mt-0.5 font-extrabold">
                     {panchangData.moon.illumination}% {t.illumination}
                   </div>
                 </div>
