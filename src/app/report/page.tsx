@@ -4,6 +4,7 @@ import React from 'react';
 import { Download, Printer } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { getActiveProfile } from '@/lib/profileStore';
+import { getSmartUpayaRecommendations } from '@/lib/upayaEngine';
 
 export default function WrittenFolioReport() {
   const profile = getActiveProfile();
@@ -132,20 +133,21 @@ export default function WrittenFolioReport() {
     doc.setTextColor(dark);
     doc.text('Moon (current) → Jupiter (Nov 2026) → Saturn (Mar 2028) → Mercury (2029)', 20, 165);
 
-    // === SATVIK UPAYA + RECOMMENDED REMEDIES (Dynamic from Upaya System) ===
+    // === SMART UPAYA RECOMMENDATIONS (from Upaya Engine) ===
     doc.setFontSize(12);
     doc.setTextColor(gold);
     doc.text('सात्त्विक उपाय — Recommended Remedies', 20, 175);
 
-    // These would come from the actual consultation data in production
-    const upayas = [
-      { type: 'Gemstone', name: 'Blue Sapphire (Neelam) 4.25ct', partner: 'Kashi Ratna Bhandar', price: '₹18,500', cert: 'GIA Certified' },
-      { type: 'Rudraksha', name: '14 Mukhi Rudraksha (Nepali)', partner: 'Shri Rudraksha Kendra', price: '₹4,800', cert: 'X-ray Verified' },
-      { type: 'Pooja', name: 'Shani Shanti Anusthan', partner: 'Kashi Vishwanath Seva Samiti', price: '₹7,500', cert: 'Temple Authorized' },
-    ];
+    // Use the Smart Engine
+    const smartUpayas = getSmartUpayaRecommendations(
+      'Vrishabha',
+      'Rohini',
+      'Moon Mahadasha',
+      'Will changing my business direction in the next six months be favourable for my long-term financial growth?'
+    );
 
     let yUpaya = 183;
-    upayas.forEach((u) => {
+    smartUpayas.forEach((u) => {
       doc.setFillColor(250, 247, 242);
       doc.rect(20, yUpaya, 170, 20, 'F');
       doc.setDrawColor(gold);
@@ -154,7 +156,7 @@ export default function WrittenFolioReport() {
       doc.setFontSize(9);
       doc.setTextColor(dark);
       doc.text(`${u.type}: ${u.name}`, 25, yUpaya + 7);
-      doc.text(`${u.partner} • ${u.price} • ${u.cert}`, 25, yUpaya + 14);
+      doc.text(`${u.reason} • ${u.priceRange}`, 25, yUpaya + 14);
       yUpaya += 23;
     });
 
