@@ -2,54 +2,78 @@
 
 import React from 'react';
 import { Download, Printer } from 'lucide-react';
+import jsPDF from 'jspdf';
 
 export default function WrittenFolioReport() {
-  const handleDownload = () => {
-    // In real implementation: use jsPDF or html2canvas
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(`
-        <html>
-          <head><title>CosmicTantra — Written Folio</title></head>
-          <body style="font-family: 'Cinzel', serif; padding: 40px; max-width: 800px; margin: 0 auto;">
-            <div style="text-align: center; border-bottom: 2px solid #8E6F1D; padding-bottom: 20px;">
-              <div style="font-size: 14px; color: #8E6F1D; letter-spacing: 4px;">श्री काशी विश्वनाथो विजयते</div>
-              <h1 style="font-size: 42px; margin: 10px 0;">CosmicTantra</h1>
-              <div style="font-size: 13px; color: #665E55;">Lahiri Ephemeris • Verified Scholarly Written Folio</div>
-            </div>
-            
-            <div style="margin-top: 40px;">
-              <div style="display: flex; justify-content: space-between; font-size: 13px; color: #665E55;">
-                <div><strong>Seeker:</strong> Priya Sharma</div>
-                <div><strong>Folio ID:</strong> CT-2026-0825-001</div>
-              </div>
-              <div style="margin-top: 30px; font-size: 15px; line-height: 1.7;">
-                <strong>Question:</strong> Will changing my business direction in the next six months be favourable for my long-term financial growth?
-              </div>
-            </div>
+  const handleDownloadPDF = () => {
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
 
-            <div style="margin-top: 50px; padding: 30px; border: 1px solid #8E6F1D; background: #FAF7F2;">
-              <h3 style="font-size: 18px; color: #8E6F1D;">विद्वत्-विवेचना (Scholarly Synthesis)</h3>
-              <p style="margin-top: 15px; line-height: 1.75; color: #1C1917;">
-                Your current Moon Mahadasha (42% complete) supports nurturing and creative ventures. 
-                The upcoming Jupiter Antardasha (starting November 2026) brings strong expansion energy 
-                in the 10th and 11th houses. This is an auspicious window for strategic pivots...
-              </p>
-              <div style="margin-top: 25px; font-size: 13px; color: #8E6F1D;">
-                <strong>Recommended Action:</strong> Perform a small Lakshmi-Ganesh puja before initiating major changes.
-              </div>
-            </div>
+    // Colors
+    const gold = '#8E6F1D';
+    const dark = '#1C1917';
+    const parchment = '#FAF7F2';
 
-            <div style="margin-top: 60px; text-align: center; font-size: 12px; color: #665E55;">
-              Verified by Pt. Vidyadhar Shastri • Sampurnanand Sanskrit University<br />
-              © CosmicTantra 2026 • Chitra Paksha (Lahiri) Sidereal Mathematics
-            </div>
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-      printWindow.print();
-    }
+    // Header
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(gold);
+    doc.text('श्री काशी विश्वनाथो विजयते', 105, 20, { align: 'center' });
+
+    doc.setFontSize(28);
+    doc.setTextColor(dark);
+    doc.text('CosmicTantra', 105, 32, { align: 'center' });
+
+    doc.setFontSize(10);
+    doc.setTextColor('#665E55');
+    doc.text('Lahiri Ephemeris • Verified Scholarly Written Folio', 105, 39, { align: 'center' });
+
+    // Divider
+    doc.setDrawColor(gold);
+    doc.setLineWidth(0.5);
+    doc.line(20, 45, 190, 45);
+
+    // Seeker Info
+    doc.setFontSize(11);
+    doc.setTextColor(dark);
+    doc.text('Seeker: Priya Sharma', 20, 55);
+    doc.text('Folio ID: CT-2026-0825-001', 190, 55, { align: 'right' });
+
+    // Question
+    doc.setFontSize(12);
+    doc.text('Question:', 20, 68);
+    doc.setFontSize(11);
+    doc.text('Will changing my business direction in the next six months be favourable for my long-term financial growth?', 20, 75, { maxWidth: 170 });
+
+    // Synthesis Box
+    doc.setFillColor(250, 247, 242);
+    doc.rect(20, 90, 170, 85, 'F');
+    doc.setDrawColor(gold);
+    doc.rect(20, 90, 170, 85);
+
+    doc.setFontSize(13);
+    doc.setTextColor(gold);
+    doc.text('विद्वत्-विवेचना (Scholarly Synthesis)', 25, 100);
+
+    doc.setFontSize(11);
+    doc.setTextColor(dark);
+    const synthesisText = `Your current Moon Mahadasha (42% complete) supports nurturing and creative ventures. The upcoming Jupiter Antardasha (starting November 2026) brings strong expansion energy in the 10th and 11th houses. This is an auspicious window for strategic pivots.`;
+    doc.text(synthesisText, 25, 110, { maxWidth: 160 });
+
+    doc.setFontSize(11);
+    doc.setTextColor(gold);
+    doc.text('Recommended Action: Perform a small Lakshmi-Ganesh puja before initiating major changes.', 25, 155, { maxWidth: 160 });
+
+    // Footer
+    doc.setFontSize(9);
+    doc.setTextColor('#665E55');
+    doc.text('Verified by Pt. Vidyadhar Shastri • Sampurnanand Sanskrit University', 105, 270, { align: 'center' });
+    doc.text('© CosmicTantra 2026 • Chitra Paksha (Lahiri) Sidereal Mathematics', 105, 276, { align: 'center' });
+
+    doc.save('CosmicTantra-Written-Folio.pdf');
   };
 
   return (
@@ -94,13 +118,13 @@ export default function WrittenFolioReport() {
 
         <div className="mt-8 flex justify-center gap-4">
           <button 
-            onClick={handleDownload}
+            onClick={handleDownloadPDF}
             className="flex items-center gap-2 px-8 py-4 rounded-2xl bg-[#8E6F1D] text-white font-semibold text-sm"
           >
             <Download className="w-4 h-4" /> DOWNLOAD PRINT-READY PDF
           </button>
           <button 
-            onClick={handleDownload}
+            onClick={handleDownloadPDF}
             className="flex items-center gap-2 px-8 py-4 rounded-2xl border border-[#8E6F1D]/30 text-sm font-medium"
           >
             <Printer className="w-4 h-4" /> PRINT FOLIO
