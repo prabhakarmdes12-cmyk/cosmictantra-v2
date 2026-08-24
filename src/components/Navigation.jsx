@@ -5,7 +5,7 @@ import { analytics, ANALYTICS_EVENTS } from '../lib/analytics';
 import { TRANSLATIONS } from '../lib/translations';
 import { chitiSensory } from '../lib/chitiAudio';
 
-const TOOL_LINKS = [
+  const TOOL_LINKS = [
   { href: '/numerology/name', label: 'Name Numerology' },
   { href: '/numerology/business-name', label: 'Business Name' },
   { href: '/numerology/mobile-number', label: 'Mobile Number' },
@@ -13,6 +13,9 @@ const TOOL_LINKS = [
   { href: '/kundali-milan', label: 'Kundali Milan' },
   { href: '/my-calendar', label: 'My Vedic Calendar' },
   { href: '/family', label: 'Family Profiles' },
+  { href: '/profile', label: 'Cosmic ID + Profile' },
+  { href: '/daily', label: 'Daily Cosmic Forecast' },
+  { href: '/payments/test', label: 'Payments Test' },
   { href: '/darshan', label: 'Live Darshan' },
   { href: '/library', label: 'Vedic Library' },
 ];

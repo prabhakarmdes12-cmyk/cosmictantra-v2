@@ -67,6 +67,17 @@ export default function HeroSection({
               {t.description}
             </p>
 
+            {/* Daily Cosmic Forecast CTA (New Retention Hook) */}
+            <div className="pt-1">
+              <a 
+                href="/daily"
+                onClick={() => chitiSensory.playTick()}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-[#D4AF37]/50 hover:bg-[#D4AF37]/10 text-xs font-semibold tracking-wider text-[#826315] dark:text-[#E5C378] transition-all"
+              >
+                🌟 Get Your Free Daily Cosmic Forecast <ArrowRight className="w-3.5 h-3.5" />
+              </a>
+            </div>
+
             {/* Primary Action Buttons (Vertical Stack on Mobile, Row on Desktop) */}
             <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-3.5 w-full">
               <button

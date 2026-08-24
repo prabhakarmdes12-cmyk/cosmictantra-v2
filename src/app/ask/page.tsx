@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Sparkles, ShieldCheck, Clock, CheckCircle2, MessageSquare, HelpCircle, ArrowRight } from 'lucide-react';
+import { Sparkles, ShieldCheck, Clock, CheckCircle2, MessageSquare, HelpCircle, ArrowRight, User } from 'lucide-react';
 import { getActiveProfile } from '@/lib/profileStore';
+import TrustBar from '@/components/visual/TrustBar';
 
 // Loads the Razorpay Checkout script once (client-side only)
 let rzpScriptPromise: Promise<any> | null = null;
@@ -26,6 +27,7 @@ function loadRazorpayCheckout() {
 export default function AskQuestionPage() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
+  const [showOtpHint, setShowOtpHint] = useState(false);
   const [form, setForm] = useState({
     customerName: '',
     customerPhone: '',
@@ -54,6 +56,10 @@ export default function AskQuestionPage() {
       timezone: f.timezone || p.tz || f.timezone,
     }));
   }, []);
+
+  const handlePhoneFocus = () => {
+    if (form.customerPhone.length < 10) setShowOtpHint(true);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,16 +138,18 @@ export default function AskQuestionPage() {
 
   return (
     <div className="min-h-screen bg-[#030108] text-[#E2D9F3] py-8 px-4 flex flex-col items-center">
+      <TrustBar />
+
       {/* Header */}
-      <div className="max-w-lg w-full mb-8 text-center">
+      <div className="max-w-lg w-full mb-8 text-center mt-6">
         <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#7C3AED]/20 border border-[#7C3AED]/40 text-[#A78BFA] text-xs font-semibold uppercase tracking-wider mb-3">
           <Sparkles className="w-4 h-4 text-[#F59E0B]" /> CosmicTantra Jyotish Service
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold font-display text-white mb-2">
+        <h1 className="text-4xl font-bold font-editorial tracking-[-1.5px] text-white mb-3">
           Ask One Question
         </h1>
-        <p className="text-xs sm:text-sm text-[#9CA3AF]">
-          Personalised Vedic Kundali analysis by CosmicTantra, verified & approved by an experienced Jyotish practitioner.
+        <p className="text-sm text-[#9CA3AF]">
+          Personalised Vedic Kundali analysis by CosmicTantra, verified &amp; approved by an experienced Jyotish practitioner.
         </p>
       </div>
 
@@ -202,15 +210,23 @@ export default function AskQuestionPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-[#9CA3AF] mb-1">WhatsApp Phone Number *</label>
-              <input
-                type="text"
-                required
-                className="chiti-input"
-                value={form.customerPhone}
-                onChange={e => setForm({ ...form, customerPhone: e.target.value })}
-                placeholder="+91 98765 43210"
-              />
-              <span className="text-[10px] text-[#6B7280]">Your consultation report will be delivered here.</span>
+              <div className="relative">
+                <input
+                  type="text"
+                  required
+                  className="chiti-input pr-10"
+                  value={form.customerPhone}
+                  onChange={e => setForm({ ...form, customerPhone: e.target.value })}
+                  onFocus={handlePhoneFocus}
+                  placeholder="+91 98765 43210"
+                />
+                {showOtpHint && (
+                  <a href="/profile" className="absolute right-3 top-1/2 -translate-y-1/2 text-[#D4AF37] hover:text-white">
+                    <User className="w-4 h-4" />
+                  </a>
+                )}
+              </div>
+              <span className="text-[10px] text-[#6B7280]">Your consultation report will be delivered here. <span className="text-[#D4AF37]">Verify for faster delivery →</span></span>
             </div>
             <div>
               <label className="block text-xs font-semibold text-[#9CA3AF] mb-1">Email Address (Optional)</label>
