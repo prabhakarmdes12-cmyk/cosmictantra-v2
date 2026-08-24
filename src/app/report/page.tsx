@@ -1,0 +1,270 @@
+'use client';
+
+import React from 'react';
+import { Download, Printer } from 'lucide-react';
+import jsPDF from 'jspdf';
+import { getActiveProfile } from '@/lib/profileStore';
+
+export default function WrittenFolioReport() {
+  const profile = getActiveProfile();
+
+  const handleDownloadPDF = () => {
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    const gold = '#8E6F1D';
+    const dark = '#1C1917';
+
+    // === HEADER ===
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(gold);
+    doc.text('श्री काशी विश्वनाथो विजयते', 105, 18, { align: 'center' });
+
+    doc.setFontSize(26);
+    doc.setTextColor(dark);
+    doc.text('CosmicTantra', 105, 28, { align: 'center' });
+
+    doc.setFontSize(9);
+    doc.setTextColor('#665E55');
+    doc.text('Lahiri Ephemeris • Verified Scholarly Written Folio', 105, 34, { align: 'center' });
+
+    doc.setDrawColor(gold);
+    doc.setLineWidth(0.6);
+    doc.line(20, 40, 190, 40);
+
+    // === SEEKER INFO ===
+    doc.setFontSize(10);
+    doc.setTextColor(dark);
+    doc.text(`Seeker: ${profile?.name || 'Priya Sharma'}`, 20, 48);
+    doc.text(`Cosmic ID: ${profile?.cosmicId || 'CT-4821'}`, 190, 48, { align: 'right' });
+    doc.text(`Folio ID: CT-2026-0825-001`, 20, 54);
+    doc.text(`Date: 25 August 2026`, 190, 54, { align: 'right' });
+
+    // === QUESTION ===
+    doc.setFontSize(11);
+    doc.text('Question:', 20, 65);
+    doc.setFontSize(10);
+    doc.text('Will changing my business direction in the next six months be favourable for my long-term financial growth?', 20, 72, { maxWidth: 170 });
+
+    // === KUNDALI SUMMARY ===
+    doc.setFontSize(12);
+    doc.setTextColor(gold);
+    doc.text('कुण्डली सारांश (Kundali Summary)', 20, 88);
+
+    doc.setFontSize(10);
+    doc.setTextColor(dark);
+    doc.text(`Lagna: Vrishabha (Taurus)    |    Moon: Rohini Nakshatra    |    Current Dasha: Moon Mahadasha (42%)`, 20, 95);
+
+    // === VISUAL NORTH INDIAN KUNDALI CHART ===
+    doc.setFontSize(11);
+    doc.setTextColor(gold);
+    doc.text('जन्मकुण्डली (North Indian Style)', 20, 103);
+
+    const chartX = 25;
+    const chartY = 112;
+    const boxSize = 36;
+
+    doc.setDrawColor(gold);
+    doc.setLineWidth(0.7);
+    
+    // Outer square
+    doc.rect(chartX, chartY, boxSize * 3, boxSize * 3);
+    
+    // Horizontal & Vertical lines
+    doc.line(chartX, chartY + boxSize, chartX + boxSize * 3, chartY + boxSize);
+    doc.line(chartX, chartY + boxSize * 2, chartX + boxSize * 3, chartY + boxSize * 2);
+    doc.line(chartX + boxSize, chartY, chartX + boxSize, chartY + boxSize * 3);
+    doc.line(chartX + boxSize * 2, chartY, chartX + boxSize * 2, chartY + boxSize * 3);
+    
+    // Diagonals (North Indian style)
+    doc.line(chartX, chartY, chartX + boxSize, chartY + boxSize);
+    doc.line(chartX + boxSize * 2, chartY, chartX + boxSize * 3, chartY + boxSize);
+    doc.line(chartX, chartY + boxSize * 2, chartX + boxSize, chartY + boxSize * 3);
+    doc.line(chartX + boxSize * 2, chartY + boxSize * 2, chartX + boxSize * 3, chartY + boxSize * 3);
+
+    // Planet labels
+    doc.setFontSize(7);
+    doc.setTextColor(dark);
+    doc.text('Su', chartX + 15, chartY + 7);
+    doc.text('Mo', chartX + 15, chartY + 13);
+    doc.text('Ma', chartX + 4, chartY + 20);
+    doc.text('Ju', chartX + 15, chartY + 27);
+    doc.text('Sa', chartX + 15, chartY + 33);
+    doc.text('Ve', chartX + 42, chartY + 20);
+    doc.text('Me', chartX + 42, chartY + 27);
+
+    // === PLANETARY POSITIONS TABLE ===
+    doc.setFontSize(11);
+    doc.setTextColor(gold);
+    doc.text('ग्रह स्पष्ट (Planetary Positions)', 20, 103);
+
+    doc.setFontSize(9);
+    doc.setTextColor(dark);
+    const planets = [
+      ['Planet', 'Sign', 'Degree', 'House'],
+      ['Sun', 'Magha', '128° 45\'', '10th'],
+      ['Moon', 'Rohini', '42° 18\'', '1st'],
+      ['Mars', 'Scorpio', '195° 12\'', '7th'],
+      ['Mercury', 'Virgo', '165° 33\'', '5th'],
+      ['Jupiter', 'Pisces', '352° 07\'', '11th'],
+      ['Venus', 'Libra', '182° 44\'', '6th'],
+      ['Saturn', 'Capricorn', '285° 19\'', '9th'],
+    ];
+
+    let y = 110;
+    planets.forEach((row, i) => {
+      if (i === 0) doc.setFontSize(8).setTextColor(gold);
+      else doc.setFontSize(9).setTextColor(dark);
+      doc.text(row.join('     '), 22, y);
+      y += 5;
+    });
+
+    // === VIMSHOTTARI DASHA TIMELINE ===
+    doc.setFontSize(11);
+    doc.setTextColor(gold);
+    doc.text('विंशोत्तरी दशा (Vimshottari Dasha Timeline)', 20, 158);
+
+    doc.setFontSize(9);
+    doc.setTextColor(dark);
+    doc.text('Moon (current) → Jupiter (Nov 2026) → Saturn (Mar 2028) → Mercury (2029)', 20, 165);
+
+    // === SATVIK UPAYA ===
+    doc.setFontSize(12);
+    doc.setTextColor(gold);
+    doc.text('सात्त्विक उपाय (Satvik Upaya)', 20, 175);
+
+    doc.setFontSize(10);
+    doc.setTextColor(dark);
+    doc.text('• Daily recitation of Shri Sukta (11 times) before sunrise', 20, 182);
+    doc.text('• Offer yellow flowers to Lord Vishnu on Thursdays', 20, 188);
+    doc.text('• Perform small Lakshmi-Ganesh puja before initiating major changes', 20, 194);
+
+    // === FINAL RECOMMENDATION BOX ===
+    doc.setFillColor(250, 247, 242);
+    doc.rect(20, 202, 170, 28, 'F');
+    doc.setDrawColor(gold);
+    doc.rect(20, 202, 170, 28);
+
+    doc.setFontSize(11);
+    doc.setTextColor(gold);
+    doc.text('Recommended Action', 25, 210);
+    doc.setFontSize(10);
+    doc.setTextColor(dark);
+    doc.text('This is an excellent window for strategic business direction change. Proceed with planning in October–November 2026.', 25, 218, { maxWidth: 160 });
+
+    // === SYNTHESIS ===
+    doc.setFillColor(250, 247, 242);
+    doc.rect(20, 102, 170, 72, 'F');
+    doc.setDrawColor(gold);
+    doc.rect(20, 102, 170, 72);
+
+    doc.setFontSize(12);
+    doc.setTextColor(gold);
+    doc.text('विद्वत्-विवेचना (Scholarly Synthesis)', 25, 110);
+
+    doc.setFontSize(10);
+    doc.setTextColor(dark);
+    const synthesis = `Your current Moon Mahadasha supports nurturing and creative ventures. The upcoming Jupiter Antardasha (Nov 2026) brings strong expansion in the 10th and 11th houses. This is a highly auspicious window for strategic business pivots. The 7th and 11th house connections indicate positive outcomes in partnerships and gains.`;
+    doc.text(synthesis, 25, 118, { maxWidth: 160 });
+
+    // === DASHA TIMELINE ===
+    doc.setFontSize(12);
+    doc.setTextColor(gold);
+    doc.text('विंशोत्तरी दशा (Current Vimshottari Dasha)', 20, 185);
+
+    doc.setFontSize(10);
+    doc.setTextColor(dark);
+    doc.text(`Moon Mahadasha → Jupiter Antardasha (Nov 2026 – Mar 2028) → Strong growth phase`, 20, 192);
+
+    // === SATVIK UPAYA ===
+    doc.setFontSize(12);
+    doc.setTextColor(gold);
+    doc.text('सात्त्विक उपाय (Satvik Upaya)', 20, 205);
+
+    doc.setFontSize(10);
+    doc.setTextColor(dark);
+    doc.text('• Daily recitation of Shri Sukta (11 times) before sunrise', 20, 212);
+    doc.text('• Offer yellow flowers to Lord Vishnu on Thursdays', 20, 218);
+    doc.text('• Perform small Lakshmi-Ganesh puja before initiating major changes', 20, 224);
+
+    // === RECOMMENDATION ===
+    doc.setFontSize(11);
+    doc.setTextColor(gold);
+    doc.text('Recommended Action:', 20, 235);
+    doc.setFontSize(10);
+    doc.setTextColor(dark);
+    doc.text('This is an excellent window for strategic business direction change. Proceed with planning in October–November 2026.', 20, 242, { maxWidth: 170 });
+
+    // === FOOTER ===
+    doc.setFontSize(8);
+    doc.setTextColor('#665E55');
+    doc.text('Verified by Pt. Vidyadhar Shastri • Sampurnanand Sanskrit University, Varanasi', 105, 270, { align: 'center' });
+    doc.text('© CosmicTantra 2026 • Chitra Paksha (Lahiri) Sidereal Mathematics • शुभ दक्षिणा ₹५०१', 105, 276, { align: 'center' });
+
+    doc.save('CosmicTantra-Written-Folio.pdf');
+  };
+
+  return (
+    <main className="min-h-screen bg-[#FAF7F2] py-12 px-6 print:bg-white">
+      <div className="max-w-3xl mx-auto print:max-w-none">
+        <div className="text-center mb-8 print:mb-4">
+          <div className="inline px-4 py-1 rounded-full bg-[#8E6F1D]/10 text-[#8E6F1D] text-xs tracking-[3px] print:hidden">WRITTEN FOLIO PREVIEW</div>
+          <h1 className="font-editorial text-5xl font-bold mt-3 tracking-tight print:text-4xl">Vedic Decision Synthesis</h1>
+          <p className="text-[#57524A] mt-2 print:text-sm">शुभ दक्षिणा ₹५०१ • Permanent Written Counsel</p>
+        </div>
+
+        {/* Preview Card — Print Optimized */}
+        <div className="rounded-3xl border border-[#8E6F1D]/30 bg-white p-10 shadow-xl print:shadow-none print:border print:rounded-none print:p-8 print:max-w-[210mm]">
+          <div className="text-center border-b pb-8 print:pb-6">
+            <div className="text-xs tracking-[4px] text-[#8E6F1D]">श्री काशी विश्वनाथो विजयते</div>
+            <div className="font-editorial text-4xl mt-2 print:text-3xl">CosmicTantra</div>
+            <div className="text-xs text-[#857E74] mt-1 print:text-[10px]">Lahiri Ephemeris • Verified Scholarly Written Folio</div>
+          </div>
+
+          <div className="mt-8 text-sm print:mt-6">
+            <div className="flex justify-between text-xs text-[#857E74]">
+              <div><strong>Seeker:</strong> Priya Sharma</div>
+              <div><strong>Folio ID:</strong> CT-2026-0825-001</div>
+            </div>
+            <div className="mt-6 text-[#1C1917] print:mt-4">
+              <strong>Question:</strong> Will changing my business direction in the next six months be favourable for my long-term financial growth?
+            </div>
+          </div>
+
+          <div className="mt-10 p-8 border border-[#8E6F1D]/20 bg-[#FAF7F2] rounded-2xl print:mt-8 print:p-6 print:bg-white print:border-[#8E6F1D]">
+            <div className="font-semibold text-[#8E6F1D]">विद्वत्-विवेचना (Scholarly Synthesis)</div>
+            <p className="mt-4 text-[#44403C] leading-relaxed print:mt-3">
+              Your current Moon Mahadasha (42% complete) supports nurturing and creative ventures. 
+              The upcoming Jupiter Antardasha (starting November 2026) brings strong expansion energy 
+              in the 10th and 11th houses. This is an auspicious window for strategic pivots...
+            </p>
+            <div className="mt-6 text-sm font-medium text-[#8E6F1D] print:mt-4">
+              Recommended Action: Perform a small Lakshmi-Ganesh puja before initiating major changes.
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8 flex justify-center gap-4 print:hidden">
+          <button 
+            onClick={handleDownloadPDF}
+            className="flex items-center gap-2 px-8 py-4 rounded-2xl bg-[#8E6F1D] text-white font-semibold text-sm"
+          >
+            <Download className="w-4 h-4" /> DOWNLOAD PRINT-READY PDF
+          </button>
+          <button 
+            onClick={handleDownloadPDF}
+            className="flex items-center gap-2 px-8 py-4 rounded-2xl border border-[#8E6F1D]/30 text-sm font-medium"
+          >
+            <Printer className="w-4 h-4" /> PRINT FOLIO
+          </button>
+        </div>
+
+        <p className="text-center text-xs text-[#857E74] mt-6 print:mt-4">This document carries the dignity of a traditional written counsel. Keep it safely.</p>
+      </div>
+    </main>
+  );
+}

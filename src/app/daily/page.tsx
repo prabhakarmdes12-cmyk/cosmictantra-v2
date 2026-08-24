@@ -4,11 +4,13 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar, Users, ArrowRight } from 'lucide-react';
 import DailyCosmicCard from '@/components/visual/DailyCosmicCard';
+import WhatsAppShareCard from '@/components/visual/WhatsAppShareCard';
 import { getActiveProfile, getProfiles } from '@/lib/profileStore';
 import { calculatePanchang } from '@/lib/panchang';
 import { calculateVimshottariDasha, getCurrentDasha } from '@/engines/dashaEngine.js';
 import { calculateKundali } from '@/lib/astrologyEngine';
 import { getDayAlerts } from '@/lib/vedicAlerts';
+import { regionalTerms, RegionalLanguage } from '@/lib/regionalTranslations';
 import TrustBar from '@/components/visual/TrustBar';
 import Link from 'next/link';
 
@@ -20,13 +22,20 @@ interface DailyPrediction {
   dasha: string;
   rahuKaal: string;
   abhijit: string;
+  gulikaKaal?: string;
+  yamaganda?: string;
+  yoga?: string;
+  tithi?: string;
   auspiciousScore: number;
   keyInsight: string;
   recommendedAction: string;
   color: string;
   sadeSati?: boolean;
+  sadeSatiPhase?: string;
   kaalSarp?: boolean;
   hasFestival?: boolean;
+  isJanmaNakshatra?: boolean;
+  isRikta?: boolean;
 }
 
 export default function DailyPage() {
@@ -34,6 +43,29 @@ export default function DailyPage() {
   const [activeProfile, setActiveProfile] = useState<any>(null);
   const [predictions, setPredictions] = useState<DailyPrediction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [language, setLanguage] = useState<RegionalLanguage>('tamil');
+  const [showShareCard, setShowShareCard] = useState(false);
+  const [shareCardData, setShareCardData] = useState<any>(null);
+
+  const openShareCard = (pred: DailyPrediction) => {
+    setShareCardData({
+      name: activeProfile?.name || 'Vedic Seeker',
+      cosmicId: activeProfile?.cosmicId || 'CT-2026-VEDIC',
+      date: pred.date,
+      dayName: pred.dayName,
+      lagna: pred.lagna,
+      moonNakshatra: pred.moonNakshatra,
+      dasha: pred.dasha,
+      auspiciousScore: pred.auspiciousScore,
+      keyInsight: pred.keyInsight,
+      recommendedAction: pred.recommendedAction,
+      rahuKaal: pred.rahuKaal,
+      abhijit: pred.abhijit,
+      tithi: pred.tithi || 'Shukla Ekadashi',
+      yoga: pred.yoga || 'Siddha',
+    });
+    setShowShareCard(true);
+  };
 
   // Get active profile or first available
   useEffect(() => {
@@ -85,8 +117,12 @@ export default function DailyPage() {
         // 4. Vedic Alerts (Rahu Kaal etc.)
         const dayAlerts = getDayAlerts(date, { name: city, lat, lng: lon, tz } as any);
         const alertsList = dayAlerts?.alerts || [];
-        const rahuKaal = (alertsList.find((a: any) => a.type === 'RAHU_KAAL' || a.title?.includes('Rahu')) as any)?.detail || '09:00–10:30';
-        const abhijit = (alertsList.find((a: any) => a.type === 'ABHIJIT' || a.title?.includes('Abhijit')) as any)?.detail || '11:45–12:30';
+        const rahuKaal = (alertsList.find((a: any) => a.type === 'RAHU_KAAL' || a.title?.includes('Rahu')) as any)?.detail || panchang?.timings?.rahuKalam || '09:00–10:30';
+        const abhijit = (alertsList.find((a: any) => a.type === 'ABHIJIT' || a.title?.includes('Abhijit')) as any)?.detail || panchang?.timings?.abhijitMuhurat || '11:45–12:30';
+        const gulikaKaal = (alertsList.find((a: any) => a.type === 'GULIKA' || a.title?.includes('Gulika')) as any)?.detail || panchang?.timings?.gulikaKalam || '16:30–18:00';
+        const yamaganda = (alertsList.find((a: any) => a.type === 'YAMAGANDA' || a.title?.includes('Yamaganda')) as any)?.detail || panchang?.timings?.yamaganda || '12:00–13:30';
+        const yoga = typeof panchang?.yoga === 'object' ? panchang.yoga?.name : String(panchang?.yoga || 'Vishkambha');
+        const tithi = typeof panchang?.tithi === 'object' ? panchang.tithi?.name : String(panchang?.tithi || '—');
         const isRikta = alertsList.some((a: any) => a.type === 'RIKTA' || a.title?.includes('Rikta'));
 
         // 5. Personalized Auspicious Score (heuristic)
@@ -96,12 +132,14 @@ export default function DailyPage() {
         if (isRikta) score -= 15;
         score = Math.max(45, Math.min(95, Math.round(score)));
 
-        // 6. Advanced Metrics (Sade Sati, Kaal Sarp, Festival Flags)
+        // 6. Advanced Metrics (Sade Sati, Kaal Sarp, Festival Flags, Janma Nakshatra)
         const birthYear = new Date(birthDate).getFullYear();
         const currentYear = date.getFullYear();
         const sadeSatiActive = currentYear >= birthYear + 28 && currentYear <= birthYear + 38;
+        const sadeSatiPhase = sadeSatiActive ? (currentYear - birthYear < 34 ? 'Peak' : 'Waning') : undefined;
         const kaalSarpActive = false;
         const hasFestival = alertsList.some((a: any) => a.type === 'FESTIVAL' || a.title?.includes('Festival'));
+        const isJanmaNakshatra = kundali.moon?.nakshatra?.name === (kundali.planets as any)?.Moon?.nakshatra?.name;
 
         // Insight + Action (personalized)
         const insights = [
@@ -128,8 +166,15 @@ export default function DailyPage() {
           recommendedAction: actions[i % 3],
           color: score >= 80 ? '#10B981' : score >= 60 ? '#D4AF37' : '#EF4444',
           sadeSati: sadeSatiActive,
+          sadeSatiPhase,
           kaalSarp: kaalSarpActive,
           hasFestival,
+          isJanmaNakshatra,
+          isRikta,
+          gulikaKaal,
+          yamaganda,
+          yoga,
+          tithi,
         });
       }
 
@@ -193,6 +238,20 @@ END:VCALENDAR`;
               Personalized for <span className="font-semibold text-[#1C1917] dark:text-white">{activeProfile.name}</span> • {activeProfile.cosmicId}
             </p>
           </div>
+          
+          {/* Regional Language Switcher */}
+          <div className="flex gap-1 text-xs">
+            {(['tamil', 'gujarati', 'bengali'] as const).map((lang) => (
+              <button
+                key={lang}
+                onClick={() => setLanguage(lang)}
+                className={`px-3 py-1 rounded-full border transition-all ${language === lang ? 'bg-[#8E6F1D] text-white border-[#8E6F1D]' : 'border-[#8E6F1D]/30'}`}
+              >
+                {lang === 'tamil' ? 'தமிழ்' : lang === 'gujarati' ? 'ગુજરાતી' : 'বাংলা'}
+              </button>
+            ))}
+          </div>
+          
           <Link href="/family" className="hidden md:flex items-center gap-2 text-sm text-[#8E6F1D] hover:underline">
             <Users className="w-4 h-4" /> Switch Profile
           </Link>
@@ -213,8 +272,25 @@ END:VCALENDAR`;
                 isToday={index === 0}
                 onAddToCalendar={() => handleAddToCalendar(pred)}
                 onShareWhatsApp={() => handleShareWhatsApp(pred)}
+                onShareCard={() => openShareCard(pred)}
               />
             ))}
+          </div>
+        )}
+
+        {/* 9:16 WhatsApp Share Modal */}
+        {showShareCard && shareCardData && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setShowShareCard(false)}>
+            <div onClick={e => e.stopPropagation()}>
+              <WhatsAppShareCard {...shareCardData} onDownload={() => {
+                // Simple download simulation
+                const link = document.createElement('a');
+                link.download = `cosmictantra-${shareCardData.date}.png`;
+                // In real implementation: use html2canvas
+                alert('9:16 card downloaded (demo)');
+                setShowShareCard(false);
+              }} />
+            </div>
           </div>
         )}
 
@@ -229,7 +305,7 @@ END:VCALENDAR`;
               Upgrade to Cosmic ID
             </Link>
             <Link href="/ask" className="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-[#8E6F1D] to-[#D4AF37] text-[#060709] text-sm font-bold">
-              Ask a ₹199 Question
+              Ask One Question (शुभ दक्षिणा ₹५०१)
             </Link>
           </div>
         </div>

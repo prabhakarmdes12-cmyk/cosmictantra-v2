@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
         practitionerId: activePractitioner?.id || null,
         paymentProvider: 'RAZORPAY',
         paymentStatus: 'PENDING',
-        amount: 199,
+        amount: 501,
       },
     });
 
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
         actorType: 'CUSTOMER',
         payload: {
           customerName,
-          amount: 199,
+          amount: 501,
           status: consultation.status,
         },
       },
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
     let razorpayOrderId = null;
     let razorpayKeyId = null;
     try {
-      const order = await createRazorpayOrder(19900, `consultation_${consultation.id}`, {
+      const order = await createRazorpayOrder(50100, `consultation_${consultation.id}`, {
         consultationId: consultation.id,
         publicId: consultation.publicId,
       });
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
       success: true,
       consultationId: consultation.id,
       publicId: consultation.publicId,
-      amount: 199,
+      amount: 501,
       currency: 'INR',
       checkoutEnabled: Boolean(razorpayOrderId),
       razorpayOrderId,
