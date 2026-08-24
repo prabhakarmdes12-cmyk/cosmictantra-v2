@@ -11,9 +11,10 @@ import SwargaLok from '@/components/SwargaLok.jsx';
 import KarmaWheel from '@/components/KarmaWheel.tsx';
 import DestinyTimeline from '@/components/DestinyTimeline.tsx';
 import ChatBox from '@/components/ChatBox.tsx';
+import MyDaysPanchang from '@/components/MyDaysPanchang.tsx';
 
 export default function PublicLandingPage() {
-  const [activeTab, setActiveTab] = useState<'kundali' | 'swarga' | 'dasha' | 'karma' | 'guru'>('kundali');
+  const [activeTab, setActiveTab] = useState<'kundali' | 'swarga' | 'dasha' | 'karma' | 'mydays' | 'guru'>('kundali');
   const [panchang, setPanchang] = useState<any>(null);
   const [calcForm, setCalcForm] = useState({
     dob: '1995-06-15',
@@ -109,50 +110,6 @@ export default function PublicLandingPage() {
         </div>
       </section>
 
-      {/* Live Panchang Section */}
-      <section className="py-8 px-4 max-w-5xl mx-auto">
-        <div className="chiti-card p-6 relative overflow-hidden">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 border-b border-purple-500/20 pb-3">
-            <div>
-              <div className="flex items-center gap-2 text-xs font-semibold text-[#F59E0B] uppercase tracking-wider">
-                <Sun className="w-4 h-4" /> Real-Time Vedic Astronomy
-              </div>
-              <h2 className="text-xl font-bold font-display text-white mt-1">
-                Today's Daily Panchang
-              </h2>
-            </div>
-            <span className="text-xs text-[#9CA3AF] bg-black/40 px-3 py-1 rounded-full border border-white/10">
-              Patna (25.59°N, 85.14°E)
-            </span>
-          </div>
-
-          {panchang && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-              <div className="p-3 rounded-xl bg-black/40 border border-purple-500/20">
-                <span className="text-[#9CA3AF] block text-[10px] uppercase font-semibold">Tithi</span>
-                <span className="font-bold text-white text-sm">{panchang.tithi?.name}</span>
-                <span className="text-[10px] text-[#A78BFA] block mt-0.5">{panchang.tithi?.paksha}</span>
-              </div>
-              <div className="p-3 rounded-xl bg-black/40 border border-purple-500/20">
-                <span className="text-[#9CA3AF] block text-[10px] uppercase font-semibold">Nakshatra</span>
-                <span className="font-bold text-[#F59E0B] text-sm">{panchang.nakshatra?.name}</span>
-                <span className="text-[10px] text-[#9CA3AF] block mt-0.5">Pada {panchang.nakshatra?.pada}</span>
-              </div>
-              <div className="p-3 rounded-xl bg-black/40 border border-purple-500/20">
-                <span className="text-[#9CA3AF] block text-[10px] uppercase font-semibold">Yoga & Vara</span>
-                <span className="font-bold text-white text-sm">{panchang.yoga?.name}</span>
-                <span className="text-[10px] text-[#10B981] block mt-0.5">{panchang.vara?.day} ({panchang.vara?.planet})</span>
-              </div>
-              <div className="p-3 rounded-xl bg-black/40 border border-amber-500/30">
-                <span className="text-[#9CA3AF] block text-[10px] uppercase font-semibold">Rahu Kala Window</span>
-                <span className="font-bold text-[#F59E0B] text-sm">{panchang.rahuKala?.start} – {panchang.rahuKala?.end}</span>
-                <span className="text-[10px] text-[#6B7280] block mt-0.5">Avoid new starts</span>
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
-
       {/* Main V34 Interactive Cosmic Utilities Suite */}
       <section id="interactive" className="py-12 px-4 max-w-5xl mx-auto space-y-6">
         <div className="text-center max-w-xl mx-auto mb-6">
@@ -163,7 +120,7 @@ export default function PublicLandingPage() {
             Free Vedic Utilities
           </h2>
           <p className="text-xs sm:text-sm text-[#9CA3AF]">
-            Explore your natal Kundali, 3D Swarga Lok planetary orbit visualizer, Vimshottari Dasha timeline, and AI Guru chat.
+            Explore your natal Kundali, 3D Swarga Lok orbit visualizer, My Days Panchang calendar, Vimshottari Dasha timeline, and AI Guru chat.
           </p>
         </div>
 
@@ -188,6 +145,16 @@ export default function PublicLandingPage() {
             }`}
           >
             🌌 3D Swarga Lok
+          </button>
+          <button
+            onClick={() => setActiveTab('mydays')}
+            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${
+              activeTab === 'mydays'
+                ? 'bg-[#7C3AED] text-white shadow-[0_0_15px_rgba(124,58,237,0.4)]'
+                : 'bg-white/5 border border-white/10 text-[#9CA3AF] hover:text-white'
+            }`}
+          >
+            📅 My Days Panchang
           </button>
           <button
             onClick={() => setActiveTab('dasha')}
@@ -297,6 +264,7 @@ export default function PublicLandingPage() {
           )}
 
           {activeTab === 'swarga' && <SwargaLok kundali={kundali} />}
+          {activeTab === 'mydays' && <MyDaysPanchang kundali={kundali} />}
           {activeTab === 'dasha' && <DestinyTimeline dashas={dashas} currentDasha={currentDasha} birthDate={calcForm.dob} />}
           {activeTab === 'karma' && <KarmaWheel kundali={kundali} size={320} />}
           {activeTab === 'guru' && <div className="h-[450px]"><ChatBox kundali={kundali} /></div>}
