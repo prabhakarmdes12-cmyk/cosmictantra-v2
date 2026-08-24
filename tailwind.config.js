@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: 'class',
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -24,8 +25,10 @@ module.exports = {
       },
       fontFamily: {
         display: ['Outfit', 'Cinzel', 'serif'],
+        editorial: ['Cinzel', 'Outfit', 'serif'],
         body: ['Inter', 'Lato', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
+        'mono-data': ['JetBrains Mono', 'monospace'],
       },
       borderRadius: {
         chiti: '16px',
