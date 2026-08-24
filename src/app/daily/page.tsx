@@ -10,6 +10,7 @@ import { calculatePanchang } from '@/lib/panchang';
 import { calculateVimshottariDasha, getCurrentDasha } from '@/lib/dashaEngine';
 import { calculateKundali } from '@/lib/astrologyEngine';
 import { getVedicAlerts } from '@/lib/vedicAlerts';
+import { regionalTerms, RegionalLanguage } from '@/lib/regionalTranslations';
 import TrustBar from '@/components/visual/TrustBar';
 import Link from 'next/link';
 
@@ -42,6 +43,7 @@ export default function DailyPage() {
   const [activeProfile, setActiveProfile] = useState<any>(null);
   const [predictions, setPredictions] = useState<DailyPrediction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [language, setLanguage] = useState<RegionalLanguage>('tamil');
 
   // Get active profile or first available
   useEffect(() => {
@@ -212,6 +214,20 @@ END:VCALENDAR`;
               Personalized for <span className="font-semibold text-[#1C1917] dark:text-white">{activeProfile.name}</span> • {activeProfile.cosmicId}
             </p>
           </div>
+          
+          {/* Regional Language Switcher */}
+          <div className="flex gap-1 text-xs">
+            {(['tamil', 'gujarati', 'bengali'] as const).map((lang) => (
+              <button
+                key={lang}
+                onClick={() => setLanguage(lang)}
+                className={`px-3 py-1 rounded-full border transition-all ${language === lang ? 'bg-[#8E6F1D] text-white border-[#8E6F1D]' : 'border-[#8E6F1D]/30'}`}
+              >
+                {lang === 'tamil' ? 'தமிழ்' : lang === 'gujarati' ? 'ગુજરાતી' : 'বাংলা'}
+              </button>
+            ))}
+          </div>
+          
           <Link href="/family" className="hidden md:flex items-center gap-2 text-sm text-[#8E6F1D] hover:underline">
             <Users className="w-4 h-4" /> Switch Profile
           </Link>
