@@ -218,6 +218,7 @@ export default function AppLandingPage() {
         <SwargaLok
           lang={lang}
           theme={theme}
+          kundaliData={kundaliData}
         />
 
         {/* 12. Methodology (Calculation is not Interpretation) */}
