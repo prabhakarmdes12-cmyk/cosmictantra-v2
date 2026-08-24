@@ -77,11 +77,23 @@ html, body {
 
 /* Devanagari & Editorial Serif Typography Fallback */
 .font-editorial {
-  font-family: 'Cinzel', 'Noto Sans Devanagari', serif;
+  font-family: 'Cinzel', 'Playfair Display', 'Noto Serif Devanagari', serif;
+  font-feature-settings: "kern" 1, "liga" 1;
 }
 
 .font-mono-data {
   font-family: 'JetBrains Mono', 'Noto Sans Devanagari', monospace;
+}
+
+/* Enhanced Scholarly Typography System */
+.text-display {
+  font-family: 'Cinzel', 'Playfair Display', serif;
+  letter-spacing: -0.025em;
+}
+
+.text-body {
+  font-family: 'Noto Serif', 'Noto Serif Devanagari', Georgia, serif;
+  line-height: 1.7;
 }
 
 /* Atmospheric Kashi Varanasi Background Images & Video Fallbacks */
