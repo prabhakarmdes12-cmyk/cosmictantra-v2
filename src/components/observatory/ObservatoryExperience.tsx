@@ -147,6 +147,9 @@ export default function ObservatoryExperience() {
           <Link href="/observatory/timemachine" style={{ textDecoration: 'none', color: '#c7bda9', fontFamily: 'monospace', fontSize: 10, letterSpacing: '.1em', display: 'flex', gap: 5, alignItems: 'center', borderLeft: '1px solid rgba(218,185,100,.19)', paddingLeft: 10 }}>
             TIME MACHINE
           </Link>
+          <Link href="/observatory/gochara" style={{ textDecoration: 'none', color: '#c7bda9', fontFamily: 'monospace', fontSize: 10, letterSpacing: '.1em', display: 'flex', gap: 5, alignItems: 'center', borderLeft: '1px solid rgba(218,185,100,.19)', paddingLeft: 10 }}>
+            GOCHARA
+          </Link>
           <button className="obs-detail-btn" onClick={()=>setDetails(!details)}>
             <Info size={14}/> DETAILS
           </button>
