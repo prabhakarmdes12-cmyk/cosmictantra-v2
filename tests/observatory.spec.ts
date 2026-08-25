@@ -15,6 +15,7 @@ import {
 } from '../src/lib/astronomy/eclipticProjection';
 import { localSiderealTime, projectStar, SiderealTime } from '../src/lib/astronomy/projection';
 import { STARS } from '../src/lib/astronomy/stars';
+import { getCelestialDetail, getConstellationDetail, PLANET_DETAILS } from '../src/lib/astronomy/celestialCatalog';
 
 test.describe('Observatory coordinate and ephemeris invariants', () => {
   const instant = new Date('2026-08-25T00:00:00.000Z');
@@ -115,5 +116,21 @@ test.describe('Observatory coordinate and ephemeris invariants', () => {
     expect(rahu.body).toBe('Rahu');
     expect(objectForm.body).toBe('Ketu');
     expect(getLahiriAyanamsha(2451545)).toBeCloseTo(23.856, 5);
+  });
+
+  test('every selectable graha has an image-ready detail record', () => {
+    expect(Object.keys(PLANET_DETAILS)).toHaveLength(9);
+    Object.values(PLANET_DETAILS).forEach(detail => {
+      expect(detail.imageAlt.length).toBeGreaterThan(20);
+      expect(detail.astronomy.length).toBeGreaterThan(40);
+      expect(detail.imageCredit.length).toBeGreaterThan(5);
+    });
+  });
+
+  test('constellation selections resolve from a catalogue star', () => {
+    const detail = getConstellationDetail('Ori');
+    expect(getCelestialDetail({ kind: 'constellation', id: 'Ori' }).displayName).toBe('Orion');
+    expect(detail.kind).toBe('constellation');
+    expect(detail.featuredStars).toContain('Betelgeuse');
   });
 });

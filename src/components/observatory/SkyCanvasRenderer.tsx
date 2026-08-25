@@ -10,6 +10,7 @@ import {
   type ObserverLocation,
 } from '@/lib/astronomy/projection';
 import { calculateCanonicalBodies, type CanonicalBody } from '@/lib/astronomy/canonicalBodies';
+import { constellationDisplayName, type CelestialSelection } from '@/lib/astronomy/celestialCatalog';
 import {
   CONSTELLATION_LINES,
   NAKSHATRA_SHORT_NAMES,
@@ -23,7 +24,11 @@ export interface SkyCanvasRendererProps {
   date: string | Date;
   observer: ObserverLocation;
   selectedPlanet?: string | null;
+  selectedConstellation?: string | null;
+  /** Preferred unified callback; the older callbacks remain compatible. */
+  onSelectObject?: (selection: CelestialSelection) => void;
   onSelectPlanet?: (body: string) => void;
+  onSelectConstellation?: (id: string) => void;
   showMandala?: boolean;
   showConstellations?: boolean;
   className?: string;
@@ -31,8 +36,10 @@ export interface SkyCanvasRendererProps {
 }
 
 interface DrawnTarget {
-  body: CanonicalBody;
+  selection: CelestialSelection;
   point: CanvasSkyPoint;
+  hitRadius: number;
+  priority: number;
 }
 
 const VISIBLE_PLANETS = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'];
@@ -122,6 +129,7 @@ function drawSky(
   date: Date,
   observer: ObserverLocation,
   selectedPlanet: string | null | undefined,
+  selectedConstellation: string | null | undefined,
   showMandala: boolean,
   showConstellations: boolean,
   targetsRef: React.MutableRefObject<DrawnTarget[]>,
@@ -183,45 +191,88 @@ function drawSky(
     const point = projectStar(star, date, observer, width, height);
     projectedStars.set(star.id, point);
   });
+  const targets: DrawnTarget[] = [];
+  const constellationPoints = new Map<string, CanvasSkyPoint[]>();
+
+  STARS.forEach((star: StarRecord) => {
+    const point = projectedStars.get(star.id);
+    if (!point?.visible) return;
+    const points = constellationPoints.get(star.constellation) || [];
+    points.push(point);
+    constellationPoints.set(star.constellation, points);
+  });
 
   if (showConstellations) {
     ctx.save();
-    ctx.strokeStyle = 'rgba(130,159,220,0.25)';
-    ctx.lineWidth = 0.75;
+    ctx.lineWidth = 0.9;
     CONSTELLATION_LINES.forEach(([from, to]) => {
+      const firstStar = STARS.find(star => star.id === from);
+      const secondStar = STARS.find(star => star.id === to);
       const first = projectedStars.get(from);
       const second = projectedStars.get(to);
-      if (!first?.visible || !second?.visible) return;
+      // A stick figure must not accidentally connect two unrelated patterns.
+      if (!firstStar || !secondStar || firstStar.constellation !== secondStar.constellation || !first?.visible || !second?.visible) return;
+      const selected = firstStar.constellation === selectedConstellation;
+      ctx.strokeStyle = selected ? 'rgba(242,198,93,0.88)' : 'rgba(130,159,220,0.27)';
+      ctx.lineWidth = selected ? 1.8 : 0.75;
       ctx.beginPath();
       ctx.moveTo(first.x, first.y);
       ctx.lineTo(second.x, second.y);
       ctx.stroke();
+      targets.push({
+        selection: { kind: 'constellation', id: firstStar.constellation },
+        point: { ...first, x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 },
+        hitRadius: selected ? 22 : 15,
+        priority: selected ? 2 : 1,
+      });
     });
+    // Give a selected pattern a readable label without covering the whole sky.
+    if (selectedConstellation) {
+      const points = constellationPoints.get(selectedConstellation);
+      if (points && points.length > 0) {
+        const average = points.reduce((sum, point) => ({ x: sum.x + point.x, y: sum.y + point.y }), { x: 0, y: 0 });
+        drawText(ctx, constellationDisplayName(selectedConstellation).toUpperCase(), average.x / points.length, average.y / points.length + 20, '#F6E5A5', 'bold 10px "JetBrains Mono", monospace');
+      }
+    }
     ctx.restore();
   }
 
-  // Draw stars after the guide lines so the catalogue reads clearly.
+  // Draw stars after the guide lines so the catalogue reads clearly. Each
+  // bright star also acts as a comfortable constellation hit target.
   STARS.forEach((star: StarRecord) => {
     const point = projectedStars.get(star.id);
     if (!point?.visible) return;
     const starRadius = starRadiusFromMagnitude(star.magnitude);
+    const selected = star.constellation === selectedConstellation;
     ctx.save();
     ctx.globalAlpha = Math.max(0.5, Math.min(1, 1.35 - star.magnitude / 5));
     ctx.fillStyle = starColorFromBV(star.bv);
     ctx.shadowColor = ctx.fillStyle;
-    ctx.shadowBlur = star.magnitude < 1.2 ? 5 : 2;
+    ctx.shadowBlur = selected ? 9 : star.magnitude < 1.2 ? 5 : 2;
     ctx.beginPath();
-    ctx.arc(point.x, point.y, starRadius, 0, Math.PI * 2);
+    ctx.arc(point.x, point.y, selected ? starRadius + 1.2 : starRadius, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
+    if (showConstellations) {
+      targets.push({
+        selection: { kind: 'constellation', id: star.constellation },
+        point,
+        hitRadius: Math.max(12, starRadius + 8),
+        priority: star.magnitude < 1.5 ? 2 : 1,
+      });
+    }
   });
 
   const bodies = calculateCanonicalBodies(date).filter(body => VISIBLE_PLANETS.includes(body.body));
-  const targets: DrawnTarget[] = [];
   bodies.forEach(body => {
     const point = projectEclipticLongitude(body.tropicalLongitude, date, observer, width, height, body.tropicalLatitude);
     if (!point.visible) return;
-    targets.push({ body, point });
+    targets.push({
+      selection: { kind: 'planet', id: body.body },
+      point,
+      hitRadius: body.body === 'Sun' ? 28 : 24,
+      priority: 3,
+    });
     const color = PLANET_COLORS[body.body] || '#D4AF37';
     const selected = body.body === selectedPlanet;
     const bodyRadius = body.body === 'Sun' ? 7 : body.body === 'Moon' ? 5.5 : 4.5;
@@ -284,7 +335,10 @@ function SkyCanvasRenderer({
   date,
   observer,
   selectedPlanet,
+  selectedConstellation,
+  onSelectObject,
   onSelectPlanet,
+  onSelectConstellation,
   showMandala = true,
   showConstellations = true,
   className = '',
@@ -302,6 +356,7 @@ function SkyCanvasRenderer({
       parseDate(dateValue),
       observer,
       selectedPlanet,
+      selectedConstellation,
       showMandala,
       showConstellations,
       targetsRef,
@@ -310,23 +365,28 @@ function SkyCanvasRenderer({
     const resizeObserver = new ResizeObserver(render);
     resizeObserver.observe(canvas);
     return () => resizeObserver.disconnect();
-  }, [dateValue, observer.latitude, observer.longitude, selectedPlanet, showMandala, showConstellations]);
+  }, [dateValue, observer.latitude, observer.longitude, selectedPlanet, selectedConstellation, showMandala, showConstellations]);
 
   const handleClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!onSelectPlanet || !canvasRef.current) return;
+    if ((!onSelectObject && !onSelectPlanet && !onSelectConstellation) || !canvasRef.current) return;
     const rect = canvasRef.current.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
-    let selectedBody: string | null = null;
-    let distance = 22;
-    targetsRef.current.forEach(target => {
+    let selectedTarget: DrawnTarget | null = null;
+    let selectedDistance = Number.POSITIVE_INFINITY;
+    for (const target of targetsRef.current) {
       const currentDistance = Math.hypot(x - target.point.x, y - target.point.y);
-      if (currentDistance < distance) {
-        distance = currentDistance;
-        selectedBody = target.body.body;
+      const withinHitArea = currentDistance <= target.hitRadius;
+      const winsTie = selectedTarget && target.priority === selectedTarget.priority && currentDistance < selectedDistance;
+      if (withinHitArea && (!selectedTarget || target.priority > selectedTarget.priority || winsTie)) {
+        selectedTarget = target;
+        selectedDistance = currentDistance;
       }
-    });
-    if (selectedBody) onSelectPlanet(selectedBody);
+    }
+    if (!selectedTarget) return;
+    if (onSelectObject) onSelectObject(selectedTarget.selection);
+    else if (selectedTarget.selection.kind === 'planet') onSelectPlanet?.(selectedTarget.selection.id);
+    else onSelectConstellation?.(selectedTarget.selection.id);
   };
 
   return (
@@ -340,7 +400,7 @@ function SkyCanvasRenderer({
       />
       {labelled && (
         <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-white/10 bg-[#060914]/85 px-3 py-1.5 text-center font-mono-data text-[9px] uppercase tracking-[0.14em] text-[#B8BED7] backdrop-blur">
-          Tap a graha · dashed gold line is the ecliptic
+          Tap a graha or star pattern · dashed gold line is the ecliptic
         </div>
       )}
     </div>

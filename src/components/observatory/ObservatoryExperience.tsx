@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import CelestialDetailSheet from './CelestialDetailSheet';
 import SkyCanvasRenderer from './SkyCanvasRenderer';
 import { calculateCanonicalBody, type CanonicalBodyName } from '@/lib/astronomy/canonicalBodies';
+import type { CelestialSelection } from '@/lib/astronomy/celestialCatalog';
 import { CITIES } from '@/lib/cities';
 
 const PLANETS: CanonicalBodyName[] = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'];
@@ -65,6 +67,8 @@ export function ObservatoryExperience({
   });
   const [showMandala, setShowMandala] = useState(true);
   const [showConstellations, setShowConstellations] = useState(true);
+  const [selectedConstellation, setSelectedConstellation] = useState<string | null>(null);
+  const [detailSelection, setDetailSelection] = useState<CelestialSelection | null>(null);
 
   const selectedBody = useMemo(() => calculateCanonicalBody(selectedPlanet, date), [selectedPlanet, date]);
   const dateInput = toDateTimeInput(date);
@@ -76,6 +80,15 @@ export function ObservatoryExperience({
   const handleDateChange = (value: string) => {
     const next = new Date(value);
     if (Number.isFinite(next.getTime())) setDate(next);
+  };
+
+  const selectObject = (selection: CelestialSelection) => {
+    setDetailSelection(selection);
+    if (selection.kind === 'planet') {
+      setSelectedPlanet(selection.id);
+      setSelectedConstellation(null);
+    }
+    if (selection.kind === 'constellation') setSelectedConstellation(selection.id);
   };
 
   return (
@@ -133,10 +146,8 @@ export function ObservatoryExperience({
                 date={date}
                 observer={{ latitude: city.lat, longitude: city.lng }}
                 selectedPlanet={selectedPlanet}
-                onSelectPlanet={body => {
-                  const next = PLANETS.find(item => item === body);
-                  if (next) setSelectedPlanet(next);
-                }}
+                selectedConstellation={selectedConstellation}
+                onSelectObject={selectObject}
                 showMandala={showMandala}
                 showConstellations={showConstellations}
               />
@@ -146,12 +157,13 @@ export function ObservatoryExperience({
           <aside className="space-y-4">
             <div className="rounded-2xl border border-[#D4AF37]/30 bg-[#0B1020] p-4">
               <div className="font-mono-data text-[10px] font-bold uppercase tracking-[0.18em] text-[#D4AF37]">Planet rail · 9 grahas</div>
+              <p className="mt-2 text-[10px] leading-relaxed text-[#8993B0]">Tap a planet here, or tap any bright star/connected constellation line in the sky for illustrated field notes.</p>
               <div className="mt-3 grid grid-cols-3 gap-2 lg:grid-cols-2">
                 {PLANETS.map(body => (
                   <button
                     type="button"
                     key={body}
-                    onClick={() => setSelectedPlanet(body)}
+                    onClick={() => selectObject({ kind: 'planet', id: body })}
                     className={`rounded-xl border px-2 py-2.5 text-left transition-colors ${body === selectedPlanet ? 'border-[#D4AF37] bg-[#D4AF37] text-[#070912]' : 'border-white/10 bg-[#070A14] text-[#C6CCDF] hover:border-[#D4AF37]/60'}`}
                   >
                     <span className="mr-1 text-base">{SYMBOLS[body]}</span>
@@ -188,6 +200,7 @@ export function ObservatoryExperience({
           <Link href={`/panchang/${city.id}`} className="font-mono-data text-[10px] font-bold uppercase tracking-[0.14em] text-[#F2C65D] hover:underline">Open {city.name} Panchang ↗</Link>
         </footer>
       </div>
+      {detailSelection && <CelestialDetailSheet selection={detailSelection} date={date} observer={{ latitude: city.lat, longitude: city.lng }} cityId={city.id} onClose={() => setDetailSelection(null)} />}
     </main>
   );
 }
