@@ -141,6 +141,9 @@ export default function ObservatoryExperience() {
           <span className="obs-render-status">
             <Sparkles size={12}/> STEREOGRAPHIC PROJECTION
           </span>
+          <Link href="/observatory/ecliptic" className="obs-detail-btn" style={{ textDecoration: 'none', color: '#c7bda9', fontFamily: 'monospace', fontSize: 10, letterSpacing: '.1em', display: 'flex', gap: 5, alignItems: 'center', borderLeft: '1px solid rgba(218,185,100,.19)', paddingLeft: 10 }}>
+            ECLIPTIC ↗
+          </Link>
           <button className="obs-detail-btn" onClick={()=>setDetails(!details)}>
             <Info size={14}/> DETAILS
           </button>
