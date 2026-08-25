@@ -38,17 +38,45 @@ const PLANET_LABELS: Record<string, string> = {
   Sun: '☉', Moon: '☾', Mercury: '☿', Venus: '♀', Mars: '♂', Jupiter: '♃', Saturn: '♄',
 };
 
-export default function ObservatoryExperience() {
+interface ObservatoryExperienceProps {
+  deepLinkTime?: string;   // ISO UTC string, e.g. "2026-08-26T02:41:32.000Z"
+  deepLinkCity?: string;   // city id from CITIES, e.g. "dhanbad"
+  deepLinkPlanet?: string; // planet name, e.g. "moon"
+}
+
+export default function ObservatoryExperience({
+  deepLinkTime,
+  deepLinkCity,
+  deepLinkPlanet,
+}: ObservatoryExperienceProps) {
   const [events, setEvents] = useState<RiseTransitSet | null>(null);
-  const [city, setCity] = useState(DEFAULT_CITY);
-  const [instant, setInstant] = useState(() => new Date());
-  const [live, setLive] = useState(true);
+  const [city, setCity] = useState(() => {
+    if (deepLinkCity) {
+      const found = CITIES.find(c => c.id === deepLinkCity);
+      if (found) return found;
+    }
+    return DEFAULT_CITY;
+  });
+  const [instant, setInstant] = useState(() => {
+    if (deepLinkTime) {
+      const parsed = new Date(deepLinkTime);
+      if (!isNaN(parsed.getTime())) return parsed;
+    }
+    return new Date();
+  });
+  const [live, setLive] = useState(!deepLinkTime); // if deep-linked to a specific time, start in simulation mode
   const [showNakshatras, setShowNakshatras] = useState(true);
   const [showConstellations, setShowConstellations] = useState(true);
   const [showEcliptic, setShowEcliptic] = useState(true);
   const [showMilkyWay, setShowMilkyWay] = useState(false);
   const [details, setDetails] = useState(false);
-  const [selectedPlanet, setSelectedPlanet] = useState<string>('Moon');
+  const [selectedPlanet, setSelectedPlanet] = useState<string>(() => {
+    if (deepLinkPlanet) {
+      const p = deepLinkPlanet.charAt(0).toUpperCase() + deepLinkPlanet.slice(1);
+      if (['Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn'].includes(p)) return p;
+    }
+    return 'Moon';
+  });
   const [planetPositions, setPlanetPositions] = useState<Record<string, { alt: number; az: number; raH: number; decD: number; rashi: string; nakshatra: string; sidereal: number; tropical: number }>>({});
   const planetRailRef = useRef<HTMLDivElement>(null);
 
@@ -377,7 +405,7 @@ export default function ObservatoryExperience() {
           )}
 
           <div className="obs-actions">
-            <Link href={`/panchang/dhanbad?observatory=${selectedPlanet.toLowerCase()}&time=${encodeURIComponent(time.utcInstant)}`}>
+            <Link href={`/panchang/${city.id}?observatory=${selectedPlanet.toLowerCase()}&time=${encodeURIComponent(time.utcInstant)}`}>
               VIEW IN PANCHANG
             </Link>
             <Link href="/?open=kundali-section">VIEW IN KUNDALI</Link>

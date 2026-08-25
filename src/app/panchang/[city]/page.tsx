@@ -58,6 +58,20 @@ export default function CityPanchangPage({ params }: { params: { city: string } 
           <p className="text-xs font-mono-data text-[#57524A] dark:text-[#AAA49A] mt-3">
             {city.lat}°N, {city.lng}°E · Lahiri ayanamsha {p.ayanamsha}° · {p.currentPeriod || 'Deterministic calculation'}
           </p>
+          <div className="mt-4 flex justify-center gap-3">
+            <Link
+              href={`/observatory?city=${city.id}&time=${now.toISOString()}`}
+              className="px-4 py-2 rounded-lg border border-[#D4AF37] text-[10px] font-bold font-mono-data text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#060709] transition-all uppercase tracking-widest"
+            >
+              ⟡ View in Observatory
+            </Link>
+            <Link
+              href={`/observatory/ecliptic?city=${city.id}&time=${now.toISOString()}`}
+              className="px-4 py-2 rounded-lg border border-black/[0.12] dark:border-white/[0.12] text-[10px] font-bold font-mono-data text-[#57524A] dark:text-[#AAA49A] hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all uppercase tracking-widest"
+            >
+              Ecliptic Chart
+            </Link>
+          </div>
         </header>
 
         <div className="p-6 rounded-2xl bg-[#FFFFFF] dark:bg-[#090B14] border border-black/[0.08] dark:border-white/[0.08] shadow-sm">
