@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import CelestialDetailSheet from './CelestialDetailSheet';
 import SkyCanvasRenderer from './SkyCanvasRenderer';
 import { calculateCanonicalBody, type CanonicalBody, type CanonicalBodyName } from '@/lib/astronomy/canonicalBodies';
+import type { CelestialSelection } from '@/lib/astronomy/celestialCatalog';
 import { getRashiForLongitude } from '@/lib/astronomy/eclipticProjection';
 import { CITIES } from '@/lib/cities';
 
@@ -48,6 +50,7 @@ function TimeMachine({ initialCity, initialTime, initialPlanet }: TimeMachinePro
   const [birthDate, setBirthDate] = useState<Date>(() => new Date('1995-06-15T10:30:00'));
   const [progress, setProgress] = useState(100);
   const [selectedPlanet, setSelectedPlanet] = useState<CanonicalBodyName>(() => BODIES.find(body => body.toLowerCase() === (initialPlanet || '').toLowerCase()) || 'Moon');
+  const [detailSelection, setDetailSelection] = useState<CelestialSelection | null>(null);
 
   const simulatedDate = useMemo(() => new Date(birthDate.getTime() + (now.getTime() - birthDate.getTime()) * progress / 100), [birthDate, now, progress]);
   const birthBodies = useMemo(() => BODIES.map(body => calculateCanonicalBody(body, birthDate)), [birthDate]);
@@ -60,6 +63,11 @@ function TimeMachine({ initialCity, initialTime, initialPlanet }: TimeMachinePro
       setBirthDate(next);
       setProgress(0);
     }
+  };
+
+  const openSelection = (selection: CelestialSelection) => {
+    setDetailSelection(selection);
+    if (selection.kind === 'planet') setSelectedPlanet(selection.id);
   };
 
   return (
@@ -103,10 +111,7 @@ function TimeMachine({ initialCity, initialTime, initialPlanet }: TimeMachinePro
                 date={simulatedDate}
                 observer={{ latitude: city.lat, longitude: city.lng }}
                 selectedPlanet={selectedPlanet}
-                onSelectPlanet={body => {
-                  const next = BODIES.find(item => item === body);
-                  if (next) setSelectedPlanet(next);
-                }}
+                onSelectObject={openSelection}
               />
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2 text-[10px] text-[#A8B0C8] sm:grid-cols-4">
@@ -126,7 +131,7 @@ function TimeMachine({ initialCity, initialTime, initialPlanet }: TimeMachinePro
                 const endpoint = nowBodies.find(item => item.body === body)!;
                 const changed = getRashiForLongitude(birth.siderealLongitude).index !== getRashiForLongitude(endpoint.siderealLongitude).index;
                 return (
-                  <button type="button" key={body} onClick={() => setSelectedPlanet(body)} className={`flex w-full items-center justify-between gap-2 rounded-xl border px-3 py-2 text-left ${selectedPlanet === body ? 'border-[#D4AF37]/70 bg-[#D4AF37]/10' : 'border-white/[0.07] bg-[#070A13] hover:border-white/20'}`}>
+                  <button type="button" key={body} onClick={() => openSelection({ kind: 'planet', id: body })} aria-label={`Open ${body} celestial details`} className={`flex w-full items-center justify-between gap-2 rounded-xl border px-3 py-2 text-left ${selectedPlanet === body ? 'border-[#D4AF37]/70 bg-[#D4AF37]/10' : 'border-white/[0.07] bg-[#070A13] hover:border-white/20'}`}>
                     <span className="flex items-center gap-2"><span className="text-base">{SYMBOLS[body]}</span><span className="font-mono-data text-[10px] font-bold text-[#D7DBEA]">{body}</span></span>
                     <span className={`font-mono-data text-[9px] font-bold ${changed ? 'text-[#F3A66A]' : 'text-[#91C7A5]'}`}>{changed ? 'changed' : 'same'}</span>
                   </button>
@@ -155,6 +160,7 @@ function TimeMachine({ initialCity, initialTime, initialPlanet }: TimeMachinePro
           </div>
         </section>
       </div>
+      {detailSelection && <CelestialDetailSheet selection={detailSelection} date={simulatedDate} observer={{ latitude: city.lat, longitude: city.lng }} cityId={city.id} onClose={() => setDetailSelection(null)} />}
     </main>
   );
 }

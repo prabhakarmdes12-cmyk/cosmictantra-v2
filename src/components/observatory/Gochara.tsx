@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import CelestialDetailSheet from './CelestialDetailSheet';
 import { calculateCanonicalBody, type CanonicalBody, type CanonicalBodyName } from '@/lib/astronomy/canonicalBodies';
+import type { CelestialSelection } from '@/lib/astronomy/celestialCatalog';
 import { getRashiForLongitude } from '@/lib/astronomy/eclipticProjection';
 import { CITIES } from '@/lib/cities';
 
@@ -153,6 +155,7 @@ function Gochara({ initialCity, initialTime, initialPlanet }: GocharaProps) {
   const now = useMemo(() => validDate(initialTime), [initialTime]);
   const [birthDate, setBirthDate] = useState<Date>(() => new Date('1995-06-15T10:30:00'));
   const [selected, setSelected] = useState<CanonicalBodyName>(() => BODIES.find(body => body.toLowerCase() === (initialPlanet || '').toLowerCase()) || 'Moon');
+  const [detailSelection, setDetailSelection] = useState<CelestialSelection | null>(null);
   const birthPositions = useMemo(() => BODIES.map(body => calculateCanonicalBody(body, birthDate)), [birthDate]);
   const currentPositions = useMemo(() => BODIES.map(body => calculateCanonicalBody(body, now)), [now]);
   const birthSelected = birthPositions.find(body => body.body === selected)!;
@@ -165,6 +168,11 @@ function Gochara({ initialCity, initialTime, initialPlanet }: GocharaProps) {
   const updateBirth = (value: string) => {
     const next = new Date(value);
     if (Number.isFinite(next.getTime())) setBirthDate(next);
+  };
+
+  const openBody = (body: CanonicalBodyName) => {
+    setSelected(body);
+    setDetailSelection({ kind: 'planet', id: body });
   };
 
   return (
@@ -189,7 +197,7 @@ function Gochara({ initialCity, initialTime, initialPlanet }: GocharaProps) {
           {BODIES.map(body => {
             const birthSign = getRashiForLongitude(birthPositions.find(item => item.body === body)!.siderealLongitude).index;
             const currentSignIndex = getRashiForLongitude(currentPositions.find(item => item.body === body)!.siderealLongitude).index;
-            return <button type="button" key={body} onClick={() => setSelected(body)} className={`rounded-full border px-3 py-2 font-mono-data text-[10px] font-bold transition-colors ${selected === body ? 'border-[#D4AF37] bg-[#D4AF37] text-[#070912]' : 'border-white/10 bg-[#0B1020] text-[#CAD0E7] hover:border-[#D4AF37]/70'}`}>{SYMBOLS[body]} {body} <span className={birthSign === currentSignIndex ? 'text-[#91C7A5]' : 'text-[#F3A66A]'}>{birthSign === currentSignIndex ? '·' : '↗'}</span></button>;
+            return <button type="button" key={body} onClick={() => openBody(body)} aria-label={`Open ${body} celestial details`} className={`rounded-full border px-3 py-2 font-mono-data text-[10px] font-bold transition-colors ${selected === body ? 'border-[#D4AF37] bg-[#D4AF37] text-[#070912]' : 'border-white/10 bg-[#0B1020] text-[#CAD0E7] hover:border-[#D4AF37]/70'}`}>{SYMBOLS[body]} {body} <span className={birthSign === currentSignIndex ? 'text-[#91C7A5]' : 'text-[#F3A66A]'}>{birthSign === currentSignIndex ? '·' : '↗'}</span></button>;
           })}
         </section>
 
@@ -202,6 +210,7 @@ function Gochara({ initialCity, initialTime, initialPlanet }: GocharaProps) {
           <aside className="rounded-2xl border border-[#D4AF37]/30 bg-[#0B1020] p-5"><div className="font-mono-data text-[10px] font-bold uppercase tracking-[0.18em] text-[#D4AF37]">Selected transit</div><div className="mt-3 flex items-center gap-2"><span className="text-3xl">{SYMBOLS[selected]}</span><div><h2 className="font-editorial text-xl font-bold">{selected}</h2><p className="font-mono-data text-[9px] uppercase tracking-wider text-[#8993B0]">{currentSelected.isRetrograde ? 'retrograde' : 'direct'} · {currentSelected.source}</p></div></div><dl className="mt-5 space-y-3 text-xs"><div className="flex justify-between gap-3 border-b border-white/[0.08] pb-2"><dt className="text-[#9DA6C4]">Birth sidereal</dt><dd className="font-mono-data">{birthSelected.siderealLongitude.toFixed(3)}°</dd></div><div className="flex justify-between gap-3 border-b border-white/[0.08] pb-2"><dt className="text-[#9DA6C4]">Current sidereal</dt><dd className="font-mono-data text-[#F2C65D]">{currentSelected.siderealLongitude.toFixed(3)}°</dd></div><div className="flex justify-between gap-3 border-b border-white/[0.08] pb-2"><dt className="text-[#9DA6C4]">Signed movement</dt><dd className="font-mono-data">{signedDelta >= 0 ? '+' : ''}{signedDelta.toFixed(3)}°</dd></div><div className="flex justify-between gap-3"><dt className="text-[#9DA6C4]">From natal Moon</dt><dd className="font-bold">House {transitHouse}</dd></div></dl><p className="mt-5 text-[10px] leading-relaxed text-[#8F99B5]">Gochara house is counted from the natal Moon rashi, a traditional transit reference. It is a computational comparison, not a complete Jyotish judgement.</p></aside>
         </section>
       </div>
+      {detailSelection && <CelestialDetailSheet selection={detailSelection} date={now} observer={{ latitude: city.lat, longitude: city.lng }} cityId={city.id} onClose={() => setDetailSelection(null)} />}
     </main>
   );
 }

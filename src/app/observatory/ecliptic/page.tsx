@@ -40,7 +40,13 @@ export default function EclipticPage({ searchParams }: { searchParams: SearchPar
           <div className="flex flex-wrap gap-2 font-mono-data text-[10px] font-bold uppercase tracking-[0.13em]"><Link href={`/observatory?${query}`} className="rounded-full border border-white/10 px-3 py-2 text-[#C7CDE1] hover:border-[#D4AF37]/60">← Observatory</Link><Link href={`/panchang/${city.id}`} className="rounded-full border border-[#D4AF37]/50 bg-[#D4AF37]/10 px-3 py-2 text-[#F2C65D] hover:bg-[#D4AF37]/20">Open {city.name} Panchang ↗</Link></div>
         </header>
         <div className="rounded-xl border border-white/[0.08] bg-[#0A0D18] px-4 py-3 font-mono-data text-[10px] text-[#9FA8C1]">{city.name} · {city.lat.toFixed(4)}°N {city.lng.toFixed(4)}°E · Lahiri ayanamsha {ayanamsha.toFixed(3)}° · coordinates are calculated, not fetched from a third-party sky service</div>
-        <EclipticInstrument date={date.toISOString()} ayanamsha={ayanamsha} selectedPlanet={planet} />
+        <EclipticInstrument
+          date={date.toISOString()}
+          ayanamsha={ayanamsha}
+          selectedPlanet={planet}
+          observer={{ latitude: city.lat, longitude: city.lng }}
+          cityId={city.id}
+        />
         <footer className="border-t border-white/[0.09] pt-5 text-[10px] leading-relaxed text-[#7F89A7]">Tropical longitude is used for the planisphere because it is the astronomy reference frame. Sidereal longitude is tropical longitude minus the displayed Chitra Paksha ayanamsha; no coordinate frame is silently mixed.</footer>
       </div>
     </main>

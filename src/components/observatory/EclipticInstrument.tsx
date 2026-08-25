@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import CelestialDetailSheet from './CelestialDetailSheet';
 import {
   ECLIPTIC_NAKSHATRAS,
   getNakshatraForLongitude,
@@ -9,13 +10,18 @@ import {
   RASHI_GLYPHS,
   RASHI_NAMES,
 } from '@/lib/astronomy/eclipticProjection';
-import { calculateCanonicalBodies, type CanonicalBody } from '@/lib/astronomy/canonicalBodies';
+import { calculateCanonicalBodies, type CanonicalBody, type CanonicalBodyName } from '@/lib/astronomy/canonicalBodies';
+import type { CelestialSelection } from '@/lib/astronomy/celestialCatalog';
+import type { ObserverLocation } from '@/lib/astronomy/projection';
 
 export interface EclipticInstrumentProps {
   date: string | Date;
   ayanamsha?: number;
   selectedPlanet?: string | null;
   onSelectPlanet?: (body: string) => void;
+  onSelectObject?: (selection: CelestialSelection) => void;
+  observer?: ObserverLocation;
+  cityId?: string;
   className?: string;
 }
 
@@ -25,7 +31,7 @@ const PLANET_COLORS: Record<string, string> = {
   Jupiter: '#D8A16B', Venus: '#F5B7D2', Saturn: '#AFA6D9',
 };
 const PLANET_SYMBOLS: Record<string, string> = {
-  Sun: '☉', Moon: '☽', Mars: '♂', Mercury: '☿', Jupiter: '♃', Venus: '♀', Saturn: '♄',
+  Sun: '☉', Moon: '☽', Mars: '♂', Mercury: '☿', Jupiter: '♃', Venus: '♀', Saturn: '♄', Rahu: '☊', Ketu: '☋',
 };
 
 function validDate(value: string | Date): Date {
@@ -176,11 +182,15 @@ function EclipticInstrument({
   ayanamsha = 23.86,
   selectedPlanet: selectedPlanetProp,
   onSelectPlanet,
+  onSelectObject,
+  observer = { latitude: 25.3176, longitude: 82.9739 },
+  cityId = 'varanasi',
   className = '',
 }: EclipticInstrumentProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const targetsRef = useRef<Map<string, { x: number; y: number; body: CanonicalBody }>>(new Map());
   const [selectedPlanet, setSelectedPlanet] = useState(selectedPlanetProp || 'Sun');
+  const [detailSelection, setDetailSelection] = useState<CelestialSelection | null>(null);
   const dateValue = date instanceof Date ? date.toISOString() : date;
   const bodies = useMemo(() => calculateCanonicalBodies(validDate(dateValue)), [dateValue]);
   const selectedBody = bodies.find(body => body.body === selectedPlanet) || bodies[0];
@@ -202,8 +212,13 @@ function EclipticInstrument({
   }, [dateValue, ayanamsha, selectedPlanet]);
 
   const choose = (body: string) => {
-    setSelectedPlanet(body);
-    onSelectPlanet?.(body);
+    const next = bodies.find(item => item.body === body);
+    if (!next) return;
+    const selection: CelestialSelection = { kind: 'planet', id: next.body as CanonicalBodyName };
+    setSelectedPlanet(next.body);
+    if (!onSelectObject) setDetailSelection(selection);
+    onSelectPlanet?.(next.body);
+    onSelectObject?.(selection);
   };
 
   const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
@@ -279,6 +294,7 @@ function EclipticInstrument({
         <div className="rounded-lg border border-white/[0.07] bg-[#090D1A] px-3 py-2">{formatLongitude(selectedBody.tropicalLongitude)} tropical</div>
         <div className="rounded-lg border border-white/[0.07] bg-[#090D1A] px-3 py-2">Lahiri {ayanamsha.toFixed(2)}°</div>
       </div>
+      {detailSelection && <CelestialDetailSheet selection={detailSelection} date={dateValue} observer={observer} cityId={cityId} onClose={() => setDetailSelection(null)} />}
     </div>
   );
 }
