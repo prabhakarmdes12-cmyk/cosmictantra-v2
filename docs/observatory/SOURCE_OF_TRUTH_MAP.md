@@ -4,7 +4,8 @@
 |---|---|---|---|
 | Moon sidereal longitude/rashi/nakshatra/pada | `src/lib/astrologyEngine.js` | `calculateCanonicalBody` | Authoritative for current CosmicTantra Jyotish output |
 | Ayanamsha | `getLahiriAyanamsha` in same module | `canonicalLahiriAdapter` | Canonical repository implementation |
-| Tropical longitude in MVP | Inverse of canonical sidereal longitude + canonical ayanamsha | Displayed with explicit provenance | Derived, not independent ephemeris |
+| Tropical longitude / RA / Dec / horizon | `astronomy-engine` 2.1.19 | `calculateCanonicalBody` astronomy field | MIT deterministic astronomical source; separately labelled from Jyotish |
+| Canonical sidereal longitude/rashi/nakshatra/pada | `src/lib/astrologyEngine.js` | `calculateCanonicalBody` Jyotish field | Existing CosmicTantra authority; cross-engine Δ is preserved for development validation |
 | Julian date / UTC / IANA time | `src/lib/astronomy/time.ts` | Observatory state | New typed time boundary |
 | Observer | `cities.js` + `ObserverLocation` | Client-only selection | Catalogue default; no geolocation persistence |
 | Renderer geometry | `ObservatoryExperience.tsx` | Visual projection only | Never used as calculation input |

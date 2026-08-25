@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { calculateKundali, getLahiriAyanamsha, normalizeAngle, RASHIS } from '../../src/lib/astrologyEngine.js';
+import { calculateKundali } from '../../src/lib/astrologyEngine.js';
 import { createObservatoryTime } from '../../src/lib/astronomy/time';
 import { calculateCanonicalBody } from '../../src/lib/astronomy/ephemeris';
 
@@ -10,10 +10,12 @@ test('OBS_INV_001: Observatory Moon preserves canonical Jyotish classification',
   const moon = calculateCanonicalBody('Moon', time);
   const direct = calculateKundali('2026-08-26', '02:41', 23.7957, 86.4304, 5.5);
   expect(moon.siderealLongitude.value).toBeCloseTo(direct.planets.Moon.longitude, 10);
-  expect(moon.rashi).toBe(RASHIS[direct.planets.Moon.rasiIndex].name);
+  expect(moon.rashi).toBe(direct.planets.Moon.rasiName);
   expect(moon.nakshatra.name).toBe(direct.planets.Moon.nakshatra.name);
   expect(moon.nakshatra.pada).toBe(direct.planets.Moon.nakshatra.pada);
-  expect(moon.tropicalLongitude.value).toBeCloseTo(normalizeAngle(direct.planets.Moon.longitude + getLahiriAyanamsha(time.julianDate)), 10);
+  expect(moon.tropicalLongitude.source).toContain('Astronomy Engine');
+  expect(Number.isFinite(moon.scientific?.altitude)).toBeTruthy();
+  expect(moon.crossEngine.canonicalSidereal).toBeCloseTo(direct.planets.Moon.longitude, 10);
 });
 
 test('OBS_INV_003: one UTC instant has one Julian date regardless of observer zone', () => {
