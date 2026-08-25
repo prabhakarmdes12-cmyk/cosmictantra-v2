@@ -49,6 +49,8 @@ Both nodes are marked retrograde and remain exactly opposite modulo 360°.
 - Canvas components use `ResizeObserver`, bounded device-pixel ratios, and accessible `role="img"` labels.
 - The Time Machine labels its slider as an inspection interpolation; it does not imply a physically linear orbit.
 - Gochara is explicitly described as a computational comparison and not a complete Jyotish judgement.
+- Planet and constellation targets are hit-tested independently. Planet targets have priority over nearby star/line targets; a selected constellation highlights its stars and stick-figure lines.
+- `CelestialDetailSheet` presents a responsive mobile bottom sheet or desktop side sheet. `CelestialArtwork` supplies original SVG portraits for planets, orbital diagrams for Rahu/Ketu, and annotated star maps for constellations, avoiding remote image hotlinks and keeping the first interaction fast.
 
 ## 3. Verification performed
 
@@ -71,7 +73,7 @@ The Observatory unit suite checks:
 - nine canonical bodies with finite tropical/sidereal coordinates;
 - explicit Rahu/Ketu mean-node handling, retrograde flags, opposition, and aliases.
 
-A local Next development-server smoke check returned HTTP 200 for `/observatory`, `/observatory/ecliptic`, `/observatory/timemachine`, and `/observatory/gochara`; a Panchang request rendered both deep-link anchors with city and ISO time parameters. The isolated Observatory suite passed 12/12 and the existing engine suite passed 13/13 in this environment. The full Playwright command also attempts the repository's responsive browser suite, but its Chromium executable is not installed in this sandbox.
+A local Next development-server smoke check returned HTTP 200 for `/observatory`, `/observatory/ecliptic`, `/observatory/timemachine`, and `/observatory/gochara`; a Panchang request rendered both deep-link anchors with city and ISO time parameters. The isolated Observatory suite passed 14/14 and the existing engine suite passed 13/13 in this environment. The full Playwright command also attempts the repository's responsive browser suite, but its Chromium executable is not installed in this sandbox.
 
 For a production-style HTTP smoke check after `npm run build && npm start`, request each route without query parameters and with a Panchang-style deep-link query. The expected status is HTTP 200 for all four routes.
 
