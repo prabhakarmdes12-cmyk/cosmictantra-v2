@@ -44,6 +44,7 @@ export default function CityPanchangPage({ params }: { params: { city: string } 
     ['Gulika Kaal', p.timings?.gulikaKalam],
     ['Abhijit Muhurat', p.timings?.abhijitMuhurat],
   ];
+  const observatoryQuery = `city=${encodeURIComponent(city.id)}&time=${encodeURIComponent(now.toISOString())}`;
 
   return (
     <main className="min-h-screen bg-[#FAF7F2] dark:bg-[#07080C] text-[#1C1917] dark:text-[#EFECE6] py-14 px-4 sm:px-6">
@@ -58,6 +59,20 @@ export default function CityPanchangPage({ params }: { params: { city: string } 
           <p className="text-xs font-mono-data text-[#57524A] dark:text-[#AAA49A] mt-3">
             {city.lat}°N, {city.lng}°E · Lahiri ayanamsha {p.ayanamsha}° · {p.currentPeriod || 'Deterministic calculation'}
           </p>
+          <div className="mt-5 flex flex-wrap justify-center gap-2">
+            <Link
+              href={`/observatory?${observatoryQuery}`}
+              className="rounded-full border border-[#D4AF37]/55 bg-[#D4AF37]/10 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[#8E6F1D] transition-colors hover:bg-[#D4AF37]/20 dark:text-[#F2C65D]"
+            >
+              See this instant in Observatory ↗
+            </Link>
+            <Link
+              href={`/observatory/ecliptic?${observatoryQuery}`}
+              className="rounded-full border border-black/[0.1] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[#57524A] transition-colors hover:border-[#D4AF37] dark:border-white/[0.12] dark:text-[#AAA49A]"
+            >
+              Open ecliptic planisphere ↗
+            </Link>
+          </div>
         </header>
 
         <div className="p-6 rounded-2xl bg-[#FFFFFF] dark:bg-[#090B14] border border-black/[0.08] dark:border-white/[0.08] shadow-sm">

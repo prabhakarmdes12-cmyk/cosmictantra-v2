@@ -6,6 +6,10 @@ import { TRANSLATIONS } from '../lib/translations';
 import { chitiSensory } from '../lib/chitiAudio';
 
 const TOOL_LINKS = [
+  { href: '/observatory', label: 'Sky Observatory' },
+  { href: '/observatory/ecliptic', label: 'Ecliptic Planisphere' },
+  { href: '/observatory/timemachine', label: 'Sky Time Machine' },
+  { href: '/observatory/gochara', label: 'Gochara Transits' },
   { href: '/numerology/name', label: 'Name Numerology' },
   { href: '/numerology/business-name', label: 'Business Name' },
   { href: '/numerology/mobile-number', label: 'Mobile Number' },
