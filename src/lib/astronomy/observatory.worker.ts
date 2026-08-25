@@ -1,0 +1,8 @@
+/// <reference lib="webworker" />
+import { calculateAstronomicalSnapshot, calculateRiseTransitSet, type AstronomicalBody } from './events';
+import type { ObserverLocation } from './types';
+type Request = { requestId: string; type: 'CALCULATE_POSITION' | 'CALCULATE_EVENTS'; body: AstronomicalBody; instant: string; observer: ObserverLocation };
+type Reply = { requestId: string; ok: true; data: unknown } | { requestId: string; ok: false; error: string };
+const scope: DedicatedWorkerGlobalScope = self as unknown as DedicatedWorkerGlobalScope;
+function valid(req: Partial<Request>): req is Request { return typeof req.requestId === 'string' && (req.type === 'CALCULATE_POSITION' || req.type === 'CALCULATE_EVENTS') && typeof req.body === 'string' && typeof req.instant === 'string' && !!req.observer && Number.isFinite(req.observer.latitude) && Number.isFinite(req.observer.longitude); }
+scope.onmessage = ({ data }: MessageEvent<Partial<Request>>) => { if (!valid(data)) { scope.postMessage({ requestId: data.requestId || 'unknown', ok: false, error: 'Invalid observatory worker request.' } satisfies Reply); return; } try { const instant = new Date(data.instant); if (Number.isNaN(instant.getTime())) throw new Error('Invalid instant.'); const result = data.type === 'CALCULATE_POSITION' ? calculateAstronomicalSnapshot(data.body, instant, data.observer) : calculateRiseTransitSet(data.body, instant, data.observer); scope.postMessage({ requestId: data.requestId, ok: true, data: result } satisfies Reply); } catch (error) { scope.postMessage({ requestId: data.requestId, ok: false, error: error instanceof Error ? error.message : 'Calculation failed.' } satisfies Reply); } };

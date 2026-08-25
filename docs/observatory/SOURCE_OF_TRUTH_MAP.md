@@ -7,6 +7,7 @@
 | Tropical longitude / RA / Dec / horizon | `astronomy-engine` 2.1.19 | `calculateCanonicalBody` astronomy field | MIT deterministic astronomical source; separately labelled from Jyotish |
 | Canonical sidereal longitude/rashi/nakshatra/pada | `src/lib/astrologyEngine.js` | `calculateCanonicalBody` Jyotish field | Existing CosmicTantra authority; cross-engine Δ is preserved for development validation |
 | Julian date / UTC / IANA time | `src/lib/astronomy/time.ts` | Observatory state | New typed time boundary |
+| Horizon / rise / transit / set | `src/lib/astronomy/events.ts` / Astronomy Engine | Worker-only `CALCULATE_EVENTS` | Observer-dependent; source and refraction convention carried with result |
 | Observer | `cities.js` + `ObserverLocation` | Client-only selection | Catalogue default; no geolocation persistence |
 | Renderer geometry | `ObservatoryExperience.tsx` | Visual projection only | Never used as calculation input |
 | Panchang deep link | `/panchang/[city]` | Navigation only | Existing Panchang remains owner |

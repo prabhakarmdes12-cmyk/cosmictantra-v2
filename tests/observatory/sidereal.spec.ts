@@ -24,3 +24,12 @@ test('OBS_INV_003: one UTC instant has one Julian date regardless of observer zo
  const london = createObservatoryTime(instant, { name:'London', latitude:51.5074, longitude:-.1278, timezone:'Europe/London', source:'catalogue' });
  expect(india.utcInstant).toBe(london.utcInstant); expect(india.julianDate).toBe(london.julianDate); expect(india.userLocalTime).not.toBe(london.userLocalTime);
 });
+
+test('astronomical horizon events are deterministic and observer-dependent', () => {
+  const { calculateRiseTransitSet } = require('../../src/lib/astronomy/events');
+  const instant = new Date('2026-08-25T21:11:00.000Z');
+  const dhanbad = { name:'Dhanbad', latitude:23.7957, longitude:86.4304, timezone:'Asia/Kolkata', source:'catalogue' };
+  const london = { name:'London', latitude:51.5074, longitude:-.1278, timezone:'Europe/London', source:'catalogue' };
+  const a = calculateRiseTransitSet('Moon', instant, dhanbad); const b = calculateRiseTransitSet('Moon', instant, london);
+  expect(a.source).toContain('Astronomy Engine'); expect(a.observerDependent).toBeTruthy(); expect(a.rise).toBeTruthy(); expect(a.transit).toBeTruthy(); expect(a.set).toBeTruthy(); expect(a.rise).not.toBe(b.rise);
+});
