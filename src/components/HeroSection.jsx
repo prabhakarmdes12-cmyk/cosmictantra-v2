@@ -106,10 +106,25 @@ export default function HeroSection({
               </button>
             </div>
 
-            {/* Classical Verified Methodology Footnote */}
-            <div className="pt-2 flex items-center gap-2 text-[10px] sm:text-[11px] font-mono-data text-[#696256] dark:text-[#A6A095]">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#8E6F1D] dark:text-[#D4AF37] shrink-0" />
-              <span>{t.footerNote}</span>
+            {/* Classical Verified Methodology Micro-Panel (§10) */}
+            <div className="pt-2.5 flex items-center justify-between flex-wrap gap-2 text-[10px] sm:text-[11px] font-mono-data text-[#696256] dark:text-[#A6A095] border-t border-black/[0.06] dark:border-white/[0.08] w-full mt-1">
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#8E6F1D] dark:text-[#D4AF37] shrink-0" />
+                <span>{t.footerNote}</span>
+              </div>
+              <a
+                href="#methodology-section"
+                onClick={(e) => {
+                  const el = document.getElementById('methodology-section');
+                  if (el) {
+                    e.preventDefault();
+                    el.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+                className="text-[#8E6F1D] dark:text-[#D4AF37] hover:underline font-semibold flex items-center gap-0.5 ml-auto"
+              >
+                <span>View methodology →</span>
+              </a>
             </div>
 
           </div>

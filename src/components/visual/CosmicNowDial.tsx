@@ -130,6 +130,47 @@ export default function CosmicNowDial({
     }
   }
 
+  // Format duration helper (e.g. 1h 24m or 42m)
+  const formatDuration = (mins: number): string => {
+    const m = Math.max(1, Math.round(mins));
+    const hrs = Math.floor(m / 60);
+    const rem = m % 60;
+    if (hrs > 0 && rem > 0) return `${hrs}h ${rem}m`;
+    if (hrs > 0) return `${hrs}h`;
+    return `${rem}m`;
+  };
+
+  // Deterministic Next Transition Calculation based on real ephemeris
+  let nextTransitionText = '';
+  const rStartMs = panchangData.timings?.rahuStart ? new Date(panchangData.timings.rahuStart).getTime() : 0;
+  const rEndMs = panchangData.timings?.rahuEnd ? new Date(panchangData.timings.rahuEnd).getTime() : 0;
+  const aStartMs = panchangData.timings?.abhijitStart ? new Date(panchangData.timings.abhijitStart).getTime() : 0;
+
+  if (currentMinutes < sunriseMinutes) {
+    const diff = sunriseMinutes - currentMinutes;
+    nextTransitionText = `Sunrise in ${formatDuration(diff)}`;
+  } else if (rStartMs > 0 && nowMs < rStartMs && (rStartMs - nowMs) <= 120 * 60 * 1000) {
+    const diffMins = (rStartMs - nowMs) / 60000;
+    nextTransitionText = `Rahu Kaal begins in ${formatDuration(diffMins)}`;
+  } else if (rStartMs > 0 && rEndMs > 0 && nowMs >= rStartMs && nowMs <= rEndMs) {
+    const diffMins = (rEndMs - nowMs) / 60000;
+    nextTransitionText = `Rahu Kaal ends in ${formatDuration(diffMins)}`;
+  } else if (aStartMs > 0 && nowMs < aStartMs && (aStartMs - nowMs) <= 90 * 60 * 1000) {
+    const diffMins = (aStartMs - nowMs) / 60000;
+    nextTransitionText = `Abhijit Muhurat in ${formatDuration(diffMins)}`;
+  } else if (currentMinutes < sunsetMinutes) {
+    const diff = sunsetMinutes - currentMinutes;
+    nextTransitionText = `Sunset in ${formatDuration(diff)}`;
+  } else {
+    const diffToMidnight = 1440 - currentMinutes;
+    const diffToDawn = diffToMidnight + sunriseMinutes - 96;
+    if (diffToDawn > 0 && diffToDawn < 1440) {
+      nextTransitionText = `Brahma Muhurat in ${formatDuration(diffToDawn)}`;
+    } else {
+      nextTransitionText = `Sunrise at ${sunriseStr}`;
+    }
+  }
+
   const tithiName = typeof panchangData.tithi === 'object' && panchangData.tithi !== null
     ? (panchangData.tithi.name || 'Shukla Ekadashi')
     : (panchangData.tithi || 'Shukla Ekadashi');
@@ -195,7 +236,7 @@ export default function CosmicNowDial({
       </div>
 
       {/* Signature Vedic Day Arc Instrument */}
-      <div className="relative z-10 p-4 sm:p-5 rounded-2xl bg-white/90 dark:bg-[#070910]/95 border border-[#8E6F1D]/20 dark:border-[#D4AF37]/30 mb-4.5 shadow-inner">
+      <div className="relative z-10 p-4 sm:p-5 rounded-2xl bg-white/90 dark:bg-[#070910]/95 border border-[#8E6F1D]/20 dark:border-[#D4AF37]/30 mb-4 shadow-inner">
         <div className="flex items-center justify-between text-[10px] font-mono-data text-[#696256] dark:text-[#A6A095] mb-2 uppercase tracking-widest">
           <span className="flex items-center gap-1 font-semibold text-[#C26E22] dark:text-[#F0A554]">
             <Sun className="w-3.5 h-3.5 text-amber-500" /> Rise {sunriseStr}
@@ -257,57 +298,69 @@ export default function CosmicNowDial({
           </span>
         </div>
 
-        {/* Live Active Period Badge */}
-        <div className="mt-3 pt-2.5 border-t border-black/[0.06] dark:border-white/[0.08] flex items-center justify-between">
-          <span className="text-[10px] font-mono-data uppercase tracking-wider text-[#696256] dark:text-[#9E988D]">
-            Current Temporal Window:
-          </span>
-          <span className={`text-[10px] font-mono-data font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
-            isWarning
-              ? 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30'
-              : 'bg-[#D4AF37]/15 text-[#8E6F1D] dark:text-[#F0C968] border border-[#D4AF37]/30'
-          }`}>
-            {periodTag}
-          </span>
+        {/* Live Active Period & Next Transition Row */}
+        <div className="mt-3 pt-2.5 border-t border-black/[0.06] dark:border-white/[0.08] flex items-center justify-between flex-wrap gap-1.5">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[9.5px] font-mono-data uppercase tracking-wider text-[#696256] dark:text-[#9E988D]">
+              Window:
+            </span>
+            <span className={`text-[9.5px] font-mono-data font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
+              isWarning
+                ? 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30'
+                : 'bg-[#D4AF37]/15 text-[#8E6F1D] dark:text-[#F0C968] border border-[#D4AF37]/30'
+            }`}>
+              {periodTag}
+            </span>
+          </div>
+          {nextTransitionText && (
+            <div className="flex items-center gap-1 text-[9.5px] font-mono-data font-semibold text-[#8E6F1D] dark:text-[#D4AF37] bg-black/[0.03] dark:bg-white/[0.04] px-2 py-0.5 rounded border border-black/[0.06] dark:border-white/[0.08]">
+              <Sparkles className="w-2.5 h-2.5 text-[#C26E22] dark:text-[#F59E0B]" />
+              <span>Next: <strong>{nextTransitionText}</strong></span>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* High-Contrast Ephemeris Matrix */}
-      <div className="relative z-10 grid grid-cols-2 gap-2.5 text-xs font-mono-data">
-        {/* Tithi */}
-        <div className="p-3 rounded-xl bg-white/85 dark:bg-[#101322] border border-black/[0.08] dark:border-white/[0.08]">
-          <div className="text-[9.5px] text-[#696256] dark:text-[#8E877B] uppercase tracking-wider">Tithi (Lunar Day)</div>
-          <div className="font-editorial text-sm font-bold text-[#1C1917] dark:text-[#FFFFFF] mt-0.5 truncate">
-            {tithiName}
+      {/* Integrated Astronomical Telemetry Plate (No generic SaaS cards) */}
+      <div className="relative z-10 rounded-2xl bg-white/85 dark:bg-[#070912]/90 border border-[#8E6F1D]/20 dark:border-[#D4AF37]/25 p-3.5 divide-y divide-black/[0.06] dark:divide-white/[0.08] text-xs font-mono-data shadow-xs">
+        {/* Primary State: Tithi + Nakshatra */}
+        <div className="grid grid-cols-2 gap-3 pb-3">
+          <div>
+            <div className="text-[9px] text-[#696256] dark:text-[#8E877B] uppercase tracking-wider font-semibold">TITHI (LUNAR DAY)</div>
+            <div className="font-editorial text-sm sm:text-base font-bold text-[#1C1917] dark:text-[#FFFFFF] mt-0.5 truncate">
+              {tithiName}
+            </div>
+            <div className="text-[9px] text-[#8E6F1D] dark:text-[#D4AF37] font-semibold mt-0.5">{tithiPaksha}</div>
           </div>
-          <div className="text-[9px] text-[#8E6F1D] dark:text-[#D4AF37] font-semibold mt-0.5">{tithiPaksha}</div>
+
+          <div className="border-l border-black/[0.06] dark:border-white/[0.08] pl-3">
+            <div className="text-[9px] text-[#696256] dark:text-[#8E877B] uppercase tracking-wider font-semibold">NAKSHATRA (MANSION)</div>
+            <div className="font-editorial text-sm sm:text-base font-bold text-[#1C1917] dark:text-[#FFFFFF] mt-0.5 truncate">
+              {nakshatraName}
+            </div>
+            <div className="text-[9px] text-indigo-600 dark:text-[#B0B0FF] font-semibold mt-0.5">Pada {pada} • Lord {nakshatraLord}</div>
+          </div>
         </div>
 
-        {/* Nakshatra */}
-        <div className="p-3 rounded-xl bg-white/85 dark:bg-[#101322] border border-black/[0.08] dark:border-white/[0.08]">
-          <div className="text-[9.5px] text-[#696256] dark:text-[#8E877B] uppercase tracking-wider">Nakshatra (Mansion)</div>
-          <div className="font-editorial text-sm font-bold text-[#1C1917] dark:text-[#FFFFFF] mt-0.5 truncate">
-            {nakshatraName}
+        {/* Secondary State & Alert: Yoga / Karana & Rahu Kaal */}
+        <div className="grid grid-cols-2 gap-3 pt-3">
+          <div>
+            <div className="text-[9px] text-[#696256] dark:text-[#8E877B] uppercase tracking-wider font-semibold">YOGA &amp; KARANA</div>
+            <div className="font-semibold text-[#1C1917] dark:text-[#FFFFFF] text-xs mt-0.5 truncate">
+              {yogaName}
+            </div>
+            <div className="text-[9px] text-[#696256] dark:text-[#9E988D] mt-0.5 truncate">Karana: {karanaName}</div>
           </div>
-          <div className="text-[9px] text-indigo-600 dark:text-[#B0B0FF] font-semibold mt-0.5">Pada {pada} • {nakshatraLord}</div>
-        </div>
 
-        {/* Yoga & Karana */}
-        <div className="p-3 rounded-xl bg-white/85 dark:bg-[#101322] border border-black/[0.08] dark:border-white/[0.08]">
-          <div className="text-[9.5px] text-[#696256] dark:text-[#8E877B] uppercase tracking-wider">Yoga &amp; Karana</div>
-          <div className="font-bold text-[#1C1917] dark:text-[#FFFFFF] text-xs mt-0.5 truncate">
-            {yogaName}
+          <div className="border-l border-black/[0.06] dark:border-white/[0.08] pl-3">
+            <div className="text-[9px] text-[#991B1B] dark:text-[#F87171] uppercase tracking-wider font-bold flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0 inline-block" /> RAHU KAAL (AVOID)
+            </div>
+            <div className="font-mono-data font-bold text-[#991B1B] dark:text-[#F87171] text-xs mt-0.5 truncate">
+              {rahuTime}
+            </div>
+            <div className="text-[9px] text-[#8E6F1D] dark:text-[#D4AF37] mt-0.5 truncate">{ayanamshaVal}</div>
           </div>
-          <div className="text-[9px] text-[#696256] dark:text-[#9E988D] mt-0.5 truncate">Karana: {karanaName}</div>
-        </div>
-
-        {/* Rahu Kaal & Ayanamsha */}
-        <div className="p-3 rounded-xl bg-white/85 dark:bg-[#101322] border border-black/[0.08] dark:border-white/[0.08]">
-          <div className="text-[9.5px] text-[#696256] dark:text-[#8E877B] uppercase tracking-wider">Rahu Kaal (Avoid)</div>
-          <div className="font-bold text-[#991B1B] dark:text-[#F87171] text-xs mt-0.5 truncate">
-            {rahuTime}
-          </div>
-          <div className="text-[9px] text-[#8E6F1D] dark:text-[#D4AF37] mt-0.5 truncate">{ayanamshaVal}</div>
         </div>
       </div>
 
