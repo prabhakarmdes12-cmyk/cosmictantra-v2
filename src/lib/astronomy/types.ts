@@ -1,0 +1,6 @@
+export type CoordinateFrame = 'ICRF' | 'J2000' | 'equatorial-of-date' | 'ecliptic-tropical' | 'ecliptic-sidereal-lahiri' | 'horizontal-topocentric';
+export interface AstronomicalValue<T> { value: T; unit: string; epoch?: string; frame?: CoordinateFrame; source: string; algorithmVersion: string; calculatedAt: string; uncertainty?: number; }
+export interface ObserverLocation { name: string; latitude: number; longitude: number; elevation?: number; timezone: string; source: 'catalogue' | 'user' | 'profile' | 'geolocation'; }
+export interface ObservatoryTime { userLocalTime: string; timezone: string; utcInstant: string; timezoneOffsetMinutes: number; julianDate: number; julianCentury: number; location: ObserverLocation; }
+export type SupportedBody = 'Sun' | 'Moon' | 'Mars' | 'Mercury' | 'Jupiter' | 'Venus' | 'Saturn' | 'Rahu' | 'Ketu';
+export interface BodyPosition { body: SupportedBody; tropicalLongitude: AstronomicalValue<number>; siderealLongitude: AstronomicalValue<number>; ayanamsha: AstronomicalValue<number>; rashi: string; degreeInRashi: number; nakshatra: { name: string; index: number; pada: number; ruler: string }; }
