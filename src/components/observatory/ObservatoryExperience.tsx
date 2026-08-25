@@ -52,23 +52,26 @@ export interface ObservatoryExperienceProps {
   initialCity?: string;
   initialTime?: string;
   initialPlanet?: string;
+  initialSelection?: CelestialSelection | null;
 }
 
 export function ObservatoryExperience({
   initialCity,
   initialTime,
   initialPlanet,
+  initialSelection = null,
 }: ObservatoryExperienceProps) {
   const [city, setCity] = useState<ObservatoryCity>(() => findCity(initialCity));
   const [date, setDate] = useState<Date>(() => validDate(initialTime));
+  const initialPlanetSelection = initialSelection?.kind === 'planet' ? initialSelection.id : null;
   const [selectedPlanet, setSelectedPlanet] = useState<CanonicalBodyName>(() => {
-    const value = PLANETS.find(body => body.toLowerCase() === (initialPlanet || '').toLowerCase());
+    const value = PLANETS.find(body => body.toLowerCase() === (initialPlanetSelection || initialPlanet || '').toLowerCase());
     return value || 'Sun';
   });
   const [showMandala, setShowMandala] = useState(true);
   const [showConstellations, setShowConstellations] = useState(true);
-  const [selectedConstellation, setSelectedConstellation] = useState<string | null>(null);
-  const [detailSelection, setDetailSelection] = useState<CelestialSelection | null>(null);
+  const [selectedConstellation, setSelectedConstellation] = useState<string | null>(() => initialSelection?.kind === 'constellation' ? initialSelection.id : null);
+  const [detailSelection, setDetailSelection] = useState<CelestialSelection | null>(initialSelection);
 
   const selectedBody = useMemo(() => calculateCanonicalBody(selectedPlanet, date), [selectedPlanet, date]);
   const dateInput = toDateTimeInput(date);

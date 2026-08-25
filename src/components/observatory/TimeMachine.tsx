@@ -42,15 +42,17 @@ export interface TimeMachineProps {
   initialCity?: string;
   initialTime?: string;
   initialPlanet?: string;
+  initialSelection?: CelestialSelection | null;
 }
 
-function TimeMachine({ initialCity, initialTime, initialPlanet }: TimeMachineProps) {
+function TimeMachine({ initialCity, initialTime, initialPlanet, initialSelection = null }: TimeMachineProps) {
   const city = useMemo(() => findCity(initialCity), [initialCity]);
   const now = useMemo(() => validDate(initialTime), [initialTime]);
   const [birthDate, setBirthDate] = useState<Date>(() => new Date('1995-06-15T10:30:00'));
   const [progress, setProgress] = useState(100);
-  const [selectedPlanet, setSelectedPlanet] = useState<CanonicalBodyName>(() => BODIES.find(body => body.toLowerCase() === (initialPlanet || '').toLowerCase()) || 'Moon');
-  const [detailSelection, setDetailSelection] = useState<CelestialSelection | null>(null);
+  const initialPlanetSelection = initialSelection?.kind === 'planet' ? initialSelection.id : null;
+  const [selectedPlanet, setSelectedPlanet] = useState<CanonicalBodyName>(() => BODIES.find(body => body.toLowerCase() === (initialPlanetSelection || initialPlanet || '').toLowerCase()) || 'Moon');
+  const [detailSelection, setDetailSelection] = useState<CelestialSelection | null>(initialSelection);
 
   const simulatedDate = useMemo(() => new Date(birthDate.getTime() + (now.getTime() - birthDate.getTime()) * progress / 100), [birthDate, now, progress]);
   const birthBodies = useMemo(() => BODIES.map(body => calculateCanonicalBody(body, birthDate)), [birthDate]);

@@ -148,14 +148,16 @@ export interface GocharaProps {
   initialCity?: string;
   initialTime?: string;
   initialPlanet?: string;
+  initialSelection?: CelestialSelection | null;
 }
 
-function Gochara({ initialCity, initialTime, initialPlanet }: GocharaProps) {
+function Gochara({ initialCity, initialTime, initialPlanet, initialSelection = null }: GocharaProps) {
   const city = useMemo(() => findCity(initialCity), [initialCity]);
   const now = useMemo(() => validDate(initialTime), [initialTime]);
   const [birthDate, setBirthDate] = useState<Date>(() => new Date('1995-06-15T10:30:00'));
-  const [selected, setSelected] = useState<CanonicalBodyName>(() => BODIES.find(body => body.toLowerCase() === (initialPlanet || '').toLowerCase()) || 'Moon');
-  const [detailSelection, setDetailSelection] = useState<CelestialSelection | null>(null);
+  const initialPlanetSelection = initialSelection?.kind === 'planet' ? initialSelection.id : null;
+  const [selected, setSelected] = useState<CanonicalBodyName>(() => BODIES.find(body => body.toLowerCase() === (initialPlanetSelection || initialPlanet || '').toLowerCase()) || 'Moon');
+  const [detailSelection, setDetailSelection] = useState<CelestialSelection | null>(initialSelection);
   const birthPositions = useMemo(() => BODIES.map(body => calculateCanonicalBody(body, birthDate)), [birthDate]);
   const currentPositions = useMemo(() => BODIES.map(body => calculateCanonicalBody(body, now)), [now]);
   const birthSelected = birthPositions.find(body => body.body === selected)!;

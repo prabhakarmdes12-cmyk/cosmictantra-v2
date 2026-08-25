@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import TimeMachine from '@/components/observatory/TimeMachine';
+import { parseCelestialSelection } from '@/lib/astronomy/celestialCatalog';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,5 +15,6 @@ function first(value: string | string[] | undefined): string | undefined { retur
 function validIso(value?: string): string { const date = value ? new Date(value) : new Date(); return Number.isFinite(date.getTime()) ? date.toISOString() : new Date().toISOString(); }
 
 export default function TimeMachinePage({ searchParams }: { searchParams: SearchParams }) {
-  return <TimeMachine initialCity={first(searchParams?.city)} initialTime={validIso(first(searchParams?.time))} initialPlanet={first(searchParams?.planet)} />;
+  const initialSelection = parseCelestialSelection(first(searchParams?.object), first(searchParams?.objectKind));
+  return <TimeMachine initialCity={first(searchParams?.city)} initialTime={validIso(first(searchParams?.time))} initialPlanet={first(searchParams?.planet)} initialSelection={initialSelection} />;
 }

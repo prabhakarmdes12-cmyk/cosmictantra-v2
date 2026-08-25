@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import ObservatoryExperience from '@/components/observatory/ObservatoryExperience';
+import { parseCelestialSelection } from '@/lib/astronomy/celestialCatalog';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,5 +22,6 @@ function validIso(value?: string): string {
 }
 
 export default function ObservatoryPage({ searchParams }: { searchParams: SearchParams }) {
-  return <ObservatoryExperience initialCity={first(searchParams?.city)} initialTime={validIso(first(searchParams?.time))} initialPlanet={first(searchParams?.planet)} />;
+  const initialSelection = parseCelestialSelection(first(searchParams?.object), first(searchParams?.objectKind));
+  return <ObservatoryExperience initialCity={first(searchParams?.city)} initialTime={validIso(first(searchParams?.time))} initialPlanet={first(searchParams?.planet)} initialSelection={initialSelection} />;
 }

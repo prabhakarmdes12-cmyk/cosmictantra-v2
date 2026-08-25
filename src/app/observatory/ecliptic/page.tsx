@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import EclipticInstrument from '@/components/observatory/EclipticInstrument';
 import { getLahiriAyanamsha, toJulianDay } from '@/lib/astronomy/canonicalBodies';
+import { parseCelestialSelection } from '@/lib/astronomy/celestialCatalog';
 import { CITIES } from '@/lib/cities';
 
 export const dynamic = 'force-dynamic';
@@ -29,6 +30,7 @@ export default function EclipticPage({ searchParams }: { searchParams: SearchPar
   const city = cityFor(first(searchParams?.city));
   const date = validDate(first(searchParams?.time));
   const planet = first(searchParams?.planet);
+  const initialSelection = parseCelestialSelection(first(searchParams?.object), first(searchParams?.objectKind));
   const query = `city=${city.id}&time=${encodeURIComponent(date.toISOString())}${planet ? `&planet=${encodeURIComponent(planet)}` : ''}`;
   const ayanamsha = getLahiriAyanamsha(toJulianDay(date));
 
@@ -46,6 +48,7 @@ export default function EclipticPage({ searchParams }: { searchParams: SearchPar
           selectedPlanet={planet}
           observer={{ latitude: city.lat, longitude: city.lng }}
           cityId={city.id}
+          initialSelection={initialSelection}
         />
         <footer className="border-t border-white/[0.09] pt-5 text-[10px] leading-relaxed text-[#7F89A7]">Tropical longitude is used for the planisphere because it is the astronomy reference frame. Sidereal longitude is tropical longitude minus the displayed Chitra Paksha ayanamsha; no coordinate frame is silently mixed.</footer>
       </div>

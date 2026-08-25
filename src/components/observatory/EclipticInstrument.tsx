@@ -22,6 +22,7 @@ export interface EclipticInstrumentProps {
   onSelectObject?: (selection: CelestialSelection) => void;
   observer?: ObserverLocation;
   cityId?: string;
+  initialSelection?: CelestialSelection | null;
   className?: string;
 }
 
@@ -185,12 +186,13 @@ function EclipticInstrument({
   onSelectObject,
   observer = { latitude: 25.3176, longitude: 82.9739 },
   cityId = 'varanasi',
+  initialSelection = null,
   className = '',
 }: EclipticInstrumentProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const targetsRef = useRef<Map<string, { x: number; y: number; body: CanonicalBody }>>(new Map());
-  const [selectedPlanet, setSelectedPlanet] = useState(selectedPlanetProp || 'Sun');
-  const [detailSelection, setDetailSelection] = useState<CelestialSelection | null>(null);
+  const [selectedPlanet, setSelectedPlanet] = useState(initialSelection?.kind === 'planet' ? initialSelection.id : selectedPlanetProp || 'Sun');
+  const [detailSelection, setDetailSelection] = useState<CelestialSelection | null>(initialSelection);
   const dateValue = date instanceof Date ? date.toISOString() : date;
   const bodies = useMemo(() => calculateCanonicalBodies(validDate(dateValue)), [dateValue]);
   const selectedBody = bodies.find(body => body.body === selectedPlanet) || bodies[0];

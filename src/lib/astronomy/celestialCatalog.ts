@@ -159,3 +159,20 @@ export function constellationIds(): string[] {
   });
   return [...ids];
 }
+
+/** Resolve a share/deep-link payload without allowing arbitrary catalog ids into the detail sheet. */
+export function parseCelestialSelection(id?: string, kind?: string): CelestialSelection | null {
+  const value = id?.trim();
+  if (!value) return null;
+
+  if (kind === 'planet') {
+    const body = (Object.keys(PLANET_DETAILS) as CanonicalBodyName[]).find(name => name.toLowerCase() === value.toLowerCase());
+    return body ? { kind: 'planet', id: body } : null;
+  }
+
+  if (kind === 'constellation') {
+    return constellationIds().includes(value) ? { kind: 'constellation', id: value } : null;
+  }
+
+  return null;
+}

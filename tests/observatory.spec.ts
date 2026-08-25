@@ -15,7 +15,7 @@ import {
 } from '../src/lib/astronomy/eclipticProjection';
 import { localSiderealTime, projectStar, SiderealTime } from '../src/lib/astronomy/projection';
 import { STARS } from '../src/lib/astronomy/stars';
-import { getCelestialDetail, getConstellationDetail, PLANET_DETAILS } from '../src/lib/astronomy/celestialCatalog';
+import { getCelestialDetail, getConstellationDetail, parseCelestialSelection, PLANET_DETAILS } from '../src/lib/astronomy/celestialCatalog';
 
 test.describe('Observatory coordinate and ephemeris invariants', () => {
   const instant = new Date('2026-08-25T00:00:00.000Z');
@@ -132,5 +132,12 @@ test.describe('Observatory coordinate and ephemeris invariants', () => {
     expect(getCelestialDetail({ kind: 'constellation', id: 'Ori' }).displayName).toBe('Orion');
     expect(detail.kind).toBe('constellation');
     expect(detail.featuredStars).toContain('Betelgeuse');
+  });
+
+  test('detail deep links accept known planets and constellations only', () => {
+    expect(parseCelestialSelection('moon', 'planet')).toEqual({ kind: 'planet', id: 'Moon' });
+    expect(parseCelestialSelection('Ori', 'constellation')).toEqual({ kind: 'constellation', id: 'Ori' });
+    expect(parseCelestialSelection('not-a-body', 'planet')).toBeNull();
+    expect(parseCelestialSelection('Ori', 'planet')).toBeNull();
   });
 });
