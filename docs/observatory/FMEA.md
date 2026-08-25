@@ -6,6 +6,7 @@
 | Invalid coordinates | High | Range validation in `createObservatoryTime`; reject | unit test pending |
 | Renderer unavailable/WASM/WebGL/context loss | Medium | Internal 2D route has no WebGL dependency | manual route verification |
 | Renderer/calculation disagreement | Critical | Renderer has no calculation input path | architecture invariant |
+| Independent-reference fixture unavailable | High | JPL generator failure is documented; fixture test remains a release gate and no values are fabricated | `REFERENCE_VALIDATION.md`, fixture test |
 | Ayanamsha mismatch | Critical | Canonical adapter only; parity test | `sidereal.spec.ts` |
 | Nakshatra floating boundary | High | canonical classifier is used; epsilon policy not yet formalized | release blocker for Phase 4 |
 | Worker stale response / crash | Medium | Request IDs prevent unknown responses from resolving; component destroys client on state change and retains no stale result | worker client code + horizon-event test |

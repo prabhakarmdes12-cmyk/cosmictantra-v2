@@ -29,3 +29,7 @@
 - Add `reference-horizons.json` with generator provenance and comparison tests.
 - Change the current display copy from a computed ecliptic sketch to `Astronomy Engine / internal 2D` only after those tests pass.
 - Keep the route production-gated as `internal` until all validation and legal gates are satisfied.
+
+## Reference-fixture operation
+
+`npm run reference:generate` queries JPL Horizons only in a controlled, networked release environment and writes raw immutable responses to `tests/observatory/fixtures/horizons-reference.json`. The application never calls Horizons. The fixture is intentionally absent until it is generated and reviewed; its missing state is an explicit release gate, not permission to validate Astronomy Engine against itself.

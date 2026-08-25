@@ -12,7 +12,8 @@
     "test": "playwright test",
     "test:engines": "playwright test tests/astrology.spec.ts tests/features.spec.ts",
     "typecheck": "tsc --noEmit",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "reference:generate": "node scripts/generate-horizons-reference.mjs"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
