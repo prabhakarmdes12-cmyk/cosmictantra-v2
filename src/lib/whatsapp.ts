@@ -143,24 +143,24 @@ export async function deliverToWhatsApp(params: {
  * 10 dummy payments + 5 real test helpers (Phase 1)
  */
 export const DUMMY_PAYMENTS = [
-  { id: 'pay_demo_001', amount: 199, status: 'PAID', phone: '+919876543210' },
-  { id: 'pay_demo_002', amount: 199, status: 'PAID', phone: '+919123456789' },
-  { id: 'pay_demo_003', amount: 499, status: 'PAID', phone: '+918765432109' },
-  { id: 'pay_demo_004', amount: 199, status: 'PENDING', phone: '+917654321098' },
-  { id: 'pay_demo_005', amount: 299, status: 'PAID', phone: '+919999999999' },
-  { id: 'pay_demo_006', amount: 199, status: 'PAID', phone: '+918888888888' },
-  { id: 'pay_demo_007', amount: 199, status: 'FAILED', phone: '+917777777777' },
-  { id: 'pay_demo_008', amount: 499, status: 'PAID', phone: '+916666666666' },
-  { id: 'pay_demo_009', amount: 199, status: 'PAID', phone: '+915555555555' },
-  { id: 'pay_demo_010', amount: 199, status: 'PENDING', phone: '+914444444444' },
+  { id: 'pay_demo_001', amount: 501, status: 'PAID', phone: '+919876543210' },
+  { id: 'pay_demo_002', amount: 501, status: 'PAID', phone: '+919123456789' },
+  { id: 'pay_demo_003', amount: 1100, status: 'PAID', phone: '+918765432109' },
+  { id: 'pay_demo_004', amount: 501, status: 'PENDING', phone: '+917654321098' },
+  { id: 'pay_demo_005', amount: 1500, status: 'PAID', phone: '+919999999999' },
+  { id: 'pay_demo_006', amount: 501, status: 'PAID', phone: '+918888888888' },
+  { id: 'pay_demo_007', amount: 501, status: 'FAILED', phone: '+917777777777' },
+  { id: 'pay_demo_008', amount: 1100, status: 'PAID', phone: '+916666666666' },
+  { id: 'pay_demo_009', amount: 501, status: 'PAID', phone: '+915555555555' },
+  { id: 'pay_demo_010', amount: 501, status: 'PENDING', phone: '+914444444444' },
 ];
 
 export const REAL_TEST_PAYMENTS = [
-  { id: 'pay_real_test_001', amount: 199, status: 'PAID', phone: '+919876543210', razorpay: true },
-  { id: 'pay_real_test_002', amount: 199, status: 'PAID', phone: '+919123456789', razorpay: true },
-  { id: 'pay_real_test_003', amount: 499, status: 'PAID', phone: '+918765432109', razorpay: true },
-  { id: 'pay_real_test_004', amount: 199, status: 'PAID', phone: '+917654321098', razorpay: true },
-  { id: 'pay_real_test_005', amount: 299, status: 'PAID', phone: '+919999999999', razorpay: true },
+  { id: 'pay_real_test_001', amount: 501, status: 'PAID', phone: '+919876543210', razorpay: true },
+  { id: 'pay_real_test_002', amount: 501, status: 'PAID', phone: '+919123456789', razorpay: true },
+  { id: 'pay_real_test_003', amount: 1100, status: 'PAID', phone: '+918765432109', razorpay: true },
+  { id: 'pay_real_test_004', amount: 501, status: 'PAID', phone: '+917654321098', razorpay: true },
+  { id: 'pay_real_test_005', amount: 1500, status: 'PAID', phone: '+919999999999', razorpay: true },
 ];
 
 export function getDummyOrRealPayment(id: string) {

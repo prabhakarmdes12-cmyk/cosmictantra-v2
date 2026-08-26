@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import Link from 'next/link';
@@ -95,7 +95,7 @@ export default function GlobalFooter({ mode = 'full', lang = 'en' }: GlobalFoote
               Scholarly Counsel
             </div>
             <ul className="space-y-2 text-xs font-mono-data text-[#696256] dark:text-[#9E988D]">
-              <li><Link href="/ask" className="hover:text-[#8E6F1D] dark:hover:text-white">Ask One Question (₹199)</Link></li>
+              <li><Link href="/ask" className="hover:text-[#8E6F1D] dark:hover:text-white">Ask Written Folio (₹501)</Link></li>
               <li><Link href="/report" className="hover:text-[#8E6F1D] dark:hover:text-white">Sample Written Folio</Link></li>
               <li><Link href="/upaya" className="hover:text-[#8E6F1D] dark:hover:text-white">Planetary Remedies</Link></li>
               <li><Link href="/presentation" className="hover:text-[#8E6F1D] dark:hover:text-white">Scholar Deck</Link></li>

@@ -22,7 +22,7 @@ const slides = [
     content: "A calm, personal workspace where seekers manage their Cosmic Identity, daily Panchang, and family profiles — all designed with traditional scholarly dignity.",
   },
   {
-    title: "Written Folio (Fixed ₹199 Dakshina)",
+    title: "Written Folio (Fixed ₹501 Dakshina)",
     sanskrit: "लिखित परामर्श पत्र",
     content: "A beautiful, archival-grade 4-page written counsel containing Kundali summary, Dasha analysis, Satvik Upaya, and verified remedy recommendations.",
   },

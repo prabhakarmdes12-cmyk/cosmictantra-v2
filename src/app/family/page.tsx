@@ -62,7 +62,7 @@ export default function FamilyPage() {
             ❤️ Kundali Milan (2 profiles)
           </a>
           <a href="/ask" className="rounded-2xl border border-[#D4AF37]/30 p-5 hover:bg-white dark:hover:bg-[#0A0C12] transition-all">
-            💬 Ask ₹199 Question (auto-fill)
+            💬 Ask ₹501 Written Folio (auto-fill)
           </a>
         </div>
       </div>

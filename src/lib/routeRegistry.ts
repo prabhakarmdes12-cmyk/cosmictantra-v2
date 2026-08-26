@@ -156,7 +156,7 @@ export const ROUTE_REGISTRY: Record<string, RouteConfig> = {
   },
   '/ask': {
     path: '/ask',
-    title: 'Request Scholarly Written Consultation (Fixed ₹199) | CosmicTantra',
+    title: 'Request Scholarly Written Consultation (Fixed ₹501) | CosmicTantra',
     description: 'One focused life question, sub-arcminute ephemeris generation, and verified 24h written folio PDF counsel.',
     category: 'Guidance',
     breadcrumbs: [

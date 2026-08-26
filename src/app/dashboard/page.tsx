@@ -161,7 +161,7 @@ export default function ScholarDashboard() {
             Remedy Tracker
           </Link>
           <Link href="/ask" className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#060709] text-xs font-mono-data font-bold hover:bg-[#A35C15] transition-all text-center shadow-md">
-            Request Written Folio (₹199)
+            Request Written Folio (₹501)
           </Link>
           <Link href="/report" className="flex items-center justify-center gap-2 p-4 rounded-2xl border border-black/10 dark:border-white/10 bg-white/70 dark:bg-white/5 hover:border-[#8E6F1D] text-xs font-mono-data font-bold text-[#1C1917] dark:text-white transition-all text-center">
             View Sample Folio

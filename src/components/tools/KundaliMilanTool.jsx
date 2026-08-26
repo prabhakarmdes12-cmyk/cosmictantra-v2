@@ -133,7 +133,7 @@ function MilanResult({ r, hi, onOpenConsultation }) {
 
       <button onClick={() => onOpenConsultation && onOpenConsultation(hi ? 'कुंडली मिलान विवेचना' : 'Kundali Milan detailed review')}
         className="w-full py-3 rounded-xl border border-[#D4AF37] text-[#8E6F1D] dark:text-[#D4AF37] font-bold text-xs hover:bg-[#D4AF37]/10 transition-all flex items-center justify-center gap-2">
-        {hi ? 'विवाह मिलान विवेचना — ₹199' : 'Get the scholars’ detailed Milan review — ₹199'}
+        {hi ? 'विवाह मिलान लिखित विवेचना — ₹501' : 'Get the scholars’ detailed Milan review — ₹501'}
         <ArrowRight className="w-3.5 h-3.5" />
       </button>
       <p className="text-[9px] text-[#857E74] dark:text-[#8E8A82]">
