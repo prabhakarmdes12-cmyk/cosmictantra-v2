@@ -11,10 +11,12 @@
     "start": "next start",
     "test": "playwright test",
     "test:engines": "playwright test tests/astrology.spec.ts tests/features.spec.ts",
+    "reference:generate": "node scripts/generate-reference.mjs",
     "typecheck": "tsc --noEmit",
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@prisma/client": "^5.22.0",
     "clsx": "^2.1.1",
     "framer-motion": "^11.11.17",
@@ -22,7 +24,8 @@
     "next": "^14.2.18",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "tailwind-merge": "^2.5.4"
+    "tailwind-merge": "^2.5.4",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",

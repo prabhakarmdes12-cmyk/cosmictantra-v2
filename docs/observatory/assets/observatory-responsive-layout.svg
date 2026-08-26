@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 760" role="img" aria-labelledby="title desc">
+  <title id="title">Observatory responsive layout blueprint</title>
+  <desc id="desc">A visual comparison of the mobile bottom sheet, desktop side sheet, and practical sky readout card grid.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#050713"/><stop offset="1" stop-color="#121A39"/></linearGradient>
+    <linearGradient id="panel" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#121A35"/><stop offset="1" stop-color="#080B17"/></linearGradient>
+    <linearGradient id="gold" x1="0" x2="1"><stop stop-color="#D4AF37"/><stop offset="1" stop-color="#F2C65D"/></linearGradient>
+    <style>
+      .title { font: 700 25px 'JetBrains Mono', monospace; letter-spacing: 3px; fill: #F7F1DF; }
+      .subtitle { font: 12px Inter, sans-serif; fill: #99A4C7; }
+      .label { font: 700 10px 'JetBrains Mono', monospace; letter-spacing: 1.7px; fill: #F2C65D; }
+      .heading { font: 700 14px Inter, sans-serif; fill: #F1F3FF; }
+      .body { font: 10px Inter, sans-serif; fill: #AEB7D3; }
+      .tiny { font: 8px 'JetBrains Mono', monospace; fill: #858FAF; }
+    </style>
+  </defs>
+  <rect width="1280" height="760" rx="28" fill="url(#bg)"/>
+  <text x="48" y="54" class="title">RESPONSIVE FIELD EXPERIENCE</text>
+  <text x="48" y="80" class="subtitle">The same selection stays useful on a small phone, a tablet, and a desktop observation desk.</text>
+  <path d="M48 106 H1232" stroke="#FFFFFF" stroke-opacity=".1"/>
+
+  <text x="48" y="137" class="label">MOBILE · BOTTOM SHEET</text>
+  <g transform="translate(48 158)">
+    <rect width="282" height="460" rx="28" fill="#02030A" stroke="#8993B0" stroke-width="2"/>
+    <rect x="10" y="10" width="262" height="440" rx="21" fill="#080C1A"/>
+    <rect x="10" y="10" width="262" height="210" rx="21" fill="#0B1230"/>
+    <circle cx="82" cy="111" r="34" fill="#F2B84B" fill-opacity=".15" stroke="#F2B84B" stroke-opacity=".7"/><circle cx="82" cy="111" r="18" fill="#F2B84B"/><circle cx="176" cy="80" r="3" fill="#E6E5FF"/><circle cx="206" cy="132" r="2" fill="#E6E5FF"/><path d="M30 166 Q140 65 250 166" fill="none" stroke="#D4AF37" stroke-opacity=".45"/>
+    <rect x="10" y="190" width="262" height="260" rx="20" fill="url(#panel)" stroke="#D4AF37" stroke-opacity=".55"/>
+    <rect x="126" y="202" width="30" height="4" rx="2" fill="#D4AF37"/>
+    <text x="29" y="231" class="tiny">CELESTIAL FIELD NOTES</text><text x="29" y="264" class="heading">Moon</text><text x="29" y="282" class="body">Chandra · Earth’s changing companion</text>
+    <rect x="29" y="300" width="104" height="40" rx="8" fill="#0D1222" stroke="#FFFFFF" stroke-opacity=".1"/><text x="39" y="317" class="tiny">SIDEREAL</text><text x="39" y="332" class="body">243° 12′</text>
+    <rect x="145" y="300" width="104" height="40" rx="8" fill="#0D1222" stroke="#FFFFFF" stroke-opacity=".1"/><text x="155" y="317" class="tiny">ALTITUDE</text><text x="155" y="332" class="body">+42.8°</text>
+    <rect x="29" y="353" width="75" height="25" rx="8" fill="#D4AF37" fill-opacity=".14" stroke="#D4AF37" stroke-opacity=".45"/><rect x="112" y="353" width="75" height="25" rx="8" fill="#FFFFFF" fill-opacity=".04" stroke="#FFFFFF" stroke-opacity=".1"/><rect x="195" y="353" width="54" height="25" rx="8" fill="#FFFFFF" fill-opacity=".04" stroke="#FFFFFF" stroke-opacity=".1"/><text x="43" y="369" class="tiny">ECLIPTIC</text><text x="125" y="369" class="tiny">COPY</text><text x="207" y="369" class="tiny">SHARE</text>
+    <text x="29" y="411" class="tiny">ESC TO CLOSE · TAB STAYS IN SHEET</text>
+  </g>
+
+  <text x="370" y="137" class="label">DESKTOP · SIDE SHEET</text>
+  <g transform="translate(370 158)">
+    <rect width="450" height="460" rx="18" fill="#02030A" stroke="#8993B0" stroke-width="2"/>
+    <rect x="12" y="12" width="426" height="436" rx="11" fill="#080C1A"/>
+    <circle cx="223" cy="213" r="145" fill="#0D1532" stroke="#D4AF37" stroke-opacity=".35"/><circle cx="223" cy="213" r="40" fill="#F2B84B" fill-opacity=".18"/><circle cx="223" cy="213" r="20" fill="#F2B84B"/><path d="M78 213 H368 M223 68 V358" stroke="#B7C0E9" stroke-opacity=".14" stroke-dasharray="3 7"/><circle cx="118" cy="130" r="3" fill="#E6E5FF"/><circle cx="330" cy="158" r="4" fill="#F5B7D2"/><circle cx="308" cy="297" r="2" fill="#E6E5FF"/>
+    <rect x="262" y="12" width="176" height="436" rx="11" fill="url(#panel)" stroke="#D4AF37" stroke-opacity=".5"/><text x="280" y="43" class="tiny">CELESTIAL FIELD NOTES</text><text x="280" y="78" class="heading">Moon</text><text x="280" y="98" class="body">CHANDRA</text><path d="M280 114 H420" stroke="#FFFFFF" stroke-opacity=".12"/>
+    <text x="280" y="139" class="tiny">TROPICAL</text><text x="280" y="157" class="body">266° 58′</text><text x="280" y="187" class="tiny">SIDEREAL</text><text x="280" y="205" class="body">243° 12′</text><text x="280" y="235" class="tiny">RASHI</text><text x="280" y="253" class="body">Dhanu</text><text x="280" y="283" class="tiny">NAKSHATRA</text><text x="280" y="301" class="body">Purva Ashadha</text><rect x="280" y="331" width="126" height="28" rx="8" fill="#D4AF37" fill-opacity=".13" stroke="#D4AF37" stroke-opacity=".4"/><text x="294" y="349" class="tiny">OPEN ECLIPTIC</text><text x="280" y="390" class="tiny">FOCUS RESTORED ON CLOSE</text>
+  </g>
+
+  <text x="860" y="137" class="label">AT-A-GLANCE · FIELD CARDS</text>
+  <g transform="translate(860 158)">
+    <rect width="372" height="460" rx="18" fill="#0A0F20" stroke="#D4AF37" stroke-opacity=".4"/>
+    <text x="22" y="35" class="heading">Sky at a glance</text><text x="22" y="56" class="body">7 physical grahas · ranked by horizon use</text>
+    <rect x="22" y="75" width="328" height="40" rx="10" fill="#102019" stroke="#91C7A5" stroke-opacity=".25"/><text x="37" y="99" class="body" fill="#D8F0DC">Best placed: Jupiter · +58.4° · SW</text>
+    <g transform="translate(22 133)">
+      <rect width="156" height="78" rx="10" fill="#070A14" stroke="#D4AF37" stroke-opacity=".5"/><text x="12" y="22" class="heading">☽ Moon</text><text x="12" y="42" class="body">+42.8° · ESE</text><text x="12" y="61" class="tiny">ABOVE HORIZON</text>
+      <rect x="172" width="156" height="78" rx="10" fill="#070A14" stroke="#FFFFFF" stroke-opacity=".12"/><text x="184" y="22" class="heading">♃ Jupiter</text><text x="184" y="42" class="body">+58.4° · SW</text><text x="184" y="61" class="tiny">ABOVE HORIZON</text>
+      <rect y="90" width="156" height="78" rx="10" fill="#070A14" stroke="#FFFFFF" stroke-opacity=".12"/><text x="12" y="112" class="heading">♀ Venus</text><text x="12" y="132" class="body">−3.1° · W</text><text x="12" y="151" class="tiny">NEAR HORIZON</text>
+      <rect x="172" y="90" width="156" height="78" rx="10" fill="#070A14" stroke="#FFFFFF" stroke-opacity=".12"/><text x="184" y="112" class="heading">♂ Mars</text><text x="184" y="132" class="body">−24.0° · NNW</text><text x="184" y="151" class="tiny">BELOW HORIZON</text>
+      <rect y="180" width="156" height="78" rx="10" fill="#070A14" stroke="#FFFFFF" stroke-opacity=".12"/><text x="12" y="202" class="heading">☿ Mercury</text><text x="12" y="222" class="body">+10.5° · E</text><text x="12" y="241" class="tiny">ABOVE HORIZON</text>
+      <rect x="172" y="180" width="156" height="78" rx="10" fill="#070A14" stroke="#FFFFFF" stroke-opacity=".12"/><text x="184" y="202" class="heading">☉ Sun</text><text x="184" y="222" class="body">−31.2° · WSW</text><text x="184" y="241" class="tiny">BELOW HORIZON</text>
+    </g>
+    <text x="22" y="430" class="tiny">CLICKABLE + KEYBOARD ACCESSIBLE · COPY READOUT</text>
+  </g>
+
+  <path d="M340 388 H360" stroke="url(#gold)" stroke-width="2"/><path d="M832 388 H852" stroke="url(#gold)" stroke-width="2"/>
+</svg>
