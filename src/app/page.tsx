@@ -34,6 +34,7 @@ const CitySelectorModal = dynamic(() => import('@/components/CitySelectorModal')
 const CosmicSearchModal = dynamic(() => import('@/components/CosmicSearchModal'), { ssr: false });
 const CapabilityRegistryModal = dynamic(() => import('@/components/CapabilityRegistryModal'), { ssr: false });
 const ConsultationModal = dynamic(() => import('@/components/ConsultationModal'), { ssr: false });
+import FloatingAIGuruAvatar from '@/components/consultation/FloatingAIGuruAvatar';
 
 export default function AppLandingPage() {
   const [currentCity, setCurrentCity] = useState(DEFAULT_CITY);
@@ -316,6 +317,9 @@ export default function AppLandingPage() {
         lang={lang}
         theme={theme}
       />
+
+      {/* Floating AI Guru Concierge Avatar & Proactive Guide */}
+      <FloatingAIGuruAvatar />
 
     </div>
   );

@@ -89,4 +89,31 @@ test.describe('CosmicTantra — AI Guru, CallMe4 E2EE & Pandit Onboarding Suite'
     await gheeBtn.click();
   });
 
+  test('Floating AI Guru Avatar: Visible on homepage, opens concierge drawer, displays quick action chips and triggers navigation', async ({ page }) => {
+    await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
+
+    // Floating Avatar Button is rendered
+    const avatarBtn = page.locator('button[title="गुरु ज्योतिषदेव AI से बात करें"]');
+    await expect(avatarBtn).toBeVisible();
+    await avatarBtn.click();
+    await page.waitForTimeout(300);
+
+    // Concierge drawer opens with Guru Jyotishdev title
+    await expect(page.getByText(/गुरु ज्योतिषदेव/i).first()).toBeVisible();
+    await expect(page.getByText(/AI वैदिक मार्गदर्शक/i).first()).toBeVisible();
+
+    // Fast Action Chips present
+    await expect(page.getByRole('button', { name: /आज का 72h राशिफल व गोचर/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /26 महातीर्थ लाइव दर्शन व आरती/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /विद्वान् ज्योतिषी परामर्श/i })).toBeVisible();
+
+    // Click on 72h Forecast Chip
+    const forecastChip = page.getByRole('button', { name: /आज का 72h राशिफल व गोचर/i });
+    await forecastChip.click();
+    await page.waitForTimeout(600);
+
+    // Navigation action card appears inside chat
+    await expect(page.getByText(/72h Multi-Horizon Forecast Hub/i)).toBeVisible();
+  });
+
 });

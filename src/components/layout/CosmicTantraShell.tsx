@@ -1,10 +1,11 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import GlobalHeader from './GlobalHeader';
 import Breadcrumbs from './Breadcrumbs';
 import GlobalFooter from './GlobalFooter';
+import FloatingAIGuruAvatar from '@/components/consultation/FloatingAIGuruAvatar';
 import { getRouteConfig, ShellMode, FooterMode, BreadcrumbItem } from '@/lib/routeRegistry';
 
 interface CosmicTantraShellProps {
@@ -15,6 +16,7 @@ interface CosmicTantraShellProps {
   customTitle?: string;
   presentationSlide?: number;
   totalSlides?: number;
+  hideAIGuru?: boolean;
 }
 
 export default function CosmicTantraShell({
@@ -23,7 +25,8 @@ export default function CosmicTantraShell({
   footerMode,
   breadcrumbs,
   presentationSlide = 1,
-  totalSlides = 10
+  totalSlides = 10,
+  hideAIGuru = false,
 }: CosmicTantraShellProps) {
   const pathname = usePathname();
   const routeConfig = getRouteConfig(pathname || '/');
@@ -33,37 +36,45 @@ export default function CosmicTantraShell({
   const activeBreadcrumbs = breadcrumbs || routeConfig.breadcrumbs;
 
   // Day/Night & Language state synced from client storage
-  const [theme, setTheme] = useState('light');
-  const [lang, setLang] = useState('en');
-  const [mounted, setMounted] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [lang, setLang] = useState<'en' | 'hi'>('hi');
 
   useEffect(() => {
-    setMounted(true);
     try {
-      const savedTheme = localStorage.getItem('cosmictantra_theme');
-      if (savedTheme === 'light' || savedTheme === 'dark') {
+      const savedTheme = localStorage.getItem('cosmictantra_theme') as 'light' | 'dark';
+      if (savedTheme) {
         setTheme(savedTheme);
+        if (savedTheme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } else {
+        // Default to dark mode for sacred night aura if system prefers
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (prefersDark) {
+          setTheme('dark');
+          document.documentElement.classList.add('dark');
+        }
       }
-      const savedLang = localStorage.getItem('cosmictantra_lang');
-      if (savedLang === 'en' || savedLang === 'hi') {
+
+      const savedLang = localStorage.getItem('cosmictantra_lang') as 'en' | 'hi';
+      if (savedLang) {
         setLang(savedLang);
       }
     } catch {}
   }, []);
 
   const handleThemeToggle = () => {
-    const nextTheme = theme === 'light' ? 'dark' : 'light';
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
     setTheme(nextTheme);
-    const root = document.documentElement;
-    if (nextTheme === 'dark') {
-      root.classList.remove('light');
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-      root.classList.add('light');
-    }
     try {
       localStorage.setItem('cosmictantra_theme', nextTheme);
+      if (nextTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
     } catch {}
   };
 
@@ -102,6 +113,11 @@ export default function CosmicTantraShell({
       <main className="flex-1 w-full">
         {children}
       </main>
+
+      {/* FLOATING AI GURU CONCIERGE AVATAR */}
+      {!hideAIGuru && activeShellMode !== 'presentation' && (
+        <FloatingAIGuruAvatar />
+      )}
 
       {/* Institutional Global Footer */}
       <GlobalFooter 
