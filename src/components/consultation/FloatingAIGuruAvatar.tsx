@@ -129,8 +129,13 @@ export default function FloatingAIGuruAvatar() {
     }
   }, [chatMessages, isOpen]);
 
-  const handleNavigate = (href: string) => {
+  // Standard signature tactile click across all interactive buttons
+  const playClick = () => {
     if (soundEnabled) chitiSensory.playTick();
+  };
+
+  const handleNavigate = (href: string) => {
+    playClick();
     setIsOpen(false);
     try {
       router.push(href);
@@ -140,7 +145,7 @@ export default function FloatingAIGuruAvatar() {
   };
 
   const toggleOpen = () => {
-    if (soundEnabled) chitiSensory.playBell();
+    playClick();
     setShowGreetingTooltip(false);
     setIsOpen(!isOpen);
 
@@ -171,18 +176,25 @@ export default function FloatingAIGuruAvatar() {
     }
   };
 
+  // Specific sacred ritual audio: OM Chant
   const handlePlayOmChant = () => {
+    playClick();
     if (isPlayingOm) {
       setIsPlayingOm(false);
     } else {
       setIsPlayingOm(true);
-      chitiSensory.playOmChant();
+      if (soundEnabled) chitiSensory.playOmChant();
       setTimeout(() => setIsPlayingOm(false), 3000);
     }
   };
 
+  // Specific sacred ritual audio: Lighting Diya / Temple Bell
+  const handlePlayDiyaBell = () => {
+    if (soundEnabled) chitiSensory.playBell();
+  };
+
   const handleChipClick = (chip: { label: string; action: string; href?: string }) => {
-    if (soundEnabled) chitiSensory.playTick();
+    playClick();
 
     const userMsg: ChatMessage = {
       id: `u-${Date.now()}`,
@@ -258,6 +270,7 @@ export default function FloatingAIGuruAvatar() {
     }
 
     if (chip.action === 'IN_CHAT_DARSHAN') {
+      handlePlayDiyaBell();
       setTimeout(() => {
         setChatMessages(prev => [
           ...prev,
@@ -406,7 +419,7 @@ export default function FloatingAIGuruAvatar() {
     if (e) e.preventDefault();
     if (!inputVal.trim()) return;
 
-    if (soundEnabled) chitiSensory.playTick();
+    playClick();
     const text = inputVal.trim();
     setInputVal('');
 
@@ -501,7 +514,11 @@ export default function FloatingAIGuruAvatar() {
         }).catch(() => {});
       } catch {}
 
-      if (soundEnabled) chitiSensory.playBell();
+      if (isCautionDay) {
+        handlePlayDiyaBell();
+      } else {
+        playClick();
+      }
 
       setTimeout(() => {
         setChatMessages(prev => [
@@ -568,8 +585,8 @@ export default function FloatingAIGuruAvatar() {
         {!isOpen && showGreetingTooltip && (
           <div className="mb-2 max-w-xs p-3 rounded-2xl bg-white/95 dark:bg-[#0E101D]/95 backdrop-blur-xl border border-[#8E6F1D]/40 dark:border-[#D4AF37]/50 shadow-2xl animate-in fade-in slide-in-from-bottom-3 duration-300 relative">
             <button
-              onClick={(e) => { e.stopPropagation(); setShowGreetingTooltip(false); }}
-              className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center text-[10px] hover:bg-black"
+              onClick={(e) => { e.stopPropagation(); playClick(); setShowGreetingTooltip(false); }}
+              className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center text-[10px] hover:bg-black cursor-pointer"
             >
               <X className="w-3 h-3" />
             </button>
@@ -640,14 +657,14 @@ export default function FloatingAIGuruAvatar() {
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="font-bold text-xs text-[#1C1917] dark:text-white">
+                  <h3 className="font-editorial text-sm sm:text-base font-bold text-[#1C1917] dark:text-white">
                     गुरु ज्योतिषदेव (वाराणसी पीठ)
-                  </span>
+                  </h3>
                   <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[9px] font-bold">
                     ONLINE
                   </span>
                 </div>
-                <p className="text-[10px] text-[#696256] dark:text-[#9E988D]">
+                <p className="text-[11px] text-[#696256] dark:text-[#9E988D]">
                   AI वैदिक मार्गदर्शक • साक्षात् मार्गदर्शन
                 </p>
               </div>
@@ -657,7 +674,7 @@ export default function FloatingAIGuruAvatar() {
               {/* Soothing OM Chant Audio Button */}
               <button
                 onClick={handlePlayOmChant}
-                className={`p-1.5 rounded-xl border text-[10px] font-bold flex items-center gap-1 transition-all ${
+                className={`p-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
                   isPlayingOm
                     ? 'bg-amber-500 text-white border-amber-600 animate-pulse'
                     : 'bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-[#696256] dark:text-[#9E988D]'
@@ -668,8 +685,8 @@ export default function FloatingAIGuruAvatar() {
               </button>
 
               <button
-                onClick={() => setSoundEnabled(!soundEnabled)}
-                className="p-1.5 rounded-xl bg-black/5 dark:bg-white/5 text-[#696256] dark:text-[#9E988D] hover:text-[#1C1917] dark:hover:text-white"
+                onClick={() => { playClick(); setSoundEnabled(!soundEnabled); }}
+                className="p-1.5 rounded-xl bg-black/5 dark:bg-white/5 text-[#696256] dark:text-[#9E988D] hover:text-[#1C1917] dark:hover:text-white cursor-pointer"
                 title={soundEnabled ? 'Mute Chimes' : 'Unmute Chimes'}
               >
                 {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5 text-rose-400" />}
@@ -685,7 +702,7 @@ export default function FloatingAIGuruAvatar() {
           </div>
 
           {/* Chat Messages Stream */}
-          <div className="flex-1 overflow-y-auto p-3.5 space-y-3.5 text-xs">
+          <div className="flex-1 overflow-y-auto p-3.5 space-y-3.5 text-xs sm:text-[13px]">
             {chatMessages.map((msg) => (
               <div
                 key={msg.id}
@@ -693,7 +710,7 @@ export default function FloatingAIGuruAvatar() {
               >
                 <div className="flex items-start gap-2 max-w-[95%]">
                   {msg.sender === 'GURU' && (
-                    <div className="relative w-6 h-6 rounded-full overflow-hidden shrink-0 border border-amber-400/50 mt-1">
+                    <div className="relative w-7 h-7 rounded-full overflow-hidden shrink-0 border border-amber-400/50 mt-1 shadow-xs">
                       <Image
                         src="/images/avatar/guru_varanasi.jpg"
                         alt="Guru"
@@ -706,8 +723,8 @@ export default function FloatingAIGuruAvatar() {
                   <div
                     className={`p-3 rounded-2xl leading-relaxed ${
                       msg.sender === 'USER'
-                        ? 'bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#080A10] rounded-br-xs font-medium'
-                        : 'bg-[#FAF7F2] dark:bg-[#151829] border border-black/10 dark:border-white/10 text-[#1C1917] dark:text-white rounded-bl-xs'
+                        ? 'bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#080A10] rounded-br-xs font-medium text-xs sm:text-[13px]'
+                        : 'bg-[#FAF7F2] dark:bg-[#151829] border border-black/10 dark:border-white/10 text-[#1C1917] dark:text-[#F3EFE6] rounded-bl-xs text-xs sm:text-[13px]'
                     }`}
                   >
                     <p>{msg.text}</p>
@@ -716,16 +733,16 @@ export default function FloatingAIGuruAvatar() {
                     {msg.inChatDarshan && (
                       <div className="mt-3 p-2.5 rounded-2xl bg-black/80 text-white border border-amber-500/40 space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-[11px] text-amber-300 flex items-center gap-1">
-                            <Flame className="w-3 h-3 text-amber-400" />
+                          <span className="font-bold text-xs text-amber-300 flex items-center gap-1">
+                            <Flame className="w-3.5 h-3.5 text-amber-400" />
                             <span>{msg.inChatDarshan.templeName}</span>
                           </span>
-                          <span className="px-1.5 py-0.2 rounded-full bg-rose-500/20 text-rose-300 text-[8px] font-bold">
+                          <span className="px-1.5 py-0.2 rounded-full bg-rose-500/20 text-rose-300 text-[9px] font-bold">
                             ● LIVE 24x7
                           </span>
                         </div>
 
-                        <div className="relative w-full h-36 rounded-xl overflow-hidden bg-black flex items-center justify-center">
+                        <div className="relative w-full h-40 rounded-xl overflow-hidden bg-black flex items-center justify-center">
                           {activeDarshanVideo === msg.id ? (
                             <iframe
                               src={msg.inChatDarshan.liveYoutubeId}
@@ -743,13 +760,13 @@ export default function FloatingAIGuruAvatar() {
                               />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-center justify-center">
                                 <button
-                                  onClick={() => setActiveDarshanVideo(msg.id)}
-                                  className="w-10 h-10 rounded-full bg-amber-500 hover:bg-amber-600 text-white flex items-center justify-center shadow-lg transition-transform hover:scale-110 cursor-pointer"
+                                  onClick={() => { handlePlayDiyaBell(); setActiveDarshanVideo(msg.id); }}
+                                  className="w-11 h-11 rounded-full bg-amber-500 hover:bg-amber-600 text-white flex items-center justify-center shadow-lg transition-transform hover:scale-110 cursor-pointer"
                                 >
-                                  <Play className="w-4 h-4 ml-0.5" />
+                                  <Play className="w-5 h-5 ml-0.5" />
                                 </button>
                               </div>
-                              <span className="absolute bottom-2 left-2 text-[10px] text-white/90 font-medium">
+                              <span className="absolute bottom-2 left-2 text-[11px] text-white/90 font-medium">
                                 {msg.inChatDarshan.location}
                               </span>
                             </div>
@@ -758,7 +775,7 @@ export default function FloatingAIGuruAvatar() {
 
                         <button
                           onClick={() => handleNavigate('/darshan')}
-                          className="w-full py-1.5 bg-amber-600/30 hover:bg-amber-600/50 text-amber-200 text-[10px] font-bold rounded-lg border border-amber-500/30 text-center block transition-colors"
+                          className="w-full py-2 bg-amber-600/30 hover:bg-amber-600/50 text-amber-200 text-xs font-bold rounded-lg border border-amber-500/30 text-center block transition-colors cursor-pointer"
                         >
                           सम्पूर्ण २६ महातीर्थ दर्शन कक्ष खोलें →
                         </button>
@@ -767,58 +784,58 @@ export default function FloatingAIGuruAvatar() {
 
                     {/* Instant Free Vedic Pulse Card */}
                     {msg.pulseCard && (
-                      <div className="mt-3 p-3 rounded-2xl bg-white dark:bg-[#0A0C14] border border-amber-500/40 space-y-2 text-left">
+                      <div className="mt-3 p-3.5 rounded-2xl bg-white dark:bg-[#0A0C14] border border-amber-500/40 space-y-2.5 text-left">
                         
                         {/* Transit Caution Status Bar */}
-                        <div className={`p-2 rounded-xl text-[10px] font-bold flex items-center gap-1.5 ${
+                        <div className={`p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 ${
                           msg.pulseCard.transitStatus === 'CAUTION_DAY'
                             ? 'bg-rose-500/15 text-rose-800 dark:text-rose-300 border border-rose-500/30'
                             : 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30'
                         }`}>
                           {msg.pulseCard.transitStatus === 'CAUTION_DAY' ? (
-                            <ShieldAlert className="w-3.5 h-3.5 shrink-0 text-rose-500" />
+                            <ShieldAlert className="w-4 h-4 shrink-0 text-rose-500" />
                           ) : (
-                            <ShieldCheck className="w-3.5 h-3.5 shrink-0 text-emerald-500" />
+                            <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-500" />
                           )}
                           <span>{msg.pulseCard.transitMessage}</span>
                         </div>
 
                         {/* Planetary Grid */}
-                        <div className="grid grid-cols-3 gap-1.5 text-center text-[10px]">
-                          <div className="p-1.5 rounded-lg bg-black/5 dark:bg-white/5">
-                            <span className="text-[8px] text-[#696256] dark:text-[#9E988D] block">लग्न (Ascendant)</span>
-                            <strong className="text-[#1C1917] dark:text-white">{msg.pulseCard.lagna}</strong>
+                        <div className="grid grid-cols-3 gap-2 text-center text-xs font-mono-data">
+                          <div className="p-2 rounded-lg bg-black/5 dark:bg-white/5">
+                            <span className="text-[10px] text-[#696256] dark:text-[#9E988D] block">लग्न (Ascendant)</span>
+                            <strong className="text-[#1C1917] dark:text-white text-xs">{msg.pulseCard.lagna}</strong>
                           </div>
-                          <div className="p-1.5 rounded-lg bg-black/5 dark:bg-white/5">
-                            <span className="text-[8px] text-[#696256] dark:text-[#9E988D] block">नक्षत्र</span>
-                            <strong className="text-[#1C1917] dark:text-white">{msg.pulseCard.nakshatra}</strong>
+                          <div className="p-2 rounded-lg bg-black/5 dark:bg-white/5">
+                            <span className="text-[10px] text-[#696256] dark:text-[#9E988D] block">नक्षत्र</span>
+                            <strong className="text-[#1C1917] dark:text-white text-xs">{msg.pulseCard.nakshatra}</strong>
                           </div>
-                          <div className="p-1.5 rounded-lg bg-black/5 dark:bg-white/5">
-                            <span className="text-[8px] text-[#696256] dark:text-[#9E988D] block">सक्रिय दशा</span>
-                            <strong className="text-[#8E6F1D] dark:text-[#F0C968]">{msg.pulseCard.dasha}</strong>
+                          <div className="p-2 rounded-lg bg-black/5 dark:bg-white/5">
+                            <span className="text-[10px] text-[#696256] dark:text-[#9E988D] block">सक्रिय दशा</span>
+                            <strong className="text-[#8E6F1D] dark:text-[#F0C968] text-xs">{msg.pulseCard.dasha}</strong>
                           </div>
                         </div>
 
                         {/* Visual North-Indian Kundali Snapshot Diagram */}
                         {msg.inChatKundaliSvg && (
-                          <div className="p-2.5 rounded-xl bg-[#FAF7F2] dark:bg-[#070912] border border-black/10 dark:border-white/10 text-center">
-                            <div className="text-[9px] font-bold text-[#8E6F1D] dark:text-[#F0C968] mb-1">
+                          <div className="p-3 rounded-xl bg-[#FAF7F2] dark:bg-[#070912] border border-black/10 dark:border-white/10 text-center">
+                            <div className="text-[11px] font-bold text-[#8E6F1D] dark:text-[#F0C968] mb-1.5 font-editorial">
                               जन्म कुण्डली चक्र (Janma Kundali Snapshot)
                             </div>
-                            <div className="w-32 h-32 mx-auto relative border border-[#8E6F1D]/40 bg-white dark:bg-black/40 flex items-center justify-center text-[9px]">
+                            <div className="w-36 h-36 mx-auto relative border border-[#8E6F1D]/40 bg-white dark:bg-black/40 flex items-center justify-center text-xs font-mono-data">
                               {/* Diamond Grid */}
-                              <div className="absolute inset-2 border border-amber-500/30 rotate-45" />
+                              <div className="absolute inset-2.5 border border-amber-500/30 rotate-45" />
                               <div className="relative z-10 font-bold text-[#8E6F1D] dark:text-[#F0C968]">
                                 १ {msg.pulseCard.lagna.split(' ')[0]}
                               </div>
-                              <span className="absolute top-1 left-2 text-[8px] text-[#696256]">१२</span>
-                              <span className="absolute top-1 right-2 text-[8px] text-[#696256]">२</span>
-                              <span className="absolute bottom-1 text-[8px] text-amber-500">चन्द्र • गुरु</span>
+                              <span className="absolute top-1.5 left-3 text-[10px] text-[#696256]">१२</span>
+                              <span className="absolute top-1.5 right-3 text-[10px] text-[#696256]">२</span>
+                              <span className="absolute bottom-1.5 text-[10px] text-amber-500 font-bold">चन्द्र • गुरु</span>
                             </div>
                           </div>
                         )}
 
-                        <p className="text-[10px] text-[#44403C] dark:text-[#D1C9BF] leading-relaxed italic bg-amber-500/10 p-2 rounded-xl border border-amber-500/20">
+                        <p className="text-xs text-[#44403C] dark:text-[#D1C9BF] leading-relaxed italic bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20">
                           {msg.pulseCard.recommendation}
                         </p>
                       </div>
@@ -828,26 +845,26 @@ export default function FloatingAIGuruAvatar() {
                     {msg.navigationAction && (
                       <div
                         onClick={() => handleNavigate(msg.navigationAction!.href)}
-                        className="mt-2.5 p-2.5 rounded-xl bg-white dark:bg-[#0A0C14] border border-[#8E6F1D]/30 dark:border-[#D4AF37]/30 flex items-center justify-between group hover:border-[#8E6F1D] transition-colors cursor-pointer"
+                        className="mt-2.5 p-3 rounded-xl bg-white dark:bg-[#0A0C14] border border-[#8E6F1D]/30 dark:border-[#D4AF37]/30 flex items-center justify-between group hover:border-[#8E6F1D] transition-colors cursor-pointer"
                       >
-                        <div className="flex items-center gap-2">
-                          <span className="text-xl">{msg.navigationAction.icon}</span>
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-2xl">{msg.navigationAction.icon}</span>
                           <div>
-                            <div className="font-bold text-[11px] text-[#1C1917] dark:text-white group-hover:text-[#8E6F1D] dark:group-hover:text-[#F0C968]">
+                            <div className="font-bold text-xs sm:text-sm text-[#1C1917] dark:text-white group-hover:text-[#8E6F1D] dark:group-hover:text-[#F0C968]">
                               {msg.navigationAction.title}
                             </div>
-                            <p className="text-[9px] text-[#696256] dark:text-[#9E988D]">
+                            <p className="text-[11px] text-[#696256] dark:text-[#9E988D] mt-0.5">
                               {msg.navigationAction.description}
                             </p>
                           </div>
                         </div>
-                        <ArrowRight className="w-3.5 h-3.5 text-[#8E6F1D] dark:text-[#F0C968] group-hover:translate-x-1 transition-transform" />
+                        <ArrowRight className="w-4 h-4 text-[#8E6F1D] dark:text-[#F0C968] group-hover:translate-x-1 transition-transform" />
                       </div>
                     )}
 
                     {/* Fast Action Suggestion Chips */}
                     {msg.quickChips && msg.quickChips.length > 0 && (
-                      <div className="mt-2.5 flex flex-wrap gap-1.5">
+                      <div className="mt-3 flex flex-wrap gap-2">
                         {msg.quickChips.map((chip, idx) => (
                           <button
                             key={idx}
@@ -858,7 +875,7 @@ export default function FloatingAIGuruAvatar() {
                                 handleChipClick(chip);
                               }
                             }}
-                            className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-[#0A0C14] hover:bg-[#8E6F1D] hover:text-white dark:hover:bg-[#D4AF37] dark:hover:text-[#080A10] border border-[#8E6F1D]/30 dark:border-[#D4AF37]/35 text-[10px] font-bold text-[#1C1917] dark:text-white transition-all cursor-pointer shadow-xs text-left"
+                            className="px-3 py-2 rounded-xl bg-white dark:bg-[#0A0C14] hover:bg-[#8E6F1D] hover:text-white dark:hover:bg-[#D4AF37] dark:hover:text-[#080A10] border border-[#8E6F1D]/30 dark:border-[#D4AF37]/35 text-xs font-semibold text-[#1C1917] dark:text-white transition-all cursor-pointer shadow-xs text-left active:scale-95"
                           >
                             {chip.label}
                           </button>
@@ -867,7 +884,7 @@ export default function FloatingAIGuruAvatar() {
                     )}
                   </div>
                 </div>
-                <span className="text-[8px] text-[#696256] dark:text-[#9E988D] mt-0.5 px-8">
+                <span className="text-[9px] text-[#696256] dark:text-[#9E988D] mt-0.5 px-9">
                   {msg.timestamp}
                 </span>
               </div>
@@ -876,20 +893,20 @@ export default function FloatingAIGuruAvatar() {
           </div>
 
           {/* Bottom Chat Input Bar */}
-          <form onSubmit={handleSendMessage} className="p-2.5 bg-[#FAF7F2] dark:bg-[#121526] border-t border-black/10 dark:border-white/10 flex items-center gap-2 shrink-0">
+          <form onSubmit={handleSendMessage} className="p-3 bg-[#FAF7F2] dark:bg-[#121526] border-t border-black/10 dark:border-white/10 flex items-center gap-2 shrink-0">
             <input
               type="text"
               value={inputVal}
               onChange={(e) => setInputVal(e.target.value)}
               placeholder="पूछें: आज का दिन, विवाह, व्यापार, या मन्त्र..."
-              className="flex-1 px-3 py-2 rounded-xl bg-white dark:bg-[#070912] border border-black/10 dark:border-white/10 text-xs text-[#1C1917] dark:text-white focus:outline-none focus:border-[#8E6F1D]"
+              className="flex-1 px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#070912] border border-black/10 dark:border-white/10 text-xs sm:text-sm text-[#1C1917] dark:text-white placeholder:text-[#8C827A] dark:placeholder:text-[#6C7280] focus:outline-none focus:border-[#8E6F1D]"
             />
             <button
               type="submit"
               disabled={!inputVal.trim()}
-              className="p-2 rounded-xl bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#080A10] disabled:opacity-40 cursor-pointer shadow-xs"
+              className="p-2.5 rounded-xl bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#080A10] disabled:opacity-40 cursor-pointer shadow-xs active:scale-95 transition-transform"
             >
-              <Send className="w-3.5 h-3.5" />
+              <Send className="w-4 h-4" />
             </button>
           </form>
 
