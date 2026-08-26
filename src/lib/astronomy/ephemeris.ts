@@ -14,3 +14,4 @@ export type {
   EclipticCoordinates,
   EquatorialCoordinates,
 } from './canonicalBodies';
+export * from './providers';

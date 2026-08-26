@@ -31,6 +31,10 @@ The local model continues to calculate tropical ecliptic values first. Lahiri si
 
 Solar events are sampled from the local canonical Sun and horizontally converted at a ten-minute step, then linearly interpolated across threshold crossings. The result is useful for a teaching field briefing, but it does not model refraction, terrain, obstruction, clouds, light pollution or a reviewed almanac. Moon phase is a Sun–Moon longitude teaching signal, not sub-degree lunar evidence.
 
+### A reference seam that fails closed
+
+The shared provider vocabulary in [`src/lib/astronomy/providers/types.ts`](../../src/lib/astronomy/providers/types.ts) separates provider, model, frame, epoch, observer, quality and error budget. [`localApproximation.ts`](../../src/lib/astronomy/providers/localApproximation.ts) adapts the existing canonical body calculation without changing its values or adding a network request. [`referenceFixture.ts`](../../src/lib/astronomy/providers/referenceFixture.ts) validates a future reviewed fixture and rejects incomplete/draft data; absent data resolves to a visible `BLOCKER-2` status rather than a false reference-checked badge. The generator scaffold now supports both geocentric and deliberate topocentric Horizons drafts, while raw output remains review-only until quantities are parsed and manually checked.
+
 ### Provenance before media
 
 The Student Desk links to NASA Images, Solar System Treks, ISRO, JPL Horizons, NAIF SPICE and ESA/Hubble as optional study sources. Nothing is scraped, hotlinked into the canvas, or required for the page to render. Any future downloaded image, video, model, tile or reference fixture must first enter the rights/provenance workflow in the roadmap: exact source page, credit, license/policy, third-party/logo/person review, retrieval date, checksum and fallback behavior.
@@ -39,6 +43,7 @@ The Student Desk links to NASA Images, Solar System Treks, ISRO, JPL Horizons, N
 
 - [`src/lib/astronomy/viewTransform.ts`](../../src/lib/astronomy/viewTransform.ts) — pure scale/pan/focus math and clamping.
 - [`src/lib/astronomy/observation.ts`](../../src/lib/astronomy/observation.ts) — local approximate observation planning helpers.
+- [`src/lib/astronomy/providers/`](../../src/lib/astronomy/providers/) — shared ephemeris/provenance types, local adapter, and fail-closed reference-fixture parser; no fixture is bundled yet.
 - [`src/components/observatory/CanvasViewControls.tsx`](../../src/components/observatory/CanvasViewControls.tsx) — accessible zoom/percentage/reset controls.
 - [`src/components/observatory/SkyCanvasRenderer.tsx`](../../src/components/observatory/SkyCanvasRenderer.tsx) — local stereographic sky, progressive labels, interaction and target mapping.
 - [`src/components/observatory/EclipticInstrument.tsx`](../../src/components/observatory/EclipticInstrument.tsx) — tropical ecliptic/rashi/Nakshatra planisphere and interaction.
@@ -64,7 +69,7 @@ The detailed NASA, ISRO, Roscosmos, ESA/ESO, JPL and NAIF inventory and risk not
 
 ## Validation record
 
-- `npx playwright test tests/observatory.spec.ts` — **18 passed**. This includes canonical astronomy invariants, Rahu/Ketu node semantics, viewport focus/clamping behavior, local solar event signals, altitude/direction helpers and bounded Moon phase output.
+- `npx playwright test tests/observatory.spec.ts` — **21 passed**. This includes canonical astronomy invariants, Rahu/Ketu node semantics, viewport focus/clamping behavior, local solar event signals, altitude/direction helpers, bounded Moon phase output, the local provider adapter, and fail-closed reference-fixture validation.
 - `npm run typecheck` — **blocked only by the pre-existing Prisma setup issue:** `src/lib/db.ts(1,10): Module "@prisma/client" has no exported member 'PrismaClient'` in the generated-client-free environment. No Observatory implementation type errors were reported.
 - `npm run dev -- --hostname 0.0.0.0` plus HTTP checks — `/observatory`, `/observatory/ecliptic`, `/observatory/timemachine` and `/observatory/gochara` returned HTTP 200 with representative city/time/planet links. The unrelated analytics API still reports the known missing generated Prisma client.
 - Full browser interaction/responsive QA remains dependent on Chromium availability. The qualification guardrail remains **CONDITIONAL PASS**.

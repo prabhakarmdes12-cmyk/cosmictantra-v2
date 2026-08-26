@@ -18,6 +18,8 @@ import { STARS } from '../src/lib/astronomy/stars';
 import { getCelestialDetail, getConstellationDetail, parseCelestialSelection, PLANET_DETAILS } from '../src/lib/astronomy/celestialCatalog';
 import { altitudeBand, calculateMoonPhase, calculateSolarDayEvents, compassDirection, skyLightState, summarizeObservations } from '../src/lib/astronomy/observation';
 import { applyViewportTransform, clampViewportTransform, DEFAULT_VIEWPORT_TRANSFORM, zoomViewportAt } from '../src/lib/astronomy/viewTransform';
+import { localEphemerisResult } from '../src/lib/astronomy/providers/localApproximation';
+import { compareWithReference, findReferenceObservation, MISSING_REFERENCE_FIXTURE_STATUS, parseReferenceFixture, referenceFixtureStatus } from '../src/lib/astronomy/providers/referenceFixture';
 
 test.describe('Observatory coordinate and ephemeris invariants', () => {
   const instant = new Date('2026-08-25T00:00:00.000Z');
@@ -181,5 +183,48 @@ test.describe('Observatory coordinate and ephemeris invariants', () => {
     expect(phase.fraction).toBeLessThan(1);
     expect(phase.illumination).toBeGreaterThanOrEqual(0);
     expect(phase.illumination).toBeLessThanOrEqual(1);
+  });
+
+  test('local ephemeris adapts to the shared provenance contract', () => {
+    const moon = localEphemerisResult('Moon', instant, { latitude: 25.3176, longitude: 82.9739 });
+    const rahu = localEphemerisResult('Rahu', instant);
+    expect(moon.provenance.provider).toBe('local-approximation');
+    expect(moon.provenance.quality).toBe('illustrative');
+    expect(moon.provenance.model).toContain('lunar');
+    expect(moon.provenance.epochUtc).toBe(instant.toISOString());
+    expect(rahu.provenance.note).toContain('Mathematical lunar node');
+  });
+
+  test('reference fixture boundary fails closed until a reviewed fixture exists', () => {
+    expect(referenceFixtureStatus(undefined)).toEqual(MISSING_REFERENCE_FIXTURE_STATUS);
+    expect(parseReferenceFixture(null)).toBeNull();
+    expect(parseReferenceFixture({ schemaVersion: 1, fixtureId: 'untrusted' })).toBeNull();
+  });
+
+  test('reviewed fixture schema keeps frame and body observations explicit', () => {
+    const fixture = parseReferenceFixture({
+      schemaVersion: 1,
+      fixtureId: 'observatory-test-fixture',
+      generatedAt: '2026-08-26T00:00:00.000Z',
+      epochUtc: instant.toISOString(),
+      timeScale: 'UTC',
+      center: '500@399 (geocentric)',
+      frame: 'ICRF',
+      plane: 'ecliptic',
+      apparent: true,
+      refraction: false,
+      quantities: '1,31,33',
+      sourceUrl: 'https://ssd.jpl.nasa.gov/horizons/',
+      reviewNote: 'Test fixture only.',
+      observations: [{ body: 'Sun', epochUtc: instant.toISOString(), longitudeDeg: 152.4, latitudeDeg: 0, rightAscensionHours: 10.2, declinationDeg: 11.5 }],
+    });
+    expect(fixture).not.toBeNull();
+    expect(referenceFixtureStatus(fixture).available).toBe(true);
+    expect(findReferenceObservation(fixture, 'Sun', instant.toISOString())?.longitudeDeg).toBe(152.4);
+    const comparison = compareWithReference(localEphemerisResult('Sun', instant), fixture);
+    expect(comparison.available).toBe(true);
+    expect(comparison.errors?.longitudeDeg).toBeGreaterThanOrEqual(0);
+    expect(compareWithReference(localEphemerisResult('Rahu', instant), fixture).available).toBe(false);
+    expect(parseReferenceFixture({ ...(fixture as object), observations: [{ body: 'Rahu', epochUtc: instant.toISOString(), longitudeDeg: 1, latitudeDeg: 0 }] })).toBeNull();
   });
 });

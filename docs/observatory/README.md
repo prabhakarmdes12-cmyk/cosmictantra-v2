@@ -8,6 +8,7 @@ This directory contains the complete design, implementation, visual, and qualifi
 - [`QUALIFICATION_REPORT.md`](QUALIFICATION_REPORT.md) — formal **CONDITIONAL PASS** report, verification evidence, Moon discrepancy, JPL fixture blocker, and release guardrails.
 - [`WORLD_CLASS_ROADMAP.md`](WORLD_CLASS_ROADMAP.md) — strategic review, open NASA/ISRO/Roscosmos source inventory, licensing/ingestion rules, zoom/deep-inspection model, and the single recommended next milestone.
 - [`EVIDENCE_OBSERVATION_V1.md`](EVIDENCE_OBSERVATION_V1.md) — implementation note for the display-only viewport, observation helpers, Student Desk, provenance block, file map, validation record, and remaining qualification guardrails.
+- [`reference-fixture-notes.md`](reference-fixture-notes.md) — reference-provider contract, geocentric/topocentric draft commands, review/freeze sequence, and explicit no-fixture status.
 
 ## Blueprint images
 

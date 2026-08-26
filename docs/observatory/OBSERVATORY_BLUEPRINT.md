@@ -3,7 +3,7 @@
 **Document status:** implementation record for the shipped Observatory work
 **Last updated:** 26 August 2026 (Asia/Calcutta)
 **Branch:** `arena/01a03b32-cosmictantra-v2`
-**Latest commit:** `126cd63 make observatory field tools more useful`
+**Latest commit:** `e3f2ee1 feat: add evidence-backed observatory study layer`
 **Release qualification:** **CONDITIONAL PASS**
 
 This document records what was built, why it was built that way, how the pieces connect, which visual assets are used, every meaningful polish step, and what remains before a precision-astronomy release claim would be justified.
@@ -34,6 +34,15 @@ The latest usefulness pass added the practical layer that turns a visualization 
 - a keyboard-friendly constellation selector;
 - URL synchronization and validated object restoration;
 - Rahu/Ketu plotted on the ecliptic as mathematical nodes, without pretending they are physical planets.
+
+The Evidence-backed Observation + Student Study Desk v1 slice then added:
+
+- bounded display-only zoom, pan, pinch, wheel, double-click, keyboard navigation, and reset controls across the local sky, ecliptic, and Gochara canvases;
+- progressive bright-star labels and an accessible visible-anchor list;
+- approximate solar events, civil/nautical/astronomical twilight state, Moon phase, altitude bands, field cues, and a reusable student briefing;
+- an integrated astronomy/Jyotish study desk with optional official-source link-outs rather than live media dependencies;
+- a provenance block that states quality, model, frame, epoch, fixture status, Moon discrepancy and node semantics;
+- implementation/validation notes in `docs/observatory/EVIDENCE_OBSERVATION_V1.md`.
 
 ---
 
@@ -136,12 +145,14 @@ The implementation does **not** claim:
 | --- | --- |
 | `ObservatoryExperience.tsx` | Primary state owner: city, instant, selected graha, selected constellation, visual layers, URL synchronization, quick time controls, route links, and sheet mounting. |
 | `SkyCanvasRenderer.tsx` | Draws the local sky canvas: background, horizon, altitude rings, Nakshatra mandala, ecliptic, stars, constellation lines, grahas, compass, and hit targets. |
-| `SkyAtAGlance.tsx` | Converts canonical graha coordinates to practical altitude/azimuth/direction cards, ranks visible objects, and copies a field readout. |
+| `SkyAtAGlance.tsx` | Converts canonical graha coordinates to practical altitude/azimuth/direction/sky-band cards, ranks visible objects, and copies a field readout. |
+| `CanvasViewControls.tsx` | Shared accessible zoom percentage, bounded zoom-in/out, and reset controls for dense canvas instruments. |
 | `CelestialArtwork.tsx` | Renders original inline SVG planet/node portraits and constellation schematic maps. |
-| `CelestialDetailSheet.tsx` | Shared responsive detail surface with contextual calculations, artwork, actions, focus lifecycle, share/copy behavior, and cross-route links. |
-| `EclipticInstrument.tsx` | Draws the top-down tropical ecliptic planisphere and exposes nine-graha selection. |
-| `TimeMachine.tsx` | Interpolates an inspection date between a birth date and endpoint, then renders a live sky and rashi-change table. |
-| `Gochara.tsx` | Calculates natal/current body arrays, draws two sidereal wheels, and exposes the nine-graha transit comparison. |
+| `CelestialDetailSheet.tsx` | Shared responsive detail surface with contextual calculations, artwork, provenance, actions, focus lifecycle, share/copy behavior, and cross-route links. |
+| `EclipticInstrument.tsx` | Draws the top-down tropical ecliptic planisphere, exposes nine-graha selection, and supports display-only camera navigation. |
+| `TimeMachine.tsx` | Interpolates an inspection date between a birth date and endpoint, then renders a live sky and rashi-change table while preserving endpoint deep-link context. |
+| `Gochara.tsx` | Calculates natal/current body arrays, draws two navigable sidereal wheels, and exposes the nine-graha transit comparison. |
+| `ObservatoryStudentDesk.tsx` | Integrates approximate field planning, Moon phase, coordinate study, selected-object guidance, and curated optional study links into the primary route. |
 
 ### Astronomy modules
 
@@ -152,16 +163,20 @@ The implementation does **not** claim:
 | `src/lib/astronomy/canonicalBodies.ts` | One canonical body contract for Sun, Moon, planets, Rahu, and Ketu, including tropical/sidereal longitude, RA/Dec, source, and retrograde state. |
 | `src/lib/astronomy/eclipticProjection.ts` | Rashi and Nakshatra constants, boundary-safe lookup, tropical-to-sidereal conversion, and planisphere geometry helpers. |
 | `src/lib/astronomy/celestialCatalog.ts` | Typed selections, planet/constellation explanatory copy, constellation names/stories, and deep-link validation. |
-| `src/lib/astronomy/ephemeris.ts` | Small compatibility re-export for canonical body calculations. |
+| `src/lib/astronomy/viewTransform.ts` | Pure display-only scale, pan, focus zoom, clamping, and zoom-label utilities shared by canvas instruments. |
+| `src/lib/astronomy/observation.ts` | Explicitly approximate local solar events, twilight state, Moon phase, compass directions, altitude bands, and observation summaries. |
+| `src/lib/astronomy/providers/` | Shared provider/provenance types, local canonical-body adapter, and fail-closed reference-fixture parser for the planned JPL/SPICE seam. |
+| `src/lib/astronomy/ephemeris.ts` | Small compatibility re-export for canonical body calculations and provider contracts. |
 | `src/lib/astronomy/index.ts` | Public astronomy barrel exports. |
 
 ### Verification and reference tooling
 
 | File | Responsibility |
 | --- | --- |
-| `tests/observatory.spec.ts` | Observatory coordinate, body, boundary, artwork metadata, and deep-link invariants. |
-| `scripts/generate-reference.mjs` | Optional networked JPL Horizons fixture-generation scaffold; deliberately not used by the browser. |
+| `tests/observatory.spec.ts` | Observatory coordinate, body, boundary, artwork metadata, deep-link, viewport, observation-helper, and Moon-phase invariants. |
+| `scripts/generate-reference.mjs` | Optional networked JPL Horizons draft generator with explicit geocentric/topocentric modes; raw drafts remain review-only and are deliberately not used by the browser. |
 | `docs/observatory/QUALIFICATION_REPORT.md` | Conditional-pass evidence, blockers, verification commands, and release guardrails. |
+| `docs/observatory/EVIDENCE_OBSERVATION_V1.md` | Implementation note for the viewport, Student Desk, provenance surface, external-source posture, and current validation record. |
 | `docs/observatory/OBSERVATORY_BLUEPRINT.md` | This detailed design and change record. |
 
 ---
@@ -325,7 +340,10 @@ Rahu and Ketu remain in the nine-graha rail but are not drawn as physical sky ob
 - **Planet rail:** nine grahas, with nodes explicitly labeled `node`.
 - **Layers:** Nakshatra mandala and constellation lines.
 - **Constellation guide:** keyboard-accessible select plus explicit “Open field notes” action.
-- **Sky at a glance:** seven physical graha observation cards.
+- **Bright anchor list:** visible bright-star DOM buttons with altitude readout; selecting one highlights the catalogue constellation.
+- **Canvas navigation:** bounded zoom/pan controls, wheel/pinch/double-click, arrow-key pan, `+`/`−`, `R`/`0` reset, and progressive bright-star labels.
+- **Sky at a glance:** seven physical graha observation cards with altitude band and direction.
+- **Student Desk:** approximate twilight/event briefing, Moon phase, selected-graha field cue, coordinate-study guidance, and optional source links.
 
 #### URL synchronization
 
@@ -365,7 +383,7 @@ It renders:
 - rashi and Nakshatra/pada;
 - a nine-graha DOM selector.
 
-Canvas clicking chooses the nearest graha target. The DOM selector provides the reliable keyboard path.
+Canvas clicking chooses the nearest graha target. The DOM selector provides the reliable keyboard path. The planisphere also has the shared bounded camera controls, wheel/pinch/double-click navigation and `+`/`−`/arrow-key controls; these transform only the drawn ring and keep tropical/sidereal values unchanged.
 
 ### 7.4 Sky Time Machine
 
@@ -400,7 +418,7 @@ It provides:
 - house counted from the natal Moon rashi;
 - selected graha detail sheet.
 
-The UI explicitly labels the Moon-reference house calculation as a traditional transit reference and not a complete Jyotish judgement.
+The UI explicitly labels the Moon-reference house calculation as a traditional transit reference and not a complete Jyotish judgement. Each wheel is a bounded display viewport with zoom/pan/pinch/double-click and keyboard controls; the sidereal positions are recalculated only from the selected natal/current dates, never from camera state.
 
 ---
 
@@ -461,6 +479,8 @@ For physical grahas, the sheet includes:
 - RA and declination;
 - direct/retrograde state;
 - calculation model/source;
+- quality, frame, local provider/model, epoch, and reference-fixture status;
+- explicit Moon discrepancy note when the selected body is the Moon;
 - astronomy explanation;
 - Vedic lens;
 - cross-route actions;
@@ -791,6 +811,32 @@ Practical field-use pass:
 23. Added the architecture, interaction, and responsive blueprint SVGs.
 24. Added this full implementation/design record.
 
+### Step 7 — `e3f2ee1 feat: add evidence-backed observatory study layer`
+
+Evidence-backed observation and student study pass:
+
+1. Added pure display-only viewport math with bounded scale/pan and zoom-at-focus behavior.
+2. Added reusable canvas zoom controls with percentage output and reset.
+3. Added pointer drag, wheel, pinch, double-click and keyboard navigation to the local sky.
+4. Applied the same camera model to the ecliptic planisphere.
+5. Applied the same camera model to both Gochara rashi wheels.
+6. Kept canvas backgrounds fixed while transforming only calculated scene geometry.
+7. Transformed canvas hit targets with the rendered scene and preserved minimum hit areas.
+8. Added progressive bright-star name/magnitude labels at higher zoom.
+9. Added a keyboard-friendly visible bright-anchor list with altitude context.
+10. Added local approximate solar event and twilight helpers using canonical Sun horizontal coordinates.
+11. Added Moon phase, illumination, compass, altitude-band, and observation-summary helpers.
+12. Integrated the Observatory Student Desk into the primary route.
+13. Added selected-graha field cues, including the node-only exception for Rahu/Ketu.
+14. Added a provenance block with quality, frame, provider/model, epoch and fixture status.
+15. Exposed the known `BLOCKER-1` Moon discrepancy in the Moon detail sheet.
+16. Synchronized city/time/planet/object context on the Ecliptic, Time Machine and Gochara routes as well as the main route.
+17. Added viewport, observation-helper and Moon-phase invariant coverage.
+18. Added a shared provider/provenance contract and local canonical-body adapter.
+19. Added a fail-closed reference-fixture parser that rejects incomplete/draft data.
+20. Extended the networked Horizons scaffold with explicit geocentric/topocentric modes and review metadata.
+21. Added the implementation/validation note in `EVIDENCE_OBSERVATION_V1.md`.
+
 ---
 
 ## 12. Design decisions and trade-offs
@@ -864,19 +910,11 @@ Practical field-use pass:
 The following checks passed in the validated workspace:
 
 ```bash
-npm run typecheck
-```
-
-```text
-TypeScript completed with no errors when the local Prisma type surface was available.
-```
-
-```bash
 npx playwright test tests/observatory.spec.ts --reporter=line
 ```
 
 ```text
-15 passed
+21 passed
 ```
 
 ```bash
@@ -905,11 +943,12 @@ Route smoke requests returned HTTP 200 for:
 
 ### Environment limitations
 
-1. **Chromium is not installed** under the expected Playwright cache path, so the repository's full responsive browser suite and screenshot QA could not launch.
-2. **Prisma generation is network-blocked** because the Prisma engine checksum request cannot establish TLS in this sandbox. The production build therefore remains unqualified here.
-3. **No JPL Horizons fixture has been generated.** `npm run reference:generate` requires a networked qualification environment and manual frame/epoch review.
-4. **The Moon model has a documented 1.135216° discrepancy** against the existing reference path. No sub-degree Moon claim is permitted.
-5. **Local city timezone data uses fixed numeric offsets.** IANA timezone/DST support is a future precision improvement.
+1. **Typecheck is blocked by the pre-existing generated Prisma client issue:** `src/lib/db.ts(1,10): Module "@prisma/client" has no exported member 'PrismaClient'`. No Observatory implementation type errors were reported before this blocker.
+2. **Prisma generation/build is network-blocked** because the Prisma engine checksum request cannot establish TLS in this sandbox. `npm run build` therefore remains unqualified here.
+3. **Chromium is not installed** under the expected Playwright cache path, so the repository's full responsive browser suite, screenshot QA, and canvas gesture checks could not launch.
+4. **No JPL Horizons fixture has been generated.** `npm run reference:generate` requires a networked qualification environment and manual frame/epoch review.
+5. **The Moon model has a documented 1.135216° discrepancy** against the existing reference path. No sub-degree Moon claim is permitted.
+6. **Local city timezone data uses fixed numeric offsets.** IANA timezone/DST support is a future precision improvement.
 
 ---
 

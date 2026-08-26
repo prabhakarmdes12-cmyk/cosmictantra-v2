@@ -9,6 +9,7 @@ import { constellationDisplayName, getCelestialDetail, type CelestialSelection }
 import { getNakshatraForLongitude, getRashiForLongitude } from '@/lib/astronomy/eclipticProjection';
 import { equatorialToHorizontal, projectStar, type ObserverLocation } from '@/lib/astronomy/projection';
 import { STARS } from '@/lib/astronomy/stars';
+import { localEphemerisProvenance } from '@/lib/astronomy/providers/localApproximation';
 
 export interface CelestialDetailSheetProps {
   selection: CelestialSelection;
@@ -48,31 +49,25 @@ export default function CelestialDetailSheet({ selection, date, observer, cityId
   const highestStar = visibleStars.reduce((highest, item) => !highest || item.point.altitudeDeg > highest.point.altitudeDeg ? item : highest, null as (typeof visibleStars[number] | null));
   const skyPosition = body ? equatorialToHorizontal({ raHours: body.rightAscensionHours, decDeg: body.declinationDeg }, dateValue, observer) : null;
   const isMathematicalNode = body?.source === 'mean-node';
-  const provenance = selection.kind === 'planet'
-    ? isMathematicalNode
-      ? {
-          label: 'Calculated locally · mean lunar node',
-          quality: 'Illustrative local approximation',
-          frame: 'Tropical ecliptic → Lahiri sidereal ecliptic',
-          source: 'CosmicTantra mean-node formula',
-          fixture: 'None · BLOCKER-2 remains open',
-          note: 'Rahu and Ketu are mathematical intersections of the lunar orbit and ecliptic. They have no physical body, distance, altitude or azimuth.',
-        }
-      : {
-          label: `Calculated locally · ${body?.source === 'lunar' ? 'compact lunar model' : body?.source === 'solar' ? 'solar model' : 'low-precision Keplerian model'}`,
-          quality: 'Illustrative local approximation',
-          frame: 'Tropical ecliptic → of-date equatorial/horizontal',
-          source: `CosmicTantra ${body?.source || 'local'} model`,
-          fixture: 'None · BLOCKER-2 remains open',
-          note: body?.body === 'Moon'
-            ? 'BLOCKER-1: this deterministic teaching ephemeris is not JPL-grade; qualification records a 1.135216° Moon discrepancy. No sub-degree lunar claim is made.'
-            : 'This deterministic teaching ephemeris is not JPL-grade, does not model terrain or refraction, and should not be read as a precision visibility prediction.',
-        }
+  const localProvenance = body ? localEphemerisProvenance(body, dateValue, observer) : null;
+  const provenance = selection.kind === 'planet' && localProvenance
+    ? {
+        label: isMathematicalNode ? 'Calculated locally · mean lunar node' : `Calculated locally · ${body?.source === 'lunar' ? 'compact lunar model' : body?.source === 'solar' ? 'solar model' : 'low-precision Keplerian model'}`,
+        quality: localProvenance.quality === 'illustrative' ? 'Illustrative local approximation' : localProvenance.quality,
+        frame: isMathematicalNode ? 'Tropical ecliptic → Lahiri sidereal ecliptic' : 'Tropical ecliptic → of-date equatorial/horizontal',
+        source: localProvenance.model,
+        sourcePath: localProvenance.sourceUrl,
+        fixture: 'None · BLOCKER-2 remains open',
+        note: isMathematicalNode
+          ? 'Rahu and Ketu are mathematical intersections of the lunar orbit and ecliptic. They have no physical body, distance, altitude or azimuth.'
+          : localProvenance.note,
+      }
     : {
         label: 'Catalogue anchor · J2000 bright-star coordinates',
         quality: 'Catalogue projection · approximate precession',
         frame: 'J2000 catalogue → local of-date sky',
         source: '70-anchor bright-star catalogue',
+        sourcePath: 'workspace:src/lib/astronomy/stars.ts',
         fixture: 'Not applicable to fixed-star artwork',
         note: 'Star positions are projected from a fixed bright-star catalogue with approximate precession. The pattern drawing is schematic, not a surveyed boundary or an agency image.',
       };
@@ -182,6 +177,7 @@ export default function CelestialDetailSheet({ selection, date, observer, cityId
             <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 font-mono-data text-[9px]">
               <div><dt className="text-[#718F7B]">Quality</dt><dd className="mt-0.5 text-[#C7E4CC]">{provenance.quality}</dd></div>
               <div><dt className="text-[#718F7B]">Source / provider</dt><dd className="mt-0.5 text-[#C7E4CC]">{provenance.source}</dd></div>
+              <div><dt className="text-[#718F7B]">Source path</dt><dd className="mt-0.5 break-all text-[#C7E4CC]">{provenance.sourcePath}</dd></div>
               <div><dt className="text-[#718F7B]">Frame</dt><dd className="mt-0.5 text-[#C7E4CC]">{provenance.frame}</dd></div>
               <div><dt className="text-[#718F7B]">Reference fixture</dt><dd className="mt-0.5 text-[#C7E4CC]">{provenance.fixture}</dd></div>
             </dl>

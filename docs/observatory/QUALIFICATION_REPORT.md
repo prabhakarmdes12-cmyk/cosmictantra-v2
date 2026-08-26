@@ -1,7 +1,7 @@
 # Observatory qualification report
 
-**Date:** 25 August 2026 (UTC)
-**Scope:** local sky observatory, ecliptic planisphere, Sky Time Machine, Gochara transit wheels, and Panchang deep-links
+**Date:** 26 August 2026 (Asia/Calcutta)
+**Scope:** local sky observatory, ecliptic planisphere, Sky Time Machine, Gochara transit wheels, practical observation planning, Student Desk, provenance contract, and Panchang deep-links
 **Decision:** **CONDITIONAL PASS**
 
 ## 1. Qualification scope
@@ -46,12 +46,15 @@ Both nodes are marked retrograde and remain exactly opposite modulo 360°.
 - No third-party sky request is needed at render time.
 - The 70-star catalogue and constellation sticks are versioned source data.
 - The planisphere uses tropical longitude for the astronomy ring and exposes the sidereal conversion in the inspector instead of mixing frames.
-- Canvas components use `ResizeObserver`, bounded device-pixel ratios, and accessible `role="img"` labels.
+- Canvas components use `ResizeObserver`, bounded device-pixel ratios, accessible `role="img"` labels, display-only bounded zoom/pan, wheel/pinch/double-click navigation, keyboard controls, and transformed target hit areas.
 - The Time Machine labels its slider as an inspection interpolation; it does not imply a physically linear orbit.
 - Gochara is explicitly described as a computational comparison and not a complete Jyotish judgement.
 - Planet and constellation targets are hit-tested independently. Planet targets have priority over nearby star/line targets; a selected constellation highlights its stars and stick-figure lines.
 - `CelestialDetailSheet` presents a responsive mobile bottom sheet or desktop side sheet. `CelestialArtwork` supplies original SVG portraits for planets, orbital diagrams for Rahu/Ketu, and annotated star maps for constellations, avoiding remote image hotlinks and keeping the first interaction fast.
-- The Observatory's `Sky at a glance` panel ranks the seven physical grahas by current altitude, direction, and horizon status, provides keyboard-accessible planet cards, and can copy a plain-text readout for field use.
+- The detail sheet includes a visible provenance block with local/reference quality, frame, model/provider, epoch, fixture status, and the Moon discrepancy guardrail. Rahu/Ketu remain mathematical nodes with no physical altitude/azimuth claim.
+- The Observatory's `Sky at a glance` panel ranks the seven physical grahas by current altitude, direction, altitude band, and horizon status, provides keyboard-accessible planet cards, and can copy a plain-text readout for field use.
+- The primary route includes a Student Desk with explicitly approximate solar events/twilight, Moon phase, selected-graha field cues, coordinate-study guidance, and optional official-source link-outs.
+- The shared provider contract records provider/model/frame/epoch/observer/quality/error-budget fields. The local adapter is active; the reference-fixture parser fails closed until a reviewed fixture exists.
 - Observation time inputs are interpreted in the selected city's fixed UTC offset, while the canonical instant remains serialized as ISO UTC in the URL. Quick controls provide now, dusk, night, midnight, and one-hour stepping.
 - Share links carry `city`, `time`, `object`, and `objectKind`; known planet/constellation payloads reopen the same detail sheet across all four instruments. Arbitrary object ids are rejected before rendering.
 - The Ecliptic instrument plots Rahu and Ketu as calculated ecliptic points and labels them as mathematical nodes rather than physical planets.
@@ -77,7 +80,7 @@ The Observatory unit suite checks:
 - nine canonical bodies with finite tropical/sidereal coordinates;
 - explicit Rahu/Ketu mean-node handling, retrograde flags, opposition, and aliases.
 
-A local Next development-server smoke check returned HTTP 200 for `/observatory`, `/observatory/ecliptic`, `/observatory/timemachine`, and `/observatory/gochara`; a Panchang request rendered both deep-link anchors with city and ISO time parameters. The isolated Observatory suite passed 15/15 and the existing engine suite passed 13/13 in this environment. The full Playwright command also attempts the repository's responsive browser suite, but its Chromium executable is not installed in this sandbox.
+A local Next development-server smoke check returned HTTP 200 for `/observatory`, `/observatory/ecliptic`, `/observatory/timemachine`, and `/observatory/gochara`; representative city/time/planet/object deep-link requests also returned HTTP 200. The isolated Observatory suite passed 21/21 and the existing engine suite passed 13/13 in this environment. `npm run typecheck` is blocked by the generated Prisma client issue, and `npm run build` is blocked during Prisma engine checksum retrieval. The full Playwright command also attempts the repository's responsive browser suite, but its Chromium executable is not installed in this sandbox.
 
 For a production-style HTTP smoke check after `npm run build && npm start`, request each route without query parameters and with a Panchang-style deep-link query. The expected status is HTTP 200 for all four routes.
 
