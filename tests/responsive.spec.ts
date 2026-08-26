@@ -86,8 +86,7 @@ test.describe('CosmicTantra Mobile Responsiveness & Hardening Suite', () => {
     await expect(menuToggleBtn).toBeVisible();
     await menuToggleBtn.click();
 
-    // Verify Mobile Drawer content
-    const todayNavBtn = page.locator('#mobile-nav-drawer button:has-text("PANCHANG")').first();
-    await expect(todayNavBtn).toBeVisible();
+    // Verify Full Screen Navigation Vault content
+    await expect(page.getByText(/NAVIGATION VAULT/i)).toBeVisible();
   });
 });

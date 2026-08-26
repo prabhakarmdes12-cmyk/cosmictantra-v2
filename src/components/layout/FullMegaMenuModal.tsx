@@ -1,0 +1,412 @@
+'use client';
+
+import React, { useState, useMemo } from 'react';
+import Link from 'next/link';
+import { 
+  X, 
+  Search, 
+  Sparkles, 
+  Compass, 
+  Calendar, 
+  ShoppingBag, 
+  Flame, 
+  ShieldCheck, 
+  User, 
+  BookOpen, 
+  Download, 
+  ArrowUpRight,
+  Heart,
+  Eye,
+  FileText,
+  Activity,
+  Layers,
+  Award
+} from 'lucide-react';
+import { chitiSensory } from '@/lib/chitiAudio';
+import CosmicTantraLogo from '@/components/visual/CosmicTantraLogo';
+
+interface NavTile {
+  title: string;
+  titleHi: string;
+  href: string;
+  icon: string;
+  badge?: string;
+  description: string;
+  category: 'OBSERVATORY' | 'TEMPLES' | 'STORE' | 'CONSULTATION' | 'PROFILE';
+}
+
+const MEGA_MENU_TILES: NavTile[] = [
+  // 1. Observatories & Forecasts
+  {
+    title: 'Stellarium Vedic Observatory',
+    titleHi: 'खगोल वेधशाला (Stellarium Sky)',
+    href: '/observatory',
+    icon: '🔭',
+    badge: 'NEW • 3D SKY',
+    description: 'Real-time celestial sphere, 27 Nakshatras (108 Padas), Graha Sphuta & Digbala radar.',
+    category: 'OBSERVATORY'
+  },
+  {
+    title: '72h Multi-Horizon Forecast',
+    titleHi: '७२ घण्टे दैनिक राशिफल व गोचर',
+    href: '/daily',
+    icon: '🔮',
+    badge: 'POPULAR',
+    description: 'Deterministic Today, Tomorrow & Day-After forecasts, weekly peaks, and monthly Sankranti ingress.',
+    category: 'OBSERVATORY'
+  },
+  {
+    title: 'Aura Monthly Vedic Calendar',
+    titleHi: 'मासिक वैदिक पञ्चाङ्ग कैलेंडर',
+    href: '/calendar',
+    icon: '📅',
+    description: 'Full 30-day interactive calendar with Shubha Muhurats, Ekadashi, Purnima, and Day Inspector.',
+    category: 'OBSERVATORY'
+  },
+  {
+    title: 'Parivaar Family Panchang',
+    titleHi: 'परिवार पञ्चाङ्ग व सुरक्षा सूत्र',
+    href: '/family-panchang',
+    icon: '👥',
+    description: 'Synchronized family transits, collective harmony score, and protective planetary alerts.',
+    category: 'OBSERVATORY'
+  },
+  {
+    title: 'Scholar’s Desk (Kundali + Dasha)',
+    titleHi: 'जन्मकुण्डली व विंशोत्तरी दशा',
+    href: '/dashboard',
+    icon: '🏛️',
+    description: 'North Indian Janma Kundali, Bhavas, Navamsha, and multi-level Vimshottari Dasha calculation.',
+    category: 'OBSERVATORY'
+  },
+
+  // 2. Temples & Darshan
+  {
+    title: 'Live Sacred Darshan Studio',
+    titleHi: '२६ महातीर्थ लाइव दर्शन व ई-पूजा',
+    href: '/darshan',
+    icon: '🌸',
+    badge: '24x7 LIVE',
+    description: '12 Jyotirlingas, 52 Shakti Peeths, Char Dham & Ganga Aarti with 24x7 YouTube feeds & E-Puja.',
+    category: 'TEMPLES'
+  },
+  {
+    title: 'Aarti & Stotra Mahagrantha Library',
+    titleHi: 'आरती, स्तोत्र व महाग्रन्थ संग्रह',
+    href: '/aarti-stotra',
+    icon: '🪔',
+    description: 'Authentic Sanskrit verses, Devanagari lyrics, English transliteration, and deep theological context.',
+    category: 'TEMPLES'
+  },
+
+  // 3. Spiritual Store & Upaya
+  {
+    title: 'Vedic Pooja Store & Samagri',
+    titleHi: 'वैदिक पूजा सामग्री प्रतिष्ठान',
+    href: '/store',
+    icon: '🛍️',
+    badge: '100% PURE',
+    description: 'Solid brass Akhand Diyas, Bhimseni camphor, A2 Bilona ghee, idol dresses, and festive puja kits.',
+    category: 'STORE'
+  },
+  {
+    title: 'Planetary Upaya Studio',
+    titleHi: 'ग्रह शान्ति व उपचार विधा',
+    href: '/upaya',
+    icon: '💎',
+    description: 'Certified gemstones, Rudraksha, Vedic Yantras, and scriptural Daan-Sankalpa recommendations.',
+    category: 'STORE'
+  },
+  {
+    title: 'Daily Japa & Mantra Tracker',
+    titleHi: 'दैनिक मन्त्र जप व माला काउंटर',
+    href: '/remedy-tracker',
+    icon: '📿',
+    description: 'Interactive 108-bead Japa counter with haptic audio feedback and planetary streak tracking.',
+    category: 'STORE'
+  },
+
+  // 4. Consultations & Analysis
+  {
+    title: 'AI Guru & Vedic Consultation',
+    titleHi: 'AI गुरु वैदिक परामर्श (Intake & Call)',
+    href: '/ask',
+    icon: '🔮',
+    badge: 'LIVE GURU',
+    description: 'Conversational AI Guru intake, instant Vedic pulse report, and verified Banaras scholar session.',
+    category: 'CONSULTATION'
+  },
+  {
+    title: 'Pandit Onboarding Portal',
+    titleHi: 'विद्वान् ज्योतिषी ऑनबोर्डिंग',
+    href: '/pandit/onboard',
+    icon: '🪔',
+    badge: 'EARN 80%',
+    description: 'Join the Kashi Vidvat Parishad network. Instant pre-context dossiers and daily Razorpay payouts.',
+    category: 'CONSULTATION'
+  },
+  {
+    title: '36-Point Kundali Milan',
+    titleHi: '३६-गुण कुण्डली मिलान',
+    href: '/kundali-milan',
+    icon: '💍',
+    description: 'Ashta-Koota compatibility, Nadi Dosha cancellation, and planetary harmony evaluation.',
+    category: 'CONSULTATION'
+  },
+  {
+    title: 'Chaldean Name Numerology',
+    titleHi: 'काल्डियन नाम अंकशास्त्र',
+    href: '/numerology/name',
+    icon: '🔢',
+    description: 'Chaldean sound frequency calculator, compound destiny number, and business name alignment.',
+    category: 'CONSULTATION'
+  },
+  {
+    title: 'Written Folio Archive (PDF)',
+    titleHi: 'लिखित कुण्डली ग्रंथ (PDF)',
+    href: '/report',
+    icon: '📜',
+    description: 'Download high-resolution, vector-rendered astrological counsel reports without mojibake.',
+    category: 'CONSULTATION'
+  },
+  {
+    title: 'Scholar Presentation Deck',
+    titleHi: 'विद्वत परिषद प्रस्तुति डेक',
+    href: '/presentation',
+    icon: '🎓',
+    description: 'Institutional slide presentation on sidereal ephemeris engines and Varanasi traditions.',
+    category: 'CONSULTATION'
+  },
+
+  // 5. Devotee Account & Vault
+  {
+    title: 'Cosmic ID & Family Vault',
+    titleHi: 'भक्त पहचान व पारिवारिक वॉल्ट',
+    href: '/profile',
+    icon: '👤',
+    badge: 'DPDP SECURE',
+    description: 'Manage multiple family birth profiles, Gotra, Janma Nakshatra, and E-Puja booking history.',
+    category: 'PROFILE'
+  }
+];
+
+interface FullMegaMenuModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function FullMegaMenuModal({ isOpen, onClose }: FullMegaMenuModalProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredTiles = useMemo(() => {
+    if (!searchQuery.trim()) return MEGA_MENU_TILES;
+    const q = searchQuery.toLowerCase();
+    return MEGA_MENU_TILES.filter(tile => 
+      tile.title.toLowerCase().includes(q) ||
+      tile.titleHi.includes(q) ||
+      tile.description.toLowerCase().includes(q)
+    );
+  }, [searchQuery]);
+
+  const observatories = useMemo(() => filteredTiles.filter(t => t.category === 'OBSERVATORY'), [filteredTiles]);
+  const temples = useMemo(() => filteredTiles.filter(t => t.category === 'TEMPLES'), [filteredTiles]);
+  const store = useMemo(() => filteredTiles.filter(t => t.category === 'STORE'), [filteredTiles]);
+  const consultations = useMemo(() => filteredTiles.filter(t => t.category === 'CONSULTATION'), [filteredTiles]);
+  const profile = useMemo(() => filteredTiles.filter(t => t.category === 'PROFILE'), [filteredTiles]);
+
+  if (!isOpen) return null;
+
+  const handleNavigate = (href: string) => {
+    chitiSensory.playTick();
+    onClose();
+    if (typeof window !== 'undefined') {
+      window.location.href = href;
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[99999] bg-[#06070B]/95 text-white backdrop-blur-2xl overflow-y-auto animate-in fade-in duration-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 min-h-screen flex flex-col justify-between space-y-8">
+        
+        {/* Top Bar: Authority Logo, Search & Close Button */}
+        <div className="flex items-center justify-between gap-4 pb-6 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <CosmicTantraLogo size="md" subtitle="NAVIGATION VAULT" />
+          </div>
+
+          {/* Quick Search */}
+          <div className="relative flex-1 max-w-md hidden sm:block">
+            <Search className="w-4 h-4 text-[#78716C] absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="खोजें: वेधशाला, राशिफल, पूजा स्टोर, दर्शन, कुण्डली..."
+              className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-xs font-mono-data text-white placeholder:text-[#78716C] outline-none focus:border-[#D4AF37]"
+            />
+          </div>
+
+          {/* Close Button */}
+          <button
+            onClick={() => { chitiSensory.playTick(); onClose(); }}
+            className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-mono-data font-bold text-white transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-lg"
+          >
+            <span>Close</span>
+            <X className="w-4 h-4 text-amber-400" />
+          </button>
+        </div>
+
+        {/* Mobile Search Input */}
+        <div className="sm:hidden relative">
+          <Search className="w-4 h-4 text-[#78716C] absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="खोजें: वेधशाला, राशिफल, पूजा स्टोर..."
+            className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-xs font-mono-data text-white placeholder:text-[#78716C] outline-none focus:border-[#D4AF37]"
+          />
+        </div>
+
+        {/* Navigation Grid by Sacred Chambers */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-1">
+          
+          {/* Chamber 1: Observatories & Horoscopes */}
+          {observatories.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-xs font-mono-data font-bold text-[#F0C968] uppercase tracking-wider">
+                <Compass className="w-4 h-4 text-amber-400" />
+                <span>खगोल वेधशाला व भविष्यफल</span>
+              </div>
+              <div className="space-y-2">
+                {observatories.map((tile) => (
+                  <button
+                    key={tile.href}
+                    onClick={() => handleNavigate(tile.href)}
+                    className="w-full text-left p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#D4AF37]/50 transition-all group flex items-start gap-3 cursor-pointer"
+                  >
+                    <span className="text-2xl p-1 bg-black/40 rounded-xl shrink-0 group-hover:scale-110 transition-transform">
+                      {tile.icon}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1">
+                        <h4 className="font-editorial text-sm font-bold text-white group-hover:text-[#F0C968] transition-colors line-clamp-1">
+                          {tile.titleHi}
+                        </h4>
+                        {tile.badge && (
+                          <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[9px] font-mono-data font-bold shrink-0">
+                            {tile.badge}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] font-mono-data text-[#A8A29E] leading-relaxed mt-0.5 line-clamp-2">
+                        {tile.description}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Chamber 2: Temples & Spiritual Commerce */}
+          {(temples.length > 0 || store.length > 0) && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-xs font-mono-data font-bold text-[#F0C968] uppercase tracking-wider">
+                <ShoppingBag className="w-4 h-4 text-amber-400" />
+                <span>तीर्थ दर्शन व पूजा सामग्री</span>
+              </div>
+              <div className="space-y-2">
+                {[...temples, ...store].map((tile) => (
+                  <button
+                    key={tile.href}
+                    onClick={() => handleNavigate(tile.href)}
+                    className="w-full text-left p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#D4AF37]/50 transition-all group flex items-start gap-3 cursor-pointer"
+                  >
+                    <span className="text-2xl p-1 bg-black/40 rounded-xl shrink-0 group-hover:scale-110 transition-transform">
+                      {tile.icon}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1">
+                        <h4 className="font-editorial text-sm font-bold text-white group-hover:text-[#F0C968] transition-colors line-clamp-1">
+                          {tile.titleHi}
+                        </h4>
+                        {tile.badge && (
+                          <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[9px] font-mono-data font-bold shrink-0">
+                            {tile.badge}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] font-mono-data text-[#A8A29E] leading-relaxed mt-0.5 line-clamp-2">
+                        {tile.description}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Chamber 3: Consultations, Analysis & Devotee Vault */}
+          {(consultations.length > 0 || profile.length > 0) && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-xs font-mono-data font-bold text-[#F0C968] uppercase tracking-wider">
+                <User className="w-4 h-4 text-amber-400" />
+                <span>विद्वान परामर्श व भक्त वॉल्ट</span>
+              </div>
+              <div className="space-y-2">
+                {[...consultations, ...profile].map((tile) => (
+                  <button
+                    key={tile.href}
+                    onClick={() => handleNavigate(tile.href)}
+                    className="w-full text-left p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#D4AF37]/50 transition-all group flex items-start gap-3 cursor-pointer"
+                  >
+                    <span className="text-2xl p-1 bg-black/40 rounded-xl shrink-0 group-hover:scale-110 transition-transform">
+                      {tile.icon}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1">
+                        <h4 className="font-editorial text-sm font-bold text-white group-hover:text-[#F0C968] transition-colors line-clamp-1">
+                          {tile.titleHi}
+                        </h4>
+                        {tile.badge && (
+                          <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[9px] font-mono-data font-bold shrink-0">
+                            {tile.badge}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] font-mono-data text-[#A8A29E] leading-relaxed mt-0.5 line-clamp-2">
+                        {tile.description}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+        </div>
+
+        {/* Bottom Footer Bar with Quick Actions */}
+        <div className="pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono-data text-[#A8A29E]">
+          <div className="flex items-center gap-4">
+            <span className="text-[#F0C968] font-bold">Vedic Precision Guarantee:</span>
+            <span>Chitra Paksha (Lahiri) Ayanamsha</span>
+            <span>•</span>
+            <span>Sidereal Ephemeris v34</span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => handleNavigate('/ask')}
+              className="px-4 py-2 rounded-xl bg-[#8E6F1D] hover:bg-[#D4AF37] text-white hover:text-black font-bold transition-all shadow-md cursor-pointer"
+            >
+              परामर्श पूछें (Ask Scholar) →
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}

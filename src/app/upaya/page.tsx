@@ -1,167 +1,213 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Gem, Award, Clock, MapPin, Star, ArrowRight } from 'lucide-react';
+import { Gem, Award, Clock, MapPin, CheckCircle, ArrowRight, ShieldAlert, Sparkles, X } from 'lucide-react';
+import CosmicTantraShell from '@/components/layout/CosmicTantraShell';
 
-interface Partner {
+interface RemedyItem {
   id: number;
   category: 'Gemstone' | 'Rudraksha' | 'Pooja';
   name: string;
   title: string;
-  priceRange: string;
-  location: string;
-  rating: number;
-  verified: boolean;
+  indicativePrice: string;
+  traditionalRegion: string;
+  specStandard: string;
   description: string;
-  certification?: string;
 }
 
-const partners: Partner[] = [
+const remedyDirectory: RemedyItem[] = [
   {
     id: 1,
     category: 'Gemstone',
-    name: 'Kashi Ratna Bhandar',
-    title: 'Certified Blue Sapphire (Neelam)',
-    priceRange: '₹12,500 – ₹28,000',
-    location: 'Varanasi',
-    rating: 4.9,
-    verified: true,
-    description: 'Lab-certified natural Neelam with full authenticity report.',
-    certification: 'GIA + IGI Certified',
+    name: 'Natural Blue Sapphire (Neelam)',
+    title: 'Lab-Certified Unheated Blue Sapphire',
+    indicativePrice: '₹12,500 – ₹28,000 (Market Standard)',
+    traditionalRegion: 'Varanasi Gemological Hub',
+    specStandard: 'GIA / IGI Optical Spectrum & Refraction Tested',
+    description: 'Natural Jyotish-grade Neelam for Saturn (Shani) pacification and focus enhancement. Must be tested before wearing.',
   },
   {
     id: 2,
     category: 'Rudraksha',
-    name: 'Shri Rudraksha Kendra',
-    title: '14 Mukhi Rudraksha',
-    priceRange: '₹3,800 – ₹7,500',
-    location: 'Haridwar',
-    rating: 4.8,
-    verified: true,
-    description: 'Premium Nepali 14 Mukhi with X-ray certificate.',
-    certification: 'X-ray Verified',
+    name: '14 Mukhi Deva Mani Rudraksha',
+    title: 'Authentic Nepali 14 Mukhi Bead',
+    indicativePrice: '₹3,800 – ₹7,500 (Authentic Grade)',
+    traditionalRegion: 'Haridwar / Kashi Corridor',
+    specStandard: 'High-Resolution X-Ray Compartment Verified',
+    description: 'Rare 14 Mukhi Rudraksha symbolizing Lord Shiva and Hanuman. Known for awakening third-eye intuition and courage.',
   },
   {
     id: 3,
     category: 'Pooja',
-    name: 'Kashi Vishwanath Seva Samiti',
-    title: 'Shani Shanti Anusthan',
-    priceRange: '₹5,500 – ₹12,000',
-    location: 'Kashi Vishwanath Temple',
-    rating: 4.95,
-    verified: true,
-    description: 'Traditional Shani Shanti performed by experienced temple Pandits.',
-    certification: 'Temple Authorized',
+    name: 'Shani Shanti Vedic Anusthan',
+    title: 'Traditional Shani Shanti Japa & Yajna',
+    indicativePrice: '₹5,500 – ₹12,000 (Samagri & Acharya Dakshina)',
+    traditionalRegion: 'Kashi Vishwanath Corridor',
+    specStandard: 'Conducted by Sampurnanand Vetted Acharyas',
+    description: 'Classical 23,000 Shani Gayatri Japa with dashansh havan performed under strict scriptural vidhi for Sade Sati relief.',
   },
 ];
 
 export default function UpayaPage() {
   const [selectedCategory, setSelectedCategory] = useState<'All' | 'Gemstone' | 'Rudraksha' | 'Pooja'>('All');
-  const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
+  const [selectedItem, setSelectedItem] = useState<RemedyItem | null>(null);
+  const [interestSubmitted, setInterestSubmitted] = useState(false);
 
   const filtered = selectedCategory === 'All' 
-    ? partners 
-    : partners.filter(p => p.category === selectedCategory);
+    ? remedyDirectory 
+    : remedyDirectory.filter(p => p.category === selectedCategory);
 
   return (
-    <main className="min-h-screen bg-[#FAF7F2] py-12 px-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-12">
-          <div className="inline px-5 py-1 rounded-full bg-[#8E6F1D]/10 text-[#8E6F1D] text-xs tracking-[3px]">VERIFIED UPAYA PARTNERS</div>
-          <h1 className="font-editorial text-6xl font-bold tracking-tight mt-4">Authentic Remedies from Trusted Hands</h1>
-          <p className="mt-4 text-xl text-[#57524A]">Genuine gemstones, Rudraksha, and temple rituals — verified by CosmicTantra.</p>
+    <CosmicTantraShell>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+        {/* Header with High-Contrast Typography */}
+        <div className="text-center mb-10">
+          <div className="inline-block px-4 py-1 rounded-full bg-[#8E6F1D]/15 dark:bg-[#D4AF37]/20 text-[#8E6F1D] dark:text-[#F0C968] text-xs font-mono-data font-bold tracking-[2px]">
+            PARTNER NETWORK — ONBOARDING UNDERWAY
+          </div>
+          <h1 className="font-editorial text-3xl sm:text-5xl font-bold text-[#1C1917] dark:text-[#FFFFFF] tracking-tight mt-3">
+            Authentic Remedies & Upaya Directory
+          </h1>
+          <p className="mt-3 text-sm sm:text-base font-mono-data text-[#57524A] dark:text-[#D1C9BF] max-w-2xl mx-auto">
+            Traditional gems, authentic Rudraksha beads, and temple anushthans sourced with rigorous material certification and scriptural integrity.
+          </p>
         </div>
 
-        {/* Filters */}
-        <div className="flex justify-center gap-3 mb-10">
+        {/* Category Filters */}
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-10">
           {(['All', 'Gemstone', 'Rudraksha', 'Pooja'] as const).map(cat => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-6 py-2 rounded-2xl text-sm font-medium border transition-all ${selectedCategory === cat ? 'bg-[#8E6F1D] text-white border-[#8E6F1D]' : 'border-[#8E6F1D]/20'}`}
+              className={`px-5 py-2 rounded-xl text-xs font-mono-data font-bold transition-all ${
+                selectedCategory === cat 
+                  ? 'bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#060709] shadow-md' 
+                  : 'bg-white/70 dark:bg-white/5 border border-black/10 dark:border-white/10 text-[#44403C] dark:text-[#D1C9BF] hover:border-[#8E6F1D]'
+              }`}
             >
               {cat}
             </button>
           ))}
         </div>
 
-        {/* Partners Grid */}
+        {/* Remedy Directory Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map(partner => (
+          {filtered.map(item => (
             <div 
-              key={partner.id} 
-              onClick={() => setSelectedPartner(partner)}
-              className="bg-white rounded-3xl border border-[#8E6F1D]/20 p-7 hover:border-[#8E6F1D]/40 cursor-pointer transition-all group"
+              key={item.id} 
+              onClick={() => { setSelectedItem(item); setInterestSubmitted(false); }}
+              className="bg-white dark:bg-[#0E101D] rounded-3xl border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 p-6 hover:border-[#8E6F1D] cursor-pointer transition-all shadow-md group flex flex-col justify-between"
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {partner.category === 'Gemstone' && <Gem className="w-5 h-5 text-[#8E6F1D]" />}
-                  {partner.category === 'Rudraksha' && <Award className="w-5 h-5 text-[#8E6F1D]" />}
-                  {partner.category === 'Pooja' && <Clock className="w-5 h-5 text-[#8E6F1D]" />}
-                  <div className="font-semibold">{partner.name}</div>
-                </div>
-                {partner.verified && <div className="text-[10px] px-3 py-0.5 bg-emerald-100 text-emerald-700 rounded-full">Verified</div>}
-              </div>
-
-              <div className="mt-6">
-                <div className="font-semibold text-xl">{partner.title}</div>
-                <div className="text-sm text-[#857E74] mt-1">{partner.description}</div>
-              </div>
-
-              <div className="mt-8 flex items-center justify-between text-sm">
-                <div>
-                  <div className="text-[#857E74]">Price Range</div>
-                  <div className="font-semibold">{partner.priceRange}</div>
-                </div>
-                <div className="text-right">
-                  <div className="flex items-center gap-1 text-[#8E6F1D]">
-                    <Star className="w-4 h-4 fill-current" /> {partner.rating}
+              <div>
+                <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-3">
+                  <div className="flex items-center gap-2">
+                    {item.category === 'Gemstone' && <Gem className="w-4 h-4 text-[#8E6F1D] dark:text-[#D4AF37]" />}
+                    {item.category === 'Rudraksha' && <Award className="w-4 h-4 text-[#8E6F1D] dark:text-[#D4AF37]" />}
+                    {item.category === 'Pooja' && <Clock className="w-4 h-4 text-[#8E6F1D] dark:text-[#D4AF37]" />}
+                    <span className="text-xs font-mono-data font-bold text-[#8E6F1D] dark:text-[#F0C968]">{item.category}</span>
                   </div>
-                  <div className="text-xs text-[#857E74]">{partner.location}</div>
+                  <span className="text-[10px] font-mono-data px-2.5 py-0.5 bg-[#8E6F1D]/10 dark:bg-[#D4AF37]/15 text-[#8E6F1D] dark:text-[#F0C968] rounded-full font-bold">
+                    Vetted Standard
+                  </span>
+                </div>
+
+                <div className="mt-4">
+                  <h2 className="font-editorial text-xl font-bold text-[#1C1917] dark:text-white group-hover:text-[#8E6F1D] transition-colors">
+                    {item.name}
+                  </h2>
+                  <p className="text-xs font-mono-data text-[#57524A] dark:text-[#B3ADA3] mt-2 leading-relaxed">
+                    {item.description}
+                  </p>
                 </div>
               </div>
 
-              <button className="mt-6 w-full py-3 rounded-2xl border border-[#8E6F1D]/30 text-sm font-medium group-hover:bg-[#8E6F1D] group-hover:text-white transition-all">
-                View Details & Book
-              </button>
+              <div className="mt-6 pt-4 border-t border-black/10 dark:border-white/10">
+                <div className="flex items-center justify-between text-xs font-mono-data mb-4">
+                  <div>
+                    <span className="text-[#696256] dark:text-[#9E988D] block text-[10px]">Reference Cost:</span>
+                    <strong className="text-[#8E6F1D] dark:text-[#F0C968]">{item.indicativePrice}</strong>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[#696256] dark:text-[#9E988D] block text-[10px]">Tradition Hub:</span>
+                    <span className="text-[#1C1917] dark:text-white font-medium">{item.traditionalRegion}</span>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => setSelectedItem(item)}
+                  className="w-full py-2.5 rounded-xl border border-[#8E6F1D]/40 dark:border-[#D4AF37]/50 text-xs font-mono-data font-bold text-[#1C1917] dark:text-white group-hover:bg-[#8E6F1D] group-hover:text-white dark:group-hover:bg-[#D4AF37] dark:group-hover:text-[#060709] transition-all bg-white/70 dark:bg-white/5"
+                >
+                  Register Interest / Details →
+                </button>
+              </div>
             </div>
           ))}
+
         </div>
 
-        {/* Booking Modal */}
-        {selectedPartner && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-6 z-50" onClick={() => setSelectedPartner(null)}>
-            <div className="bg-white rounded-3xl max-w-lg w-full p-8" onClick={e => e.stopPropagation()}>
-              <div className="flex justify-between">
-                <div>
-                  <div className="font-bold text-2xl">{selectedPartner.name}</div>
-                  <div className="text-sm text-[#857E74]">{selectedPartner.title}</div>
-                </div>
-                <button onClick={() => setSelectedPartner(null)}>✕</button>
-              </div>
-
-              <div className="mt-8 space-y-4 text-sm">
-                <div><strong>Price:</strong> {selectedPartner.priceRange}</div>
-                <div><strong>Location:</strong> {selectedPartner.location}</div>
-                {selectedPartner.certification && <div><strong>Certification:</strong> {selectedPartner.certification}</div>}
-                <div className="pt-4 border-t">{selectedPartner.description}</div>
-              </div>
-
+        {/* Modal for Inquiries */}
+        {selectedItem && (
+          <div 
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50" 
+            onClick={() => setSelectedItem(null)}
+          >
+            <div 
+              className="bg-white dark:bg-[#0E101D] rounded-3xl max-w-lg w-full p-6 sm:p-8 border border-[#8E6F1D]/30 dark:border-[#D4AF37]/40 shadow-2xl relative" 
+              onClick={e => e.stopPropagation()}
+            >
               <button 
-                onClick={() => {
-                  alert(`Thank you! Our team will contact you shortly for ${selectedPartner.title}.`);
-                  setSelectedPartner(null);
-                }}
-                className="mt-8 w-full py-4 bg-[#8E6F1D] text-white rounded-2xl font-semibold flex items-center justify-center gap-2"
+                onClick={() => setSelectedItem(null)} 
+                className="absolute top-5 right-5 p-1 rounded-full text-[#696256] hover:text-[#1C1917] dark:hover:text-white"
               >
-                Book This Remedy <ArrowRight className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
 
-              <p className="text-center text-xs text-[#857E74] mt-4">CosmicTantra verifies every partner. 100% authentic.</p>
+              <div className="text-xs font-mono-data uppercase tracking-[2px] text-[#8E6F1D] dark:text-[#F0C968] font-bold">
+                {selectedItem.category} SPECIFICATION
+              </div>
+              <h2 className="font-editorial text-2xl font-bold text-[#1C1917] dark:text-white mt-1">
+                {selectedItem.name}
+              </h2>
+
+              <div className="mt-6 space-y-3 text-xs font-mono-data text-[#1C1917] dark:text-[#E7E5E4]">
+                <div className="p-3 rounded-xl bg-[#FAF7F2] dark:bg-[#070912] border border-black/5 dark:border-white/5">
+                  <span className="text-[#696256] dark:text-[#9E988D] block text-[10px]">Verification Standard:</span>
+                  <strong>{selectedItem.specStandard}</strong>
+                </div>
+                <div className="flex justify-between p-3 rounded-xl bg-[#FAF7F2] dark:bg-[#070912] border border-black/5 dark:border-white/5">
+                  <div>
+                    <span className="text-[#696256] dark:text-[#9E988D] block text-[10px]">Indicative Range:</span>
+                    <strong>{selectedItem.indicativePrice}</strong>
+                  </div>
+                  <div>
+                    <span className="text-[#696256] dark:text-[#9E988D] block text-[10px]">Sourcing Hub:</span>
+                    <strong>{selectedItem.traditionalRegion}</strong>
+                  </div>
+                </div>
+              </div>
+
+              {!interestSubmitted ? (
+                <button 
+                  onClick={() => setInterestSubmitted(true)}
+                  className="mt-6 w-full py-3.5 bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#060709] rounded-2xl font-mono-data font-bold text-xs hover:bg-[#A35C15] dark:hover:bg-[#E5C378] transition-all flex items-center justify-center gap-2 shadow-lg"
+                >
+                  <span>Register Interest with Vetted Acharya</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              ) : (
+                <div className="mt-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-xs font-mono-data text-[#065F46] dark:text-[#10B981] text-center font-bold">
+                  ✓ Interest registered! You will be notified once partner sourcing opens.
+                </div>
+              )}
+
+              <p className="text-center text-[11px] font-mono-data text-[#696256] dark:text-[#9E988D] mt-4">
+                CosmicTantra enforces rigorous laboratory and scriptural verification prior to fulfillment.
+              </p>
             </div>
           </div>
         )}
       </div>
-    </main>
+    </CosmicTantraShell>
   );
 }
+

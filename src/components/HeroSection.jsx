@@ -123,7 +123,7 @@ export default function HeroSection({
                 }}
                 className="text-[#8E6F1D] dark:text-[#D4AF37] hover:underline font-semibold flex items-center gap-0.5 ml-auto"
               >
-                <span>View methodology →</span>
+                <span>{t.viewMethodology || (lang === 'hi' ? 'गणना पद्धति देखें →' : 'View methodology →')}</span>
               </a>
             </div>
 

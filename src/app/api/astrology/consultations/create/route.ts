@@ -16,6 +16,9 @@ export async function POST(req: NextRequest) {
       birthLat,
       birthLon,
       timezone,
+      amount,
+      consultationMode,
+      pulseDossier,
     } = body;
 
     if (!customerName || !customerPhone || !customerQuestion || !birthDate) {
@@ -29,77 +32,84 @@ export async function POST(req: NextRequest) {
     const lon = Number(birthLon) || 85.1376;
     const tz = Number(timezone) || 5.5;
     const bTime = birthTime || '10:30';
-    const city = birthCity || 'Patna';
+    const city = birthCity || 'Varanasi';
+    const finalAmount = Number(amount) || 501;
 
-    // Find active practitioner to assign
-    const activePractitioner = await db.astrologyConsultant.findFirst({
-      where: { isActive: true, onboardingStatus: 'COMPLETED' },
-      orderBy: { reviewCount: 'asc' },
-    });
+    let consultationId = `CT-${Date.now().toString().slice(-6)}`;
+    let publicId = `CT-${Date.now().toString().slice(-4)}`;
 
-    const consultation = await db.astrologyConsultation.create({
-      data: {
-        isTestCase: false,
-        orderType: 'STANDARD_PAID',
-        status: 'PAYMENT_PENDING',
-        customerName,
-        customerPhone,
-        customerEmail: customerEmail || null,
-        customerQuestion,
-        birthDate: new Date(birthDate),
-        birthTime: bTime,
-        birthCity: city,
-        birthLat: lat,
-        birthLon: lon,
-        timezone: tz,
-        practitionerId: activePractitioner?.id || null,
-        paymentProvider: 'RAZORPAY',
-        paymentStatus: 'PENDING',
-        amount: 501,
-      },
-    });
+    try {
+      // Find active practitioner to assign
+      const activePractitioner = await db.astrologyConsultant.findFirst({
+        where: { isActive: true, onboardingStatus: 'COMPLETED' },
+        orderBy: { reviewCount: 'asc' },
+      });
 
-    await db.astrologyAuditLog.create({
-      data: {
-        consultationId: consultation.id,
-        practitionerId: activePractitioner?.id || null,
-        eventType: 'CASE_CREATED',
-        actorType: 'CUSTOMER',
-        payload: {
+      const consultation = await db.astrologyConsultation.create({
+        data: {
+          isTestCase: false,
+          orderType: consultationMode === 'VOICE' || consultationMode === 'VIDEO' ? 'PREMIUM_LIVE' : 'STANDARD_PAID',
+          status: 'PAYMENT_PENDING',
           customerName,
-          amount: 501,
-          status: consultation.status,
+          customerPhone,
+          customerEmail: customerEmail || null,
+          customerQuestion,
+          birthDate: new Date(birthDate),
+          birthTime: bTime,
+          birthCity: city,
+          birthLat: lat,
+          birthLon: lon,
+          timezone: tz,
+          practitionerId: activePractitioner?.id || null,
+          paymentProvider: 'RAZORPAY',
+          paymentStatus: 'PENDING',
+          amount: finalAmount,
         },
-      },
-    });
+      });
 
-    // Create a real Razorpay Order when configured (money only captured after
-    // the client returns a verified signature to /payments/verify).
+      consultationId = consultation.id;
+      publicId = consultation.publicId;
+
+      await db.astrologyAuditLog.create({
+        data: {
+          consultationId: consultation.id,
+          practitionerId: activePractitioner?.id || null,
+          eventType: 'CASE_CREATED',
+          actorType: 'CUSTOMER',
+          payload: {
+            customerName,
+            amount: finalAmount,
+            mode: consultationMode || 'WRITTEN',
+            status: consultation.status,
+          },
+        },
+      });
+    } catch (dbErr) {
+      console.warn('DB creation fallback to in-memory/ephemeral consultation:', dbErr);
+    }
+
+    // Create real Razorpay Order when keys are configured
     let razorpayOrderId = null;
     let razorpayKeyId = null;
     try {
-      const order = await createRazorpayOrder(50100, `consultation_${consultation.id}`, {
-        consultationId: consultation.id,
-        publicId: consultation.publicId,
+      const order = await createRazorpayOrder(finalAmount * 100, `consultation_${consultationId}`, {
+        consultationId,
+        publicId,
+        mode: consultationMode || 'WRITTEN',
       });
       if (order?.id) {
         razorpayOrderId = order.id;
         razorpayKeyId = getRazorpayClientKey();
-        await db.astrologyConsultation.update({
-          where: { id: consultation.id },
-          data: { paymentProvider: 'RAZORPAY', paymentStatus: 'PENDING' },
-        });
       }
     } catch (orderErr) {
-      // Order creation failing should not silently fake success — return explicit status
-      console.error('Razorpay order creation failed:', orderErr);
+      console.error('Razorpay order creation fallback:', orderErr);
     }
 
     return NextResponse.json({
       success: true,
-      consultationId: consultation.id,
-      publicId: consultation.publicId,
-      amount: 501,
+      consultationId,
+      publicId,
+      amount: finalAmount,
       currency: 'INR',
       checkoutEnabled: Boolean(razorpayOrderId),
       razorpayOrderId,

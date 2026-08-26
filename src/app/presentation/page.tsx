@@ -1,48 +1,60 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { ArrowLeft, ArrowRight, BookOpen, FileText, UserCheck, Sparkles } from 'lucide-react';
+import CosmicTantraShell from '@/components/layout/CosmicTantraShell';
 
 const slides = [
   {
     title: "Welcome, Pandit Ji",
-    content: "This platform was built with deep reverence for the unbroken Jyotish tradition of Kashi. We do not aim to replace the scholar — we aim to serve them.",
+    sanskrit: "श्री काशी विश्वनाथो विजयते",
+    content: "This platform was built with deep reverence for the unbroken Jyotish tradition of Kashi. We do not aim to replace the scholar — we aim to serve them with sub-arcminute astronomical tools.",
   },
   {
     title: "The Problem We Solve",
-    content: "Seekers today are flooded with noisy, per-minute call marketplaces. CosmicTantra offers a dignified alternative: Permanent Written Folios, verified by real scholars.",
+    sanskrit: "मर्यादा एवं शुचिता",
+    content: "Seekers today are flooded with noisy, predatory per-minute call apps. CosmicTantra offers a dignified alternative: Permanent Written Folios, verified and signed by real Vedic scholars.",
   },
   {
     title: "Scholar’s Desk",
-    content: "A calm, personal workspace where seekers manage their Cosmic Identity, daily Panchang, and family profiles — all with a scholarly aesthetic.",
+    sanskrit: "विद्वत् पीठ",
+    content: "A calm, personal workspace where seekers manage their Cosmic Identity, daily Panchang, and family profiles — all designed with traditional scholarly dignity.",
   },
   {
-    title: "Written Folio (शुभ दक्षिणा ₹५०१)",
-    content: "A beautiful, print-ready scholarly document containing Kundali summary, Dasha analysis, Satvik Upaya, and verified remedy recommendations.",
+    title: "Written Folio (Fixed ₹199 Dakshina)",
+    sanskrit: "लिखित परामर्श पत्र",
+    content: "A beautiful, archival-grade 4-page written counsel containing Kundali summary, Dasha analysis, Satvik Upaya, and verified remedy recommendations.",
   },
   {
     title: "Pandit Workspace",
-    content: "A clean, professional interface where you receive consultations, write folios, add internal comments, and approve delivery.",
+    sanskrit: "ज्योतिर्विद् कार्यपीठ",
+    content: "A dedicated operational workbench where you receive consultation cases, review deterministic planetary evidence, edit synthesis, and approve folios.",
   },
   {
     title: "Verified Upaya Partners",
-    content: "Genuine gemstones, Rudraksha, and temple rituals from verified suppliers — presented with dignity, not as a marketplace.",
+    sanskrit: "सात्त्विक उपाय",
+    content: "Genuine lab-certified gemstones, Nepali Rudraksha, and authentic temple anushthans from vetted partners — presented with complete transparency.",
   },
   {
     title: "Smart Upaya Engine",
-    content: "Automatically suggests the most appropriate remedies based on the seeker’s Lagna, Nakshatra, Dasha, and question.",
+    sanskrit: "शुद्ध ग्रह शान्ति",
+    content: "Automatically computes classical planetary remedies based on the seeker's Lagna, Janma Nakshatra, Mahadasha, and focused life question.",
   },
   {
     title: "Family Panchang",
-    content: "Personalized daily guidance for the entire family — turning a single user into a daily habit across multiple profiles.",
+    sanskrit: "पारिवारिक पञ्चाङ्ग",
+    content: "Personalized daily astronomical guidance for the entire family — turning one seeker into an unbroken daily habit across all family members.",
   },
   {
     title: "Our Philosophy",
-    content: "We believe Jyotish is a sacred navigational science. Our role is to preserve its dignity while making it accessible through technology.",
+    sanskrit: "शास्त्र सम्मत खगोल विज्ञान",
+    content: "We believe Jyotish is a sacred navigational science. Our role is to preserve its dignity while making it accessible through precision modern engineering.",
   },
   {
-    title: "Next Steps",
-    content: "We respectfully invite your guidance. How would you like to shape this platform further?",
+    title: "Next Steps & Invitation",
+    sanskrit: "आचार्य मण्डल",
+    content: "We respectfully invite your guidance and partnership. Together, let us elevate the standard of Vedic astrological counsel across India.",
   },
 ];
 
@@ -52,63 +64,122 @@ export default function PanditJiPresentation() {
   const next = () => setCurrentSlide((prev) => Math.min(prev + 1, slides.length - 1));
   const prev = () => setCurrentSlide((prev) => Math.max(prev - 1, 0));
 
+  // Keyboard navigation support
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight' || e.key === 'Space') {
+        next();
+      } else if (e.key === 'ArrowLeft') {
+        prev();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const slide = slides[currentSlide];
 
   return (
-    <main className="min-h-screen bg-[#FAF7F2] flex flex-col">
-      <div className="max-w-3xl mx-auto px-6 pt-12 pb-8 flex-1 flex flex-col">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="text-xs tracking-[4px] text-[#8E6F1D]">काशी विद्वत्-परिषद् • PRESENTATION</div>
-          <div className="font-editorial text-3xl mt-3">CosmicTantra for Pandit Ji</div>
-        </div>
-
-        {/* Slide Content */}
-        <div className="flex-1 flex flex-col justify-center">
-          <div className="bg-white rounded-3xl border border-[#8E6F1D]/20 p-10 min-h-[320px] flex flex-col">
-            <div className="text-xs text-[#8E6F1D] tracking-widest mb-4">
-              SLIDE {currentSlide + 1} / {slides.length}
+    <CosmicTantraShell
+      shellMode="presentation"
+      footerMode="none"
+      presentationSlide={currentSlide + 1}
+      totalSlides={slides.length}
+    >
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 flex-1 flex flex-col justify-center">
+        {/* Main Presentation Slide Card */}
+        <div className="bg-white dark:bg-[#0E101D] rounded-3xl border border-[#8E6F1D]/30 dark:border-[#D4AF37]/40 p-6 sm:p-12 shadow-2xl transition-colors">
+          <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-4 mb-6">
+            <div className="text-xs font-mono-data font-bold text-[#8E6F1D] dark:text-[#F0C968] tracking-[3px]">
+              SLIDE {currentSlide + 1} OF {slides.length}
             </div>
-            
-            <h2 className="font-editorial text-4xl font-bold tracking-tight">{slide.title}</h2>
-            
-            <p className="mt-6 text-lg leading-relaxed text-[#44403C] flex-1">
-              {slide.content}
-            </p>
+            <div className="text-xs font-mono-data text-[#8E6F1D] dark:text-[#D4AF37] font-semibold">
+              {slide.sanskrit}
+            </div>
+          </div>
 
-            {/* Quick Links */}
-            <div className="mt-8 pt-6 border-t grid grid-cols-2 gap-3 text-sm">
-              <Link href="/dashboard" className="text-center py-3 border border-[#8E6F1D]/20 rounded-2xl hover:bg-[#8E6F1D]/5">Scholar’s Desk</Link>
-              <Link href="/report" className="text-center py-3 border border-[#8E6F1D]/20 rounded-2xl hover:bg-[#8E6F1D]/5">Written Folio</Link>
-              <Link href="/pandit/workspace" className="text-center py-3 border border-[#8E6F1D]/20 rounded-2xl hover:bg-[#8E6F1D]/5">Pandit Workspace</Link>
-              <Link href="/upaya" className="text-center py-3 border border-[#8E6F1D]/20 rounded-2xl hover:bg-[#8E6F1D]/5">Upaya Partners</Link>
+          <h1 className="font-editorial text-3xl sm:text-4xl lg:text-5xl font-bold text-[#1C1917] dark:text-[#FFFFFF] tracking-tight">
+            {slide.title}
+          </h1>
+
+          <p className="mt-6 text-base sm:text-xl leading-relaxed text-[#37332E] dark:text-[#E7E5E4] min-h-[90px]">
+            {slide.content}
+          </p>
+
+          {/* Real Active Navigation Destinations */}
+          <div className="mt-10 pt-6 border-t border-black/10 dark:border-white/10">
+            <div className="text-[11px] font-mono-data uppercase tracking-wider font-bold text-[#696256] dark:text-[#9E988D] mb-3">
+              Explore Live Prototype Destinations:
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <Link 
+                href="/dashboard" 
+                className="flex flex-col items-center justify-center p-3 rounded-2xl border border-[#8E6F1D]/30 dark:border-[#D4AF37]/35 bg-[#FAF7F2] dark:bg-white/5 hover:bg-[#8E6F1D]/10 dark:hover:bg-white/10 hover:border-[#8E6F1D] transition-all text-center group"
+              >
+                <BookOpen className="w-4 h-4 text-[#8E6F1D] dark:text-[#D4AF37] mb-1 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-mono-data font-bold text-[#1C1917] dark:text-white">Scholar’s Desk</span>
+              </Link>
+              <Link 
+                href="/report" 
+                className="flex flex-col items-center justify-center p-3 rounded-2xl border border-[#8E6F1D]/30 dark:border-[#D4AF37]/35 bg-[#FAF7F2] dark:bg-white/5 hover:bg-[#8E6F1D]/10 dark:hover:bg-white/10 hover:border-[#8E6F1D] transition-all text-center group"
+              >
+                <FileText className="w-4 h-4 text-[#8E6F1D] dark:text-[#D4AF37] mb-1 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-mono-data font-bold text-[#1C1917] dark:text-white">Written Folio</span>
+              </Link>
+              <Link 
+                href="/pandit/workspace" 
+                className="flex flex-col items-center justify-center p-3 rounded-2xl border border-[#8E6F1D]/30 dark:border-[#D4AF37]/35 bg-[#FAF7F2] dark:bg-white/5 hover:bg-[#8E6F1D]/10 dark:hover:bg-white/10 hover:border-[#8E6F1D] transition-all text-center group"
+              >
+                <UserCheck className="w-4 h-4 text-[#8E6F1D] dark:text-[#D4AF37] mb-1 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-mono-data font-bold text-[#1C1917] dark:text-white">Pandit Desk</span>
+              </Link>
+              <Link 
+                href="/upaya" 
+                className="flex flex-col items-center justify-center p-3 rounded-2xl border border-[#8E6F1D]/30 dark:border-[#D4AF37]/35 bg-[#FAF7F2] dark:bg-white/5 hover:bg-[#8E6F1D]/10 dark:hover:bg-white/10 hover:border-[#8E6F1D] transition-all text-center group"
+              >
+                <Sparkles className="w-4 h-4 text-[#8E6F1D] dark:text-[#D4AF37] mb-1 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-mono-data font-bold text-[#1C1917] dark:text-white">Upaya Network</span>
+              </Link>
             </div>
           </div>
         </div>
 
-        {/* Navigation */}
-        <div className="flex justify-between mt-8">
+        {/* Slide Controls */}
+        <div className="flex items-center justify-between mt-8">
           <button 
             onClick={prev} 
             disabled={currentSlide === 0}
-            className="px-6 py-3 text-sm disabled:opacity-40"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-black/15 dark:border-white/15 text-xs font-mono-data font-bold text-[#1C1917] dark:text-white hover:border-[#8E6F1D] disabled:opacity-30 disabled:pointer-events-none transition-all bg-white dark:bg-[#0E101D]"
           >
-            ← Previous
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Previous</span>
           </button>
           
-          <div className="text-xs text-[#857E74] self-center">
-            {currentSlide + 1} / {slides.length}
+          <div className="flex items-center gap-1.5">
+            {slides.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentSlide(idx)}
+                aria-label={`Go to slide ${idx + 1}`}
+                className={`w-2.5 h-2.5 rounded-full transition-all ${
+                  idx === currentSlide 
+                    ? 'bg-[#8E6F1D] dark:bg-[#D4AF37] w-6' 
+                    : 'bg-black/20 dark:bg-white/20 hover:bg-black/40'
+                }`}
+              />
+            ))}
           </div>
 
           <button 
             onClick={next} 
             disabled={currentSlide === slides.length - 1}
-            className="px-6 py-3 text-sm disabled:opacity-40"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#060709] text-xs font-mono-data font-bold hover:bg-[#A35C15] dark:hover:bg-[#E5C378] disabled:opacity-30 disabled:pointer-events-none transition-all shadow-md"
           >
-            Next →
+            <span>Next</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
-    </main>
+    </CosmicTantraShell>
   );
 }

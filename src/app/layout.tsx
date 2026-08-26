@@ -63,6 +63,8 @@ export const metadata: Metadata = {
   },
 };
 
+import PwaRegister from '@/components/pwa/PwaRegister';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -130,6 +132,13 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#06070B" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="CosmicTantra" />
+        <link rel="apple-touch-icon" href="/cosmictantra_logo_master.png" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -137,6 +146,7 @@ export default function RootLayout({
       </head>
       <body className="bg-[#FAF7F2] dark:bg-[#07080C] text-[#1C1917] dark:text-[#EFECE6] antialiased transition-colors duration-300">
         {children}
+        <PwaRegister />
       </body>
     </html>
   );

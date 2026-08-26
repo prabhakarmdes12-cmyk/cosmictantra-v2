@@ -4,27 +4,120 @@ import { analytics, ANALYTICS_EVENTS } from '../lib/analytics';
 import { TRANSLATIONS } from '../lib/translations';
 import { chitiSensory } from '../lib/chitiAudio';
 
+const HINDI_DIGITS = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९'];
+function toHindiDigits(str) {
+  if (!str) return '';
+  return String(str).replace(/[0-9]/g, (d) => HINDI_DIGITS[parseInt(d, 10)]);
+}
+
+const TITHI_HI_MAP = {
+  'Pratipada': 'प्रतिपदा', 'Dwitiya': 'द्वितीया', 'Tritiya': 'तृतीया',
+  'Chaturthi': 'चतुर्थी', 'Panchami': 'पञ्चमी', 'Shashthi': 'षष्ठी',
+  'Saptami': 'सप्तमी', 'Ashtami': 'अष्टमी', 'Navami': 'नवमी',
+  'Dashami': 'दशमी', 'Ekadashi': 'एकादशी', 'Dwadashi': 'द्वादशी',
+  'Trayodashi': 'त्रयोदशी', 'Chaturdashi': 'चतुर्दशी', 'Purnima': 'पूर्णिमा',
+  'Amavasya': 'अमावस्या'
+};
+
+const PAKSHA_HI_MAP = {
+  'Shukla Paksha': 'शुक्ल पक्ष',
+  'Krishna Paksha': 'कृष्ण पक्ष',
+  'Shukla': 'शुक्ल पक्ष',
+  'Krishna': 'कृष्ण पक्ष'
+};
+
+const NAKSHATRA_HI_MAP = {
+  'Ashwini': 'अश्विनी', 'Bharani': 'भरणी', 'Krittika': 'कृत्तिका',
+  'Rohini': 'रोहिणी', 'Mrigashira': 'मृगशिरा', 'Ardra': 'आर्द्रा',
+  'Punarvasu': 'पुनर्वसु', 'Pushya': 'पुष्य', 'Ashlesha': 'आश्लेषा',
+  'Magha': 'मघा', 'Purva Phalguni': 'पूर्वाफाल्गुनी', 'Uttara Phalguni': 'उत्तराफाल्गुनी',
+  'Hasta': 'हस्त', 'Chitra': 'चित्रा', 'Swati': 'स्वाती',
+  'Vishakha': 'विशाखा', 'Anuradha': 'अनुराधा', 'Jyeshtha': 'ज्येष्ठा',
+  'Mula': 'मूल', 'Purva Ashadha': 'पूर्वाषाढ़ा', 'Uttara Ashadha': 'उत्तराषाढ़ा',
+  'Shravana': 'श्रवण', 'Dhanishta': 'धनिष्ठा', 'Shatabhisha': 'शतभिषा',
+  'Purva Bhadrapada': 'पूर्वभाद्रपद', 'Uttara Bhadrapada': 'उत्तरभाद्रपद', 'Revati': 'रेवती'
+};
+
+const YOGA_HI_MAP = {
+  'Vishkambha': 'विष्कम्भ', 'Priti': 'प्रीति', 'Ayushman': 'आयुष्मान्',
+  'Saubhagya': 'सौभाग्य', 'Shobhana': 'शोभन', 'Atiganda': 'अतिगण्ड',
+  'Sukarma': 'सुकर्मा', 'Dhriti': 'धृति', 'Shoola': 'शूल',
+  'Ganda': 'गण्ड', 'Vriddhi': 'वृद्धि', 'Dhruva': 'ध्रुव',
+  'Vyaghata': 'व्याघात', 'Harshana': 'हर्षण', 'Vajra': 'वज्र',
+  'Siddhi': 'सिद्धि', 'Vyatipata': 'व्यतीपात', 'Variyana': 'वरीयान्',
+  'Variyan': 'वरीयान्', 'Parigha': 'परिघ', 'Shiva': 'शिव',
+  'Siddha': 'सिद्ध', 'Sadhya': 'साध्य', 'Shubha': 'शुभ',
+  'Shukla': 'शुक्ल', 'Brahma': 'ब्रह्म', 'Indra': 'इन्द्र',
+  'Vaidhriti': 'वैधृति'
+};
+
+const KARANA_HI_MAP = {
+  'Bava': 'बव', 'Balava': 'बालव', 'Kaulava': 'कौलव',
+  'Taitila': 'तैतिल', 'Gara': 'गर', 'Garaja': 'गर',
+  'Vanija': 'वणिज', 'Vishti (Bhadra)': 'विष्टि (भद्रा)', 'Vishti': 'विष्टि (भद्रा)',
+  'Shakuni': 'शकुनि', 'Chatushpada': 'चतुष्पाद', 'Naga': 'नाग',
+  'Kintughna': 'किस्तुघ्न'
+};
+
+const MOON_PHASE_HI_MAP = {
+  'Waxing Crescent': 'शुक्ल द्वितीया-तृतीया (चान्द्र वृद्धि)',
+  'First Quarter': 'शुक्ल अष्टमी (अर्ध चन्द्र)',
+  'Waxing Gibbous': 'शुक्ल एकादशी (वृद्ध चन्द्र)',
+  'Full Moon': 'पूर्णिमा (पूर्ण चन्द्र)',
+  'Waning Gibbous': 'कृष्ण तृतीया (चान्द्र ह्रास)',
+  'Last Quarter': 'कृष्ण अष्टमी (अर्ध चन्द्र)',
+  'Waning Crescent': 'कृष्ण एकादशी (कृष्ण पक्षीय चन्द्र)',
+  'New Moon': 'अमावस्या (नव चन्द्र)'
+};
+
 export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsultation, lang = 'en', theme = 'dark' }) {
   const [showShareModal, setShowShareModal] = useState(false);
+  const isHi = lang === 'hi';
   const t = TRANSLATIONS[lang]?.panchang || TRANSLATIONS.en.panchang;
 
+  if (!panchangData) return null;
+
+  const rawTithiName = panchangData.tithi?.name || 'Ekadashi';
+  const tithiName = isHi ? (panchangData.tithi?.nameHi || TITHI_HI_MAP[rawTithiName] || rawTithiName) : rawTithiName;
+
+  const rawPaksha = panchangData.tithi?.paksha || 'Shukla Paksha';
+  const tithiPaksha = isHi ? (PAKSHA_HI_MAP[rawPaksha] || rawPaksha) : rawPaksha;
+
+  const rawNakshatraName = panchangData.nakshatra?.name || 'Rohini';
+  const nakshatraName = isHi ? (panchangData.nakshatra?.nameHi || NAKSHATRA_HI_MAP[rawNakshatraName] || rawNakshatraName) : rawNakshatraName;
+
+  const rawYogaName = panchangData.yoga?.name || 'Siddha';
+  const yogaName = isHi ? (panchangData.yoga?.nameHi || YOGA_HI_MAP[rawYogaName] || rawYogaName) : rawYogaName;
+
+  const rawKaranaName = panchangData.karana?.name || 'Bava';
+  const karanaName = isHi ? (panchangData.karana?.nameHi || KARANA_HI_MAP[rawKaranaName] || rawKaranaName) : rawKaranaName;
+
+  const rawMoonPhase = panchangData.moon?.phase || 'Waxing Moon';
+  const moonPhase = isHi ? (MOON_PHASE_HI_MAP[rawMoonPhase] || rawMoonPhase) : rawMoonPhase;
+
+  const sunrise = isHi ? toHindiDigits(panchangData.sun?.sunrise) : panchangData.sun?.sunrise;
+  const sunset = isHi ? toHindiDigits(panchangData.sun?.sunset) : panchangData.sun?.sunset;
+  const rahuKalam = isHi ? toHindiDigits(panchangData.timings?.rahuKalam) : panchangData.timings?.rahuKalam;
+  const abhijitMuhurat = isHi ? toHindiDigits(panchangData.timings?.abhijitMuhurat) : panchangData.timings?.abhijitMuhurat;
+  const yamaganda = isHi ? toHindiDigits(panchangData.timings?.yamaganda) : panchangData.timings?.yamaganda;
+  const pada = isHi ? toHindiDigits(panchangData.nakshatra?.pada || 1) : (panchangData.nakshatra?.pada || 1);
+  const moonIllum = isHi ? toHindiDigits(panchangData.moon?.illumination || 75) : (panchangData.moon?.illumination || 75);
+
   const getUsefulGuidance = () => {
-    const nak = panchangData.nakshatra.name;
-    
     return [
       {
         title: t.guidance1Title,
-        desc: `${nak} Nakshatra: ${t.guidance1Desc}`,
+        desc: isHi ? `${nakshatraName} नक्षत्र: ${t.guidance1Desc}` : `${nakshatraName} Nakshatra: ${t.guidance1Desc}`,
         type: 'auspicious'
       },
       {
         title: t.guidance2Title,
-        desc: `${t.guidance2Desc} (${panchangData.timings.rahuKalam})`,
+        desc: `${t.guidance2Desc} (${rahuKalam})`,
         type: 'caution'
       },
       {
         title: t.guidance3Title,
-        desc: `${t.guidance3Desc} (${panchangData.timings.abhijitMuhurat})`,
+        desc: `${t.guidance3Desc} (${abhijitMuhurat})`,
         type: 'highlight'
       }
     ];
@@ -45,7 +138,9 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
               {t.heading}
             </h2>
             <p className="text-xs sm:text-sm text-[#4A443B] dark:text-[#C4BEB3] font-mono-data mt-1.5">
-              {t.subheading} <span className="text-[#181512] dark:text-[#F5F2EB] font-bold">{currentCity.name}, {currentCity.state} ({currentCity.lat.toFixed(2)}°N, {currentCity.lng.toFixed(2)}°E)</span>
+              {t.subheading} <span className="text-[#181512] dark:text-[#F5F2EB] font-bold">
+                {isHi ? (currentCity.nameHi || currentCity.name) : currentCity.name}, {currentCity.state} ({isHi ? toHindiDigits(currentCity.lat.toFixed(2)) : currentCity.lat.toFixed(2)}°N, {isHi ? toHindiDigits(currentCity.lng.toFixed(2)) : currentCity.lng.toFixed(2)}°E)
+              </span>
             </p>
           </div>
 
@@ -56,7 +151,7 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
                 analytics.track('SHARE_CARD_OPENED');
                 setShowShareModal(true);
               }}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-black/[0.12] dark:border-[#D4AF37]/35 bg-[#FFFFFF] dark:bg-[#0D0F1A] text-xs font-mono-data text-[#181512] dark:text-[#F5F2EB] hover:border-[#826315] dark:hover:border-[#D4AF37] transition-all shadow-xs font-bold"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-black/[0.12] dark:border-[#D4AF37]/35 bg-[#FFFFFF] dark:bg-[#0D0F1A] text-xs font-mono-data text-[#181512] dark:text-[#F5F2EB] hover:border-[#826315] dark:hover:border-[#D4AF37] transition-all shadow-xs font-bold cursor-pointer"
             >
               <Share2 className="w-3.5 h-3.5 text-[#826315] dark:text-[#E5C378]" />
               <span>{t.shareBtn}</span>
@@ -68,7 +163,7 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
                 analytics.track(ANALYTICS_EVENTS.ASK_JYOTISHI_CLICKED, { source: 'TODAY_SECTION' });
                 onOpenConsultation();
               }}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[#A6461D]/50 dark:border-[#C86D46]/50 bg-[#FFFFFF] dark:bg-[#120F18] text-xs font-mono-data text-[#A6461D] dark:text-[#F0A554] hover:border-[#826315] dark:hover:border-[#D4AF37] transition-all shadow-xs font-bold"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[#A6461D]/50 dark:border-[#C86D46]/50 bg-[#FFFFFF] dark:bg-[#120F18] text-xs font-mono-data text-[#A6461D] dark:text-[#F0A554] hover:border-[#826315] dark:hover:border-[#D4AF37] transition-all shadow-xs font-bold cursor-pointer"
             >
               <span>{t.personalizeBtn}</span>
               <ChevronRight className="w-3.5 h-3.5" />
@@ -79,7 +174,7 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
         {/* Signature 01: Varanasi Stepped Ghat Diurnal Timeline */}
         <div className="w-full max-w-full rounded-2xl bg-[#FFFFFF] dark:bg-[#090B14] border border-black/[0.1] dark:border-[#D4AF37]/30 p-4 sm:p-6 mb-10 shadow-xl transition-colors duration-250 min-w-0 overflow-hidden">
           <div className="text-[10px] font-mono-data uppercase tracking-widest text-[#696256] dark:text-[#8E887E] mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-1 font-bold">
-            <span className="text-[#826315] dark:text-[#E5C378]">{t.diurnalTitle} — {panchangData.city}</span>
+            <span className="text-[#826315] dark:text-[#E5C378]">{t.diurnalTitle} — {isHi ? (panchangData.cityHi || panchangData.city) : panchangData.city}</span>
             <span>{t.dashashwamedh}</span>
           </div>
 
@@ -93,7 +188,7 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
                 <span>{t.sunriseTitle}</span>
               </div>
               <div className="text-lg font-bold font-mono-data text-[#181512] dark:text-[#F5F2EB] mt-1">
-                {panchangData.sun.sunrise}
+                {sunrise}
               </div>
               <div className="text-[10px] text-[#4A443B] dark:text-[#8E887E] font-mono-data mt-1 font-medium">{t.sunriseDesc}</div>
             </div>
@@ -104,7 +199,7 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
                 {t.morningTitle}
               </div>
               <div className="text-sm font-bold font-mono-data text-[#181512] dark:text-[#F5F2EB] mt-1">
-                07:30 AM – 10:30 AM
+                {isHi ? '०७:३० - १०:३०' : '07:30 AM – 10:30 AM'}
               </div>
               <div className="text-[10px] text-[#4A443B] dark:text-[#8E887E] font-mono-data mt-1 font-medium">{t.morningDesc}</div>
             </div>
@@ -116,7 +211,7 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
                 <span>{t.rahuTitle}</span>
               </div>
               <div className="text-sm font-bold font-mono-data text-[#821322] dark:text-[#fca5a5] mt-1">
-                {panchangData.timings.rahuKalam}
+                {rahuKalam}
               </div>
               <div className="text-[10px] text-[#821322]/90 dark:text-[#fca5a5]/80 font-mono-data mt-1 font-medium">{t.rahuDesc}</div>
             </div>
@@ -128,7 +223,7 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
                 <span>{t.abhijitTitle}</span>
               </div>
               <div className="text-sm font-bold font-mono-data text-[#094A2D] dark:text-[#6ee7b7] mt-1">
-                {panchangData.timings.abhijitMuhurat}
+                {abhijitMuhurat}
               </div>
               <div className="text-[10px] text-[#094A2D]/90 dark:text-[#34d399]/80 font-mono-data mt-1 font-medium">{t.abhijitDesc}</div>
             </div>
@@ -140,7 +235,7 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
                 <span>{t.sunsetTitle}</span>
               </div>
               <div className="text-lg font-bold font-mono-data text-[#181512] dark:text-[#F5F2EB] mt-1">
-                {panchangData.sun.sunset}
+                {sunset}
               </div>
               <div className="text-[10px] text-[#4A443B] dark:text-[#8E887E] font-mono-data mt-1 font-medium">{t.sunsetDesc}</div>
             </div>
@@ -151,39 +246,61 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
         {/* Tabular Characteristics Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-10 font-mono-data">
           <div className="p-3.5 rounded-3xl border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 dark:border-white/[0.07] shadow-xs">
-            <div className="text-[9px] uppercase tracking-widest text-[#696256] dark:text-[#8E887E] font-bold">Tithi (तिथि)</div>
-            <div className="font-bold text-sm text-[#181512] dark:text-[#F5F2EB] mt-1">{panchangData.tithi.name}</div>
-            <div className="text-[11px] text-[#826315] dark:text-[#E5C378] mt-0.5 font-bold">{panchangData.tithi.paksha}</div>
+            <div className="text-[9px] uppercase tracking-widest text-[#696256] dark:text-[#8E887E] font-bold">
+              {isHi ? 'तिथि' : 'Tithi (तिथि)'}
+            </div>
+            <div className="font-bold text-sm text-[#181512] dark:text-[#F5F2EB] mt-1">{tithiName}</div>
+            <div className="text-[11px] text-[#826315] dark:text-[#E5C378] mt-0.5 font-bold">{tithiPaksha}</div>
           </div>
 
           <div className="p-3.5 rounded-3xl border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 dark:border-white/[0.07] shadow-xs">
-            <div className="text-[9px] uppercase tracking-widest text-[#696256] dark:text-[#8E887E] font-bold">Nakshatra (नक्षत्र)</div>
-            <div className="font-bold text-sm text-[#181512] dark:text-[#F5F2EB] mt-1">{panchangData.nakshatra.name}</div>
-            <div className="text-[11px] text-[#3D3D99] dark:text-[#9E9EF8] mt-0.5 font-bold">Pada {panchangData.nakshatra.pada}</div>
+            <div className="text-[9px] uppercase tracking-widest text-[#696256] dark:text-[#8E887E] font-bold">
+              {isHi ? 'नक्षत्र' : 'Nakshatra (नक्षत्र)'}
+            </div>
+            <div className="font-bold text-sm text-[#181512] dark:text-[#F5F2EB] mt-1">{nakshatraName}</div>
+            <div className="text-[11px] text-[#3D3D99] dark:text-[#9E9EF8] mt-0.5 font-bold">
+              {isHi ? `पाद ${pada}` : `Pada ${pada}`}
+            </div>
           </div>
 
           <div className="p-3.5 rounded-3xl border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 dark:border-white/[0.07] shadow-xs">
-            <div className="text-[9px] uppercase tracking-widest text-[#696256] dark:text-[#8E887E] font-bold">Yoga (योग)</div>
-            <div className="font-bold text-sm text-[#181512] dark:text-[#F5F2EB] mt-1">{panchangData.yoga.name}</div>
-            <div className="text-[11px] text-[#A6461D] dark:text-[#E2825B] mt-0.5 font-bold">Yoga #{panchangData.yoga.number}</div>
+            <div className="text-[9px] uppercase tracking-widest text-[#696256] dark:text-[#8E887E] font-bold">
+              {isHi ? 'योग' : 'Yoga (योग)'}
+            </div>
+            <div className="font-bold text-sm text-[#181512] dark:text-[#F5F2EB] mt-1">{yogaName}</div>
+            <div className="text-[11px] text-[#A6461D] dark:text-[#E2825B] mt-0.5 font-bold">
+              {isHi ? `योग #${toHindiDigits(panchangData.yoga?.number || 1)}` : `Yoga #${panchangData.yoga?.number || 1}`}
+            </div>
           </div>
 
           <div className="p-3.5 rounded-3xl border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 dark:border-white/[0.07] shadow-xs">
-            <div className="text-[9px] uppercase tracking-widest text-[#696256] dark:text-[#8E887E] font-bold">Karana (करण)</div>
-            <div className="font-bold text-sm text-[#181512] dark:text-[#F5F2EB] mt-1">{panchangData.karana.name}</div>
-            <div className="text-[11px] text-[#4A443B] dark:text-[#C4BEB3] mt-0.5 font-medium">Half Lunar Arc</div>
+            <div className="text-[9px] uppercase tracking-widest text-[#696256] dark:text-[#8E887E] font-bold">
+              {isHi ? 'करण' : 'Karana (करण)'}
+            </div>
+            <div className="font-bold text-sm text-[#181512] dark:text-[#F5F2EB] mt-1">{karanaName}</div>
+            <div className="text-[11px] text-[#4A443B] dark:text-[#C4BEB3] mt-0.5 font-medium">
+              {isHi ? 'अर्ध तिथि काल' : 'Half Lunar Arc'}
+            </div>
           </div>
 
           <div className="p-3.5 rounded-3xl border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 dark:border-white/[0.07] shadow-xs">
-            <div className="text-[9px] uppercase tracking-widest text-[#696256] dark:text-[#8E887E] font-bold">Moon (चन्द्र कला)</div>
-            <div className="font-bold text-xs text-[#181512] dark:text-[#F5F2EB] mt-1 truncate" title={panchangData.moon.phase}>{panchangData.moon.phase}</div>
-            <div className="text-[11px] text-[#3D3D99] dark:text-[#9E9EF8] mt-0.5 font-bold">{panchangData.moon.illumination}% Illum.</div>
+            <div className="text-[9px] uppercase tracking-widest text-[#696256] dark:text-[#8E887E] font-bold">
+              {isHi ? 'चन्द्र कला' : 'Moon (चन्द्र कला)'}
+            </div>
+            <div className="font-bold text-xs text-[#181512] dark:text-[#F5F2EB] mt-1 truncate" title={moonPhase}>{moonPhase}</div>
+            <div className="text-[11px] text-[#3D3D99] dark:text-[#9E9EF8] mt-0.5 font-bold">
+              {isHi ? `${moonIllum}% प्रकाश` : `${moonIllum}% Illum.`}
+            </div>
           </div>
 
           <div className="p-3.5 rounded-3xl border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 dark:border-white/[0.07] shadow-xs">
-            <div className="text-[9px] uppercase tracking-widest text-[#696256] dark:text-[#8E887E] font-bold">Yamaganda (यमगण्ड)</div>
-            <div className="font-bold text-xs text-[#181512] dark:text-[#F5F2EB] mt-1">{panchangData.timings.yamaganda}</div>
-            <div className="text-[10px] text-[#821322] dark:text-[#f87171] mt-0.5 font-bold">Secondary Caution</div>
+            <div className="text-[9px] uppercase tracking-widest text-[#696256] dark:text-[#8E887E] font-bold">
+              {isHi ? 'यमगण्ड' : 'Yamaganda (यमगण्ड)'}
+            </div>
+            <div className="font-bold text-xs text-[#181512] dark:text-[#F5F2EB] mt-1">{yamaganda}</div>
+            <div className="text-[10px] text-[#821322] dark:text-[#f87171] mt-0.5 font-bold">
+              {isHi ? 'गौण वर्ज्य काल' : 'Secondary Caution'}
+            </div>
           </div>
         </div>
 
@@ -222,14 +339,16 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
             <div className="flex items-center justify-between border-b border-black/[0.08] dark:border-white/[0.08] pb-3">
               <div className="flex items-center gap-2">
                 <Flame className="w-4 h-4 text-[#A6461D] dark:text-[#F0A554]" />
-                <span className="font-editorial text-base font-bold text-[#181512] dark:text-[#F5F2EB]">CosmicTantra Kashi Daily Card</span>
+                <span className="font-editorial text-base font-bold text-[#181512] dark:text-[#F5F2EB]">
+                  {isHi ? 'CosmicTantra काशी दैनिक पञ्चाङ्ग' : 'CosmicTantra Kashi Daily Card'}
+                </span>
               </div>
               <button 
                 onClick={() => {
                   chitiSensory.playTick();
                   setShowShareModal(false);
                 }}
-                className="p-1 rounded text-[#696256] dark:text-[#8E887E] hover:opacity-100"
+                className="p-1 rounded text-[#696256] dark:text-[#8E887E] hover:opacity-100 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -241,22 +360,22 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
                 ॥ श्री काशी विश्वनाथ ॥
               </div>
               <div className="font-editorial text-2xl font-bold text-[#181512] dark:text-[#F5F2EB]">
-                {panchangData.tithi.fullName}
+                {isHi ? `${tithiPaksha} ${tithiName}` : panchangData.tithi.fullName}
               </div>
               <div className="text-xs text-[#3D3D99] dark:text-[#9E9EF8] font-bold">
-                नक्षत्र: {panchangData.nakshatra.name} (Pada {panchangData.nakshatra.pada})
+                {isHi ? `नक्षत्र: ${nakshatraName} (पाद ${pada})` : `Nakshatra: ${nakshatraName} (Pada ${pada})`}
               </div>
 
               <div className="grid grid-cols-2 gap-2 text-xs py-2 border-y border-black/[0.08] dark:border-white/[0.08] text-left text-[#4A443B] dark:text-[#C4BEB3]">
-                <div><span>स्थान (City):</span> <strong className="text-[#181512] dark:text-[#F5F2EB]">{panchangData.city}</strong></div>
-                <div><span>सूर्योदय (Sunrise):</span> <strong className="text-[#A6461D] dark:text-[#F0A554]">{panchangData.sun.sunrise}</strong></div>
-                <div><span>राहुकाल (Rahu Kaal):</span> <strong className="text-[#821322] dark:text-[#fca5a5]">{panchangData.timings.rahuKalam}</strong></div>
-                <div><span>अभिजित (Abhijit):</span> <strong className="text-[#094A2D] dark:text-[#34d399]">{panchangData.timings.abhijitMuhurat}</strong></div>
+                <div><span>{isHi ? 'स्थान:' : 'City:'}</span> <strong className="text-[#181512] dark:text-[#F5F2EB]">{isHi ? (panchangData.cityHi || panchangData.city) : panchangData.city}</strong></div>
+                <div><span>{isHi ? 'सूर्योदय:' : 'Sunrise:'}</span> <strong className="text-[#A6461D] dark:text-[#F0A554]">{sunrise}</strong></div>
+                <div><span>{isHi ? 'राहुकाल:' : 'Rahu Kaal:'}</span> <strong className="text-[#821322] dark:text-[#fca5a5]">{rahuKalam}</strong></div>
+                <div><span>{isHi ? 'अभिजित:' : 'Abhijit:'}</span> <strong className="text-[#094A2D] dark:text-[#34d399]">{abhijitMuhurat}</strong></div>
               </div>
 
               <div className="flex items-center justify-between text-[9px] text-[#696256] dark:text-[#8E887E] pt-1">
                 <span>cosmictantra.com</span>
-                <span>Chitra Paksha Sidereal Ephemeris</span>
+                <span>{isHi ? 'चित्रा पक्षीय निरयण पञ्चाङ्ग' : 'Chitra Paksha Sidereal Ephemeris'}</span>
               </div>
             </div>
 
@@ -264,35 +383,38 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
               <button
                 onClick={() => {
                   chitiSensory.playTick();
-                  const shareText = `✨ CosmicTantra Kashi Panchang (${panchangData.city})\n• Tithi: ${panchangData.tithi.fullName}\n• Nakshatra: ${panchangData.nakshatra.name}\n• Rahu Kaal: ${panchangData.timings.rahuKalam}\n• Abhijit Muhurat: ${panchangData.timings.abhijitMuhurat}\n\nSee full Vedic ephemeris: https://cosmictantra.chiti.tech`;
+                  const shareText = isHi
+                    ? `✨ CosmicTantra काशी पञ्चाङ्ग (${panchangData.cityHi || panchangData.city})\n• तिथि: ${tithiPaksha} ${tithiName}\n• नक्षत्र: ${nakshatraName}\n• राहु काल: ${rahuKalam}\n• अभिजित मुहूर्त: ${abhijitMuhurat}\n\nसम्पूर्ण निरयण पञ्चाङ्ग देखें: https://cosmictantra.chiti.tech`
+                    : `✨ CosmicTantra Kashi Panchang (${panchangData.city})\n• Tithi: ${panchangData.tithi.fullName}\n• Nakshatra: ${panchangData.nakshatra.name}\n• Rahu Kaal: ${panchangData.timings.rahuKalam}\n• Abhijit Muhurat: ${panchangData.timings.abhijitMuhurat}\n\nSee full Vedic ephemeris: https://cosmictantra.chiti.tech`;
                   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, '_blank');
                   setShowShareModal(false);
                 }}
-                className="flex-1 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#1EBE57] text-white font-bold text-xs uppercase transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+                className="flex-1 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#1EBE57] text-white font-bold text-xs uppercase transition-colors flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
               >
-                <span>Share on WhatsApp</span>
+                <span>{isHi ? 'व्हाट्सएप पर साझा करें' : 'Share on WhatsApp'}</span>
               </button>
               <button
                 onClick={() => {
                   chitiSensory.playTick();
-                  navigator.clipboard.writeText(
-                    `✨ CosmicTantra Kashi Vedic Time (${panchangData.city})\n• Tithi: ${panchangData.tithi.fullName}\n• Nakshatra: ${panchangData.nakshatra.name}\n• Rahu Kaal: ${panchangData.timings.rahuKalam}\n• Abhijit: ${panchangData.timings.abhijitMuhurat}\nhttps://cosmictantra.chiti.tech`
-                  );
-                  alert('Vedic daily card copied to clipboard!');
+                  const shareText = isHi
+                    ? `✨ CosmicTantra काशी वैदिक समय (${panchangData.cityHi || panchangData.city})\n• तिथि: ${tithiPaksha} ${tithiName}\n• नक्षत्र: ${nakshatraName}\n• राहु काल: ${rahuKalam}\n• अभिजित: ${abhijitMuhurat}\nhttps://cosmictantra.chiti.tech`
+                    : `✨ CosmicTantra Kashi Vedic Time (${panchangData.city})\n• Tithi: ${panchangData.tithi.fullName}\n• Nakshatra: ${panchangData.nakshatra.name}\n• Rahu Kaal: ${panchangData.timings.rahuKalam}\n• Abhijit: ${panchangData.timings.abhijitMuhurat}\nhttps://cosmictantra.chiti.tech`;
+                  navigator.clipboard.writeText(shareText);
+                  alert(isHi ? 'दैनिक पञ्चाङ्ग कार्ड कॉपी हो गया!' : 'Vedic daily card copied to clipboard!');
                   setShowShareModal(false);
                 }}
-                className="px-3.5 py-2.5 rounded-xl bg-[#826315] dark:bg-[#D4AF37] text-white dark:text-[#060709] font-bold text-xs uppercase hover:bg-[#965B18] dark:hover:bg-[#E5C378] transition-colors"
+                className="px-3.5 py-2.5 rounded-xl bg-[#826315] dark:bg-[#D4AF37] text-white dark:text-[#060709] font-bold text-xs uppercase hover:bg-[#965B18] dark:hover:bg-[#E5C378] transition-colors cursor-pointer"
               >
-                Copy Text
+                {isHi ? 'कॉपी करें' : 'Copy Text'}
               </button>
               <button
                 onClick={() => {
                   chitiSensory.playTick();
                   setShowShareModal(false);
                 }}
-                className="px-4 py-2.5 rounded-lg bg-[#FAF7F2] dark:bg-[#101322] border border-black/[0.1] dark:border-white/[0.08] text-xs text-[#181512] dark:text-[#F5F2EB] font-bold"
+                className="px-4 py-2.5 rounded-lg bg-[#FAF7F2] dark:bg-[#101322] border border-black/[0.1] dark:border-white/[0.08] text-xs text-[#181512] dark:text-[#F5F2EB] font-bold cursor-pointer"
               >
-                Close
+                {isHi ? 'बन्द करें' : 'Close'}
               </button>
             </div>
           </div>
@@ -301,3 +423,4 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
     </section>
   );
 }
+

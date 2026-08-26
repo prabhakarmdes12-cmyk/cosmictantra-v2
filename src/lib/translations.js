@@ -58,7 +58,8 @@ export const TRANSLATIONS = {
       rahuKaal: 'Rahu Kaal',
       abhijit: 'Abhijit',
       viewAllTimes: 'Panchang →',
-      ephemerisStamp: 'Sidereal Ephemeris'
+      ephemerisStamp: 'Sidereal Ephemeris',
+      viewMethodology: 'View methodology →'
     },
     panchang: {
       tag: 'Kashi Panchang • Diurnal Ephemeris',
@@ -337,7 +338,8 @@ export const TRANSLATIONS = {
       rahuKaal: 'राहुकाल',
       abhijit: 'अभिजित',
       viewAllTimes: 'सम्पूर्ण पञ्चाङ्ग →',
-      ephemerisStamp: 'निरयण पञ्चाङ्ग'
+      ephemerisStamp: 'निरयण पञ्चाङ्ग',
+      viewMethodology: 'गणना पद्धति देखें →'
     },
     panchang: {
       tag: 'काशीय पञ्चाङ्ग • अहोरात्र खगोल',

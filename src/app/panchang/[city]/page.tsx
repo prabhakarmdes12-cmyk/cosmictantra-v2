@@ -69,6 +69,15 @@ export default function CityPanchangPage({ params }: { params: { city: string } 
               </div>
             ))}
           </div>
+
+          <div className="mt-6 pt-4 border-t border-black/10 dark:border-white/10 text-center">
+            <Link
+              href="/calendar"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#060709] font-bold text-xs font-mono-data hover:shadow-lg transition-all"
+            >
+              <span>📅 सम्पूर्ण मासिक वैदिक कैलेंडर व पॉवर डेज़ देखें (Full Month Calendar) →</span>
+            </Link>
+          </div>
         </div>
 
         <div className="flex flex-wrap justify-center gap-2">

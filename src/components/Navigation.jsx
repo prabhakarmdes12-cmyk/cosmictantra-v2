@@ -1,5 +1,8 @@
+'use client';
+
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Search, MapPin, Shield, Menu, X, ArrowUpRight, Sun, Moon, Languages, Compass } from 'lucide-react';
 import { analytics, ANALYTICS_EVENTS } from '../lib/analytics';
 import { TRANSLATIONS } from '../lib/translations';
@@ -11,7 +14,7 @@ import { chitiSensory } from '../lib/chitiAudio';
   { href: '/numerology/mobile-number', label: 'Mobile Number' },
   { href: '/numerology/baby-names', label: 'Baby Names' },
   { href: '/kundali-milan', label: 'Kundali Milan' },
-  { href: '/my-calendar', label: 'My Vedic Calendar' },
+  { href: '/calendar', label: 'Monthly Vedic Calendar' },
   { href: '/family', label: 'Family Profiles' },
   { href: '/profile', label: 'Cosmic ID + Profile' },
   { href: '/daily', label: 'Daily Cosmic Forecast' },
@@ -36,12 +39,26 @@ export default function Navigation({
   lang,
   onToggleLang
 }) {
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [exploreOpen, setExploreOpen] = useState(false);
   const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
+
+  const handleExploreNav = (href) => {
+    chitiSensory.playTick();
+    setExploreOpen(false);
+    setMobileMenuOpen(false);
+    if (typeof window !== 'undefined') {
+      window.location.href = href;
+    }
+  };
+
 
   const handleNavClick = (sectionId, label) => {
     chitiSensory.playTick();
     setMobileMenuOpen(false);
+    setExploreOpen(false);
+
     analytics.track(ANALYTICS_EVENTS.INTENT_SELECTED, { intent: label });
     const el = document.getElementById(sectionId);
     if (el) {
@@ -60,7 +77,7 @@ export default function Navigation({
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-black/[0.1] dark:border-white/[0.08] bg-[#F8F5EE]/95 dark:bg-[#060709]/95 backdrop-blur-md transition-colors duration-250">
+    <header className="sticky top-0 z-50 w-full border-b border-black/[0.1] dark:border-white/[0.08] bg-[#F8F5EE]/95 dark:bg-[#060709]/95 backdrop-blur-md shadow-xs transition-colors duration-250">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2 sm:gap-4 relative">
         
         {/* Left Section: Primary Desktop Nav & Mobile Menu Toggle */}
@@ -71,103 +88,193 @@ export default function Navigation({
               chitiSensory.playTick();
               setMobileMenuOpen(!mobileMenuOpen);
             }}
-            className="lg:hidden p-2 rounded-lg border border-black/[0.12] dark:border-white/[0.12] bg-[#FFFFFF] dark:bg-[#0D0F18] text-[#181512] dark:text-[#F5F2EB] shrink-0"
+            className="lg:hidden p-2 rounded-lg border border-black/[0.12] dark:border-white/[0.12] bg-[#FFFFFF] dark:bg-[#0D0F18] text-[#181512] dark:text-[#F5F2EB] shrink-0 cursor-pointer"
             aria-label="Open navigation menu"
           >
             {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           </button>
 
-          {/* Primary Desktop Nav Links (4 Core Items + Explore Dropdown) */}
-          <nav className="hidden lg:flex items-center gap-4 xl:gap-6 text-xs font-mono-data tracking-wider uppercase text-[#332E27] dark:text-[#EAE6DF] font-bold">
+          {/* Primary Desktop Nav Links (Core Items + Explore Dropdown) */}
+          <nav className="hidden lg:flex items-center gap-3.5 xl:gap-5 text-xs font-mono-data tracking-wider uppercase text-[#332E27] dark:text-[#EAE6DF] font-bold">
+            <Link
+              href="/daily"
+              onClick={() => chitiSensory.playTick()}
+              className="text-[#826315] dark:text-[#F0C968] hover:underline transition-colors py-1 flex items-center gap-1 font-bold"
+            >
+              <span>{lang === 'hi' ? 'दैनिक राशिफल' : '72h Forecast'}</span>
+            </Link>
+            <Link
+              href="/calendar"
+              data-testid="nav-desktop-calendar"
+              onClick={() => chitiSensory.playTick()}
+              className="text-[#826315] dark:text-[#F0C968] hover:underline transition-colors py-1 flex items-center gap-1 font-bold"
+            >
+              <span>{lang === 'hi' ? 'मासिक कैलेंडर' : 'Monthly Calendar'}</span>
+            </Link>
+            <Link
+              href="/family-panchang"
+              onClick={() => chitiSensory.playTick()}
+              className="hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1"
+            >
+              {lang === 'hi' ? 'परिवार' : 'Parivaar'}
+            </Link>
             <button 
               onClick={() => handleNavClick('panchang-section', 'TODAY_PANCHANG')}
-              className="hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none"
+              className="hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none cursor-pointer"
             >
               {t.nav.today}
             </button>
             <button 
               onClick={() => handleNavClick('muhurat-section', 'MUHURAT')}
-              className="hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none"
+              className="hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none cursor-pointer"
             >
               {t.nav.muhurat}
             </button>
             <button 
               onClick={() => handleNavClick('kundali-section', 'KUNDALI')}
-              className="hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none"
+              className="hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none cursor-pointer"
             >
               {t.nav.kundali}
             </button>
-            <button 
-              onClick={() => handleNavClick('practitioners-section', 'JYOTISHI')}
-              className="hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none"
-            >
-              {t.nav.jyotishi || 'Jyotishi'}
-            </button>
 
             {/* Explore ▾ Dropdown */}
-            <div className="relative group">
-              <button className="flex items-center gap-1 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none">
+            <div className="relative">
+              <button 
+                onClick={() => setExploreOpen(!exploreOpen)}
+                className="flex items-center gap-1 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors py-1 focus:outline-none cursor-pointer"
+                aria-expanded={exploreOpen}
+              >
                 <span>{t.nav.explore || 'Explore'}</span>
                 <span className="text-[9px] opacity-70">▾</span>
               </button>
-              <div className="absolute left-0 top-full pt-2.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                <div className="w-56 p-2 rounded-xl border border-[#826315]/25 dark:border-[#D4AF37]/30 bg-[#FFFFFF] dark:bg-[#0B0D14] shadow-2xl space-y-0.5">
-                  <button
-                    onClick={() => handleNavClick('dasha-section', 'DASHA')}
-                    className="w-full text-left px-3 py-1.5 rounded-lg text-[11px] font-bold text-[#332E27] dark:text-[#EAE6DF] hover:bg-[#D4AF37]/10 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors"
+
+              {exploreOpen && (
+                <>
+                  {/* Invisible backdrop to catch clicks outside without interrupting inner clicks */}
+                  <div 
+                    className="fixed inset-0 z-40 bg-transparent" 
+                    onClick={() => setExploreOpen(false)} 
+                  />
+                  <div 
+                    className="absolute left-0 top-full pt-1 z-50 w-64"
                   >
-                    {t.nav.dasha} Chapters
-                  </button>
-                  <button
-                    onClick={() => handleNavClick('festival-section', 'FESTIVALS')}
-                    className="w-full text-left px-3 py-1.5 rounded-lg text-[11px] font-bold text-[#332E27] dark:text-[#EAE6DF] hover:bg-[#D4AF37]/10 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors"
-                  >
-                    {t.nav.festivals}
-                  </button>
-                  <Link
-                    href="/kundali-milan"
-                    className="block px-3 py-1.5 rounded-lg text-[11px] font-bold text-[#332E27] dark:text-[#EAE6DF] hover:bg-[#D4AF37]/10 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors"
-                  >
-                    {t.nav.milan || 'Kundali Milan'}
-                  </Link>
-                  <Link
-                    href="/numerology/name"
-                    className="block px-3 py-1.5 rounded-lg text-[11px] font-bold text-[#332E27] dark:text-[#EAE6DF] hover:bg-[#D4AF37]/10 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors"
-                  >
-                    {t.nav.numerology || 'Numerology'}
-                  </Link>
-                  <button
-                    onClick={() => handleNavClick('swarga-lok-section', 'SWARGA_LOK')}
-                    className="w-full text-left px-3 py-1.5 rounded-lg text-[11px] font-bold text-[#826315] dark:text-[#F0C968] hover:bg-[#D4AF37]/10 transition-colors"
-                  >
-                    {t.nav.observatory} (3D)
-                  </button>
-                  <button
-                    onClick={() => handleNavClick('methodology-section', 'METHODOLOGY')}
-                    className="w-full text-left px-3 py-1.5 rounded-lg text-[11px] font-bold text-[#332E27] dark:text-[#EAE6DF] hover:bg-[#D4AF37]/10 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors"
-                  >
-                    {t.nav.methodology || 'Methodology'}
-                  </button>
-                </div>
-              </div>
+                    <div className="rounded-xl border border-[#826315]/25 dark:border-[#D4AF37]/30 bg-[#FFFFFF] dark:bg-[#0B0D14] shadow-2xl p-2 space-y-0.5 max-h-[80vh] overflow-y-auto">
+                      <button
+                        onClick={() => handleExploreNav('/calendar')}
+                        className="w-full text-left block px-3 py-2 rounded-lg text-xs font-bold text-[#826315] dark:text-[#F0C968] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
+                      >
+                        📅 Monthly Vedic Calendar
+                      </button>
+                      <button
+                        onClick={() => handleExploreNav('/daily')}
+                        className="w-full text-left block px-3 py-2 rounded-lg text-xs font-bold text-[#826315] dark:text-[#F0C968] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
+                      >
+                        🔮 72h Forecast & Transits
+                      </button>
+                      <button
+                        onClick={() => handleExploreNav('/family-panchang')}
+                        className="w-full text-left block px-3 py-2 rounded-lg text-xs font-bold text-[#332E27] dark:text-[#EAE6DF] hover:bg-[#D4AF37]/10 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors cursor-pointer"
+                      >
+                        👥 Parivaar Family Panchang
+                      </button>
+                      <button
+                        onClick={() => handleExploreNav('/dashboard')}
+                        className="w-full text-left block px-3 py-2 rounded-lg text-xs font-bold text-[#332E27] dark:text-[#EAE6DF] hover:bg-[#D4AF37]/10 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors cursor-pointer"
+                      >
+                        🏛️ Scholar’s Desk (Kundali)
+                      </button>
+                      <button
+                        onClick={() => handleExploreNav('/report')}
+                        className="w-full text-left block px-3 py-2 rounded-lg text-xs font-bold text-[#332E27] dark:text-[#EAE6DF] hover:bg-[#D4AF37]/10 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors cursor-pointer"
+                      >
+                        📜 Written Folio Archive
+                      </button>
+                      <button
+                        onClick={() => handleNavClick('dasha-section', 'DASHA')}
+                        className="w-full text-left px-3 py-2 rounded-lg text-xs font-bold text-[#332E27] dark:text-[#EAE6DF] hover:bg-[#D4AF37]/10 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors cursor-pointer"
+                      >
+                        {t.nav.dasha} Chapters
+                      </button>
+                      <button
+                        onClick={() => handleNavClick('festival-section', 'FESTIVALS')}
+                        className="w-full text-left px-3 py-2 rounded-lg text-xs font-bold text-[#332E27] dark:text-[#EAE6DF] hover:bg-[#D4AF37]/10 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors cursor-pointer"
+                      >
+                        {t.nav.festivals}
+                      </button>
+                      <button
+                        onClick={() => handleExploreNav('/kundali-milan')}
+                        className="w-full text-left block px-3 py-2 rounded-lg text-xs font-bold text-[#332E27] dark:text-[#EAE6DF] hover:bg-[#D4AF37]/10 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors cursor-pointer"
+                      >
+                        💍 Kundali Milan
+                      </button>
+                      <button
+                        onClick={() => handleExploreNav('/numerology/name')}
+                        className="w-full text-left block px-3 py-2 rounded-lg text-xs font-bold text-[#332E27] dark:text-[#EAE6DF] hover:bg-[#D4AF37]/10 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors cursor-pointer"
+                      >
+                        🔢 Chaldean Numerology
+                      </button>
+
+                      <button
+                        onClick={() => handleExploreNav('/aarti-stotra')}
+                        className="w-full text-left block px-3 py-2 rounded-lg text-xs font-bold text-[#332E27] dark:text-[#EAE6DF] hover:bg-[#D4AF37]/10 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors cursor-pointer"
+                      >
+                        🪔 Aarti & Stotra Library
+                      </button>
+                      <button
+                        onClick={() => handleExploreNav('/upaya')}
+                        className="w-full text-left block px-3 py-2 rounded-lg text-xs font-bold text-[#332E27] dark:text-[#EAE6DF] hover:bg-[#D4AF37]/10 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors cursor-pointer"
+                      >
+                        💎 Planetary Upaya Studio
+                      </button>
+                      <button
+                        onClick={() => handleExploreNav('/remedy-tracker')}
+                        className="w-full text-left block px-3 py-2 rounded-lg text-xs font-bold text-[#332E27] dark:text-[#EAE6DF] hover:bg-[#D4AF37]/10 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors cursor-pointer"
+                      >
+                        📿 Daily Japa Tracker
+                      </button>
+                      <button
+                        onClick={() => handleExploreNav('/darshan')}
+                        className="w-full text-left block px-3 py-2 rounded-lg text-xs font-bold text-[#332E27] dark:text-[#EAE6DF] hover:bg-[#D4AF37]/10 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors cursor-pointer"
+                      >
+                        🌸 Live Kashi Darshan
+                      </button>
+                      <button
+                        onClick={() => handleNavClick('swarga-lok-section', 'SWARGA_LOK')}
+                        className="w-full text-left px-3 py-2 rounded-lg text-xs font-bold text-[#826315] dark:text-[#F0C968] hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
+                      >
+                        {t.nav.observatory} (3D)
+                      </button>
+                      <button
+                        onClick={() => handleNavClick('methodology-section', 'METHODOLOGY')}
+                        className="w-full text-left px-3 py-2 rounded-lg text-xs font-bold text-[#332E27] dark:text-[#EAE6DF] hover:bg-[#D4AF37]/10 hover:text-[#826315] dark:hover:text-[#F0C968] transition-colors cursor-pointer"
+                      >
+                        {t.nav.methodology || 'Methodology'}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
+
           </nav>
         </div>
 
+
+
         {/* Center: Prominent Brand Anchor (Centered & Slightly Bigger) */}
         <div className="flex items-center justify-center shrink-0">
-          <a 
-            href="#" 
+          <Link 
+            href="/" 
             className="focus:outline-none flex items-center justify-center"
-            onClick={(e) => {
-              e.preventDefault();
+            onClick={() => {
               chitiSensory.playTick();
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
           >
             <CosmicTantraLogo subtitle={t.brandSubtitle} size="lg" />
-          </a>
+          </Link>
         </div>
+
 
         {/* Right Section: Language, Theme, Location, Search, and Primary CTA */}
         <div className="flex items-center gap-1.5 sm:gap-2 flex-1 justify-end shrink-0">
@@ -266,6 +373,36 @@ export default function Navigation({
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-xs font-mono-data uppercase tracking-wider font-bold">
+            <Link 
+              href="/daily" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="col-span-2 text-left px-3.5 py-3 rounded-xl bg-[#826315] dark:bg-[#D4AF37] text-white dark:text-[#060709] font-bold shadow-sm flex items-center justify-between"
+            >
+              <span>🔮 72h Forecast & Transits</span>
+              <span>→</span>
+            </Link>
+            <Link 
+              href="/calendar" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="col-span-2 text-left px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] dark:bg-[#161928] text-[#826315] dark:text-[#F0C968] border border-[#826315]/30 dark:border-[#D4AF37]/30 font-bold shadow-xs flex items-center justify-between"
+            >
+              <span>📅 Monthly Vedic Calendar (पॉवर डेज़)</span>
+              <span>→</span>
+            </Link>
+            <Link 
+              href="/family-panchang" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-left px-3 py-2.5 rounded-lg bg-white dark:bg-[#111320] text-[#181512] dark:text-[#F5F2EB] border border-black/[0.08] dark:border-white/[0.06]"
+            >
+              👥 Parivaar
+            </Link>
+            <Link 
+              href="/dashboard" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-left px-3 py-2.5 rounded-lg bg-white dark:bg-[#111320] text-[#181512] dark:text-[#F5F2EB] border border-black/[0.08] dark:border-white/[0.06]"
+            >
+              🏛️ Scholar Desk
+            </Link>
             <button 
               onClick={() => handleNavClick('panchang-section', 'TODAY')}
               className="text-left px-3 py-2.5 rounded-lg bg-white dark:bg-[#111320] text-[#181512] dark:text-[#F5F2EB] border border-black/[0.08] dark:border-white/[0.06]"
@@ -290,38 +427,39 @@ export default function Navigation({
             >
               {t.nav.dashaChapters}
             </button>
-            <button 
-              onClick={() => handleNavClick('festival-section', 'FESTIVALS')}
-              className="text-left px-3 py-2.5 rounded-lg bg-white dark:bg-[#111320] text-[#181512] dark:text-[#F5F2EB] border border-black/[0.08] dark:border-white/[0.06]"
-            >
-              {t.nav.vedicCalendar}
-            </button>
-            <button 
-              onClick={() => handleNavClick('practitioners-section', 'JYOTISHI')}
-              className="text-left px-3 py-2.5 rounded-lg bg-white dark:bg-[#111320] text-[#181512] dark:text-[#F5F2EB] border border-black/[0.08] dark:border-white/[0.06]"
-            >
-              {t.nav.practicingScholars}
-            </button>
+            <Link href="/report" onClick={() => setMobileMenuOpen(false)}
+              className="text-left px-3 py-2.5 rounded-lg bg-white dark:bg-[#111320] text-[#181512] dark:text-[#F5F2EB] border border-black/[0.08] dark:border-white/[0.06]">
+              📜 Written Folio
+            </Link>
             <Link href="/kundali-milan" onClick={() => setMobileMenuOpen(false)}
               className="text-left px-3 py-2.5 rounded-lg bg-white dark:bg-[#111320] text-[#181512] dark:text-[#F5F2EB] border border-black/[0.08] dark:border-white/[0.06]">
-              Kundali Milan
+              💍 Milan
+            </Link>
+            <Link href="/aarti-stotra" onClick={() => setMobileMenuOpen(false)}
+              className="text-left px-3 py-2.5 rounded-lg bg-white dark:bg-[#111320] text-[#181512] dark:text-[#F5F2EB] border border-black/[0.08] dark:border-white/[0.06]">
+              🪔 Aarti Library
+            </Link>
+            <Link href="/upaya" onClick={() => setMobileMenuOpen(false)}
+              className="text-left px-3 py-2.5 rounded-lg bg-white dark:bg-[#111320] text-[#181512] dark:text-[#F5F2EB] border border-black/[0.08] dark:border-white/[0.06]">
+              💎 Upaya Studio
+            </Link>
+            <Link href="/remedy-tracker" onClick={() => setMobileMenuOpen(false)}
+              className="text-left px-3 py-2.5 rounded-lg bg-white dark:bg-[#111320] text-[#181512] dark:text-[#F5F2EB] border border-black/[0.08] dark:border-white/[0.06]">
+              📿 Japa Tracker
             </Link>
             <Link href="/numerology/name" onClick={() => setMobileMenuOpen(false)}
               className="text-left px-3 py-2.5 rounded-lg bg-white dark:bg-[#111320] text-[#181512] dark:text-[#F5F2EB] border border-black/[0.08] dark:border-white/[0.06]">
-              Numerology
-            </Link>
-            <Link href="/my-calendar" onClick={() => setMobileMenuOpen(false)}
-              className="text-left px-3 py-2.5 rounded-lg bg-white dark:bg-[#111320] text-[#181512] dark:text-[#F5F2EB] border border-black/[0.08] dark:border-white/[0.06]">
-              My Calendar
+              🔢 Numerology
             </Link>
             <Link href="/darshan" onClick={() => setMobileMenuOpen(false)}
               className="text-left px-3 py-2.5 rounded-lg bg-white dark:bg-[#111320] text-[#181512] dark:text-[#F5F2EB] border border-black/[0.08] dark:border-white/[0.06]">
-              Live Darshan
+              🌸 Live Darshan
             </Link>
-            <Link href="/library" onClick={() => setMobileMenuOpen(false)}
+            <Link href="/presentation" onClick={() => setMobileMenuOpen(false)}
               className="text-left px-3 py-2.5 rounded-lg bg-white dark:bg-[#111320] text-[#181512] dark:text-[#F5F2EB] border border-black/[0.08] dark:border-white/[0.06]">
-              Vedic Library
+              📜 Scholar Deck
             </Link>
+
           </div>
 
           <div className="pt-2 flex flex-col gap-2">

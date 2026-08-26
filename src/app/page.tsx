@@ -9,7 +9,7 @@ import { analytics, ANALYTICS_EVENTS } from '@/lib/analytics';
 import dynamic from 'next/dynamic';
 
 // Primary Above-the-Fold Components (Eager)
-import Navigation from '@/components/Navigation';
+import GlobalHeader from '@/components/layout/GlobalHeader';
 import PersonalisationBridge from '@/components/PersonalisationBridge';
 import HeroSection from '@/components/HeroSection';
 import TodayAtAGlance from '@/components/TodayAtAGlance';
@@ -126,17 +126,14 @@ export default function AppLandingPage() {
     <div className="min-h-screen flex flex-col bg-[#FAF7F2] dark:bg-[#07080C] text-[#1C1917] dark:text-[#EFECE6] selection:bg-[#D4AF37]/30 selection:text-black dark:selection:text-white transition-colors duration-300">
       
       {/* 1. Global Consumer Navigation with Theme & Language Toggles */}
-      <Navigation
+      <GlobalHeader
         currentCity={currentCity}
         onOpenCitySelector={() => setIsCityModalOpen(true)}
-        onOpenSearch={() => setIsSearchModalOpen(true)}
         onOpenConsultation={() => handleOpenConsultation()}
-        onOpenCapabilityModal={() => setIsCapabilityModalOpen(true)}
-        activeProfile={kundaliData}
         theme={theme}
-        onToggleTheme={handleToggleTheme}
+        onThemeToggle={handleToggleTheme}
         lang={lang}
-        onToggleLang={handleToggleLang}
+        onLangToggle={handleToggleLang}
       />
 
       {/* 2. Personalisation Bridge */}
