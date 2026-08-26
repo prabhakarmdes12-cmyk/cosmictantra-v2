@@ -16,7 +16,7 @@ import {
 import { localSiderealTime, projectStar, SiderealTime } from '../src/lib/astronomy/projection';
 import { STARS } from '../src/lib/astronomy/stars';
 import { getCelestialDetail, getConstellationDetail, parseCelestialSelection, PLANET_DETAILS } from '../src/lib/astronomy/celestialCatalog';
-import { altitudeBand, calculateMoonPhase, calculateSolarDayEvents, compassDirection, skyLightState, summarizeObservations } from '../src/lib/astronomy/observation';
+import { altitudeBand, angularSeparationDeg, calculateMoonPhase, calculateSolarDayEvents, compassDirection, findNextHorizonEvent, planObservation, skyLightState, summarizeObservations } from '../src/lib/astronomy/observation';
 import { applyViewportTransform, clampViewportTransform, DEFAULT_VIEWPORT_TRANSFORM, zoomViewportAt } from '../src/lib/astronomy/viewTransform';
 import { localEphemerisResult } from '../src/lib/astronomy/providers/localApproximation';
 import { compareWithReference, findReferenceObservation, MISSING_REFERENCE_FIXTURE_STATUS, parseReferenceFixture, referenceFixtureStatus } from '../src/lib/astronomy/providers/referenceFixture';
@@ -183,6 +183,25 @@ test.describe('Observatory coordinate and ephemeris invariants', () => {
     expect(phase.fraction).toBeLessThan(1);
     expect(phase.illumination).toBeGreaterThanOrEqual(0);
     expect(phase.illumination).toBeLessThanOrEqual(1);
+  });
+
+  test('the observation planner provides bounded physical-body windows and node exceptions', () => {
+    const observer = { latitude: 25.3176, longitude: 82.9739 };
+    const sun = planObservation(instant, observer, 'Sun');
+    const rahu = planObservation(instant, observer, 'Rahu');
+    expect(sun.body.body).toBe('Sun');
+    expect(sun.nextHorizonEvent).not.toBeNull();
+    expect(sun.nextHorizonEvent?.approximate).toBe(true);
+    expect(sun.nextHorizonEvent?.time.getTime()).toBeGreaterThanOrEqual(instant.getTime());
+    expect(rahu.horizontal).toBeNull();
+    expect(rahu.direction).toBeNull();
+    expect(rahu.nextHorizonEvent).toBeNull();
+    expect(rahu.lunarSeparationDeg).toBeNull();
+    expect(sun.nextHorizonEvent?.kind).toBe('rise');
+    expect(angularSeparationDeg(sun.body, sun.body)).toBeCloseTo(0, 8);
+    expect(angularSeparationDeg({ rightAscensionHours: 0, declinationDeg: 0 }, { rightAscensionHours: 12, declinationDeg: 0 })).toBeCloseTo(180, 8);
+    expect(angularSeparationDeg({ rightAscensionHours: 23.9, declinationDeg: 0 }, { rightAscensionHours: 0.1, declinationDeg: 0 })).toBeCloseTo(3, 8);
+    expect(findNextHorizonEvent(instant, observer, 'Ketu')).toBeNull();
   });
 
   test('local ephemeris adapts to the shared provenance contract', () => {

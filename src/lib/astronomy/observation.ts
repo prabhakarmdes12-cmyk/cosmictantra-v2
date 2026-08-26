@@ -44,6 +44,26 @@ export interface ObservationSummary {
   altitudeBand: 'high' | 'usable' | 'near horizon' | 'below horizon';
 }
 
+export type HorizonEventKind = 'rise' | 'set';
+
+export interface ApproximateHorizonEvent {
+  body: CanonicalBodyName;
+  kind: HorizonEventKind;
+  time: Date;
+  thresholdDeg: number;
+  approximate: true;
+}
+
+export interface ObservationPlan {
+  body: CanonicalBody;
+  horizontal: HorizontalCoordinate | null;
+  visible: boolean;
+  direction: string | null;
+  altitudeBand: ObservationSummary['altitudeBand'] | null;
+  nextHorizonEvent: ApproximateHorizonEvent | null;
+  lunarSeparationDeg: number | null;
+}
+
 export const COMPASS_DIRECTIONS = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'] as const;
 
 function finiteDate(value: Date | number | string): Date {
@@ -177,6 +197,90 @@ export function summarizeObservations(
         altitudeBand: altitudeBand(horizontal.altitudeDeg),
       };
     });
+}
+
+export function angularSeparationDeg(
+  first: Pick<CanonicalBody, 'rightAscensionHours' | 'declinationDeg'>,
+  second: Pick<CanonicalBody, 'rightAscensionHours' | 'declinationDeg'>,
+): number {
+  const firstRa = first.rightAscensionHours * 15 * Math.PI / 180;
+  const secondRa = second.rightAscensionHours * 15 * Math.PI / 180;
+  const firstDec = first.declinationDeg * Math.PI / 180;
+  const secondDec = second.declinationDeg * Math.PI / 180;
+  const cosine = Math.sin(firstDec) * Math.sin(secondDec)
+    + Math.cos(firstDec) * Math.cos(secondDec) * Math.cos(firstRa - secondRa);
+  return Math.acos(Math.max(-1, Math.min(1, cosine))) * 180 / Math.PI;
+}
+
+/**
+ * Find the next mathematical-horizon crossing for a physical canonical body.
+ * This is a planning estimate only: it samples the local model every ten
+ * minutes and linearly interpolates the crossing. Refraction, terrain and
+ * local horizon obstruction are deliberately outside this helper.
+ */
+function bodyAltitude(bodyName: CanonicalBodyName, date: Date, observer: ObserverLocation): number {
+  const body = calculateCanonicalBody(bodyName, date);
+  return equatorialToHorizontal(
+    { raHours: body.rightAscensionHours, decDeg: body.declinationDeg },
+    date,
+    observer,
+  ).altitudeDeg;
+}
+
+export function findNextHorizonEvent(
+  date: Date | number | string,
+  observer: ObserverLocation,
+  bodyName: CanonicalBodyName,
+  thresholdDeg = 0,
+  lookaheadHours = 30,
+): ApproximateHorizonEvent | null {
+  if (bodyName === 'Rahu' || bodyName === 'Ketu') return null;
+  const start = finiteDate(date);
+  const step = 10 * MINUTE;
+  const limit = Math.max(1, lookaheadHours) * 60 * MINUTE;
+  let previousDate = start;
+  let previousAltitude = bodyAltitude(bodyName, previousDate, observer);
+
+  for (let elapsed = step; elapsed <= limit; elapsed += step) {
+    const currentDate = new Date(start.getTime() + elapsed);
+    const currentAltitude = bodyAltitude(bodyName, currentDate, observer);
+    if (previousAltitude < thresholdDeg && currentAltitude >= thresholdDeg) {
+      return { body: bodyName, kind: 'rise', time: interpolateCrossing(previousDate, previousAltitude, currentDate, currentAltitude, thresholdDeg), thresholdDeg, approximate: true };
+    }
+    if (previousAltitude >= thresholdDeg && currentAltitude < thresholdDeg) {
+      return { body: bodyName, kind: 'set', time: interpolateCrossing(previousDate, previousAltitude, currentDate, currentAltitude, thresholdDeg), thresholdDeg, approximate: true };
+    }
+    previousDate = currentDate;
+    previousAltitude = currentAltitude;
+  }
+  return null;
+}
+
+export function planObservation(
+  date: Date | number | string,
+  observer: ObserverLocation,
+  bodyName: CanonicalBodyName,
+): ObservationPlan {
+  const instant = finiteDate(date);
+  const body = calculateCanonicalBody(bodyName, instant);
+  const physical = body.source !== 'mean-node';
+  const horizontal = physical
+    ? equatorialToHorizontal(
+      { raHours: body.rightAscensionHours, decDeg: body.declinationDeg },
+      instant,
+      observer,
+    )
+    : null;
+  const moon = physical && bodyName !== 'Moon' ? calculateCanonicalBody('Moon', instant) : null;
+  return {
+    body,
+    horizontal,
+    visible: Boolean(horizontal && horizontal.altitudeDeg >= 0),
+    direction: horizontal ? compassDirection(horizontal.azimuthDeg) : null,
+    altitudeBand: horizontal ? altitudeBand(horizontal.altitudeDeg) : null,
+    nextHorizonEvent: physical ? findNextHorizonEvent(instant, observer, bodyName) : null,
+    lunarSeparationDeg: moon ? angularSeparationDeg(body, moon) : null,
+  };
 }
 
 export function calculateMoonPhase(date: Date | number | string): MoonPhase {

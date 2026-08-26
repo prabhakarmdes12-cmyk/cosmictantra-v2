@@ -10,8 +10,10 @@ import {
   altitudeBand,
   calculateSolarDayEvents,
   compassDirection,
+  formatEventDateTime,
   formatEventTime,
   formatPercent,
+  planObservation,
   skyLightState,
 } from '@/lib/astronomy/observation';
 import { equatorialToHorizontal, type ObserverLocation } from '@/lib/astronomy/projection';
@@ -68,13 +70,7 @@ export default function ObservatoryStudentDesk({
       date,
       observer,
     );
-    const selectedHorizontal = selected.source === 'mean-node'
-      ? null
-      : equatorialToHorizontal(
-        { raHours: selected.rightAscensionHours, decDeg: selected.declinationDeg },
-        date,
-        observer,
-      );
+    const selectedPlan = planObservation(date, observer, selectedPlanet);
     return {
       sun,
       moon,
@@ -82,12 +78,13 @@ export default function ObservatoryStudentDesk({
       phase,
       events,
       lightState: skyLightState(sunHorizontal.altitudeDeg),
-      selectedHorizontal,
+      selectedPlan,
     };
   }, [date, observer.latitude, observer.longitude, selectedPlanet, timezoneOffsetHours]);
 
   const selectedRashi = getRashiForLongitude(brief.selected.siderealLongitude);
   const selectedNakshatra = getNakshatraForLongitude(brief.selected.siderealLongitude);
+  const selectedHorizontal = brief.selectedPlan.horizontal;
   const localTime = formatLocalClock(date, timezoneOffsetHours);
 
   return (
@@ -128,14 +125,34 @@ export default function ObservatoryStudentDesk({
           <p className="mt-1 font-mono-data text-[10px] text-[#AEB6D5]">{selectedRashi.glyph} {selectedRashi.englishName} · {selectedNakshatra.name} · pada {selectedNakshatra.pada}</p>
           <div className="mt-4 rounded-xl border border-white/[0.08] bg-[#0A1027] px-3 py-2.5 text-[10px] leading-relaxed text-[#C7CBE2]">
             <strong className="text-[#F2C65D]">Field cue:</strong>{' '}
-            {brief.selectedHorizontal
-              ? `${brief.selected.body} is ${brief.selectedHorizontal.altitudeDeg >= 0 ? 'above' : 'below'} the mathematical horizon at ${brief.selectedHorizontal.altitudeDeg.toFixed(1)}° toward ${compassDirection(brief.selectedHorizontal.azimuthDeg)} (${altitudeBand(brief.selectedHorizontal.altitudeDeg)}).`
+            {selectedHorizontal
+              ? `${brief.selected.body} is ${selectedHorizontal.altitudeDeg >= 0 ? 'above' : 'below'} the mathematical horizon at ${selectedHorizontal.altitudeDeg.toFixed(1)}° toward ${compassDirection(selectedHorizontal.azimuthDeg)} (${altitudeBand(selectedHorizontal.altitudeDeg)}).`
               : `${brief.selected.body} is a mathematical node. Use its longitude and sidereal descriptors for study; it is not a physical object to locate in the sky.`}
           </div>
           <dl className="mt-5 space-y-3 font-mono-data text-[10px]"><div className="flex justify-between gap-3 border-b border-white/[0.08] pb-2"><dt className="text-[#8691B4]">Tropical</dt><dd>{formatLongitude(brief.selected.tropicalLongitude)}</dd></div><div className="flex justify-between gap-3 border-b border-white/[0.08] pb-2"><dt className="text-[#8691B4]">Sidereal</dt><dd className="text-[#F2C65D]">{formatLongitude(brief.selected.siderealLongitude)}</dd></div><div className="flex justify-between gap-3"><dt className="text-[#8691B4]">Motion</dt><dd className="text-[#D8DCEF]">{brief.selected.isRetrograde ? 'Retrograde' : 'Direct'}</dd></div></dl>
           <Link href={`/observatory/gochara?city=${encodeURIComponent(cityId)}&time=${encodeURIComponent(date.toISOString())}&planet=${encodeURIComponent(selectedPlanet)}`} className="mt-5 inline-flex items-center gap-1.5 font-mono-data text-[10px] font-bold uppercase tracking-[0.12em] text-[#C4C5FF] hover:underline">Compare in Gochara <ExternalLink className="h-3 w-3" /></Link>
         </article>
       </div>
+
+      <article className="rounded-2xl border border-[#91C7A5]/25 bg-[#0C1717] p-5" aria-labelledby="observation-planner-title">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <div className="font-mono-data text-[10px] font-bold uppercase tracking-[0.16em] text-[#91C7A5]">Approximate observation planner</div>
+            <h3 id="observation-planner-title" className="mt-1 font-editorial text-2xl font-bold text-[#F4F0E6]">When can I use this target?</h3>
+            <p className="mt-1 text-[10px] leading-relaxed text-[#9EB6A7]">A short-horizon field cue for the selected graha. It uses the same local model as the sky, with mathematical-horizon crossings sampled every ten minutes.</p>
+          </div>
+          <span className="rounded-full border border-[#91C7A5]/25 bg-[#102019] px-3 py-1.5 font-mono-data text-[9px] font-bold uppercase tracking-[0.12em] text-[#91C7A5]">No refraction · no terrain</span>
+        </div>
+        {!selectedHorizontal ? (
+          <div className="mt-4 rounded-xl border border-[#E19A72]/25 bg-[#24171A] px-3 py-3 text-[10px] leading-relaxed text-[#E5B9A7]">Rahu and Ketu do not receive a rise/set window. They are mathematical lunar nodes: use the ecliptic longitude, sidereal rashi and Nakshatra context instead of attempting a physical sky search.</div>
+        ) : (
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            <div className="rounded-xl border border-white/[0.08] bg-[#07100F] p-3"><div className="font-mono-data text-[9px] uppercase tracking-wider text-[#718F7B]">Now</div><div className="mt-1 font-mono-data text-sm font-bold text-[#DCECDF]">{brief.selectedPlan.visible ? 'Above horizon' : 'Below horizon'}</div><div className="mt-1 font-mono-data text-[10px] text-[#A2BBA9]">{selectedHorizontal.altitudeDeg.toFixed(1)}° · {compassDirection(selectedHorizontal.azimuthDeg)} · {altitudeBand(selectedHorizontal.altitudeDeg)}</div></div>
+            <div className="rounded-xl border border-white/[0.08] bg-[#07100F] p-3"><div className="font-mono-data text-[9px] uppercase tracking-wider text-[#718F7B]">Next horizon crossing</div><div className="mt-1 font-mono-data text-sm font-bold capitalize text-[#F2C65D]">{brief.selectedPlan.nextHorizonEvent?.kind || 'none found'}</div><div className="mt-1 font-mono-data text-[10px] text-[#A2BBA9]">{brief.selectedPlan.nextHorizonEvent ? formatEventDateTime(brief.selectedPlan.nextHorizonEvent.time, timezoneOffsetHours) : 'within 30 hours'}</div></div>
+            <div className="rounded-xl border border-white/[0.08] bg-[#07100F] p-3"><div className="font-mono-data text-[9px] uppercase tracking-wider text-[#718F7B]">Moon separation</div><div className="mt-1 font-mono-data text-sm font-bold text-[#DCECDF]">{brief.selectedPlan.lunarSeparationDeg === null ? '—' : `${brief.selectedPlan.lunarSeparationDeg.toFixed(1)}°`}</div><div className="mt-1 text-[10px] text-[#A2BBA9]">Larger separation can make a target easier to study under moonlight; brightness and sky conditions are not modeled.</div></div>
+          </div>
+        )}
+      </article>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_1.25fr]">
         <article className="rounded-2xl border border-white/[0.09] bg-[#090D1A] p-5">

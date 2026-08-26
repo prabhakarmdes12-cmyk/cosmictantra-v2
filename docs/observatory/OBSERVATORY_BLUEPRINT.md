@@ -3,7 +3,7 @@
 **Document status:** implementation record for the shipped Observatory work
 **Last updated:** 26 August 2026 (Asia/Calcutta)
 **Branch:** `arena/01a03b32-cosmictantra-v2`
-**Latest commit:** `ddf63c3 feat: establish observatory reference provider seam`
+**Latest commit:** `a8043dd docs: record reference seam implementation`
 **Release qualification:** **CONDITIONAL PASS**
 
 This document records what was built, why it was built that way, how the pieces connect, which visual assets are used, every meaningful polish step, and what remains before a precision-astronomy release claim would be justified.
@@ -41,6 +41,7 @@ The Evidence-backed Observation + Student Study Desk v1 slice then added:
 - progressive bright-star labels and an accessible visible-anchor list;
 - approximate solar events, civil/nautical/astronomical twilight state, Moon phase, altitude bands, field cues, and a reusable student briefing;
 - an integrated astronomy/Jyotish study desk with optional official-source link-outs rather than live media dependencies;
+- an approximate selected-body observation planner with current horizon status, sampled next rise/set estimate, Moon separation, and explicit Rahu/Ketu exclusion;
 - a provenance block that states quality, model, frame, epoch, fixture status, Moon discrepancy and node semantics;
 - implementation/validation notes in `docs/observatory/EVIDENCE_OBSERVATION_V1.md`.
 
@@ -847,6 +848,18 @@ Reference architecture pass:
 7. Added reference schema/parser/comparison tests, while keeping the reviewed fixture absent until a networked manual review is possible.
 8. Added `docs/observatory/reference-fixture-notes.md` with the generation, review and freeze sequence.
 
+### Step 9 — observation-planning slice
+
+The practical planning pass extends the Student Desk without changing the deterministic astronomy core:
+
+1. Added bounded great-circle angular separation from the calculated RA/declination values.
+2. Added ten-minute sampled/interpolated next mathematical-horizon crossings for physical canonical bodies.
+3. Excluded Rahu/Ketu from physical rise/set planning and preserved their mathematical-node semantics.
+4. Added selected-body observation-plan output combining current altitude, azimuth, direction, altitude band, next crossing and optional Moon separation.
+5. Added an approximate planner panel with explicit no-refraction/no-terrain and brightness limitations.
+6. Added deterministic planner, crossing, angular-separation and node-exclusion coverage.
+7. Updated the qualification/evidence records and roadmap so approximate cues are not confused with future reviewed precision planning.
+
 ---
 
 ## 12. Design decisions and trade-offs
@@ -899,11 +912,11 @@ Reference architecture pass:
 **Why:** matches the current data model and makes local datetime input deterministic.
 **Trade-off:** cities with daylight-saving changes need a future IANA timezone upgrade before seasonal civil-time precision is claimed.
 
-### Decision I — practical visibility without overclaiming rise/set accuracy
+### Decision I — useful horizon cues without overclaiming almanac accuracy
 
-**Choice:** show current altitude/azimuth/horizon status rather than inventing a full rise/set scheduler.
-**Why:** it is immediately useful and supported by the current model.
-**Trade-off:** field users still need to inspect a sequence or use a precision ephemeris for exact rise/set planning.
+**Choice:** retain current altitude/azimuth/horizon status and add a clearly approximate next mathematical-horizon crossing estimate sampled every ten minutes; do not present it as a full rise/set scheduler.
+**Why:** a bounded selected-body field cue is useful immediately and is supported by the current deterministic model, while the label keeps the accuracy boundary visible.
+**Trade-off:** the estimate omits refraction, terrain, obstruction, brightness and local conditions; field users still need a reviewed ephemeris for exact rise/transit/set planning.
 
 ### Decision J — conditional pass rather than hiding known discrepancies
 
@@ -924,7 +937,7 @@ npx playwright test tests/observatory.spec.ts --reporter=line
 ```
 
 ```text
-21 passed
+22 passed
 ```
 
 ```bash
