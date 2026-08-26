@@ -146,10 +146,10 @@ export default function CosmicTantraLogo({
   }
 
   const sizeStyles = {
-    sm: { emblem: 'w-7 h-7', title: 'text-sm tracking-[0.16em]', sub: 'text-[8px] tracking-[0.24em]' },
-    md: { emblem: 'w-8 h-8 sm:w-9 sm:h-9', title: 'text-sm sm:text-base tracking-[0.18em]', sub: 'text-[8px] sm:text-[9px] tracking-[0.26em]' },
-    lg: { emblem: 'w-10 h-10 sm:w-11 sm:h-11', title: 'text-base sm:text-lg lg:text-xl tracking-[0.22em]', sub: 'text-[9px] sm:text-[10px] tracking-[0.28em]' },
-    xl: { emblem: 'w-14 h-14', title: 'text-2xl sm:text-3xl tracking-[0.24em]', sub: 'text-[12px] tracking-[0.3em]' },
+    sm: { emblem: 'w-6 h-6 sm:w-7 sm:h-7', title: 'text-xs sm:text-sm tracking-[0.12em] sm:tracking-[0.16em]', sub: 'text-[7px] sm:text-[8px] tracking-[0.18em] sm:tracking-[0.24em]' },
+    md: { emblem: 'w-7 h-7 sm:w-9 sm:h-9', title: 'text-xs sm:text-base tracking-[0.12em] sm:tracking-[0.18em]', sub: 'text-[7px] sm:text-[9px] tracking-[0.18em] sm:tracking-[0.26em]' },
+    lg: { emblem: 'w-9 h-9 sm:w-11 sm:h-11', title: 'text-sm sm:text-lg lg:text-xl tracking-[0.18em] sm:tracking-[0.22em]', sub: 'text-[8px] sm:text-[10px] tracking-[0.22em] sm:tracking-[0.28em]' },
+    xl: { emblem: 'w-12 h-12 sm:w-14 sm:h-14', title: 'text-xl sm:text-3xl tracking-[0.2em] sm:tracking-[0.24em]', sub: 'text-[10px] sm:text-[12px] tracking-[0.24em] sm:tracking-[0.3em]' },
   }[size];
 
   return (

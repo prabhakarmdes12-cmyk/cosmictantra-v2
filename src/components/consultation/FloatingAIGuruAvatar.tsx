@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
   Sparkles, 
@@ -137,9 +138,7 @@ export default function FloatingAIGuruAvatar() {
   const handleNavigate = (href: string) => {
     playClick();
     setIsOpen(false);
-    try {
-      router.push(href);
-    } catch {
+    if (typeof window !== 'undefined') {
       window.location.href = href;
     }
   };
@@ -266,6 +265,38 @@ export default function FloatingAIGuruAvatar() {
           },
         ]);
       }, 400);
+      return;
+    }
+
+    if (chip.action === 'NAV_DARSHAN_FULL' && chip.href) {
+      handleNavigate(chip.href);
+      return;
+    }
+
+    if (chip.action === 'DARSHAN_GANGA') {
+      handlePlayDiyaBell();
+      setTimeout(() => {
+        setChatMessages(prev => [
+          ...prev,
+          {
+            id: `g-${Date.now()}`,
+            sender: 'GURU',
+            text: 'माँ गंगा की पावन संध्या महाआरती (दशाश्वमेध घाट, वाराणसी) का लाइव दर्शन:',
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            inChatDarshan: {
+              templeName: 'दशाश्वमेध घाट माँ गंगा महाआरती',
+              deity: 'माँ गंगा व भगवान विश्वनाथ',
+              location: 'दशाश्वमेध घाट, वाराणसी',
+              image: '/images/darshan/dashashwamedh_ganga_aarti_1787746607595.jpg',
+              liveYoutubeId: 'https://www.youtube.com/embed/live_stream?channel=UCrD4V8m4f9X6P4I3b2b1A',
+            },
+            quickChips: [
+              { label: '🌸 सम्पूर्ण २६ महातीर्थ दर्शन कक्ष खोलें', action: 'NAV_DARSHAN_FULL', href: '/darshan' },
+              { label: '📿 दैनिक मन्त्र जप', action: 'NAV_MANTRA', href: '/remedy-tracker' },
+            ],
+          },
+        ]);
+      }, 500);
       return;
     }
 
@@ -773,12 +804,16 @@ export default function FloatingAIGuruAvatar() {
                           )}
                         </div>
 
-                        <button
-                          onClick={() => handleNavigate('/darshan')}
+                        <Link
+                          href="/darshan"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleNavigate('/darshan');
+                          }}
                           className="w-full py-2 bg-amber-600/30 hover:bg-amber-600/50 text-amber-200 text-xs font-bold rounded-lg border border-amber-500/30 text-center block transition-colors cursor-pointer"
                         >
                           सम्पूर्ण २६ महातीर्थ दर्शन कक्ष खोलें →
-                        </button>
+                        </Link>
                       </div>
                     )}
 
@@ -843,9 +878,13 @@ export default function FloatingAIGuruAvatar() {
 
                     {/* Navigation Action Card */}
                     {msg.navigationAction && (
-                      <div
-                        onClick={() => handleNavigate(msg.navigationAction!.href)}
-                        className="mt-2.5 p-3 rounded-xl bg-white dark:bg-[#0A0C14] border border-[#8E6F1D]/30 dark:border-[#D4AF37]/30 flex items-center justify-between group hover:border-[#8E6F1D] transition-colors cursor-pointer"
+                      <Link
+                        href={msg.navigationAction.href}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleNavigate(msg.navigationAction!.href);
+                        }}
+                        className="mt-2.5 p-3 rounded-xl bg-white dark:bg-[#0A0C14] border border-[#8E6F1D]/30 dark:border-[#D4AF37]/30 flex items-center justify-between group hover:border-[#8E6F1D] transition-colors cursor-pointer block"
                       >
                         <div className="flex items-center gap-2.5">
                           <span className="text-2xl">{msg.navigationAction.icon}</span>
@@ -859,7 +898,7 @@ export default function FloatingAIGuruAvatar() {
                           </div>
                         </div>
                         <ArrowRight className="w-4 h-4 text-[#8E6F1D] dark:text-[#F0C968] group-hover:translate-x-1 transition-transform" />
-                      </div>
+                      </Link>
                     )}
 
                     {/* Fast Action Suggestion Chips */}
@@ -869,7 +908,7 @@ export default function FloatingAIGuruAvatar() {
                           <button
                             key={idx}
                             onClick={() => {
-                              if (chip.href && chip.action.startsWith('OPEN_CHECKOUT_')) {
+                              if (chip.href && (chip.action.startsWith('OPEN_CHECKOUT_') || chip.action.startsWith('NAV_DARSHAN_'))) {
                                 handleNavigate(chip.href);
                               } else {
                                 handleChipClick(chip);

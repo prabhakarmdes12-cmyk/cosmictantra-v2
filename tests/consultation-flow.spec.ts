@@ -166,4 +166,26 @@ test.describe('CosmicTantra — AI Guru, CallMe4 E2EE & Pandit Onboarding Suite'
     await expect(page.getByText(/₹501 लिखित विद्वत्-परामर्श पत्र/i)).toBeVisible();
   });
 
+  test('Floating AI Guru In-Chat Links: Clicking in-chat consultation chip navigates to /ask and closes chat drawer', async ({ page }) => {
+    await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
+
+    // Open Guru Avatar
+    const avatarBtn = page.locator('button[title="गुरु ज्योतिषदेव AI से बात करें"]');
+    await avatarBtn.click();
+    await page.waitForTimeout(300);
+
+    // Click 72h forecast chip -> reveals navigation card
+    const forecastChip = page.getByRole('button', { name: /आज का 72h राशिफल व गोचर/i });
+    await forecastChip.click();
+    await page.waitForTimeout(600);
+
+    // Click in-chat navigation action card
+    const actionCard = page.getByText(/72h Multi-Horizon Forecast Hub/i);
+    await expect(actionCard).toBeVisible();
+    await actionCard.click();
+
+    // Verify successful navigation to /daily
+    await expect(page).toHaveURL(/.*\/daily/);
+  });
+
 });
