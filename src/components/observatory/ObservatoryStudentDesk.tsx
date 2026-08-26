@@ -17,6 +17,7 @@ import {
   skyLightState,
 } from '@/lib/astronomy/observation';
 import { equatorialToHorizontal, type ObserverLocation } from '@/lib/astronomy/projection';
+import ObservationLog from './ObservationLog';
 
 interface ObservatoryStudentDeskProps {
   date: Date;
@@ -153,6 +154,19 @@ export default function ObservatoryStudentDesk({
           </div>
         )}
       </article>
+
+      <ObservationLog
+        date={date}
+        observer={observer}
+        cityId={cityId}
+        cityName={cityName}
+        timezoneOffsetHours={timezoneOffsetHours}
+        selectedPlan={brief.selectedPlan}
+        rashiName={selectedRashi.name}
+        nakshatraName={selectedNakshatra.name}
+        pada={selectedNakshatra.pada}
+        moonPhaseName={brief.phase.name}
+      />
 
       <div className="grid gap-4 lg:grid-cols-[1fr_1.25fr]">
         <article className="rounded-2xl border border-white/[0.09] bg-[#090D1A] p-5">

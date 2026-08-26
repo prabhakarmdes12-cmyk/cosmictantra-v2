@@ -20,6 +20,7 @@ import { altitudeBand, angularSeparationDeg, calculateMoonPhase, calculateSolarD
 import { applyViewportTransform, clampViewportTransform, DEFAULT_VIEWPORT_TRANSFORM, zoomViewportAt } from '../src/lib/astronomy/viewTransform';
 import { localEphemerisResult } from '../src/lib/astronomy/providers/localApproximation';
 import { compareWithReference, findReferenceObservation, MISSING_REFERENCE_FIXTURE_STATUS, parseReferenceFixture, referenceFixtureStatus } from '../src/lib/astronomy/providers/referenceFixture';
+import { createObservationLogEntry, observationLogToCsv, parseObservationLog, serializeObservationLog, type ObservationLogDraft } from '../src/lib/astronomy/observationLog';
 
 test.describe('Observatory coordinate and ephemeris invariants', () => {
   const instant = new Date('2026-08-25T00:00:00.000Z');
@@ -202,6 +203,45 @@ test.describe('Observatory coordinate and ephemeris invariants', () => {
     expect(angularSeparationDeg({ rightAscensionHours: 0, declinationDeg: 0 }, { rightAscensionHours: 12, declinationDeg: 0 })).toBeCloseTo(180, 8);
     expect(angularSeparationDeg({ rightAscensionHours: 23.9, declinationDeg: 0 }, { rightAscensionHours: 0.1, declinationDeg: 0 })).toBeCloseTo(3, 8);
     expect(findNextHorizonEvent(instant, observer, 'Ketu')).toBeNull();
+  });
+
+  test('observation logs round-trip locally and export escaped study fields', () => {
+    const observer = { latitude: 25.3176, longitude: 82.9739 };
+    const plan = planObservation(instant, observer, 'Jupiter');
+    const draft: ObservationLogDraft = {
+      observedAt: instant.toISOString(),
+      cityId: 'varanasi',
+      cityName: 'Varanasi',
+      observer,
+      timezoneOffsetHours: 5.5,
+      body: plan.body.body,
+      source: plan.body.source,
+      physicalSky: Boolean(plan.horizontal),
+      altitudeDeg: plan.horizontal?.altitudeDeg ?? null,
+      azimuthDeg: plan.horizontal?.azimuthDeg ?? null,
+      direction: plan.direction,
+      altitudeBand: plan.altitudeBand,
+      tropicalLongitude: plan.body.tropicalLongitude,
+      siderealLongitude: plan.body.siderealLongitude,
+      rashi: 'Mithuna',
+      nakshatra: 'Ardra',
+      pada: 2,
+      lunarSeparationDeg: plan.lunarSeparationDeg,
+      moonPhase: 'Waxing Crescent',
+      status: 'observed',
+      note: 'Clear, steady seeing; ask "why?"',
+    };
+    const entry = createObservationLogEntry(draft, 'entry-1', '2026-08-25T00:01:00.000Z');
+    const longEntry = createObservationLogEntry({ ...draft, note: 'x'.repeat(1500) }, 'entry-2', '2026-08-25T00:02:00.000Z');
+    expect(entry.note).toBe('Clear, steady seeing; ask "why?"');
+    expect(longEntry.note).toHaveLength(1200);
+    expect(parseObservationLog(serializeObservationLog([entry]))).toEqual([entry]);
+    expect(parseObservationLog('not-json')).toEqual([]);
+    expect(parseObservationLog(JSON.stringify([entry, { broken: true }]))).toHaveLength(1);
+    expect(parseObservationLog(JSON.stringify([{ ...entry, body: 'Rahu', source: 'mean-node', physicalSky: true }]))).toEqual([]);
+    const csv = observationLogToCsv([entry]);
+    expect(csv).toContain('"Clear, steady seeing; ask ""why?"""');
+    expect(csv.split('\n')).toHaveLength(2);
   });
 
   test('local ephemeris adapts to the shared provenance contract', () => {

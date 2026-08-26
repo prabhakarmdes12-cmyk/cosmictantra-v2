@@ -42,6 +42,7 @@ The Evidence-backed Observation + Student Study Desk v1 slice then added:
 - approximate solar events, civil/nautical/astronomical twilight state, Moon phase, altitude bands, field cues, and a reusable student briefing;
 - an integrated astronomy/Jyotish study desk with optional official-source link-outs rather than live media dependencies;
 - an approximate selected-body observation planner with current horizon status, sampled next rise/set estimate, Moon separation, and explicit Rahu/Ketu exclusion;
+- a browser-local observation notebook that saves reproducible snapshots and exports JSON/CSV without an account or runtime service;
 - a provenance block that states quality, model, frame, epoch, fixture status, Moon discrepancy and node semantics;
 - implementation/validation notes in `docs/observatory/EVIDENCE_OBSERVATION_V1.md`.
 
@@ -153,7 +154,8 @@ The implementation does **not** claim:
 | `EclipticInstrument.tsx` | Draws the top-down tropical ecliptic planisphere, exposes nine-graha selection, and supports display-only camera navigation. |
 | `TimeMachine.tsx` | Interpolates an inspection date between a birth date and endpoint, then renders a live sky and rashi-change table while preserving endpoint deep-link context. |
 | `Gochara.tsx` | Calculates natal/current body arrays, draws two navigable sidereal wheels, and exposes the nine-graha transit comparison. |
-| `ObservatoryStudentDesk.tsx` | Integrates approximate field planning, Moon phase, coordinate study, selected-object guidance, and curated optional study links into the primary route. |
+| `ObservatoryStudentDesk.tsx` | Integrates approximate field planning, Moon phase, coordinate study, selected-object guidance, local notebook, and curated optional study links into the primary route. |
+| `ObservationLog.tsx` | Saves the selected city/time/target snapshot locally, distinguishes physical observations from node study notes, and exports JSON/CSV. |
 
 ### Astronomy modules
 
@@ -165,7 +167,8 @@ The implementation does **not** claim:
 | `src/lib/astronomy/eclipticProjection.ts` | Rashi and Nakshatra constants, boundary-safe lookup, tropical-to-sidereal conversion, and planisphere geometry helpers. |
 | `src/lib/astronomy/celestialCatalog.ts` | Typed selections, planet/constellation explanatory copy, constellation names/stories, and deep-link validation. |
 | `src/lib/astronomy/viewTransform.ts` | Pure display-only scale, pan, focus zoom, clamping, and zoom-label utilities shared by canvas instruments. |
-| `src/lib/astronomy/observation.ts` | Explicitly approximate local solar events, twilight state, Moon phase, compass directions, altitude bands, and observation summaries. |
+| `src/lib/astronomy/observation.ts` | Explicitly approximate local solar events, twilight state, Moon phase, compass directions, altitude bands, horizon crossings, angular separation, and observation plans. |
+| `src/lib/astronomy/observationLog.ts` | Validated browser-local observation-log schema with persistence and CSV serialization. |
 | `src/lib/astronomy/providers/` | Shared provider/provenance types, local canonical-body adapter, and fail-closed reference-fixture parser for the planned JPL/SPICE seam. |
 | `src/lib/astronomy/ephemeris.ts` | Small compatibility re-export for canonical body calculations and provider contracts. |
 | `src/lib/astronomy/index.ts` | Public astronomy barrel exports. |
@@ -860,6 +863,17 @@ The practical planning pass extends the Student Desk without changing the determ
 6. Added deterministic planner, crossing, angular-separation and node-exclusion coverage.
 7. Updated the qualification/evidence records and roadmap so approximate cues are not confused with future reviewed precision planning.
 
+### Step 10 — local observation notebook
+
+The field-retention pass adds a portable study record without creating a cloud account or weakening the offline calculation boundary:
+
+1. Added a validated `ObservationLogEntry` schema with exact UTC instant, fixed offset, city coordinates, target source, coordinate context, and note status.
+2. Added browser-local persistence capped at 50 entries, with malformed stored records discarded fail-closed.
+3. Added JSON and escaped CSV export for personal fieldwork, classroom handoff, and spreadsheet analysis.
+4. Added reopen links that restore the city, instant, and selected target in the main Observatory.
+5. Kept Rahu/Ketu entries explicitly as mathematical-node study notes with no physical altitude or azimuth.
+6. Added deterministic round-trip, malformed-record, note-limit, and CSV-escaping coverage.
+
 ---
 
 ## 12. Design decisions and trade-offs
@@ -937,7 +951,7 @@ npx playwright test tests/observatory.spec.ts --reporter=line
 ```
 
 ```text
-22 passed
+23 passed
 ```
 
 ```bash
@@ -1098,7 +1112,7 @@ Use this checklist when Chromium or a real browser is available.
 - Add rise/set and transit estimates with explicit standard-altitude assumptions.
 - Add IANA timezone identifiers to city data for DST-correct civil time.
 - Add user geolocation with a privacy-first permission flow and URL-safe custom coordinates.
-- Add a lightweight observation log export using the existing share/readout model.
+- Extend the local notebook with optional reviewed photographs, equipment metadata, and classroom sharing only after a privacy/rights workflow exists.
 - Add optional limiting magnitude and horizon masking controls.
 
 ### P2 — education and personalization

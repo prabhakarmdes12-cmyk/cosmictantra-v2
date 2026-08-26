@@ -31,3 +31,5 @@ export {
   tropicalToSiderealLongitude,
 } from './eclipticProjection';
 export * from './providers';
+export * from './observation';
+export * from './observationLog';
