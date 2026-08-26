@@ -146,25 +146,25 @@ export default function CosmicTantraLogo({
   }
 
   const sizeStyles = {
-    sm: { emblem: 'w-6 h-6 sm:w-7 sm:h-7', title: 'text-xs sm:text-sm tracking-[0.12em] sm:tracking-[0.16em]', sub: 'text-[7px] sm:text-[8px] tracking-[0.18em] sm:tracking-[0.24em]' },
-    md: { emblem: 'w-7 h-7 sm:w-9 sm:h-9', title: 'text-xs sm:text-base tracking-[0.12em] sm:tracking-[0.18em]', sub: 'text-[7px] sm:text-[9px] tracking-[0.18em] sm:tracking-[0.26em]' },
-    lg: { emblem: 'w-9 h-9 sm:w-11 sm:h-11', title: 'text-sm sm:text-lg lg:text-xl tracking-[0.18em] sm:tracking-[0.22em]', sub: 'text-[8px] sm:text-[10px] tracking-[0.22em] sm:tracking-[0.28em]' },
-    xl: { emblem: 'w-12 h-12 sm:w-14 sm:h-14', title: 'text-xl sm:text-3xl tracking-[0.2em] sm:tracking-[0.24em]', sub: 'text-[10px] sm:text-[12px] tracking-[0.24em] sm:tracking-[0.3em]' },
+    sm: { emblem: 'w-5 h-5 sm:w-7 sm:h-7', title: 'text-[11px] sm:text-sm tracking-[0.12em] sm:tracking-[0.16em]', sub: 'text-[6px] sm:text-[8px] tracking-[0.16em] sm:tracking-[0.24em]' },
+    md: { emblem: 'w-6 h-6 sm:w-8 sm:h-8', title: 'text-[13px] sm:text-base tracking-[0.14em] sm:tracking-[0.18em]', sub: 'text-[7px] sm:text-[9px] tracking-[0.18em] sm:tracking-[0.26em]' },
+    lg: { emblem: 'w-8 h-8 sm:w-11 sm:h-11', title: 'text-sm sm:text-lg lg:text-xl tracking-[0.16em] sm:tracking-[0.22em]', sub: 'text-[8px] sm:text-[10px] tracking-[0.2em] sm:tracking-[0.28em]' },
+    xl: { emblem: 'w-11 h-11 sm:w-14 sm:h-14', title: 'text-xl sm:text-3xl tracking-[0.2em] sm:tracking-[0.24em]', sub: 'text-[10px] sm:text-[12px] tracking-[0.24em] sm:tracking-[0.3em]' },
   }[size];
 
   return (
-    <div className={`inline-flex items-center gap-2.5 sm:gap-3 group select-none ${className}`}>
+    <div className={`inline-flex items-center gap-2 sm:gap-2.5 group select-none whitespace-nowrap ${className}`}>
       {/* Astrolabe Emblem Frame */}
-      <div className="relative p-1.5 rounded-xl bg-gradient-to-br from-white/95 to-[#FAF7F2]/95 dark:from-[#11131E] dark:to-[#090B14] border border-[#8E6F1D]/30 dark:border-[#D4AF37]/50 shadow-xs group-hover:border-[#D4AF37] transition-all">
+      <div className="relative p-1 sm:p-1.5 rounded-lg sm:rounded-xl bg-gradient-to-br from-white/95 to-[#FAF7F2]/95 dark:from-[#11131E] dark:to-[#090B14] border border-[#8E6F1D]/30 dark:border-[#D4AF37]/50 shadow-xs group-hover:border-[#D4AF37] transition-all shrink-0">
         <CosmicTantraEmblem className={sizeStyles.emblem} />
       </div>
 
       {/* Typography */}
-      <div className="flex flex-col">
-        <span className={`font-editorial font-bold text-[#1C1917] dark:text-[#F5F2EB] group-hover:text-[#8E6F1D] dark:group-hover:text-[#D4AF37] transition-colors leading-tight ${sizeStyles.title}`}>
+      <div className="flex flex-col text-left">
+        <span className={`font-editorial font-bold text-[#1C1917] dark:text-[#F5F2EB] group-hover:text-[#8E6F1D] dark:group-hover:text-[#D4AF37] transition-colors leading-none whitespace-nowrap ${sizeStyles.title}`}>
           COSMICTANTRA
         </span>
-        <span className={`font-mono-data font-bold text-[#8E6F1D] dark:text-[#D4AF37] uppercase opacity-95 leading-none mt-0.5 ${sizeStyles.sub}`}>
+        <span className={`font-mono-data font-bold text-[#8E6F1D] dark:text-[#D4AF37] uppercase opacity-95 leading-none mt-0.5 whitespace-nowrap ${sizeStyles.sub}`}>
           {subtitle || 'VEDIC PRECISION'}
         </span>
       </div>

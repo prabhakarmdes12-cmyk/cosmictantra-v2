@@ -76,7 +76,7 @@ export default function FloatingAIGuruAvatar() {
   const [seekerData, setSeekerData] = useState({
     name: '',
     phone: '',
-    birthDate: '1995-06-15',
+    birthDate: '',
     birthTime: '10:30',
     birthCity: 'Varanasi',
     domain: 'करियर व व्यापार',
@@ -112,7 +112,7 @@ export default function FloatingAIGuruAvatar() {
   // Prefill active profile if available
   useEffect(() => {
     const p = getActiveProfile();
-    if (p) {
+    if (p && p.name) {
       setSeekerData(prev => ({
         ...prev,
         name: p.name || prev.name,
@@ -204,25 +204,81 @@ export default function FloatingAIGuruAvatar() {
 
     setChatMessages(prev => [...prev, userMsg]);
 
-    // Handle Direct Navigation actions
-    if (chip.action === 'NAV_DAILY' && chip.href) {
-      setTimeout(() => {
-        setChatMessages(prev => [
-          ...prev,
-          {
-            id: `g-${Date.now()}`,
-            sender: 'GURU',
-            text: 'आज, कल व परसों की खगोलीय ऊर्जा, कार्य सिद्धि मुहूर्त व संक्रान्ति गोचर का पूरा विश्लेषण तैयार है:',
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            navigationAction: {
-              title: '72h Multi-Horizon Forecast Hub',
-              description: 'आज, कल व परसों का राशिफल व गोचर विस्तार से देखें →',
-              href: '/daily',
-              icon: '🔮',
+    // Handle Direct Navigation actions with intelligent pre-context validation
+    if (chip.action === 'NAV_DAILY') {
+      const activeP = getActiveProfile();
+      const knownName = (seekerData.name && seekerData.name.trim()) || activeP?.name || '';
+      const knownDOB = seekerData.birthDate || activeP?.birthDate || '';
+      const knownTime = seekerData.birthTime || activeP?.birthTime || '10:30';
+
+      if (!knownName || !knownDOB) {
+        // Seeker details not known yet -> Prompt for birth details first!
+        setIntakeStep('ASK_NAME');
+        setTimeout(() => {
+          setChatMessages(prev => [
+            ...prev,
+            {
+              id: `g-${Date.now()}`,
+              sender: 'GURU',
+              text: '72 घण्टे के सूक्ष्म खगोलीय गोचर (आज, कल व परसों) का सटीक व्यक्तिगत फल जानने हेतु मुझे आपकी जन्म-पत्रिका के लग्न व चन्द्र नक्षत्र की आवश्यकता होगी। कृपया अपना शुभ नाम बताएं (ताकि आपकी कुण्डली के अनुसार गणना की जा सके):',
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              quickChips: [
+                { label: '🌐 सामान्य 72h गोचर हब देखें', action: 'FORCE_NAV_DAILY', href: '/daily' },
+              ],
             },
-          },
-        ]);
-      }, 400);
+          ]);
+        }, 400);
+        return;
+      } else {
+        // Seeker details ARE known -> Compute Vedic transit insight & render working link card!
+        let lagnaName = 'वृषभ (Vrishabha)';
+        let nakshatraName = 'रोहिणी (Rohini)';
+        try {
+          const dObj = new Date(knownDOB);
+          const kundali = calculateKundali(
+            isNaN(dObj.getTime()) ? new Date('1995-06-15') : dObj,
+            knownTime,
+            25.3176,
+            82.9739,
+            5.5
+          );
+          if (kundali?.lagna?.rashiEn) lagnaName = `${kundali.lagna.rashiName} (${kundali.lagna.rashiEn})`;
+          if ((kundali?.moon?.nakshatra as any)?.name) nakshatraName = (kundali?.moon?.nakshatra as any).name;
+        } catch {}
+
+        const currentHour = new Date().getHours();
+        const isCaution = currentHour >= 12 && currentHour <= 15;
+        const transitInsight = isCaution
+          ? '⚠️ आज दोपहर राहुकाल सक्रिय है — चन्द्रमा के गोचरवश महत्वपूर्ण निर्णयों में जल्दबाजी से बचें। कल प्रातः से कार्य-सिद्धि योग प्रबल होगा।'
+          : '✨ आज गुरु-चन्द्र का शुभ दृष्टि योग सक्रिय है — आपके लग्न अनुसार नई पहल व वार्ता हेतु दोपहर का समय सर्वाधिक फलदायी रहेगा।';
+
+        setTimeout(() => {
+          setChatMessages(prev => [
+            ...prev,
+            {
+              id: `g-${Date.now()}`,
+              sender: 'GURU',
+              text: `प्रणाम ${knownName} जी! 🙏 आपकी ${lagnaName} लग्न व ${nakshatraName} नक्षत्र के अनुसार 72-घंटे का सूक्ष्म खगोलीय गोचर:\n\n${transitInsight}\n\nआज, कल व परसों का पूर्ण त्रि-दिवसीय गोचर, शुभ मुहूर्त एवं पारिवारिक प्रभाव चार्ट नीचे देखें:`,
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              navigationAction: {
+                title: '72h Multi-Horizon Forecast Hub',
+                description: `${knownName} जी के लिए आज, कल व परसों का विस्तृत राशिफल एवं गोचर →`,
+                href: '/daily',
+                icon: '🔮',
+              },
+              quickChips: [
+                { label: '🌸 संपूर्ण 72h गोचर हब खोलें', action: 'FORCE_NAV_DAILY', href: '/daily' },
+                { label: '🔮 पुनः कुण्डली विवरण बदलें', action: 'START_INTAKE' },
+              ],
+            },
+          ]);
+        }, 400);
+        return;
+      }
+    }
+
+    if (chip.action === 'FORCE_NAV_DAILY' && chip.href) {
+      handleNavigate(chip.href);
       return;
     }
 
@@ -908,7 +964,7 @@ export default function FloatingAIGuruAvatar() {
                           <button
                             key={idx}
                             onClick={() => {
-                              if (chip.href && (chip.action.startsWith('OPEN_CHECKOUT_') || chip.action.startsWith('NAV_DARSHAN_'))) {
+                              if (chip.href && (chip.action.startsWith('OPEN_CHECKOUT_') || chip.action.startsWith('NAV_DARSHAN_') || chip.action === 'FORCE_NAV_DAILY')) {
                                 handleNavigate(chip.href);
                               } else {
                                 handleChipClick(chip);

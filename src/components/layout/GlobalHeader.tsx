@@ -152,20 +152,20 @@ export default function GlobalHeader({
   return (
     <>
       <header className="sticky top-0 z-50 w-full bg-[#FAF7F2]/90 dark:bg-[#06070B]/90 backdrop-blur-2xl border-b border-black/[0.06] dark:border-white/[0.08] transition-colors duration-300">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-20 grid grid-cols-3 items-center">
+        <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-1 sm:gap-4">
           
           {/* LEFT COLUMN: Minimal Subtle Controls */}
-          <div className="flex items-center justify-start gap-2 sm:gap-2.5">
+          <div className="flex items-center justify-start gap-1.5 sm:gap-2.5 shrink-0">
             {/* Language Toggle */}
             {onLangToggle && (
               <button
                 onClick={onLangToggle}
-                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-2xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-xs font-mono-data font-bold text-[#1C1917] dark:text-white hover:border-[#8E6F1D] dark:hover:border-[#D4AF37] transition-all cursor-pointer shadow-xs active:scale-95"
+                className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl sm:rounded-2xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-xs font-mono-data font-bold text-[#1C1917] dark:text-white hover:border-[#8E6F1D] dark:hover:border-[#D4AF37] transition-all cursor-pointer shadow-xs active:scale-95"
                 title="Change Language"
               >
                 <Languages className="w-3.5 h-3.5 text-[#8E6F1D] dark:text-[#D4AF37]" />
                 <span className="hidden sm:inline">{lang === 'en' ? 'हिन्दी' : 'English'}</span>
-                <span className="sm:hidden">{lang === 'en' ? 'हिं' : 'EN'}</span>
+                <span className="sm:hidden text-[10px]">{lang === 'en' ? 'हिं' : 'EN'}</span>
               </button>
             )}
 
@@ -173,10 +173,10 @@ export default function GlobalHeader({
             {onThemeToggle && (
               <button
                 onClick={onThemeToggle}
-                className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-2xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-[#1C1917] dark:text-white hover:border-[#8E6F1D] dark:hover:border-[#D4AF37] transition-all cursor-pointer shadow-xs active:scale-95"
+                className="flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-[#1C1917] dark:text-white hover:border-[#8E6F1D] dark:hover:border-[#D4AF37] transition-all cursor-pointer shadow-xs active:scale-95"
                 title="Toggle Day/Night"
               >
-                {theme === 'dark' ? <Sun className="w-4 h-4 text-[#F59E0B]" /> : <Moon className="w-4 h-4 text-[#8E6F1D]" />}
+                {theme === 'dark' ? <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#F59E0B]" /> : <Moon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#8E6F1D]" />}
               </button>
             )}
 
@@ -194,14 +194,14 @@ export default function GlobalHeader({
           </div>
 
           {/* CENTER COLUMN: Perfectly Centered Brand Identity */}
-          <div className="flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-center min-w-0 px-1">
             <Link href="/" className="group focus:outline-none flex items-center justify-center transition-transform hover:scale-102">
               <CosmicTantraLogo size="md" subtitle={lang === 'hi' ? 'वैदिक खगोल शुद्धता' : 'VEDIC PRECISION'} />
             </Link>
           </div>
 
           {/* RIGHT COLUMN: Minimal Action & Luxury Mega Menu Trigger */}
-          <div className="flex items-center justify-end gap-2 sm:gap-3">
+          <div className="flex items-center justify-end gap-1.5 sm:gap-3 shrink-0">
             {/* Quick Consultation CTA */}
             <Link
               href="/ask"
@@ -218,11 +218,11 @@ export default function GlobalHeader({
                 chitiSensory.playTick();
                 setMegaMenuOpen(true);
               }}
-              className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-2xl bg-gradient-to-r from-[#8E6F1D] via-[#A88424] to-[#8E6F1D] dark:from-[#D4AF37] dark:via-[#F0C968] dark:to-[#D4AF37] text-white dark:text-[#060709] font-mono-data font-bold text-xs flex items-center gap-2 shadow-lg shadow-[#8E6F1D]/20 dark:shadow-[#D4AF37]/25 cursor-pointer transition-all hover:scale-105 active:scale-95 shrink-0 hover:shadow-xl"
+              className="px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl bg-gradient-to-r from-[#8E6F1D] via-[#A88424] to-[#8E6F1D] dark:from-[#D4AF37] dark:via-[#F0C968] dark:to-[#D4AF37] text-white dark:text-[#060709] font-mono-data font-bold text-xs flex items-center gap-1.5 sm:gap-2 shadow-lg shadow-[#8E6F1D]/20 dark:shadow-[#D4AF37]/25 cursor-pointer transition-all hover:scale-105 active:scale-95 shrink-0 hover:shadow-xl"
               aria-label="Open navigation menu"
             >
-              <Menu className="w-4 h-4 stroke-[2.5]" />
-              <span className="uppercase tracking-wider">{lang === 'hi' ? 'अन्वेषण' : 'Menu'}</span>
+              <Menu className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
+              <span className="uppercase tracking-wider text-[11px] sm:text-xs">{lang === 'hi' ? 'अन्वेषण' : 'Menu'}</span>
             </button>
           </div>
 

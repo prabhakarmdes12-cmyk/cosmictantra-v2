@@ -89,7 +89,7 @@ test.describe('CosmicTantra — AI Guru, CallMe4 E2EE & Pandit Onboarding Suite'
     await gheeBtn.click();
   });
 
-  test('Floating AI Guru Avatar: Visible on homepage, opens concierge drawer, displays quick action chips and triggers navigation', async ({ page }) => {
+  test('Floating AI Guru Avatar: Visible on homepage, opens concierge drawer, asks user details before 72h forecast when not known', async ({ page }) => {
     await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
 
     // Floating Avatar Button is rendered
@@ -107,13 +107,14 @@ test.describe('CosmicTantra — AI Guru, CallMe4 E2EE & Pandit Onboarding Suite'
     await expect(page.getByRole('button', { name: /26 महातीर्थ लाइव दर्शन व आरती/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /कुण्डली व जीवन प्रश्न/i })).toBeVisible();
 
-    // Click on 72h Forecast Chip
+    // Click on 72h Forecast Chip -> Guru asks for birth details first
     const forecastChip = page.getByRole('button', { name: /आज का 72h राशिफल व गोचर/i });
     await forecastChip.click();
     await page.waitForTimeout(600);
 
-    // Navigation action card appears inside chat
-    await expect(page.getByText(/72h Multi-Horizon Forecast Hub/i)).toBeVisible();
+    // Guru prompts for details
+    await expect(page.getByText(/सटीक व्यक्तिगत फल जानने हेतु मुझे आपकी जन्म-पत्रिका|कृपया अपना शुभ नाम बताएं/i).first()).toBeVisible();
+    await expect(page.getByRole('button', { name: /सामान्य 72h गोचर हब देखें/i })).toBeVisible();
   });
 
   test('Floating AI Guru In-Chat Intake Flow: Guides through Domain, Name, DOB, Time, City, and Question to render Kundali snapshot', async ({ page }) => {
@@ -166,7 +167,7 @@ test.describe('CosmicTantra — AI Guru, CallMe4 E2EE & Pandit Onboarding Suite'
     await expect(page.getByText(/₹501 लिखित विद्वत्-परामर्श पत्र/i)).toBeVisible();
   });
 
-  test('Floating AI Guru In-Chat Links: Clicking in-chat consultation chip navigates to /ask and closes chat drawer', async ({ page }) => {
+  test('Floating AI Guru In-Chat Links: Clicking 72h general hub chip navigates to /daily and closes chat drawer', async ({ page }) => {
     await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
 
     // Open Guru Avatar
@@ -174,15 +175,15 @@ test.describe('CosmicTantra — AI Guru, CallMe4 E2EE & Pandit Onboarding Suite'
     await avatarBtn.click();
     await page.waitForTimeout(300);
 
-    // Click 72h forecast chip -> reveals navigation card
+    // Click 72h forecast chip -> reveals general hub navigation chip
     const forecastChip = page.getByRole('button', { name: /आज का 72h राशिफल व गोचर/i });
     await forecastChip.click();
     await page.waitForTimeout(600);
 
-    // Click in-chat navigation action card
-    const actionCard = page.getByText(/72h Multi-Horizon Forecast Hub/i);
-    await expect(actionCard).toBeVisible();
-    await actionCard.click();
+    // Click in-chat direct link chip
+    const hubChip = page.getByRole('button', { name: /सामान्य 72h गोचर हब देखें/i });
+    await expect(hubChip).toBeVisible();
+    await hubChip.click();
 
     // Verify successful navigation to /daily
     await expect(page).toHaveURL(/.*\/daily/);
