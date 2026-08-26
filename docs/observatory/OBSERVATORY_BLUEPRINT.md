@@ -3,7 +3,7 @@
 **Document status:** implementation record for the shipped Observatory work
 **Last updated:** 26 August 2026 (Asia/Calcutta)
 **Branch:** `arena/01a03b32-cosmictantra-v2`
-**Latest commit:** `9202672 feat: add approximate observation planning`
+**Latest commit:** `f7cae0a feat: add local observatory field log`
 **Release qualification:** **CONDITIONAL PASS**
 
 This document records what was built, why it was built that way, how the pieces connect, which visual assets are used, every meaningful polish step, and what remains before a precision-astronomy release claim would be justified.
