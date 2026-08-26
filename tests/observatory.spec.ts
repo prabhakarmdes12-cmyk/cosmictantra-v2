@@ -16,6 +16,8 @@ import {
 import { localSiderealTime, projectStar, SiderealTime } from '../src/lib/astronomy/projection';
 import { STARS } from '../src/lib/astronomy/stars';
 import { getCelestialDetail, getConstellationDetail, parseCelestialSelection, PLANET_DETAILS } from '../src/lib/astronomy/celestialCatalog';
+import { altitudeBand, calculateMoonPhase, calculateSolarDayEvents, compassDirection, skyLightState, summarizeObservations } from '../src/lib/astronomy/observation';
+import { applyViewportTransform, clampViewportTransform, DEFAULT_VIEWPORT_TRANSFORM, zoomViewportAt } from '../src/lib/astronomy/viewTransform';
 
 test.describe('Observatory coordinate and ephemeris invariants', () => {
   const instant = new Date('2026-08-25T00:00:00.000Z');
@@ -139,5 +141,45 @@ test.describe('Observatory coordinate and ephemeris invariants', () => {
     expect(parseCelestialSelection('Ori', 'constellation')).toEqual({ kind: 'constellation', id: 'Ori' });
     expect(parseCelestialSelection('not-a-body', 'planet')).toBeNull();
     expect(parseCelestialSelection('Ori', 'planet')).toBeNull();
+  });
+
+  test('display zoom preserves a point under the chosen focus', () => {
+    const current = { ...DEFAULT_VIEWPORT_TRANSFORM };
+    const next = zoomViewportAt(current, 2, { x: 180, y: 120 }, 600, 480);
+    const point = { x: 300, y: 240 };
+    const before = applyViewportTransform(point, 600, 480, current);
+    const after = applyViewportTransform(point, 600, 480, next);
+    expect(before.x).not.toBeCloseTo(after.x, 3);
+    const focusBefore = applyViewportTransform({ x: 180, y: 120 }, 600, 480, current);
+    const focusAfter = applyViewportTransform({ x: 180, y: 120 }, 600, 480, next);
+    expect(focusBefore.x).toBeCloseTo(focusAfter.x, 8);
+    expect(focusBefore.y).toBeCloseTo(focusAfter.y, 8);
+    expect(clampViewportTransform({ scale: 20, offsetX: 9999, offsetY: -9999 }, 600, 480).scale).toBe(4);
+  });
+
+  test('observation helpers expose honest local planning signals', () => {
+    const observer = { latitude: 25.3176, longitude: 82.9739 };
+    const events = calculateSolarDayEvents(instant, observer, 5.5);
+    expect(events.approximate).toBe(true);
+    expect(events.localDate).toBe('2026-08-25');
+    expect(events.sunrise).not.toBeNull();
+    expect(events.sunset).not.toBeNull();
+    expect(skyLightState(10)).toBe('daylight');
+    expect(skyLightState(-9)).toBe('nautical twilight');
+    expect(compassDirection(0)).toBe('N');
+    expect(compassDirection(90)).toBe('E');
+    expect(altitudeBand(60)).toBe('high');
+    expect(altitudeBand(-2)).toBe('below horizon');
+    expect(summarizeObservations(instant, observer)).toHaveLength(7);
+  });
+
+  test('Moon phase is bounded and derived from the Sun–Moon angle', () => {
+    const phase = calculateMoonPhase(instant);
+    expect(phase.angleDeg).toBeGreaterThanOrEqual(0);
+    expect(phase.angleDeg).toBeLessThan(360);
+    expect(phase.fraction).toBeGreaterThanOrEqual(0);
+    expect(phase.fraction).toBeLessThan(1);
+    expect(phase.illumination).toBeGreaterThanOrEqual(0);
+    expect(phase.illumination).toBeLessThanOrEqual(1);
   });
 });

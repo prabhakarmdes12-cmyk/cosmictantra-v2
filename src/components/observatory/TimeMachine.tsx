@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import CelestialDetailSheet from './CelestialDetailSheet';
 import SkyCanvasRenderer from './SkyCanvasRenderer';
 import { calculateCanonicalBody, type CanonicalBody, type CanonicalBodyName } from '@/lib/astronomy/canonicalBodies';
@@ -58,6 +58,21 @@ function TimeMachine({ initialCity, initialTime, initialPlanet, initialSelection
   const birthBodies = useMemo(() => BODIES.map(body => calculateCanonicalBody(body, birthDate)), [birthDate]);
   const nowBodies = useMemo(() => BODIES.map(body => calculateCanonicalBody(body, now)), [now]);
   const selectedBody = calculateCanonicalBody(selectedPlanet, simulatedDate);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    params.set('city', city.id);
+    params.set('time', now.toISOString());
+    params.set('planet', selectedPlanet);
+    if (detailSelection) {
+      params.set('object', detailSelection.id);
+      params.set('objectKind', detailSelection.kind);
+    } else {
+      params.delete('object');
+      params.delete('objectKind');
+    }
+    window.history.replaceState(window.history.state, '', `${window.location.pathname}?${params.toString()}${window.location.hash}`);
+  }, [city.id, now, selectedPlanet, detailSelection]);
 
   const setBirthFromInput = (value: string) => {
     const next = new Date(value);

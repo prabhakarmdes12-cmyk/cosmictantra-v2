@@ -2,7 +2,15 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import CanvasViewControls from './CanvasViewControls';
 import CelestialDetailSheet from './CelestialDetailSheet';
+import {
+  clampViewportTransform,
+  DEFAULT_VIEWPORT_TRANSFORM,
+  zoomViewportAt,
+  type ViewportPoint,
+  type ViewportTransform,
+} from '@/lib/astronomy/viewTransform';
 import { calculateCanonicalBody, type CanonicalBody, type CanonicalBodyName } from '@/lib/astronomy/canonicalBodies';
 import type { CelestialSelection } from '@/lib/astronomy/celestialCatalog';
 import { getRashiForLongitude } from '@/lib/astronomy/eclipticProjection';
@@ -29,7 +37,7 @@ function dateInput(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-function drawRashiWheel(canvas: HTMLCanvasElement, positions: CanonicalBody[], selected: CanonicalBodyName): void {
+function drawRashiWheel(canvas: HTMLCanvasElement, positions: CanonicalBody[], selected: CanonicalBodyName, view: ViewportTransform): void {
   const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
   const rect = canvas.getBoundingClientRect();
   const width = Math.max(260, rect.width || 360);
@@ -47,6 +55,11 @@ function drawRashiWheel(canvas: HTMLCanvasElement, positions: CanonicalBody[], s
 
   ctx.fillStyle = '#070A13';
   ctx.fillRect(0, 0, width, height);
+  const viewport = clampViewportTransform(view, width, height);
+  ctx.save();
+  ctx.translate(width / 2 + viewport.offsetX, height / 2 + viewport.offsetY);
+  ctx.scale(viewport.scale, viewport.scale);
+  ctx.translate(-width / 2, -height / 2);
   ctx.strokeStyle = 'rgba(212,175,55,0.52)';
   ctx.lineWidth = 1.4;
   ctx.beginPath();
@@ -121,6 +134,7 @@ function drawRashiWheel(canvas: HTMLCanvasElement, positions: CanonicalBody[], s
   ctx.fillStyle = 'rgba(214,220,244,0.72)';
   ctx.font = '9px "JetBrains Mono", monospace';
   ctx.fillText('SIDEREAL · LAHIRI', cx, cy);
+  ctx.restore();
 }
 
 interface RashiWheelProps {
@@ -131,17 +145,132 @@ interface RashiWheelProps {
 
 function RashiWheel({ label, positions, selected }: RashiWheelProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [view, setView] = useState<ViewportTransform>(DEFAULT_VIEWPORT_TRANSFORM);
+  const dragRef = useRef<{ pointerId: number; x: number; y: number; offsetX: number; offsetY: number } | null>(null);
+  const pointersRef = useRef<Map<number, ViewportPoint>>(new Map());
+  const pinchRef = useRef<{ distance: number; center: ViewportPoint; transform: ViewportTransform } | null>(null);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const draw = () => drawRashiWheel(canvas, positions, selected);
+    const draw = () => drawRashiWheel(canvas, positions, selected, view);
     draw();
     const resizeObserver = new ResizeObserver(draw);
     resizeObserver.observe(canvas);
     return () => resizeObserver.disconnect();
-  }, [positions, selected]);
+  }, [positions, selected, view.scale, view.offsetX, view.offsetY]);
 
-  return <div className="rounded-2xl border border-white/[0.09] bg-[#070A13] p-3"><div className="mb-2 px-1 font-mono-data text-[10px] font-bold uppercase tracking-[0.16em] text-[#D4AF37]">{label}</div><canvas ref={canvasRef} className="block h-[min(76vw,430px)] min-h-[270px] w-full" role="img" aria-label={`${label} sidereal rashi wheel`} /></div>;
+  const pointFromEvent = (event: React.PointerEvent<HTMLCanvasElement>): ViewportPoint => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+  };
+  const zoomAtEvent = (event: React.WheelEvent<HTMLCanvasElement> | React.MouseEvent<HTMLCanvasElement>, factor: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    setView(current => zoomViewportAt(current, current.scale * factor, { x: event.clientX - rect.left, y: event.clientY - rect.top }, rect.width, rect.height));
+  };
+  const zoomBy = (factor: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    setView(current => zoomViewportAt(current, current.scale * factor, { x: rect.width / 2, y: rect.height / 2 }, rect.width, rect.height));
+  };
+  const handleWheel = (event: React.WheelEvent<HTMLCanvasElement>) => {
+    event.preventDefault();
+    zoomAtEvent(event, event.deltaY < 0 ? 1.16 : 1 / 1.16);
+  };
+  const handlePointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    const point = pointFromEvent(event);
+    pointersRef.current.set(event.pointerId, point);
+    event.currentTarget.setPointerCapture(event.pointerId);
+    if (pointersRef.current.size === 1) {
+      dragRef.current = { pointerId: event.pointerId, x: point.x, y: point.y, offsetX: view.offsetX, offsetY: view.offsetY };
+    } else if (pointersRef.current.size === 2) {
+      const [first, second] = [...pointersRef.current.values()];
+      pinchRef.current = { distance: Math.max(1, Math.hypot(second.x - first.x, second.y - first.y)), center: { x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 }, transform: view };
+      dragRef.current = null;
+    }
+  };
+  const handlePointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!pointersRef.current.has(event.pointerId)) return;
+    const point = pointFromEvent(event);
+    pointersRef.current.set(event.pointerId, point);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    if (pointersRef.current.size >= 2 && pinchRef.current) {
+      const [first, second] = [...pointersRef.current.values()];
+      const distance = Math.max(1, Math.hypot(second.x - first.x, second.y - first.y));
+      const center = { x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 };
+      const base = pinchRef.current;
+      setView(() => {
+        const zoomed = zoomViewportAt(base.transform, base.transform.scale * distance / base.distance, base.center, rect.width, rect.height);
+        return clampViewportTransform({ ...zoomed, offsetX: zoomed.offsetX + center.x - base.center.x, offsetY: zoomed.offsetY + center.y - base.center.y }, rect.width, rect.height);
+      });
+      return;
+    }
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    setView(current => clampViewportTransform({ ...current, offsetX: drag.offsetX + point.x - drag.x, offsetY: drag.offsetY + point.y - drag.y }, rect.width, rect.height));
+  };
+  const handlePointerUp = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    pointersRef.current.delete(event.pointerId);
+    if (pointersRef.current.size < 2) pinchRef.current = null;
+    if (dragRef.current?.pointerId === event.pointerId) dragRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+  };
+  const handleDoubleClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    event.preventDefault();
+    zoomAtEvent(event, 1.45);
+  };
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    if (event.key === '+' || event.key === '=') {
+      event.preventDefault();
+      zoomBy(1.35);
+    } else if (event.key === '-' || event.key === '_') {
+      event.preventDefault();
+      zoomBy(1 / 1.35);
+    } else if (event.key === '0' || event.key.toLowerCase() === 'r') {
+      event.preventDefault();
+      setView(DEFAULT_VIEWPORT_TRANSFORM);
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight' || event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+      event.preventDefault();
+      const step = event.shiftKey ? 48 : 24;
+      const dx = event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0;
+      const dy = event.key === 'ArrowUp' ? -step : event.key === 'ArrowDown' ? step : 0;
+      setView(current => clampViewportTransform({ ...current, offsetX: current.offsetX + dx, offsetY: current.offsetY + dy }, rect.width, rect.height));
+    }
+  };
+
+  return (
+    <div className="relative rounded-2xl border border-white/[0.09] bg-[#070A13] p-3">
+      <div className="mb-2 px-1 font-mono-data text-[10px] font-bold uppercase tracking-[0.16em] text-[#D4AF37]">{label}</div>
+      <canvas
+        ref={canvasRef}
+        onDoubleClick={handleDoubleClick}
+        onKeyDown={handleKeyDown}
+        onWheel={handleWheel}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        className="block h-[min(76vw,430px)] min-h-[270px] w-full cursor-grab touch-none active:cursor-grabbing"
+        tabIndex={0}
+        title="Focus the rashi wheel, then use plus/minus, arrow keys, R, or 0 to navigate"
+        role="img"
+        aria-label={`${label} sidereal rashi wheel. Use the zoom controls or drag to inspect the wheel.`}
+      />
+      <div className="pointer-events-none absolute right-5 top-5">
+        <CanvasViewControls zoom={view.scale} onZoomIn={() => zoomBy(1.35)} onZoomOut={() => zoomBy(1 / 1.35)} onReset={() => setView(DEFAULT_VIEWPORT_TRANSFORM)} label={`${label} zoom and pan controls`} />
+      </div>
+      {view.scale > 1 && <div className="pointer-events-none absolute left-5 top-10 rounded-lg border border-white/10 bg-[#060914]/85 px-2.5 py-1.5 font-mono-data text-[9px] uppercase tracking-[0.12em] text-[#AAB4CF] backdrop-blur">Drag to pan · double-click to zoom</div>}
+    </div>
+  );
 }
 
 export interface GocharaProps {
@@ -166,6 +295,21 @@ function Gochara({ initialCity, initialTime, initialPlanet, initialSelection = n
   const currentSign = getRashiForLongitude(currentSelected.siderealLongitude);
   const transitHouse = ((currentSign.index - natalMoonSign + 12) % 12) + 1;
   const signedDelta = ((currentSelected.siderealLongitude - birthSelected.siderealLongitude + 540) % 360) - 180;
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    params.set('city', city.id);
+    params.set('time', now.toISOString());
+    params.set('planet', selected);
+    if (detailSelection) {
+      params.set('object', detailSelection.id);
+      params.set('objectKind', detailSelection.kind);
+    } else {
+      params.delete('object');
+      params.delete('objectKind');
+    }
+    window.history.replaceState(window.history.state, '', `${window.location.pathname}?${params.toString()}${window.location.hash}`);
+  }, [city.id, now, selected, detailSelection]);
 
   const updateBirth = (value: string) => {
     const next = new Date(value);

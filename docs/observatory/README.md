@@ -7,6 +7,7 @@ This directory contains the complete design, implementation, visual, and qualifi
 - [`OBSERVATORY_BLUEPRINT.md`](OBSERVATORY_BLUEPRINT.md) — full product blueprint, route map, architecture, astronomy pipeline, design decisions, image inventory, micro-improvement ledger, QA checklist, and extension roadmap.
 - [`QUALIFICATION_REPORT.md`](QUALIFICATION_REPORT.md) — formal **CONDITIONAL PASS** report, verification evidence, Moon discrepancy, JPL fixture blocker, and release guardrails.
 - [`WORLD_CLASS_ROADMAP.md`](WORLD_CLASS_ROADMAP.md) — strategic review, open NASA/ISRO/Roscosmos source inventory, licensing/ingestion rules, zoom/deep-inspection model, and the single recommended next milestone.
+- [`EVIDENCE_OBSERVATION_V1.md`](EVIDENCE_OBSERVATION_V1.md) — implementation note for the display-only viewport, observation helpers, Student Desk, provenance block, file map, validation record, and remaining qualification guardrails.
 
 ## Blueprint images
 

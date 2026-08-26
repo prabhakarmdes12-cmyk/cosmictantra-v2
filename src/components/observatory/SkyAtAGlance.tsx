@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import { calculateCanonicalBodies, type CanonicalBody, type CanonicalBodyName } from '@/lib/astronomy/canonicalBodies';
 import { getRashiForLongitude } from '@/lib/astronomy/eclipticProjection';
 import { equatorialToHorizontal, type ObserverLocation } from '@/lib/astronomy/projection';
+import { altitudeBand } from '@/lib/astronomy/observation';
 import type { CelestialSelection } from '@/lib/astronomy/celestialCatalog';
 
 const OBSERVABLE_BODIES: CanonicalBodyName[] = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'];
@@ -23,6 +24,7 @@ interface SkyRow {
   direction: string;
   visible: boolean;
   twilight: boolean;
+  altitudeBand: ReturnType<typeof altitudeBand>;
   rashi: ReturnType<typeof getRashiForLongitude>;
 }
 
@@ -79,6 +81,7 @@ export default function SkyAtAGlance({ date, observer, selectedPlanet, onSelectO
           direction: directionForAzimuth(horizontal.azimuthDeg),
           visible: horizontal.altitudeDeg >= 0,
           twilight: horizontal.altitudeDeg >= -6,
+          altitudeBand: altitudeBand(horizontal.altitudeDeg),
           rashi: getRashiForLongitude(body.siderealLongitude),
         };
       })
@@ -152,6 +155,7 @@ export default function SkyAtAGlance({ date, observer, selectedPlanet, onSelectO
               <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1 font-mono-data text-[10px]">
                 <span className="text-[#7F89A7]">Altitude</span><span className="text-right text-[#E0E4F1]">{altitudeLabel(row.altitudeDeg)}</span>
                 <span className="text-[#7F89A7]">Direction</span><span className="text-right text-[#F2C65D]">{row.direction} · {row.azimuthDeg.toFixed(0)}°</span>
+                <span className="text-[#7F89A7]">Sky band</span><span className="text-right capitalize text-[#C9D0E5]">{row.altitudeBand}</span>
                 <span className="text-[#7F89A7]">Sidereal</span><span className="truncate text-right text-[#C9D0E5]">{row.rashi.glyph} {row.rashi.name}</span>
               </div>
             </button>

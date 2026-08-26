@@ -48,6 +48,34 @@ export default function CelestialDetailSheet({ selection, date, observer, cityId
   const highestStar = visibleStars.reduce((highest, item) => !highest || item.point.altitudeDeg > highest.point.altitudeDeg ? item : highest, null as (typeof visibleStars[number] | null));
   const skyPosition = body ? equatorialToHorizontal({ raHours: body.rightAscensionHours, decDeg: body.declinationDeg }, dateValue, observer) : null;
   const isMathematicalNode = body?.source === 'mean-node';
+  const provenance = selection.kind === 'planet'
+    ? isMathematicalNode
+      ? {
+          label: 'Calculated locally · mean lunar node',
+          quality: 'Illustrative local approximation',
+          frame: 'Tropical ecliptic → Lahiri sidereal ecliptic',
+          source: 'CosmicTantra mean-node formula',
+          fixture: 'None · BLOCKER-2 remains open',
+          note: 'Rahu and Ketu are mathematical intersections of the lunar orbit and ecliptic. They have no physical body, distance, altitude or azimuth.',
+        }
+      : {
+          label: `Calculated locally · ${body?.source === 'lunar' ? 'compact lunar model' : body?.source === 'solar' ? 'solar model' : 'low-precision Keplerian model'}`,
+          quality: 'Illustrative local approximation',
+          frame: 'Tropical ecliptic → of-date equatorial/horizontal',
+          source: `CosmicTantra ${body?.source || 'local'} model`,
+          fixture: 'None · BLOCKER-2 remains open',
+          note: body?.body === 'Moon'
+            ? 'BLOCKER-1: this deterministic teaching ephemeris is not JPL-grade; qualification records a 1.135216° Moon discrepancy. No sub-degree lunar claim is made.'
+            : 'This deterministic teaching ephemeris is not JPL-grade, does not model terrain or refraction, and should not be read as a precision visibility prediction.',
+        }
+    : {
+        label: 'Catalogue anchor · J2000 bright-star coordinates',
+        quality: 'Catalogue projection · approximate precession',
+        frame: 'J2000 catalogue → local of-date sky',
+        source: '70-anchor bright-star catalogue',
+        fixture: 'Not applicable to fixed-star artwork',
+        note: 'Star positions are projected from a fixed bright-star catalogue with approximate precession. The pattern drawing is schematic, not a surveyed boundary or an agency image.',
+      };
   const rashi = body ? getRashiForLongitude(body.siderealLongitude) : null;
   const nakshatra = body ? getNakshatraForLongitude(body.siderealLongitude) : null;
   const query = `city=${encodeURIComponent(cityId)}&time=${encodeURIComponent(dateValue.toISOString())}${selection.kind === 'planet' ? `&planet=${encodeURIComponent(selection.id)}` : ''}`;
@@ -149,6 +177,18 @@ export default function CelestialDetailSheet({ selection, date, observer, cityId
             <p id="celestial-detail-description" className="mt-4 text-xs leading-relaxed text-[#8F99B5]">Calculated for {dateValue.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' })} UTC · anchor {observerLabel} · observer {observer.latitude.toFixed(2)}° {observer.latitude >= 0 ? 'N' : 'S'}, {Math.abs(observer.longitude).toFixed(2)}° {observer.longitude >= 0 ? 'E' : 'W'}</p>
           </header>
 
+          <section className="rounded-2xl border border-[#91C7A5]/20 bg-[#0D1B17] p-4" aria-label="Calculation provenance">
+            <div className="font-mono-data text-[10px] font-bold uppercase tracking-[0.16em] text-[#91C7A5]">{provenance.label}</div>
+            <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 font-mono-data text-[9px]">
+              <div><dt className="text-[#718F7B]">Quality</dt><dd className="mt-0.5 text-[#C7E4CC]">{provenance.quality}</dd></div>
+              <div><dt className="text-[#718F7B]">Source / provider</dt><dd className="mt-0.5 text-[#C7E4CC]">{provenance.source}</dd></div>
+              <div><dt className="text-[#718F7B]">Frame</dt><dd className="mt-0.5 text-[#C7E4CC]">{provenance.frame}</dd></div>
+              <div><dt className="text-[#718F7B]">Reference fixture</dt><dd className="mt-0.5 text-[#C7E4CC]">{provenance.fixture}</dd></div>
+            </dl>
+            <p className="mt-3 text-[10px] leading-relaxed text-[#B9D8C0]">{provenance.note}</p>
+            <p className="mt-2 font-mono-data text-[9px] leading-relaxed text-[#718F7B]">Epoch: {dateValue.toISOString()} · tropical ecliptic coordinates remain the astronomy frame. Sidereal longitude, Lahiri ayanamsha, rashi, Nakshatra and pada are derived separately; no external provider is being queried for this sheet.</p>
+          </section>
+
           {body ? (
             <>
               <section className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -157,7 +197,7 @@ export default function CelestialDetailSheet({ selection, date, observer, cityId
                 <div className="rounded-xl border border-white/[0.08] bg-[#0D1222] p-3"><div className="font-mono-data text-[9px] uppercase tracking-wider text-[#8993B0]">{isMathematicalNode ? 'Physical altitude' : 'Altitude'}</div><div className="mt-1 font-mono-data text-sm font-bold text-[#E3E7F5]">{!isMathematicalNode && skyPosition ? `${skyPosition.altitudeDeg.toFixed(1)}°` : '—'}</div></div>
                 <div className="rounded-xl border border-white/[0.08] bg-[#0D1222] p-3"><div className="font-mono-data text-[9px] uppercase tracking-wider text-[#8993B0]">{isMathematicalNode ? 'Physical azimuth' : 'Azimuth'}</div><div className="mt-1 font-mono-data text-sm font-bold text-[#E3E7F5]">{!isMathematicalNode && skyPosition ? `${skyPosition.azimuthDeg.toFixed(1)}°` : '—'}</div></div>
               </section>
-              <section className="rounded-2xl border border-[#D4AF37]/25 bg-[#0D1222] p-4"><div className="font-mono-data text-[10px] font-bold uppercase tracking-[0.16em] text-[#D4AF37]">Coordinate reading</div><dl className="mt-3 grid grid-cols-2 gap-x-5 gap-y-3 text-xs"><div><dt className="text-[#8993B0]">Rashi</dt><dd className="mt-1 font-bold text-[#E4E8F5]">{rashi?.glyph} {rashi?.name}</dd></div><div><dt className="text-[#8993B0]">Nakshatra</dt><dd className="mt-1 font-bold text-[#E4E8F5]">{nakshatra?.name} · Pada {nakshatra?.pada}</dd></div><div><dt className="text-[#8993B0]">Right ascension</dt><dd className="mt-1 font-mono-data text-[#C9D0E5]">{body.rightAscensionHours.toFixed(3)}h</dd></div><div><dt className="text-[#8993B0]">Declination</dt><dd className="mt-1 font-mono-data text-[#C9D0E5]">{body.declinationDeg.toFixed(2)}°</dd></div><div><dt className="text-[#8993B0]">Motion</dt><dd className="mt-1 font-bold text-[#C9D0E5]">{body.isRetrograde ? 'Retrograde' : 'Direct'}</dd></div><div><dt className="text-[#8993B0]">Model</dt><dd className="mt-1 font-mono-data text-[10px] text-[#C9D0E5]">{body.source}</dd></div></dl></section>
+              <section className="rounded-2xl border border-[#D4AF37]/25 bg-[#0D1222] p-4"><div className="font-mono-data text-[10px] font-bold uppercase tracking-[0.16em] text-[#D4AF37]">Coordinate reading</div><dl className="mt-3 grid grid-cols-2 gap-x-5 gap-y-3 text-xs"><div><dt className="text-[#8993B0]">Rashi</dt><dd className="mt-1 font-bold text-[#E4E8F5]">{rashi?.glyph} {rashi?.name}</dd></div><div><dt className="text-[#8993B0]">Nakshatra</dt><dd className="mt-1 font-bold text-[#E4E8F5]">{nakshatra?.name} · Pada {nakshatra?.pada}</dd></div><div><dt className="text-[#8993B0]">Right ascension</dt><dd className="mt-1 font-mono-data text-[#C9D0E5]">{body.rightAscensionHours.toFixed(3)}h</dd></div><div><dt className="text-[#8993B0]">Declination</dt><dd className="mt-1 font-mono-data text-[#C9D0E5]">{body.declinationDeg.toFixed(2)}°</dd></div><div><dt className="text-[#8993B0]">Ecliptic latitude</dt><dd className="mt-1 font-mono-data text-[#C9D0E5]">{body.tropicalLatitude.toFixed(2)}°</dd></div><div><dt className="text-[#8993B0]">Distance</dt><dd className="mt-1 font-mono-data text-[#C9D0E5]">{isMathematicalNode ? 'not applicable' : `${body.distanceAu.toFixed(4)} AU`}</dd></div><div><dt className="text-[#8993B0]">Motion</dt><dd className="mt-1 font-bold text-[#C9D0E5]">{body.isRetrograde ? 'Retrograde' : 'Direct'}</dd></div><div><dt className="text-[#8993B0]">Model</dt><dd className="mt-1 font-mono-data text-[10px] text-[#C9D0E5]">{body.source}</dd></div></dl></section>
             </>
           ) : (
             <section className="grid grid-cols-2 gap-2 sm:grid-cols-4"><div className="rounded-xl border border-white/[0.08] bg-[#0D1222] p-3"><div className="font-mono-data text-[9px] uppercase tracking-wider text-[#8993B0]">Visible anchors</div><div className="mt-1 font-mono-data text-lg font-bold text-[#F2C65D]">{visibleStars.length}</div></div><div className="rounded-xl border border-white/[0.08] bg-[#0D1222] p-3"><div className="font-mono-data text-[9px] uppercase tracking-wider text-[#8993B0]">Peak altitude</div><div className="mt-1 font-mono-data text-lg font-bold text-[#E3E7F5]">{highestStar ? `${highestStar.point.altitudeDeg.toFixed(1)}°` : 'Below horizon'}</div></div><div className="rounded-xl border border-white/[0.08] bg-[#0D1222] p-3"><div className="font-mono-data text-[9px] uppercase tracking-wider text-[#8993B0]">Observer latitude</div><div className="mt-1 font-mono-data text-lg font-bold text-[#E3E7F5]">{observer.latitude.toFixed(1)}°</div></div><div className="rounded-xl border border-white/[0.08] bg-[#0D1222] p-3"><div className="font-mono-data text-[9px] uppercase tracking-wider text-[#8993B0]">Pattern</div><div className="mt-1 font-mono-data text-sm font-bold text-[#E3E7F5]">{constellationDisplayName(selection.id)}</div></div></section>

@@ -2,13 +2,16 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { Clock3, LocateFixed, RotateCcw, SlidersHorizontal } from 'lucide-react';
+import { Clock3, LocateFixed, RotateCcw, SlidersHorizontal, Star } from 'lucide-react';
 import CelestialDetailSheet from './CelestialDetailSheet';
+import ObservatoryStudentDesk from './ObservatoryStudentDesk';
 import SkyAtAGlance from './SkyAtAGlance';
 import SkyCanvasRenderer from './SkyCanvasRenderer';
 import { calculateCanonicalBody, type CanonicalBodyName } from '@/lib/astronomy/canonicalBodies';
 import { constellationDisplayName, constellationIds, type CelestialSelection } from '@/lib/astronomy/celestialCatalog';
 import { CITIES } from '@/lib/cities';
+import { projectStar } from '@/lib/astronomy/projection';
+import { STARS } from '@/lib/astronomy/stars';
 
 const PLANETS: CanonicalBodyName[] = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'];
 const SYMBOLS: Record<string, string> = { Sun: '☉', Moon: '☽', Mars: '♂', Mercury: '☿', Jupiter: '♃', Venus: '♀', Saturn: '♄', Rahu: '☊', Ketu: '☋' };
@@ -85,6 +88,11 @@ export function ObservatoryExperience({
 
   const selectedBody = useMemo(() => calculateCanonicalBody(selectedPlanet, date), [selectedPlanet, date]);
   const constellationOptions = useMemo(() => constellationIds().map(id => ({ id, name: constellationDisplayName(id) })), []);
+  const visibleBrightAnchors = useMemo(() => STARS
+    .map(star => ({ star, point: projectStar(star, date, { latitude: city.lat, longitude: city.lng }, 600, 600) }))
+    .filter(item => item.point.visible && item.star.magnitude <= 2.5)
+    .sort((left, right) => left.star.magnitude - right.star.magnitude)
+    .slice(0, 14), [date, city.lat, city.lng]);
   const dateInput = toDateTimeInput(date, city.tz);
 
   useEffect(() => {
@@ -144,6 +152,7 @@ export function ObservatoryExperience({
             <Link href={query('/observatory/ecliptic')} className="rounded-full border border-[#D4AF37]/50 bg-[#D4AF37]/10 px-3 py-2 text-[#F2C65D] transition-colors hover:bg-[#D4AF37]/20">Ecliptic planisphere ↗</Link>
             <Link href={query('/observatory/timemachine')} className="rounded-full border border-white/10 px-3 py-2 text-[#C1C7DF] transition-colors hover:border-[#D4AF37]/60">Time machine</Link>
             <Link href={query('/observatory/gochara')} className="rounded-full border border-white/10 px-3 py-2 text-[#C1C7DF] transition-colors hover:border-[#D4AF37]/60">Gochara</Link>
+            <a href="#student-desk-title" className="rounded-full border border-white/10 px-3 py-2 text-[#C1C7DF] transition-colors hover:border-[#D4AF37]/60">Study desk</a>
           </div>
         </header>
 
@@ -263,6 +272,20 @@ export function ObservatoryExperience({
               </select>
               {selectedConstellation && <button type="button" onClick={() => setDetailSelection({ kind: 'constellation', id: selectedConstellation })} className="mt-2 w-full rounded-xl border border-[#8B8BF5]/40 bg-[#8B8BF5]/10 px-3 py-2.5 font-mono-data text-[10px] font-bold uppercase tracking-[0.12em] text-[#C4C5FF] transition-colors hover:bg-[#8B8BF5]/20">Open {constellationDisplayName(selectedConstellation)} field notes</button>}
             </div>
+
+            <div className="rounded-2xl border border-white/[0.09] bg-[#090D1A] p-4">
+              <div className="flex items-center gap-2 font-mono-data text-[10px] font-bold uppercase tracking-[0.16em] text-[#9DA6C4]"><Star className="h-3 w-3 text-[#F2C65D]" /> Bright anchor list</div>
+              <p className="mt-2 text-[10px] leading-relaxed text-[#8993B0]">A keyboard-friendly alternative to canvas targeting. Select a visible bright-star anchor to highlight its constellation and open field notes.</p>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {visibleBrightAnchors.map(({ star, point }) => (
+                  <button type="button" key={star.id} onClick={() => selectObject({ kind: 'constellation', id: star.constellation })} className="rounded-lg border border-white/[0.07] bg-[#070A13] px-2.5 py-2 text-left transition-colors hover:border-[#D4AF37]/55" aria-label={`Highlight ${star.name}, ${constellationDisplayName(star.constellation)}; altitude ${point.altitudeDeg.toFixed(1)} degrees`}>
+                    <span className="block truncate font-mono-data text-[10px] font-bold text-[#DCE1F0]">✦ {star.name}</span>
+                    <span className="mt-1 block font-mono-data text-[9px] text-[#7F89A7]">{constellationDisplayName(star.constellation)} · {point.altitudeDeg.toFixed(0)}° alt</span>
+                  </button>
+                ))}
+              </div>
+              {visibleBrightAnchors.length === 0 && <p className="mt-3 text-[10px] text-[#7F89A7]">No bright catalogue anchor is above the mathematical horizon at this instant.</p>}
+            </div>
           </aside>
         </section>
 
@@ -271,6 +294,15 @@ export function ObservatoryExperience({
           observer={{ latitude: city.lat, longitude: city.lng }}
           selectedPlanet={selectedPlanet}
           onSelectObject={selectObject}
+        />
+
+        <ObservatoryStudentDesk
+          date={date}
+          observer={{ latitude: city.lat, longitude: city.lng }}
+          cityId={city.id}
+          cityName={city.name}
+          timezoneOffsetHours={city.tz}
+          selectedPlanet={selectedPlanet}
         />
 
         <footer className="flex flex-col gap-3 border-t border-white/[0.09] pt-5 text-xs text-[#9CA4BD] sm:flex-row sm:items-center sm:justify-between">

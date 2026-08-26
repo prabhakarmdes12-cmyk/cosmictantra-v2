@@ -1,6 +1,15 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import CanvasViewControls from './CanvasViewControls';
+import {
+  applyViewportTransform,
+  clampViewportTransform,
+  DEFAULT_VIEWPORT_TRANSFORM,
+  zoomViewportAt,
+  type ViewportPoint,
+  type ViewportTransform,
+} from '@/lib/astronomy/viewTransform';
 import {
   altitudeRingPoints,
   cardinalDirectionPoints,
@@ -132,6 +141,7 @@ function drawSky(
   selectedConstellation: string | null | undefined,
   showMandala: boolean,
   showConstellations: boolean,
+  view: ViewportTransform,
   targetsRef: React.MutableRefObject<DrawnTarget[]>,
 ): void {
   const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
@@ -155,6 +165,18 @@ function drawSky(
   background.addColorStop(1, '#03050B');
   ctx.fillStyle = background;
   ctx.fillRect(0, 0, width, height);
+
+  const viewport = clampViewportTransform(view, width, height);
+  const toScreenPoint = (point: CanvasSkyPoint): CanvasSkyPoint => ({
+    ...point,
+    ...applyViewportTransform(point, width, height, viewport),
+  });
+  // Keep the background fixed while the calculated sky scene becomes a
+  // navigable display layer. This transform never changes astronomy values.
+  ctx.save();
+  ctx.translate(width / 2 + viewport.offsetX, height / 2 + viewport.offsetY);
+  ctx.scale(viewport.scale, viewport.scale);
+  ctx.translate(-width / 2, -height / 2);
 
   // Horizon and altitude rings.
   ctx.save();
@@ -221,8 +243,8 @@ function drawSky(
       ctx.stroke();
       targets.push({
         selection: { kind: 'constellation', id: firstStar.constellation },
-        point: { ...first, x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 },
-        hitRadius: selected ? 22 : 15,
+        point: toScreenPoint({ ...first, x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 }),
+        hitRadius: (selected ? 22 : 15) * viewport.scale,
         priority: selected ? 2 : 1,
       });
     });
@@ -253,11 +275,14 @@ function drawSky(
     ctx.arc(point.x, point.y, selected ? starRadius + 1.2 : starRadius, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
+    if (viewport.scale >= 1.7 && star.magnitude <= 2.3) {
+      drawText(ctx, `${star.name} · ${star.magnitude.toFixed(1)}`, point.x + starRadius + 7, point.y - starRadius - 4, '#DCE3FF', '8px "JetBrains Mono", monospace', 'left');
+    }
     if (showConstellations) {
       targets.push({
         selection: { kind: 'constellation', id: star.constellation },
-        point,
-        hitRadius: Math.max(12, starRadius + 8),
+        point: toScreenPoint(point),
+        hitRadius: Math.max(12, starRadius + 8) * viewport.scale,
         priority: star.magnitude < 1.5 ? 2 : 1,
       });
     }
@@ -269,8 +294,8 @@ function drawSky(
     if (!point.visible) return;
     targets.push({
       selection: { kind: 'planet', id: body.body },
-      point,
-      hitRadius: body.body === 'Sun' ? 28 : 24,
+      point: toScreenPoint(point),
+      hitRadius: (body.body === 'Sun' ? 28 : 24) * viewport.scale,
       priority: 3,
     });
     const color = PLANET_COLORS[body.body] || '#D4AF37';
@@ -311,8 +336,6 @@ function drawSky(
       selected ? 'bold 10px "JetBrains Mono", monospace' : '9px "JetBrains Mono", monospace',
     );
   });
-  targetsRef.current = targets;
-
   // Zenith, cardinal compass, and quiet coordinate annotations.
   ctx.save();
   ctx.strokeStyle = 'rgba(255,255,255,0.11)';
@@ -329,6 +352,8 @@ function drawSky(
   Object.entries(directions).forEach(([label, point]) => {
     drawText(ctx, label, point.x, point.y, label === 'N' ? '#F2C65D' : '#AEB7D7', 'bold 10px "JetBrains Mono", monospace');
   });
+  ctx.restore();
+  targetsRef.current = targets;
 }
 
 function SkyCanvasRenderer({
@@ -346,6 +371,10 @@ function SkyCanvasRenderer({
 }: SkyCanvasRendererProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const targetsRef = useRef<DrawnTarget[]>([]);
+  const [view, setView] = useState<ViewportTransform>(DEFAULT_VIEWPORT_TRANSFORM);
+  const dragRef = useRef<{ pointerId: number; x: number; y: number; offsetX: number; offsetY: number } | null>(null);
+  const pointersRef = useRef<Map<number, ViewportPoint>>(new Map());
+  const pinchRef = useRef<{ distance: number; center: ViewportPoint; transform: ViewportTransform } | null>(null);
   const dateValue = date instanceof Date ? date.toISOString() : date;
 
   useEffect(() => {
@@ -359,13 +388,122 @@ function SkyCanvasRenderer({
       selectedConstellation,
       showMandala,
       showConstellations,
+      view,
       targetsRef,
     );
     render();
     const resizeObserver = new ResizeObserver(render);
     resizeObserver.observe(canvas);
     return () => resizeObserver.disconnect();
-  }, [dateValue, observer.latitude, observer.longitude, selectedPlanet, selectedConstellation, showMandala, showConstellations]);
+  }, [dateValue, observer.latitude, observer.longitude, selectedPlanet, selectedConstellation, showMandala, showConstellations, view.scale, view.offsetX, view.offsetY]);
+
+  const pointFromEvent = (event: React.PointerEvent<HTMLCanvasElement>): ViewportPoint => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+  };
+
+  const zoomAtEvent = (event: React.WheelEvent<HTMLCanvasElement> | React.MouseEvent<HTMLCanvasElement>, factor: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const focusPoint = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+    setView(current => zoomViewportAt(current, current.scale * factor, focusPoint, rect.width, rect.height));
+  };
+
+  const zoomBy = (factor: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    setView(current => zoomViewportAt(current, current.scale * factor, { x: rect.width / 2, y: rect.height / 2 }, rect.width, rect.height));
+  };
+
+  const handleWheel = (event: React.WheelEvent<HTMLCanvasElement>) => {
+    event.preventDefault();
+    zoomAtEvent(event, event.deltaY < 0 ? 1.16 : 1 / 1.16);
+  };
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    const point = pointFromEvent(event);
+    pointersRef.current.set(event.pointerId, point);
+    event.currentTarget.setPointerCapture(event.pointerId);
+    if (pointersRef.current.size === 1) {
+      dragRef.current = { pointerId: event.pointerId, x: point.x, y: point.y, offsetX: view.offsetX, offsetY: view.offsetY };
+    } else if (pointersRef.current.size === 2) {
+      const [first, second] = [...pointersRef.current.values()];
+      pinchRef.current = {
+        distance: Math.max(1, Math.hypot(second.x - first.x, second.y - first.y)),
+        center: { x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 },
+        transform: view,
+      };
+      dragRef.current = null;
+    }
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    const point = pointFromEvent(event);
+    if (!pointersRef.current.has(event.pointerId)) return;
+    pointersRef.current.set(event.pointerId, point);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    if (pointersRef.current.size >= 2 && pinchRef.current) {
+      const [first, second] = [...pointersRef.current.values()];
+      const distance = Math.max(1, Math.hypot(second.x - first.x, second.y - first.y));
+      const center = { x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 };
+      const base = pinchRef.current;
+      setView(current => {
+        const zoomed = zoomViewportAt(base.transform, base.transform.scale * distance / base.distance, base.center, rect.width, rect.height);
+        return clampViewportTransform({
+          ...zoomed,
+          offsetX: zoomed.offsetX + center.x - base.center.x,
+          offsetY: zoomed.offsetY + center.y - base.center.y,
+        }, rect.width, rect.height);
+      });
+      return;
+    }
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    setView(current => clampViewportTransform({
+      ...current,
+      offsetX: drag.offsetX + point.x - drag.x,
+      offsetY: drag.offsetY + point.y - drag.y,
+    }, rect.width, rect.height));
+  };
+
+  const handlePointerUp = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    pointersRef.current.delete(event.pointerId);
+    if (pointersRef.current.size < 2) pinchRef.current = null;
+    if (dragRef.current?.pointerId === event.pointerId) dragRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+  };
+
+  const handleDoubleClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    event.preventDefault();
+    zoomAtEvent(event, 1.45);
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    if (event.key === '+' || event.key === '=') {
+      event.preventDefault();
+      zoomBy(1.35);
+    } else if (event.key === '-' || event.key === '_') {
+      event.preventDefault();
+      zoomBy(1 / 1.35);
+    } else if (event.key === '0' || event.key.toLowerCase() === 'r') {
+      event.preventDefault();
+      setView(DEFAULT_VIEWPORT_TRANSFORM);
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight' || event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+      event.preventDefault();
+      const step = event.shiftKey ? 48 : 24;
+      const dx = event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0;
+      const dy = event.key === 'ArrowUp' ? -step : event.key === 'ArrowDown' ? step : 0;
+      setView(current => clampViewportTransform({ ...current, offsetX: current.offsetX + dx, offsetY: current.offsetY + dy }, rect.width, rect.height));
+    }
+  };
 
   const handleClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
     if ((!onSelectObject && !onSelectPlanet && !onSelectConstellation) || !canvasRef.current) return;
@@ -394,13 +532,26 @@ function SkyCanvasRenderer({
       <canvas
         ref={canvasRef}
         onClick={handleClick}
-        className="block h-full min-h-[320px] w-full cursor-crosshair touch-manipulation"
+        onDoubleClick={handleDoubleClick}
+        onKeyDown={handleKeyDown}
+        onWheel={handleWheel}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        className="block h-full min-h-[320px] w-full cursor-grab touch-none active:cursor-grabbing"
+        tabIndex={0}
+        title="Focus the sky, then use plus/minus, arrow keys, R, or 0 to navigate"
         role="img"
-        aria-label="Stereographic local sky projection with stars and planets"
+        aria-label="Stereographic local sky projection with stars and planets. Use the zoom controls or drag to inspect the field."
       />
+      <div className="pointer-events-none absolute right-3 top-3">
+        <CanvasViewControls zoom={view.scale} onZoomIn={() => zoomBy(1.35)} onZoomOut={() => zoomBy(1 / 1.35)} onReset={() => setView(DEFAULT_VIEWPORT_TRANSFORM)} label="Local sky zoom and pan controls" />
+      </div>
+      {view.scale > 1 && <div className="pointer-events-none absolute left-3 top-3 rounded-lg border border-white/10 bg-[#060914]/85 px-2.5 py-1.5 font-mono-data text-[9px] uppercase tracking-[0.12em] text-[#AAB4CF] backdrop-blur">Drag to pan · double-click to zoom</div>}
       {labelled && (
         <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-white/10 bg-[#060914]/85 px-3 py-1.5 text-center font-mono-data text-[9px] uppercase tracking-[0.14em] text-[#B8BED7] backdrop-blur">
-          Tap a graha or star pattern · dashed gold line is the ecliptic
+          Tap a graha or star pattern · scroll/pinch to zoom · dashed gold line is the ecliptic
         </div>
       )}
     </div>

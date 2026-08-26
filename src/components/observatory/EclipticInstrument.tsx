@@ -1,7 +1,16 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import CanvasViewControls from './CanvasViewControls';
 import CelestialDetailSheet from './CelestialDetailSheet';
+import {
+  applyViewportTransform,
+  clampViewportTransform,
+  DEFAULT_VIEWPORT_TRANSFORM,
+  zoomViewportAt,
+  type ViewportPoint,
+  type ViewportTransform,
+} from '@/lib/astronomy/viewTransform';
 import {
   ECLIPTIC_NAKSHATRAS,
   getNakshatraForLongitude,
@@ -46,6 +55,7 @@ function drawPlanisphere(
   date: Date,
   ayanamsha: number,
   selectedPlanet: string | null | undefined,
+  view: ViewportTransform,
 ): Map<string, { x: number; y: number; body: CanonicalBody }> {
   const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
   const rect = canvas.getBoundingClientRect();
@@ -71,6 +81,15 @@ function drawPlanisphere(
   background.addColorStop(1, '#040611');
   ctx.fillStyle = background;
   ctx.fillRect(0, 0, width, height);
+
+  const viewport = clampViewportTransform(view, width, height);
+  const toScreenPoint = (point: { x: number; y: number }) => applyViewportTransform(point, width, height, viewport);
+  // The planisphere is a calculated ring. Zoom is a display transform only;
+  // it must never alter the underlying tropical or sidereal longitude.
+  ctx.save();
+  ctx.translate(width / 2 + viewport.offsetX, height / 2 + viewport.offsetY);
+  ctx.scale(viewport.scale, viewport.scale);
+  ctx.translate(-width / 2, -height / 2);
 
   ctx.save();
   ctx.strokeStyle = 'rgba(212,175,55,0.55)';
@@ -137,7 +156,8 @@ function drawPlanisphere(
   const bodies = calculateCanonicalBodies(date).filter(body => DISPLAY_BODIES.includes(body.body));
   bodies.forEach(body => {
     const point = plotEclipticPosition(body.tropicalLongitude, cx, cy, planetRadius);
-    targets.set(body.body, { x: point.x, y: point.y, body });
+    const screenPoint = toScreenPoint(point);
+    targets.set(body.body, { x: screenPoint.x, y: screenPoint.y, body });
     const color = PLANET_COLORS[body.body] || '#D4AF37';
     const selected = body.body === selectedPlanet;
     ctx.save();
@@ -170,6 +190,7 @@ function drawPlanisphere(
   ctx.font = '9px "JetBrains Mono", monospace';
   ctx.textAlign = 'center';
   ctx.fillText('TROPICAL ECLIPTIC · 0° ARIES AT TOP', cx, cy);
+  ctx.restore();
   return targets;
 }
 
@@ -193,6 +214,10 @@ function EclipticInstrument({
 }: EclipticInstrumentProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const targetsRef = useRef<Map<string, { x: number; y: number; body: CanonicalBody }>>(new Map());
+  const [view, setView] = useState<ViewportTransform>(DEFAULT_VIEWPORT_TRANSFORM);
+  const dragRef = useRef<{ pointerId: number; x: number; y: number; offsetX: number; offsetY: number } | null>(null);
+  const pointersRef = useRef<Map<number, ViewportPoint>>(new Map());
+  const pinchRef = useRef<{ distance: number; center: ViewportPoint; transform: ViewportTransform } | null>(null);
   const [selectedPlanet, setSelectedPlanet] = useState(initialSelection?.kind === 'planet' ? initialSelection.id : selectedPlanetProp || 'Sun');
   const [detailSelection, setDetailSelection] = useState<CelestialSelection | null>(initialSelection);
   const dateValue = date instanceof Date ? date.toISOString() : date;
@@ -204,16 +229,138 @@ function EclipticInstrument({
   }, [selectedPlanetProp, selectedPlanet]);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    params.set('city', cityId);
+    params.set('time', dateValue);
+    if (selectedPlanet) params.set('planet', selectedPlanet);
+    if (detailSelection) {
+      params.set('object', detailSelection.id);
+      params.set('objectKind', detailSelection.kind);
+    } else {
+      params.delete('object');
+      params.delete('objectKind');
+    }
+    window.history.replaceState(window.history.state, '', `${window.location.pathname}?${params.toString()}${window.location.hash}`);
+  }, [cityId, dateValue, selectedPlanet, detailSelection]);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const render = () => {
-      targetsRef.current = drawPlanisphere(canvas, validDate(dateValue), ayanamsha, selectedPlanet);
+      targetsRef.current = drawPlanisphere(canvas, validDate(dateValue), ayanamsha, selectedPlanet, view);
     };
     render();
     const resizeObserver = new ResizeObserver(render);
     resizeObserver.observe(canvas);
     return () => resizeObserver.disconnect();
-  }, [dateValue, ayanamsha, selectedPlanet]);
+  }, [dateValue, ayanamsha, selectedPlanet, view.scale, view.offsetX, view.offsetY]);
+
+  const pointFromEvent = (event: React.PointerEvent<HTMLCanvasElement>): ViewportPoint => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+  };
+
+  const zoomAtEvent = (event: React.WheelEvent<HTMLCanvasElement> | React.MouseEvent<HTMLCanvasElement>, factor: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    setView(current => zoomViewportAt(current, current.scale * factor, { x: event.clientX - rect.left, y: event.clientY - rect.top }, rect.width, rect.height));
+  };
+
+  const zoomBy = (factor: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    setView(current => zoomViewportAt(current, current.scale * factor, { x: rect.width / 2, y: rect.height / 2 }, rect.width, rect.height));
+  };
+
+  const handleWheel = (event: React.WheelEvent<HTMLCanvasElement>) => {
+    event.preventDefault();
+    zoomAtEvent(event, event.deltaY < 0 ? 1.16 : 1 / 1.16);
+  };
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    const point = pointFromEvent(event);
+    pointersRef.current.set(event.pointerId, point);
+    event.currentTarget.setPointerCapture(event.pointerId);
+    if (pointersRef.current.size === 1) {
+      dragRef.current = { pointerId: event.pointerId, x: point.x, y: point.y, offsetX: view.offsetX, offsetY: view.offsetY };
+    } else if (pointersRef.current.size === 2) {
+      const [first, second] = [...pointersRef.current.values()];
+      pinchRef.current = {
+        distance: Math.max(1, Math.hypot(second.x - first.x, second.y - first.y)),
+        center: { x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 },
+        transform: view,
+      };
+      dragRef.current = null;
+    }
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    const point = pointFromEvent(event);
+    if (!pointersRef.current.has(event.pointerId)) return;
+    pointersRef.current.set(event.pointerId, point);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    if (pointersRef.current.size >= 2 && pinchRef.current) {
+      const [first, second] = [...pointersRef.current.values()];
+      const distance = Math.max(1, Math.hypot(second.x - first.x, second.y - first.y));
+      const center = { x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 };
+      const base = pinchRef.current;
+      setView(() => {
+        const zoomed = zoomViewportAt(base.transform, base.transform.scale * distance / base.distance, base.center, rect.width, rect.height);
+        return clampViewportTransform({
+          ...zoomed,
+          offsetX: zoomed.offsetX + center.x - base.center.x,
+          offsetY: zoomed.offsetY + center.y - base.center.y,
+        }, rect.width, rect.height);
+      });
+      return;
+    }
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    setView(current => clampViewportTransform({
+      ...current,
+      offsetX: drag.offsetX + point.x - drag.x,
+      offsetY: drag.offsetY + point.y - drag.y,
+    }, rect.width, rect.height));
+  };
+
+  const handlePointerUp = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    pointersRef.current.delete(event.pointerId);
+    if (pointersRef.current.size < 2) pinchRef.current = null;
+    if (dragRef.current?.pointerId === event.pointerId) dragRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+  };
+
+  const handleDoubleClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    event.preventDefault();
+    zoomAtEvent(event, 1.45);
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    if (event.key === '+' || event.key === '=') {
+      event.preventDefault();
+      zoomBy(1.35);
+    } else if (event.key === '-' || event.key === '_') {
+      event.preventDefault();
+      zoomBy(1 / 1.35);
+    } else if (event.key === '0' || event.key.toLowerCase() === 'r') {
+      event.preventDefault();
+      setView(DEFAULT_VIEWPORT_TRANSFORM);
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight' || event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+      event.preventDefault();
+      const step = event.shiftKey ? 48 : 24;
+      const dx = event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0;
+      const dy = event.key === 'ArrowUp' ? -step : event.key === 'ArrowDown' ? step : 0;
+      setView(current => clampViewportTransform({ ...current, offsetX: current.offsetX + dx, offsetY: current.offsetY + dy }, rect.width, rect.height));
+    }
+  };
 
   const choose = (body: string) => {
     const next = bodies.find(item => item.body === body);
@@ -250,14 +397,27 @@ function EclipticInstrument({
   return (
     <div className={`space-y-5 ${className}`}>
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
-        <div className="overflow-hidden rounded-2xl border border-white/[0.09] bg-[#03050B] p-2">
+        <div className="relative overflow-hidden rounded-2xl border border-white/[0.09] bg-[#03050B] p-2">
           <canvas
             ref={canvasRef}
             onClick={handleCanvasClick}
-            className="block h-[min(78vw,680px)] min-h-[320px] w-full cursor-crosshair touch-manipulation"
+            onDoubleClick={handleDoubleClick}
+            onKeyDown={handleKeyDown}
+            onWheel={handleWheel}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+            className="block h-[min(78vw,680px)] min-h-[320px] w-full cursor-grab touch-none active:cursor-grabbing"
+            tabIndex={0}
+            title="Focus the planisphere, then use plus/minus, arrow keys, R, or 0 to navigate"
             role="img"
-            aria-label="Top-down ecliptic planisphere with rashis, nakshatras, and planets"
+            aria-label="Top-down ecliptic planisphere with rashis, nakshatras, and planets. Use the zoom controls or drag to inspect the field."
           />
+          <div className="pointer-events-none absolute right-5 top-5">
+            <CanvasViewControls zoom={view.scale} onZoomIn={() => zoomBy(1.35)} onZoomOut={() => zoomBy(1 / 1.35)} onReset={() => setView(DEFAULT_VIEWPORT_TRANSFORM)} label="Ecliptic planisphere zoom and pan controls" />
+          </div>
+          {view.scale > 1 && <div className="pointer-events-none absolute left-5 top-5 rounded-lg border border-white/10 bg-[#060914]/85 px-2.5 py-1.5 font-mono-data text-[9px] uppercase tracking-[0.12em] text-[#AAB4CF] backdrop-blur">Drag to pan · double-click to zoom</div>}
         </div>
 
         <aside className="rounded-2xl border border-white/[0.09] bg-[#090D1A] p-5 text-[#E9ECF9]">

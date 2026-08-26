@@ -2,7 +2,7 @@
 
 **Review date:** 26 August 2026 (Asia/Calcutta)
 **Review scope:** the existing local sky, ecliptic, Time Machine, Gochara, deep-link, artwork, and qualification work
-**Document status:** strategic review; no NASA, ISRO, Roscosmos, media, tile, or 3D implementation has been added by this review
+**Document status:** strategic baseline; no NASA, ISRO, Roscosmos, media, tile, 3D or external-reference implementation has been added. The local viewport, observation, Student Desk and provenance slice is recorded in [`EVIDENCE_OBSERVATION_V1.md`](EVIDENCE_OBSERVATION_V1.md).
 
 > **Recommendation in one sentence:** build an **Evidence-backed Observation Layer v1** before building a large media catalogue or a full 3D solar system. It should add a frozen precision-reference path, a true zoomable/deep-inspection model, and a shared provenance contract across all four existing instruments.
 
