@@ -14,6 +14,10 @@ This note records what is implemented after the strategic review in [`WORLD_CLAS
 - [`observation.ts`](../../src/lib/astronomy/observation.ts) provides deterministic, explicitly approximate solar events, twilight state, lunar phase, compass direction, altitude bands, angular separation, sampled horizon crossings, selected-body observation plans, and display-filter bounds. It uses the same canonical body and horizontal-coordinate path as the sky instrument.
 - [`ObservatoryStudentDesk.tsx`](../../src/components/observatory/ObservatoryStudentDesk.tsx) is integrated into the main `/observatory` route. It combines field planning, twilight, Moon phase, approximate next horizon crossing, Moon separation, tropical/sidereal study context, rashi/Nakshatra/pada, reading guidance, a local observation notebook, and optional official study links. External sources are links only; they are not runtime calculation dependencies.
 - [`CelestialDetailSheet.tsx`](../../src/components/observatory/CelestialDetailSheet.tsx) now exposes a provenance block with quality, frame, local provider/model, epoch context, fixture status, and explicit physical-node semantics. The known lunar qualification discrepancy is visible for the Moon rather than hidden behind extra decimals.
+- [`LiveObservationPanel.tsx`](../../src/components/observatory/LiveObservationPanel.tsx) adds a capability-aware Reality layer to the primary local sky. It waits for 2.15× local display zoom, requests a same-origin provider check, displays a real NASA SDO/Helioviewer solar frame when the allowlisted adapter resolves one, and otherwise states that no external frame is available. It never treats the local canvas or an illustrative faint field as a camera image.
+- [`src/lib/observatory/live/`](../../src/lib/observatory/live/) adds normalized target/provider/frame contracts, a provider matrix for NASA SDO/Helioviewer, LCO, MicroObservatory, Virtual Telescope, ASCOM Alpaca and INDI, server-side Helioviewer/NASA frame/tile seams, and a fail-closed hardware action policy.
+- [`src/app/api/observatory/live/`](../../src/app/api/observatory/live/) keeps provider fetches and image bytes server-side, uses allowlisted upstream URLs, bounded payloads and cache headers, and exposes separate metadata, frame and tile routes. Moon, planets and stars without an enabled provider remain local-only with an explicit fallback message.
+- [`src/app/api/observatory/mcp/route.ts`](../../src/app/api/observatory/mcp/route.ts) and [`mcpServer.ts`](../../src/lib/observatory/mcpServer.ts) add an official SDK-backed, stateless MCP control/context plane for target resolution, provider status, provenance, approximate planning and a locked exposure-request seam. MCP does not carry image/video bytes.
 
 ## Design rationale
 
@@ -51,6 +55,14 @@ The shared provider vocabulary in [`src/lib/astronomy/providers/types.ts`](../..
 
 The Student Desk links to NASA Images, Solar System Treks, ISRO, JPL Horizons, NAIF SPICE and ESA/Hubble as optional study sources. Nothing is scraped, hotlinked into the canvas, or required for the page to render. Any future downloaded image, video, model, tile or reference fixture must first enter the rights/provenance workflow in the roadmap: exact source page, credit, license/policy, third-party/logo/person review, retrieval date, checksum and fallback behavior.
 
+### Real frames are a separate product layer
+
+The live-observation contract in [`LIVE_OBSERVATION_ARCHITECTURE.md`](./LIVE_OBSERVATION_ARCHITECTURE.md) keeps five states distinct: local calculated sky, near-real-time public mission image, queued remote exposure, user-owned telescope camera stream, and archival/reference imagery. A frame has provider, target, request/capture/receive times, wavelength/filter, exposure, pixel scale, processing level, quality, freshness, source, attribution, license and use-note fields. A provider is allowed to return `null` for metadata it does not publish; the UI says `not supplied` instead of inferring precision.
+
+The current public adapter is intentionally Sun-only. Helioviewer SDO/AIA 171 Å is tried first and the NASA SDO latest-browse image is a timestamp-unknown fallback. The image and tile bytes are fetched through `/api/observatory/live/frame` and `/tile`; the browser does not receive an uncontrolled upstream image hotlink. A selected Moon, planet, star or event receives a capability matrix and an honest no-frame state until an approved remote or local telescope provider is configured.
+
+MCP is implemented as a semantic/control surface, not a camera transport. `resolve_target`, `get_observatory_status`, `get_latest_frame`, `explain_frame_provenance` and `plan_observation` are read-only/context operations; `request_exposure` is present as a locked seam and returns `DISABLED_BY_DEFAULT`. HTTP/CDN/object storage, SSE/WebSocket and, only for a true camera stream, WebRTC are the appropriate frame/status channels.
+
 ## File map
 
 - [`src/lib/astronomy/viewTransform.ts`](../../src/lib/astronomy/viewTransform.ts) — pure scale/pan/focus math and clamping.
@@ -58,6 +70,12 @@ The Student Desk links to NASA Images, Solar System Treks, ISRO, JPL Horizons, N
 - [`src/lib/astronomy/contextStars.ts`](../../src/lib/astronomy/contextStars.ts) — deterministic, display-only faint-field texture tiers used after zoom; never used for selection or ephemeris values.
 - [`src/lib/astronomy/observationLog.ts`](../../src/lib/astronomy/observationLog.ts) — validated local-log schema plus JSON persistence and CSV serialization helpers.
 - [`src/lib/astronomy/providers/`](../../src/lib/astronomy/providers/) — shared ephemeris/provenance types, local adapter, and fail-closed reference-fixture parser; no fixture is bundled yet.
+- [`src/lib/observatory/live/`](../../src/lib/observatory/live/) — target/provider/frame contracts, capability catalog, Helioviewer/NASA SDO adapter, safety policy and server-side transport URL builders.
+- [`src/lib/observatory/mcpServer.ts`](../../src/lib/observatory/mcpServer.ts) — official MCP tool/resource registration for read-only Observatory context and locked exposure planning.
+- [`src/app/api/observatory/live/`](../../src/app/api/observatory/live/) — capability metadata, image gateway, tile gateway and disabled hardware-request route.
+- [`src/app/api/observatory/mcp/route.ts`](../../src/app/api/observatory/mcp/route.ts) — stateless Streamable HTTP MCP endpoint with optional bearer authentication.
+- [`src/lib/observatory/agent.ts`](../../src/lib/observatory/agent.ts) — deployment-only ASCOM Alpaca/INDI agent configuration and read-only status boundary.
+- [`src/app/api/observatory/agent/status/route.ts`](../../src/app/api/observatory/agent/status/route.ts) — same-origin read-only agent status endpoint; no browser LAN discovery or hardware command.
 - [`src/components/observatory/CanvasViewControls.tsx`](../../src/components/observatory/CanvasViewControls.tsx) — accessible zoom/percentage/reset controls.
 - [`src/components/observatory/SkyCanvasRenderer.tsx`](../../src/components/observatory/SkyCanvasRenderer.tsx) — local stereographic sky, progressive labels, interaction and target mapping.
 - [`src/components/observatory/EclipticInstrument.tsx`](../../src/components/observatory/EclipticInstrument.tsx) — tropical ecliptic/rashi/Nakshatra planisphere and interaction.
@@ -84,10 +102,11 @@ The detailed NASA, ISRO, Roscosmos, ESA/ESO, JPL and NAIF inventory and risk not
 
 ## Validation record
 
-- `npx playwright test tests/observatory.spec.ts` — **25 passed**. This includes canonical astronomy invariants, progressive zoom-detail tier determinism, Rahu/Ketu node semantics, viewport focus/clamping behavior, local solar event signals, altitude/direction helpers, display-only horizon/magnitude filters, bounded Moon phase output, sampled horizon-crossing and angular-separation planner signals, local observation-log round trips/CSV escaping, the local provider adapter, and fail-closed reference-fixture validation.
+- `npx playwright test tests/observatory.spec.ts --reporter=line` — **29 passed**. This includes canonical astronomy invariants, progressive zoom-detail tier determinism, Rahu/Ketu node semantics, viewport focus/clamping behavior, local solar event signals, altitude/direction helpers, display-only horizon/magnitude filters, bounded Moon phase output, sampled horizon-crossing and angular-separation planner signals, local observation-log round trips/CSV escaping, the local provider adapter, live target/provider/frame metadata boundaries, server-side URL construction, fail-closed hardware safety, validated Alpaca/INDI agent configuration, and fail-closed reference-fixture validation.
 - `npm run typecheck` — **blocked only by the pre-existing Prisma setup issue:** `src/lib/db.ts(1,10): Module "@prisma/client" has no exported member 'PrismaClient'` in the generated-client-free environment. No Observatory implementation type errors were reported.
 - `npm run dev -- --hostname 0.0.0.0` plus HTTP checks — `/observatory`, `/observatory/ecliptic`, `/observatory/timemachine` and `/observatory/gochara` returned HTTP 200 with representative city/time/planet links. The unrelated analytics API still reports the known missing generated Prisma client.
 - Full browser interaction/responsive QA remains dependent on Chromium availability. The qualification guardrail remains **CONDITIONAL PASS**.
+- The local dev smoke pass also exercised `/api/observatory/live` for Sun, Jupiter and Sirius, the image/tile allowlist rejection path, and MCP `initialize`, `tools/list`, `resolve_target`, and locked `request_exposure` JSON-RPC calls. The Sun provider result is network-dependent: Helioviewer is preferred, with a timestamp-unknown NASA SDO latest-browse fallback for current requests.
 
 ## Qualification guardrails that remain in force
 

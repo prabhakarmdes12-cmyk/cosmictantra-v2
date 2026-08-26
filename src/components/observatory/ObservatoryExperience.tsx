@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Clock3, LocateFixed, RotateCcw, SlidersHorizontal, Star } from 'lucide-react';
 import CelestialDetailSheet from './CelestialDetailSheet';
 import ObservatoryStudentDesk from './ObservatoryStudentDesk';
+import LiveObservationPanel from './LiveObservationPanel';
 import SkyAtAGlance from './SkyAtAGlance';
 import SkyCanvasRenderer from './SkyCanvasRenderer';
 import { calculateCanonicalBody, type CanonicalBodyName } from '@/lib/astronomy/canonicalBodies';
@@ -13,6 +14,7 @@ import { CITIES } from '@/lib/cities';
 import { projectStar } from '@/lib/astronomy/projection';
 import { DEFAULT_LIMITING_MAGNITUDE, DEFAULT_MINIMUM_ALTITUDE_DEG, isAboveObservationHorizon, isWithinLimitingMagnitude, OBSERVATION_LIMITS } from '@/lib/astronomy/observation';
 import { STARS } from '@/lib/astronomy/stars';
+import { LIVE_OBSERVATION_ZOOM_THRESHOLD, type LiveTarget } from '@/lib/observatory/live';
 
 const PLANETS: CanonicalBodyName[] = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'];
 const SYMBOLS: Record<string, string> = { Sun: '☉', Moon: '☽', Mars: '♂', Mercury: '☿', Jupiter: '♃', Venus: '♀', Saturn: '♄', Rahu: '☊', Ketu: '☋' };
@@ -97,6 +99,13 @@ export function ObservatoryExperience({
   const [showConstellations, setShowConstellations] = useState(true);
   const [selectedConstellation, setSelectedConstellation] = useState<string | null>(() => initialSelection?.kind === 'constellation' ? initialSelection.id : null);
   const [detailSelection, setDetailSelection] = useState<CelestialSelection | null>(initialSelection);
+  const [liveTarget, setLiveTarget] = useState<LiveTarget>(() => initialSelection?.kind === 'planet'
+    ? { kind: 'planet', id: initialSelection.id, label: initialSelection.id }
+    : initialSelection?.kind === 'constellation'
+      ? { kind: 'constellation', id: initialSelection.id, label: constellationDisplayName(initialSelection.id) }
+      : { kind: 'planet', id: selectedPlanet, label: selectedPlanet });
+  const [skyZoom, setSkyZoom] = useState(1);
+  const handleViewportChange = useCallback((view: { scale: number }) => setSkyZoom(view.scale), []);
 
   const selectedBody = useMemo(() => calculateCanonicalBody(selectedPlanet, date), [selectedPlanet, date]);
   const constellationOptions = useMemo(() => constellationIds().map(id => ({ id, name: constellationDisplayName(id) })), []);
@@ -155,8 +164,18 @@ export function ObservatoryExperience({
     if (selection.kind === 'planet') {
       setSelectedPlanet(selection.id);
       setSelectedConstellation(null);
+      setLiveTarget({ kind: 'planet', id: selection.id, label: selection.id });
     }
-    if (selection.kind === 'constellation') setSelectedConstellation(selection.id);
+    if (selection.kind === 'constellation') {
+      setSelectedConstellation(selection.id);
+      setLiveTarget({ kind: 'constellation', id: selection.id, label: constellationDisplayName(selection.id) });
+    }
+  };
+
+  const selectStar = (star: typeof STARS[number]) => {
+    setSelectedConstellation(star.constellation);
+    setDetailSelection({ kind: 'constellation', id: star.constellation });
+    setLiveTarget({ kind: 'star', id: star.id, label: star.name });
   };
 
   return (
@@ -229,12 +248,14 @@ export function ObservatoryExperience({
                 selectedPlanet={selectedPlanet}
                 selectedConstellation={selectedConstellation}
                 onSelectObject={selectObject}
+                onViewChange={handleViewportChange}
                 showMandala={showMandala}
                 showConstellations={showConstellations}
                 minimumAltitudeDeg={minimumAltitudeDeg}
                 limitingMagnitude={limitingMagnitude}
               />
             </div>
+            <LiveObservationPanel target={liveTarget} date={date} deepZoom={skyZoom >= LIVE_OBSERVATION_ZOOM_THRESHOLD} />
           </div>
 
           <aside className="space-y-4">
@@ -301,7 +322,10 @@ export function ObservatoryExperience({
                 onChange={event => {
                   const value = event.target.value || null;
                   setSelectedConstellation(value);
-                  if (value) setDetailSelection(null);
+                  if (value) {
+                    setDetailSelection(null);
+                    setLiveTarget({ kind: 'constellation', id: value, label: constellationDisplayName(value) });
+                  }
                 }}
                 className="mt-3 block w-full rounded-xl border border-white/10 bg-[#050710] px-3 py-3 font-mono-data text-xs text-[#F0F1F8] outline-none transition-colors focus:border-[#D4AF37]"
               >
@@ -316,7 +340,7 @@ export function ObservatoryExperience({
               <p className="mt-2 text-[10px] leading-relaxed text-[#8993B0]">A keyboard-friendly alternative to canvas targeting. Select a visible bright-star anchor to highlight its constellation and open field notes.</p>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 {visibleBrightAnchors.map(({ star, point }) => (
-                  <button type="button" key={star.id} onClick={() => selectObject({ kind: 'constellation', id: star.constellation })} className="rounded-lg border border-white/[0.07] bg-[#070A13] px-2.5 py-2 text-left transition-colors hover:border-[#D4AF37]/55" aria-label={`Highlight ${star.name}, ${constellationDisplayName(star.constellation)}; altitude ${point.altitudeDeg.toFixed(1)} degrees`}>
+                  <button type="button" key={star.id} onClick={() => selectStar(star)} className="rounded-lg border border-white/[0.07] bg-[#070A13] px-2.5 py-2 text-left transition-colors hover:border-[#D4AF37]/55" aria-label={`Highlight ${star.name}, ${constellationDisplayName(star.constellation)}; altitude ${point.altitudeDeg.toFixed(1)} degrees`}>
                     <span className="block truncate font-mono-data text-[10px] font-bold text-[#DCE1F0]">✦ {star.name}</span>
                     <span className="mt-1 block font-mono-data text-[9px] text-[#7F89A7]">{constellationDisplayName(star.constellation)} · {point.altitudeDeg.toFixed(0)}° alt</span>
                   </button>

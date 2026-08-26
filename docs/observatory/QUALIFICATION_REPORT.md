@@ -1,7 +1,7 @@
 # Observatory qualification report
 
 **Date:** 26 August 2026 (Asia/Calcutta)
-**Scope:** local sky observatory, ecliptic planisphere, Sky Time Machine, Gochara transit wheels, practical observation planning, Student Desk, provenance contract, and Panchang deep-links
+**Scope:** local sky observatory, ecliptic planisphere, Sky Time Machine, Gochara transit wheels, practical observation planning, Student Desk, local/external provenance contracts, capability-aware live-observation layer, server-side frame/tile gateways, MCP control-plane seam, and Panchang deep-links
 **Decision:** **CONDITIONAL PASS**
 
 ## 1. Qualification scope
@@ -56,6 +56,11 @@ Both nodes are marked retrograde and remain exactly opposite modulo 360°.
 - The Observatory's `Sky at a glance` panel ranks the seven physical grahas by current altitude, direction, altitude band, and a user-selected minimum-altitude mask, provides keyboard-accessible planet cards, and can copy a plain-text readout for field use.
 - The primary route includes a Student Desk with explicitly approximate solar events/twilight, Moon phase, selected-graha field cues, a sampled next mathematical-horizon crossing, bounded Moon separation, a browser-local observation notebook with JSON/CSV export, coordinate-study guidance, and optional official-source link-outs. Rahu/Ketu are excluded from physical rise/set planning and are saved only as mathematical-node study notes.
 - The shared provider contract records provider/model/frame/epoch/observer/quality/error-budget fields. The local adapter is active; the reference-fixture parser fails closed until a reviewed fixture exists.
+- The live-observation contract in `src/lib/observatory/live/` keeps local calculation, near-real-time public mission imagery, queued remote exposure, user-owned camera stream, and archival/reference imagery distinct. The primary Reality layer requests a provider only at 2.15× local display zoom or deeper.
+- NASA SDO/Helioviewer is the first enabled public path and is Sun-only. Helioviewer capture metadata is preferred; the NASA latest-browse fallback explicitly leaves capture time unknown. Moon, planets and stars without a configured remote/local telescope return an honest no-frame state.
+- `/api/observatory/live/frame` and `/tile` are server-side allowlisted image gateways with bounded payloads and cache headers; the browser does not use uncontrolled provider hotlinks. `/api/observatory/live/request` fails closed for hardware actions.
+- `/api/observatory/mcp` is an official SDK-backed stateless MCP context/control endpoint. It exposes target resolution, provider status, provenance, approximate planning and a locked exposure-request seam. MCP carries metadata/HTTP paths, not high-throughput image/video bytes; HTTP/CDN/object storage, SSE/WebSocket and WebRTC remain the frame/status transports.
+- ASCOM Alpaca and INDI are represented as authenticated local-gateway capabilities only. The read-only `/api/observatory/agent/status` seam validates deployment configuration and redacts tokens; browser LAN discovery and unauthenticated mount/camera control are not implemented.
 - Observation time inputs are interpreted in the selected city's fixed UTC offset, while the canonical instant remains serialized as ISO UTC in the URL. Quick controls provide now, dusk, night, midnight, and one-hour stepping.
 - Share links carry `city`, `time`, `object`, and `objectKind`; known planet/constellation payloads reopen the same detail sheet across all four instruments. Arbitrary object ids are rejected before rendering.
 - The Ecliptic instrument plots Rahu and Ketu as calculated ecliptic points and labels them as mathematical nodes rather than physical planets.
@@ -83,9 +88,10 @@ The Observatory unit suite checks:
 - bounded angular-separation geometry and deterministic ten-minute horizon-crossing interpolation;
 - selected-body planner output, Moon-separation context, and the no-rise/set physical-node exception;
 - observation-log schema validation, local persistence round trips, and CSV escaping;
-- display-only horizon-mask and limiting-magnitude bounds without changing calculated coordinates.
+- display-only horizon-mask and limiting-magnitude bounds without changing calculated coordinates;
+- live target/provider capability matching, server-side frame/tile URL construction, provider metadata null semantics, NASA SDO fallback labeling, and fail-closed hardware action decisions.
 
-A local Next development-server smoke check returned HTTP 200 for `/observatory`, `/observatory/ecliptic`, `/observatory/timemachine`, and `/observatory/gochara`; representative city/time/planet/object deep-link requests also returned HTTP 200 after the planner, notebook, display-filter, and zoom-detail slices. The isolated Observatory suite passed 25/25 and the existing engine suite passed 13/13 in this environment. `npm run typecheck` is blocked by the generated Prisma client issue, and `npm run build` is blocked during Prisma engine checksum retrieval. The full Playwright command also attempts the repository's responsive browser suite, but its Chromium executable is not installed in this sandbox.
+A local Next development-server smoke check returned HTTP 200 for `/observatory`, `/observatory/ecliptic`, `/observatory/timemachine`, and `/observatory/gochara`; representative city/time/planet/object deep-link requests also returned HTTP 200 after the planner, notebook, display-filter, and zoom-detail slices. The isolated Observatory suite passed 29/29 and the existing engine suite passed 13/13 in this environment. The live/MCP route smoke checks also returned the expected metadata, allowlist rejection, and fail-closed safety responses; provider image availability remains network-dependent. `npm run typecheck` is blocked by the generated Prisma client issue, and `npm run build` is blocked during Prisma engine checksum retrieval. The full Playwright command also attempts the repository's responsive browser suite, but its Chromium executable is not installed in this sandbox.
 
 For a production-style HTTP smoke check after `npm run build && npm start`, request each route without query parameters and with a Panchang-style deep-link query. The expected status is HTTP 200 for all four routes.
 

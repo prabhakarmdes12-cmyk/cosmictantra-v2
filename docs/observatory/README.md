@@ -9,6 +9,7 @@ This directory contains the complete design, implementation, visual, and qualifi
 - [`WORLD_CLASS_ROADMAP.md`](WORLD_CLASS_ROADMAP.md) — strategic review, open NASA/ISRO/Roscosmos source inventory, licensing/ingestion rules, zoom/deep-inspection model, and the single recommended next milestone.
 - [`EVIDENCE_OBSERVATION_V1.md`](EVIDENCE_OBSERVATION_V1.md) — implementation note for the display-only viewport, observation helpers, Student Desk, provenance block, file map, validation record, and remaining qualification guardrails.
 - [`reference-fixture-notes.md`](reference-fixture-notes.md) — reference-provider contract, geocentric/topocentric draft commands, review/freeze sequence, and explicit no-fixture status.
+- [`LIVE_OBSERVATION_ARCHITECTURE.md`](LIVE_OBSERVATION_ARCHITECTURE.md) — implemented live/reference imaging seam, NASA SDO/Helioviewer first adapter, provider capability matrix, server-side cache/frame routes, ASCOM Alpaca/INDI gateway boundary, MCP control-plane endpoint, safety defaults, licensing risks, and follow-up qualification steps.
 
 ## Blueprint images
 

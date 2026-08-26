@@ -22,6 +22,9 @@ import { applyViewportTransform, clampViewportTransform, DEFAULT_VIEWPORT_TRANSF
 import { localEphemerisResult } from '../src/lib/astronomy/providers/localApproximation';
 import { compareWithReference, findReferenceObservation, MISSING_REFERENCE_FIXTURE_STATUS, parseReferenceFixture, referenceFixtureStatus } from '../src/lib/astronomy/providers/referenceFixture';
 import { createObservationLogEntry, observationLogToCsv, parseObservationLog, serializeObservationLog, type ObservationLogDraft } from '../src/lib/astronomy/observationLog';
+import { buildNasaSdoFallbackFrame, helioviewerClosestImageUrl, helioviewerScreenshotUrl, helioviewerTileUrl, normalizeLiveTarget, parseHelioviewerClosestImage, providerSupportsTarget, liveProviderCapabilitiesFor, createLiveObservationResponse } from '../src/lib/observatory/live';
+import { DEFAULT_OBSERVATORY_SAFETY_POLICY, evaluateObservationAction } from '../src/lib/observatory/live/safety';
+import { agentConfiguration, parseAgentStatus, unavailableAgentStatus, validateAgentBaseUrl } from '../src/lib/observatory/agent';
 
 test.describe('Observatory coordinate and ephemeris invariants', () => {
   const instant = new Date('2026-08-25T00:00:00.000Z');
@@ -281,6 +284,81 @@ test.describe('Observatory coordinate and ephemeris invariants', () => {
     expect(referenceFixtureStatus(undefined)).toEqual(MISSING_REFERENCE_FIXTURE_STATUS);
     expect(parseReferenceFixture(null)).toBeNull();
     expect(parseReferenceFixture({ schemaVersion: 1, fixtureId: 'untrusted' })).toBeNull();
+  });
+
+  test('live provider capabilities keep local calculation separate from external frames', () => {
+    const sun = normalizeLiveTarget('planet', 'sun');
+    const jupiter = normalizeLiveTarget('planet', 'Jupiter');
+    const sirius = normalizeLiveTarget('star', 'Sirius');
+    expect(sun).toEqual({ kind: 'planet', id: 'Sun', label: 'Sun' });
+    expect(jupiter).not.toBeNull();
+    expect(sirius).toEqual({ kind: 'star', id: 'sirius', label: 'Sirius' });
+    expect(providerSupportsTarget('nasa-sdo', sun!)).toBe(true);
+    expect(providerSupportsTarget('nasa-sdo', jupiter!)).toBe(false);
+    expect(liveProviderCapabilitiesFor(sirius!).some(provider => provider.id === 'las-cumbres-observatory')).toBe(true);
+    expect(liveProviderCapabilitiesFor(sirius!).some(provider => provider.id === 'ascom-alpaca' && provider.configured === false)).toBe(true);
+    expect(normalizeLiveTarget('planet', 'Rahu')).not.toBeNull();
+    expect(normalizeLiveTarget('star', 'not-a-star')).toBeNull();
+    expect(normalizeLiveTarget('event', '../unsafe')).toBeNull();
+
+    const response = createLiveObservationResponse(sun!, instant.toISOString());
+    expect(response.localCalculation.mode).toBe('local-calculation');
+    expect(response.localCalculation.note).toContain('never turns');
+    expect(response.frame).toBeNull();
+  });
+
+  test('solar adapter records provider metadata and keeps server-side image paths', () => {
+    const closest = parseHelioviewerClosestImage({ id: 36275490, date: '2026-08-25 00:00:02', scale: 0.589, scaleCorrection: 1.01, width: 4096, height: 4096 });
+    expect(closest?.id).toBe(36275490);
+    expect(parseHelioviewerClosestImage({ id: 0, date: 'not-a-date', scale: 1, scaleCorrection: 1 })).toBeNull();
+    expect(helioviewerClosestImageUrl(instant.toISOString())).toContain('sourceId=10');
+    expect(helioviewerScreenshotUrl(instant.toISOString(), 0.6)).toContain('layers=%5B10%2C1%2C100%5D');
+    expect(helioviewerTileUrl(36275490, -1, 0, 0.6)).toContain('id=36275490');
+    const fallback = buildNasaSdoFallbackFrame(normalizeLiveTarget('planet', 'Sun')!, instant.toISOString(), instant.toISOString());
+    expect(fallback.capturedAtUtc).toBeNull();
+    expect(fallback.imageUrl).toMatch(/^\/api\/observatory\/live\/frame/);
+    expect(fallback.useNotes).toContain('never presented as an exact-time match');
+    expect(fallback.wavelengthLabel).toContain('171');
+  });
+
+  test('hardware and exposure actions fail closed by default', () => {
+    const target = normalizeLiveTarget('planet', 'Jupiter')!;
+    const decision = evaluateObservationAction(DEFAULT_OBSERVATORY_SAFETY_POLICY, {
+      action: 'camera.exposure',
+      target,
+      explicitUserAuthorization: true,
+      actorId: 'student-1',
+      auditRequestId: 'audit-1',
+    });
+    expect(decision.allowed).toBe(false);
+    expect(decision.code).toBe('DISABLED_BY_DEFAULT');
+    const missingAudit = evaluateObservationAction({ ...DEFAULT_OBSERVATORY_SAFETY_POLICY, exposureRequestsEnabled: true }, {
+      action: 'camera.exposure',
+      target,
+      explicitUserAuthorization: true,
+      actorId: 'student-1',
+    });
+    expect(missingAudit.code).toBe('AUDIT_ID_REQUIRED');
+  });
+
+  test('the local agent seam validates deployment configuration and exposes read-only status', () => {
+    expect(validateAgentBaseUrl('http://127.0.0.1:11111', true)).toBe('http://127.0.0.1:11111');
+    expect(validateAgentBaseUrl('http://observatory.example/agent', true)).toBeNull();
+    expect(validateAgentBaseUrl('http://127.0.0.1:11111', false)).toBe('http://127.0.0.1:11111');
+    expect(validateAgentBaseUrl('https://observatory.example/agent/', true)).toBe('https://observatory.example/agent');
+    const configuration = agentConfiguration({
+      OBSERVATORY_AGENT_URL: 'https://observatory.example/agent/',
+      OBSERVATORY_AGENT_TOKEN: 'secret-not-returned',
+      OBSERVATORY_AGENT_PROTOCOL: 'indi',
+    }, true);
+    const unavailable = unavailableAgentStatus(configuration);
+    expect(unavailable.configured).toBe(true);
+    expect(unavailable.reachable).toBe(false);
+    expect(unavailable.endpoint).toBe('https://observatory.example/agent');
+    expect(JSON.stringify(unavailable)).not.toContain('secret-not-returned');
+    const status = parseAgentStatus({ reachable: true, protocols: ['indi'], equipment: { mount: 'tracking', camera: 'ready', dome: 'closed', weather: 'safe' }, note: 'read-only' }, configuration);
+    expect(status?.equipment.mount).toBe('tracking');
+    expect(status?.equipment.weather).toBe('safe');
   });
 
   test('reviewed fixture schema keeps frame and body observations explicit', () => {

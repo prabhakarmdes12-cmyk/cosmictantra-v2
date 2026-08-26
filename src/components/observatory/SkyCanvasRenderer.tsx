@@ -41,6 +41,8 @@ export interface SkyCanvasRendererProps {
   selectedConstellation?: string | null;
   /** Preferred unified callback; the older callbacks remain compatible. */
   onSelectObject?: (selection: CelestialSelection) => void;
+  /** Reports only the display transform; it never changes calculated coordinates. */
+  onViewChange?: (view: ViewportTransform) => void;
   onSelectPlanet?: (body: string) => void;
   onSelectConstellation?: (id: string) => void;
   showMandala?: boolean;
@@ -692,6 +694,7 @@ function SkyCanvasRenderer({
   selectedPlanet,
   selectedConstellation,
   onSelectObject,
+  onViewChange,
   onSelectPlanet,
   onSelectConstellation,
   showMandala = true,
@@ -726,10 +729,11 @@ function SkyCanvasRenderer({
       targetsRef,
     );
     render();
+    onViewChange?.(view);
     const resizeObserver = new ResizeObserver(render);
     resizeObserver.observe(canvas);
     return () => resizeObserver.disconnect();
-  }, [dateValue, observer.latitude, observer.longitude, selectedPlanet, selectedConstellation, showMandala, showConstellations, minimumAltitudeDeg, limitingMagnitude, view.scale, view.offsetX, view.offsetY]);
+  }, [dateValue, observer.latitude, observer.longitude, selectedPlanet, selectedConstellation, showMandala, showConstellations, minimumAltitudeDeg, limitingMagnitude, onViewChange, view.scale, view.offsetX, view.offsetY]);
 
   const pointFromEvent = (event: React.PointerEvent<HTMLCanvasElement>): ViewportPoint => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -887,7 +891,7 @@ function SkyCanvasRenderer({
       </div>}
       {labelled && (
         <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-white/10 bg-[#060914]/85 px-3 py-1.5 text-center font-mono-data text-[9px] uppercase tracking-[0.14em] text-[#B8BED7] backdrop-blur">
-          Tap a graha or star pattern · scroll/pinch to zoom · dashed gold line is the ecliptic · faint field is illustrative
+          Local calculation · tap a graha or star pattern · scroll/pinch to zoom · faint field is illustrative; provider frames are separate
         </div>
       )}
     </div>

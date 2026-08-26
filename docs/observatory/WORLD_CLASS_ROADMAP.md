@@ -2,9 +2,9 @@
 
 **Review date:** 26 August 2026 (Asia/Calcutta)
 **Review scope:** the existing local sky, ecliptic, Time Machine, Gochara, deep-link, artwork, and qualification work
-**Document status:** strategic baseline; no NASA, ISRO, Roscosmos, media, tile, 3D or external-reference implementation has been added. The local viewport, observation, Student Desk and provenance slice is recorded in [`EVIDENCE_OBSERVATION_V1.md`](EVIDENCE_OBSERVATION_V1.md).
+**Document status:** strategic baseline plus the implemented first live-observation vertical slice. NASA SDO/Helioviewer solar metadata/frame gateways, provider capability contracts, safety seam, and MCP control-plane endpoint are now present; ISRO, Roscosmos, remote-telescope, local-hardware, media, tile, 3D and external-ephemeris expansion remain review-gated. See [`EVIDENCE_OBSERVATION_V1.md`](EVIDENCE_OBSERVATION_V1.md) and [`LIVE_OBSERVATION_ARCHITECTURE.md`](LIVE_OBSERVATION_ARCHITECTURE.md).
 
-> **Recommendation in one sentence:** finish the **Evidence-backed Observation Layer v1** before building a large media catalogue or a full 3D solar system. The local instruments now have a progressive zoom/deep-inspection baseline; the remaining trust-critical step is a frozen precision-reference path and a shared provenance contract across all four instruments.
+> **Recommendation in one sentence:** keep the **Evidence-backed Observation Layer v1** as the foundation while expanding provider-backed imagery carefully. The local instruments now have progressive zoom/deep-inspection and an honest Sun mission-frame path; the remaining trust-critical work is provider rights/health hardening, a true tiled comparison viewer, reviewed precision references, and an approved remote/user-telescope adapter for arbitrary planets and stars.
 
 This is the shortest path from a good deterministic visualization to a trustworthy, memorable observatory. It improves the current product for every route, creates the seam where images, videos, surface tiles, mission data, and 3D objects can later attach, and does not weaken the existing local computation or make the browser depend on an external service.
 
@@ -25,7 +25,7 @@ The Observatory is already a credible product foundation rather than a placehold
 - the shared detail sheet, accessible DOM controls, source labels, and practical sky readout give the suite a coherent interaction model;
 - the current browser experience is deterministic and does not require a live astronomy API.
 
-It is **not yet world-class** because its scientific depth and external evidence stop before the reference/media layer. A user can now progressively inspect the local field, but cannot yet verify the reference path, explore a body surface, follow a mission, or understand the provenance of a scientific image without leaving the product.
+It is **not yet world-class** because its scientific depth and external evidence remain conditional. A user can now progressively inspect the local field and, for the Sun, open a separately labelled NASA SDO/Helioviewer mission frame; arbitrary planets and stars still require an approved remote-telescope or user-hardware adapter, and the precision reference path, body surfaces, mission theatre, and asset-rights workflow remain unfinished.
 
 ### The one next milestone
 
@@ -103,7 +103,7 @@ It also creates reusable infrastructure:
 
 ## 4. Proposed contracts and architecture
 
-These are proposed interfaces for the next implementation. They are not present in the repository yet.
+The ephemeris and provenance interfaces below remain useful design references. The live-observation implementation now adds the concrete, narrower contracts in `src/lib/observatory/live/types.ts` and `src/lib/observatory/live/catalog.ts`; the larger cross-route asset registry remains future work.
 
 ### 4.1 Observation context
 
@@ -734,6 +734,21 @@ Checked for this review on 26 August 2026. URLs are retained here so future impl
 - [ESO copyright](https://www.eso.org/public/copyright/)
 - [ESA open Creative Commons content](https://open.esa.int/image-usage-creative-commons/)
 - [USGS-NASA Planetary Geologic Mapping hub](https://astrogeology-usgs.hub.arcgis.com/)
+
+---
+
+## 13. Implemented live-observation slice
+
+The first real-media step is now implemented without weakening the local instruments. See [`LIVE_OBSERVATION_ARCHITECTURE.md`](LIVE_OBSERVATION_ARCHITECTURE.md) for the complete contract and provider/risk record.
+
+- `LiveObservationPanel.tsx` attaches to the selected planet or accessible catalogue star and requests a provider check only after the bounded local view reaches 2.15×.
+- `src/lib/observatory/live/` normalizes target capability, frame metadata, Helioviewer/NASA SDO behavior, server-side image/tile paths, and hardware safety policy.
+- `/api/observatory/live` is the capability/frame metadata route; `/frame` and `/tile` proxy only allowlisted provider paths with bounded payloads and cache headers.
+- NASA SDO/Helioviewer is the first active public path for the Sun. Moon, planets and stars remain honest no-frame states until an approved remote-telescope or user-hardware provider is configured.
+- `/api/observatory/mcp` exposes read-only target/status/provenance/planning tools and a locked exposure-request seam. MCP returns metadata/HTTP paths, not image bytes.
+- The local stereographic sky, ecliptic, Time Machine, Gochara, Rahu/Ketu semantics, deep links, masks and qualification limits remain unchanged.
+
+This is deliberately a capability-aware layer, not a promise that every target has a free live feed. The next implementation should add one provider at a time with provider permission, queue/freshness state, rights records, and browser-independent fallback behavior.
 
 ---
 

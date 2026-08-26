@@ -3,7 +3,8 @@
 **Document status:** implementation record for the shipped Observatory work
 **Last updated:** 26 August 2026 (Asia/Calcutta)
 **Branch:** `arena/01a03b32-cosmictantra-v2`
-**Latest commit:** `f7cae0a feat: add local observatory field log`
+**Latest committed baseline:** `3edf219 feat(observatory): add live observation architecture`
+**Current implementation slice:** live/reference imaging gateway, provider capability catalog, safety seam, and MCP control-plane integration
 **Release qualification:** **CONDITIONAL PASS**
 
 This document records what was built, why it was built that way, how the pieces connect, which visual assets are used, every meaningful polish step, and what remains before a precision-astronomy release claim would be justified.
@@ -46,6 +47,17 @@ The Evidence-backed Observation + Student Study Desk v1 slice then added:
 - field-condition controls for a user-selected minimum-altitude mask and limiting stellar magnitude, kept separate from the local calculations;
 - a provenance block that states quality, model, frame, epoch, fixture status, Moon discrepancy and node semantics;
 - implementation/validation notes in `docs/observatory/EVIDENCE_OBSERVATION_V1.md`.
+
+The live-observation vertical slice now adds a capability-aware external reality layer without changing that local baseline:
+
+- a selected planet or accessible bright-star target can ask for a provider frame after 2.15× local zoom;
+- NASA SDO/Helioviewer is enabled first for the Sun, with capture metadata when supplied and an explicitly timestamp-unknown SDO latest-browse fallback;
+- Moon, other planets, stars, events and mathematical nodes remain honest no-frame states until a remote-telescope or authenticated user-gateway provider is configured;
+- server-side frame/tile gateways, cache headers, provider metadata and attribution/use notes prevent browser-side uncontrolled hotlinks;
+- an ASCOM Alpaca/INDI agent status seam, default-deny hardware safety policy and official MCP context/control route are in place;
+- MCP returns metadata and ordinary HTTP transport paths, never high-throughput image/video bytes.
+
+The full live-provider and MCP record is [`LIVE_OBSERVATION_ARCHITECTURE.md`](LIVE_OBSERVATION_ARCHITECTURE.md).
 
 ---
 
@@ -91,7 +103,8 @@ The responsive diagram documents the mobile bottom-sheet treatment, desktop side
 | “Can I inspect a constellation without hitting a tiny star?” | Constellation guide select, constellation target hit areas, schematic field artwork, and a constellation detail sheet. |
 | “Can I carry this observation to another route or person?” | City/time/planet query links, share URLs containing object and object type, copyable coordinates, and copyable plain-text readouts. |
 | “Can I use it without a mouse?” | Native selects/buttons, keyboard focus rings, sheet focus trapping/restoration, Escape-to-close, and DOM-accessible planet cards. |
-| “Can I trust what is calculated?” | Source labels, explicit frame language, no live browser sky request, accuracy caveats, deterministic tests, and a conditional qualification report. |
+| “Can I trust what is calculated?” | Source labels, explicit frame language, local/external separation, accuracy caveats, deterministic tests, and a conditional qualification report. |
+| “Can I see a real frame when one exists?” | Zoom-gated Reality layer, provider capability matrix, server-side NASA SDO/Helioviewer Sun adapter, full frame metadata, and honest no-frame fallback for arbitrary planets/stars. |
 
 ### Deliberately excluded claims
 
@@ -156,6 +169,7 @@ The implementation does **not** claim:
 | `TimeMachine.tsx` | Interpolates an inspection date between a birth date and endpoint, then renders a live sky and rashi-change table while preserving endpoint deep-link context. |
 | `Gochara.tsx` | Calculates natal/current body arrays, draws two navigable sidereal wheels, and exposes the nine-graha transit comparison. |
 | `ObservatoryStudentDesk.tsx` | Integrates approximate field planning, Moon phase, coordinate study, selected-object guidance, local notebook, and curated optional study links into the primary route. |
+| `LiveObservationPanel.tsx` | Attaches a capability-aware provider frame layer after 2.15× local zoom; displays Sun mission frames only when the server adapter resolves one, and otherwise reports the target’s honest no-frame state. |
 | `ObservationLog.tsx` | Saves the selected city/time/target snapshot locally, distinguishes physical observations from node study notes, and exports JSON/CSV. |
 
 ### Astronomy modules
@@ -172,6 +186,9 @@ The implementation does **not** claim:
 | `src/lib/astronomy/observation.ts` | Explicitly approximate local solar events, twilight state, Moon phase, compass directions, altitude bands, horizon crossings, angular separation, observation plans, and display-filter bounds. |
 | `src/lib/astronomy/observationLog.ts` | Validated browser-local observation-log schema with persistence and CSV serialization. |
 | `src/lib/astronomy/providers/` | Shared provider/provenance types, local canonical-body adapter, and fail-closed reference-fixture parser for the planned JPL/SPICE seam. |
+| `src/lib/observatory/live/` | Live target/provider/frame contracts, capability matrix, Helioviewer/NASA SDO adapter, server-side transport URL builders, and fail-closed action safety policy. |
+| `src/lib/observatory/mcpServer.ts` | Official MCP tool/resource registration for read-only target resolution, status, provenance, planning, and a locked exposure seam. |
+| `src/lib/observatory/agent.ts` | Deployment-only ASCOM Alpaca/INDI agent configuration, status schema, and server-side fetch boundary. |
 | `src/lib/astronomy/ephemeris.ts` | Small compatibility re-export for canonical body calculations and provider contracts. |
 | `src/lib/astronomy/index.ts` | Public astronomy barrel exports. |
 
@@ -428,6 +445,27 @@ It provides:
 - selected graha detail sheet.
 
 The UI explicitly labels the Moon-reference house calculation as a traditional transit reference and not a complete Jyotish judgement. Each wheel is a bounded display viewport with zoom/pan/pinch/double-click and keyboard controls; the sidereal positions are recalculated only from the selected natal/current dates, never from camera state.
+
+### 7.6 Reality layer and live/reference imaging
+
+The main Observatory keeps its calculated sky as the primary instrument and attaches `LiveObservationPanel` as a separate, capability-aware layer. The panel receives a selected planet, accessible catalogue star, constellation, or future event target plus the same observation instant. It does not rewrite the canvas or replace the local field.
+
+At 2.15× local display zoom, the panel requests `/api/observatory/live`. The route validates the target and returns:
+
+- a `LocalSkyCalculationDescriptor` that says the local calculation is still active;
+- the target-specific provider capability matrix;
+- a normalized external frame when an allowlisted adapter can supply one;
+- notices explaining no-frame, stale, missing timestamp, queue, or provider-failure conditions.
+
+The first enabled public adapter is Sun-only NASA SDO/Helioviewer AIA 171 Å. Helioviewer capture metadata is preferred. NASA SDO’s latest-browse JPEG is a current fallback only when its capture timestamp is not exposed; the UI says so instead of deriving one. Moon, planets, stars, events, and Rahu/Ketu never receive a fabricated image.
+
+`/api/observatory/live/frame` and `/tile` fetch allowlisted upstream bytes server-side and return same-origin cacheable responses. A frame exposes provider, target, requested/captured/received UTC, wavelength/filter, exposure, pixel scale, processing level, quality, freshness, source, attribution, license, use notes, and caveats. HTTP/CDN/object storage is the image path; SSE/WebSocket can carry status; WebRTC is reserved for a genuine authorized camera stream.
+
+ASCOM Alpaca and INDI are represented as authenticated local-gateway capabilities. The browser does not scan private networks or control a mount/camera directly. `/api/observatory/live/request` and the MCP `request_exposure` tool are locked by default and require a future authenticated actor, explicit authorization, audit id, provider interlocks and safety checks.
+
+MCP is implemented at `/api/observatory/mcp` using the official SDK as a stateless context/control plane. It exposes target resolution, provider status, frame metadata, provenance, approximate planning, and the locked exposure seam. It never carries high-throughput image/video bytes.
+
+The full provider matrix, licensing/attribution risks, data contract, cache design, gateway topology and follow-up sequence are recorded in [`LIVE_OBSERVATION_ARCHITECTURE.md`](LIVE_OBSERVATION_ARCHITECTURE.md).
 
 ---
 
@@ -901,6 +939,22 @@ The local sky keeps its existing 70-star catalogue and calculation pipeline, but
 5. The Sun, Moon, and planets use restrained display shading, and the Moon disc follows the existing approximate Sun–Moon phase angle.
 6. The canvas copy explicitly calls the faint field illustrative; context points are never promoted into a precision catalogue.
 
+### Step 12 — capability-aware live-observation path
+
+The live/reference imaging slice adds an external reality layer without replacing the local instruments:
+
+1. Added a normalized `LiveTarget`/`LiveFrameMetadata`/provider-capability contract with explicit local, near-real-time, queued exposure, camera-stream, archival, unavailable, freshness, source and rights fields.
+2. Added a zoom threshold at 2.15× so the local display remains immediately available and provider requests are intentional rather than hidden on first paint.
+3. Added accessible star-target selection through the bright-anchor list while preserving the existing constellation detail-sheet path.
+4. Added a NASA SDO/Helioviewer first adapter for the Sun. Helioviewer capture metadata is preferred; NASA SDO latest-browse fallback leaves capture time null instead of inferring it.
+5. Added same-origin server-side frame and tile gateways with upstream allowlists, bounded payloads, short cache lifetimes and source/attribution metadata; the browser does not use uncontrolled image hotlinks.
+6. Added provider capability entries for Las Cumbres Observatory, MicroObservatory, Virtual Telescope, ASCOM Alpaca and INDI without claiming those services are configured or universally live.
+7. Added a read-only deployment-configured observatory-agent status seam and kept device credentials/server URLs out of browser state.
+8. Added default-deny mount, camera, dome and weather action policy with explicit authorization, authentication, provider-interlock and audit-id requirements.
+9. Added an official SDK-backed stateless MCP route with target resolution, status, provenance, approximate planning, provider metadata and a locked exposure-request tool; MCP never carries image/video bytes.
+10. Added provider, gateway, fallback, safety, agent and MCP invariant coverage in `tests/observatory.spec.ts`.
+11. Added the full provider, transport, licensing, cache, agent and qualification record in `docs/observatory/LIVE_OBSERVATION_ARCHITECTURE.md`.
+
 ---
 
 ## 12. Design decisions and trade-offs
@@ -977,6 +1031,24 @@ The local sky keeps its existing 70-star catalogue and calculation pipeline, but
 **Why:** trust is more valuable than a misleading “production accurate” label.
 **Trade-off:** the feature ships as an educational/operational instrument until references and tolerance policy are completed.
 
+### Decision M — provider frames are a separate reality layer
+
+**Choice:** keep local calculations and external frames in separate contracts, panels and URLs; request a provider only after intentional deep zoom.
+**Why:** a real image has a provider, capture/receive time, wavelength/filter, processing and rights context that a calculated sky point does not. The user must be able to tell which reality they are viewing.
+**Trade-off:** the UI is more explicit and a planet/star may show “no provider frame” rather than a cinematic substitute. That is the correct behavior when no targetable service exists.
+
+### Decision N — NASA/Helioviewer first, remote/local adapters later
+
+**Choice:** ship a Sun-specific public mission adapter first, then add remote exposure and user-hardware providers only behind capability and safety contracts.
+**Why:** SDO/Helioviewer has a documented public solar image path; arbitrary planet/star views do not have one universal free live API. This gives users a real frame without promising coverage that the provider ecosystem cannot supply.
+**Trade-off:** the first frame is EUV solar imagery rather than a visible local telescope view, and arbitrary target coverage remains dependent on provider accounts, sessions or hardware.
+
+### Decision O — MCP is semantic control plane, not pixel transport
+
+**Choice:** use MCP for target resolution, provider status, provenance, observation planning and a locked future exposure request; use HTTP/CDN/object storage, SSE/WebSocket or WebRTC for bytes/status.
+**Why:** MCP is optimized for tool/resource context and explicit operations, while high-rate image/video delivery needs cacheable binary/tile/stream transports.
+**Trade-off:** an AI client must make a normal authorized HTTP request for a frame after MCP returns metadata; the result is higher performance and clearer security boundaries.
+
 ---
 
 ## 13. Verification record
@@ -990,7 +1062,7 @@ npx playwright test tests/observatory.spec.ts --reporter=line
 ```
 
 ```text
-25 passed
+29 passed
 ```
 
 ```bash
