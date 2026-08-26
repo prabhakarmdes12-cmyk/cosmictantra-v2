@@ -3,7 +3,7 @@
 **Document status:** implementation record for the shipped Observatory work
 **Last updated:** 26 August 2026 (Asia/Calcutta)
 **Branch:** `arena/01a03b32-cosmictantra-v2`
-**Latest commit:** `e3f2ee1 feat: add evidence-backed observatory study layer`
+**Latest commit:** `ddf63c3 feat: establish observatory reference provider seam`
 **Release qualification:** **CONDITIONAL PASS**
 
 This document records what was built, why it was built that way, how the pieces connect, which visual assets are used, every meaningful polish step, and what remains before a precision-astronomy release claim would be justified.
@@ -832,10 +832,20 @@ Evidence-backed observation and student study pass:
 15. Exposed the known `BLOCKER-1` Moon discrepancy in the Moon detail sheet.
 16. Synchronized city/time/planet/object context on the Ecliptic, Time Machine and Gochara routes as well as the main route.
 17. Added viewport, observation-helper and Moon-phase invariant coverage.
-18. Added a shared provider/provenance contract and local canonical-body adapter.
-19. Added a fail-closed reference-fixture parser that rejects incomplete/draft data.
-20. Extended the networked Horizons scaffold with explicit geocentric/topocentric modes and review metadata.
-21. Added the implementation/validation note in `EVIDENCE_OBSERVATION_V1.md`.
+18. Added the implementation/validation note in `EVIDENCE_OBSERVATION_V1.md`.
+
+### Step 8 — `ddf63c3 feat: establish observatory reference provider seam`
+
+Reference architecture pass:
+
+1. Added shared provider, quality, frame, observer and error-budget types.
+2. Adapted the existing local canonical-body calculation to the provider contract without changing its output or adding a network dependency.
+3. Added a fail-closed reference-fixture parser with explicit physical-body-only validation and angular range checks.
+4. Added exact-epoch reference lookup and local-versus-reference field comparison helpers.
+5. Extended the Horizons draft generator with explicit geocentric and topocentric modes.
+6. Recorded topocentric geodetic observer inputs and review-only raw-response metadata.
+7. Added reference schema/parser/comparison tests, while keeping the reviewed fixture absent until a networked manual review is possible.
+8. Added `docs/observatory/reference-fixture-notes.md` with the generation, review and freeze sequence.
 
 ---
 
