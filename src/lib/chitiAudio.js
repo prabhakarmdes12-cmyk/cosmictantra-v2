@@ -1,6 +1,6 @@
 /**
- * CHITI TECHNOLOGIES UDS v3.0.0 — MULTI-SENSORY FEEDBACK
- * Programmatic synthetic audio tick (Web Audio API) & subtle mobile haptics.
+ * CHITI TECHNOLOGIES UDS v3.0.0 — MULTI-SENSORY SACRED FEEDBACK
+ * Programmatic synthetic audio synthesis (Web Audio API) & subtle mobile haptics.
  */
 
 class ChitiSensory {
@@ -42,12 +42,11 @@ class ChitiSensory {
       osc.start();
       osc.stop(this.audioCtx.currentTime + 0.015);
 
-      // Trigger mobile haptic if available
       if (typeof navigator !== 'undefined' && navigator.vibrate) {
         navigator.vibrate(8);
       }
     } catch {
-      // Gracefully ignore audio autoplay restrictions
+      // Gracefully ignore autoplay policies
     }
   }
 
@@ -65,22 +64,101 @@ class ChitiSensory {
 
       osc.type = 'sine';
       osc.frequency.setValueAtTime(880, this.audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(440, this.audioCtx.currentTime + 0.5);
+      osc.frequency.exponentialRampToValueAtTime(440, this.audioCtx.currentTime + 0.6);
 
-      gain.gain.setValueAtTime(0.06, this.audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.0001, this.audioCtx.currentTime + 0.5);
+      gain.gain.setValueAtTime(0.07, this.audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, this.audioCtx.currentTime + 0.6);
 
       osc.connect(gain);
       gain.connect(this.audioCtx.destination);
 
       osc.start();
-      osc.stop(this.audioCtx.currentTime + 0.5);
+      osc.stop(this.audioCtx.currentTime + 0.6);
 
       if (typeof navigator !== 'undefined' && navigator.vibrate) {
         navigator.vibrate(12);
       }
     } catch {
-      // Gracefully ignore audio autoplay restrictions
+      // Gracefully ignore
+    }
+  }
+
+  playSacredGong() {
+    try {
+      this.initAudio();
+      if (!this.audioCtx) return;
+
+      if (this.audioCtx.state === 'suspended') {
+        this.audioCtx.resume();
+      }
+
+      const now = this.audioCtx.currentTime;
+      const osc1 = this.audioCtx.createOscillator();
+      const osc2 = this.audioCtx.createOscillator();
+      const gain = this.audioCtx.createGain();
+
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(108, now); // 108 Hz sacred base
+      osc1.frequency.exponentialRampToValueAtTime(54, now + 2.5);
+
+      osc2.type = 'triangle';
+      osc2.frequency.setValueAtTime(216, now); // First harmonic
+      osc2.frequency.exponentialRampToValueAtTime(108, now + 2.5);
+
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.5);
+
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(this.audioCtx.destination);
+
+      osc1.start(now);
+      osc2.start(now);
+      osc1.stop(now + 2.5);
+      osc2.stop(now + 2.5);
+
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate([15, 30, 45]);
+      }
+    } catch {
+      // Gracefully ignore
+    }
+  }
+
+  playOmChant() {
+    try {
+      this.initAudio();
+      if (!this.audioCtx) return;
+
+      if (this.audioCtx.state === 'suspended') {
+        this.audioCtx.resume();
+      }
+
+      const now = this.audioCtx.currentTime;
+      const osc = this.audioCtx.createOscillator();
+      const gain = this.audioCtx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(136.1, now); // 136.1 Hz Cosmic OM frequency
+      osc.frequency.linearRampToValueAtTime(136.5, now + 1.5);
+      osc.frequency.exponentialRampToValueAtTime(130, now + 3.0);
+
+      gain.gain.setValueAtTime(0.01, now);
+      gain.gain.linearRampToValueAtTime(0.07, now + 0.8);
+      gain.gain.linearRampToValueAtTime(0.05, now + 2.0);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 3.0);
+
+      osc.connect(gain);
+      gain.connect(this.audioCtx.destination);
+
+      osc.start(now);
+      osc.stop(now + 3.0);
+
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate([20, 40, 80]);
+      }
+    } catch {
+      // Gracefully ignore
     }
   }
 
@@ -161,6 +239,6 @@ export const chitiSensory = new ChitiSensory();
 export const playBell = () => chitiSensory.playBell();
 export const playTick = () => chitiSensory.playTick();
 export const playConch = () => chitiSensory.playConch();
+export const playSacredGong = () => chitiSensory.playSacredGong();
+export const playOmChant = () => chitiSensory.playOmChant();
 export const playFlowerDrop = () => chitiSensory.playFlowerDrop();
-
-

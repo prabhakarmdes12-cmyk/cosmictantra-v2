@@ -105,7 +105,7 @@ test.describe('CosmicTantra — AI Guru, CallMe4 E2EE & Pandit Onboarding Suite'
     // Fast Action Chips present
     await expect(page.getByRole('button', { name: /आज का 72h राशिफल व गोचर/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /26 महातीर्थ लाइव दर्शन व आरती/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /विद्वान् ज्योतिषी परामर्श/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /कुण्डली व जीवन प्रश्न/i })).toBeVisible();
 
     // Click on 72h Forecast Chip
     const forecastChip = page.getByRole('button', { name: /आज का 72h राशिफल व गोचर/i });
@@ -114,6 +114,56 @@ test.describe('CosmicTantra — AI Guru, CallMe4 E2EE & Pandit Onboarding Suite'
 
     // Navigation action card appears inside chat
     await expect(page.getByText(/72h Multi-Horizon Forecast Hub/i)).toBeVisible();
+  });
+
+  test('Floating AI Guru In-Chat Intake Flow: Guides through Domain, Name, DOB, Time, City, and Question to render Kundali snapshot', async ({ page }) => {
+    await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
+
+    // Open Guru Avatar
+    const avatarBtn = page.locator('button[title="गुरु ज्योतिषदेव AI से बात करें"]');
+    await avatarBtn.click();
+    await page.waitForTimeout(300);
+
+    // Click "🔮 कुण्डली व जीवन प्रश्न"
+    const intakeChip = page.getByRole('button', { name: /कुण्डली व जीवन प्रश्न/i }).first();
+    await intakeChip.click();
+    await page.waitForTimeout(400);
+
+    // Select Domain (e.g. Career)
+    const careerChip = page.getByRole('button', { name: /करियर, व्यापार व धन लाभ/i });
+    await careerChip.click();
+    await page.waitForTimeout(400);
+
+    // Enter Name
+    const chatInput = page.locator('input[placeholder="पूछें: आज का दिन, विवाह, व्यापार, या मन्त्र..."]');
+    await chatInput.fill('आदित्य शर्मा');
+    const sendBtn = page.locator('form:has(input[placeholder*="पूछें"]) button[type="submit"]');
+    await sendBtn.click();
+    await page.waitForTimeout(500);
+
+    // Select Date chip
+    const dateChip = page.getByRole('button', { name: /1995-06-15/i }).first();
+    await dateChip.click();
+    await page.waitForTimeout(500);
+
+    // Select Time chip
+    const timeChip = page.getByRole('button', { name: /10:30 \(सुबह\)/i }).first();
+    await timeChip.click();
+    await page.waitForTimeout(500);
+
+    // Select City chip
+    const cityChip = page.getByRole('button', { name: /Varanasi/i }).first();
+    await cityChip.click();
+    await page.waitForTimeout(500);
+
+    // Enter Question
+    await chatInput.fill('व्यापार में नए निवेश हेतु क्या शुभ मुहूर्त है?');
+    await sendBtn.click();
+    await page.waitForTimeout(1000);
+
+    // Verify Kundali Snapshot & Transit Status
+    await expect(page.getByText(/लग्न \(Ascendant\)|Janma Kundali Snapshot/i).first()).toBeVisible();
+    await expect(page.getByText(/₹501 लिखित विद्वत्-परामर्श पत्र/i)).toBeVisible();
   });
 
 });

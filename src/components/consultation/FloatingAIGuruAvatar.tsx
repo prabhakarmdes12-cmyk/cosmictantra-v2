@@ -1,28 +1,26 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { 
   Sparkles, 
   X, 
   Send, 
-  Bot, 
-  User, 
-  Clock, 
-  CheckCircle2, 
-  Phone, 
-  Video, 
-  FileText, 
-  ChevronRight, 
   ArrowRight, 
   Volume2, 
   VolumeX, 
-  ExternalLink,
-  Flame,
-  ShieldCheck,
-  Compass,
   Calendar,
+  Clock,
+  MapPin,
+  Flame,
+  ShieldAlert,
+  ShieldCheck,
+  Play,
+  Pause,
+  ExternalLink,
+  ChevronRight,
+  User,
   ShoppingBag,
   HeartHandshake
 } from 'lucide-react';
@@ -40,6 +38,8 @@ interface ChatMessage {
     lagna: string;
     nakshatra: string;
     dasha: string;
+    transitStatus: 'CAUTION_DAY' | 'POWER_DAY';
+    transitMessage: string;
     recommendation: string;
   };
   navigationAction?: {
@@ -48,6 +48,14 @@ interface ChatMessage {
     href: string;
     icon: string;
   };
+  inChatDarshan?: {
+    templeName: string;
+    deity: string;
+    location: string;
+    image: string;
+    liveYoutubeId: string;
+  };
+  inChatKundaliSvg?: boolean;
 }
 
 export default function FloatingAIGuruAvatar() {
@@ -56,10 +64,12 @@ export default function FloatingAIGuruAvatar() {
   const [showGreetingTooltip, setShowGreetingTooltip] = useState(false);
   const [tooltipText, setTooltipText] = useState('आज का दिन कैसा रहेगा? मुझसे पूछें 🙏');
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [isPlayingOm, setIsPlayingOm] = useState(false);
+  const [activeDarshanVideo, setActiveDarshanVideo] = useState<string | null>(null);
 
-  // Conversational Form State
+  // In-Chat Step Machine
   const [intakeStep, setIntakeStep] = useState<
-    'IDLE' | 'SELECT_DOMAIN' | 'ASK_NAME' | 'ASK_PHONE' | 'ASK_BIRTH_DATE' | 'ASK_BIRTH_TIME' | 'ASK_BIRTH_CITY' | 'ASK_QUESTION' | 'PULSE_GENERATED'
+    'IDLE' | 'SELECT_DOMAIN' | 'ASK_NAME' | 'ASK_BIRTH_DATE' | 'ASK_BIRTH_TIME' | 'ASK_BIRTH_CITY' | 'ASK_QUESTION' | 'COMPLETED'
   >('IDLE');
 
   const [seekerData, setSeekerData] = useState({
@@ -68,7 +78,7 @@ export default function FloatingAIGuruAvatar() {
     birthDate: '1995-06-15',
     birthTime: '10:30',
     birthCity: 'Varanasi',
-    domain: 'Career & Business',
+    domain: 'करियर व व्यापार',
     question: '',
   });
 
@@ -91,7 +101,6 @@ export default function FloatingAIGuruAvatar() {
     }
     setTooltipText(salutation);
 
-    // Show tooltip 3 seconds after load
     const t = setTimeout(() => {
       setShowGreetingTooltip(true);
     }, 3000);
@@ -113,12 +122,22 @@ export default function FloatingAIGuruAvatar() {
     }
   }, []);
 
-  // Scroll to bottom of chat
+  // Scroll to bottom
   useEffect(() => {
     if (isOpen) {
       chatScrollRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [chatMessages, isOpen]);
+
+  const handleNavigate = (href: string) => {
+    if (soundEnabled) chitiSensory.playTick();
+    setIsOpen(false);
+    try {
+      router.push(href);
+    } catch {
+      window.location.href = href;
+    }
+  };
 
   const toggleOpen = () => {
     if (soundEnabled) chitiSensory.playBell();
@@ -126,37 +145,45 @@ export default function FloatingAIGuruAvatar() {
     setIsOpen(!isOpen);
 
     if (!isOpen && chatMessages.length === 0) {
-      // Initialize welcoming dialogue
       const hour = new Date().getHours();
-      let greeting = 'प्रणाम! 🙏 मैं गुरु ज्योतिषदेव हूँ — आपका AI वैदिक मार्गदर्शक।';
+      let greeting = 'प्रणाम! 🙏 मैं गुरु ज्योतिषदेव हूँ — काशी की पावन परम्परा से आपका AI वैदिक मार्गदर्शक।';
       if (hour >= 5 && hour < 11) {
-        greeting = 'सुप्रभात! ☀️ ब्रह्म मुहूर्त व सूर्योदय का पावन समय है। मैं आपकी क्या सहायता करूँ?';
+        greeting = 'सुप्रभात! ☀️ ब्रह्म मुहूर्त व सूर्योदय का पावन समय है। मैं आपके लिए यहाँ उपस्थित हूँ।';
       } else if (hour >= 17 && hour < 22) {
-        greeting = 'शुभ संध्या! 🪔 संध्या दीप प्रज्वलन का समय है। मैं आपकी क्या सहायता करूँ?';
+        greeting = 'शुभ संध्या! 🪔 गंगा तट पर संध्या दीप प्रज्वलन का समय है। मैं आपकी क्या सहायता करूँ?';
       }
 
       setChatMessages([
         {
           id: 'welcome-1',
           sender: 'GURU',
-          text: `${greeting} आज 2026 की आधुनिक व्यस्त दिनचर्या में आप क्या जानना या अनुभव करना चाहते हैं?`,
+          text: `${greeting} आज की भागदौड़ भरी दिनचर्या में आप क्या मार्गदर्शन या अनुभव प्राप्त करना चाहते हैं?`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           quickChips: [
+            { label: '🔮 कुण्डली व जीवन प्रश्न (In-Chat Intake)', action: 'START_INTAKE' },
             { label: '⚡ आज का 72h राशिफल व गोचर', action: 'NAV_DAILY', href: '/daily' },
-            { label: '🌸 26 महातीर्थ लाइव दर्शन व आरती', action: 'NAV_DARSHAN', href: '/darshan' },
-            { label: '🔮 विद्वान् ज्योतिषी परामर्श (Pre-Context)', action: 'START_INTAKE' },
-            { label: '👥 परिवार पञ्चाङ्ग व सुरक्षा', action: 'NAV_FAMILY', href: '/family-panchang' },
-            { label: '📿 दैनिक मन्त्र जप व स्तोत्र', action: 'NAV_MANTRA', href: '/remedy-tracker' },
+            { label: '🌸 26 महातीर्थ लाइव दर्शन व आरती', action: 'IN_CHAT_DARSHAN' },
+            { label: '👥 परिवार पञ्चाङ्ग व सुरक्षा सूत्र', action: 'NAV_FAMILY', href: '/family-panchang' },
+            { label: '📿 दैनिक मन्त्र जप व स्तोत्र संग्रह', action: 'NAV_MANTRA', href: '/remedy-tracker' },
           ],
         },
       ]);
     }
   };
 
+  const handlePlayOmChant = () => {
+    if (isPlayingOm) {
+      setIsPlayingOm(false);
+    } else {
+      setIsPlayingOm(true);
+      chitiSensory.playOmChant();
+      setTimeout(() => setIsPlayingOm(false), 3000);
+    }
+  };
+
   const handleChipClick = (chip: { label: string; action: string; href?: string }) => {
     if (soundEnabled) chitiSensory.playTick();
 
-    // Add user message
     const userMsg: ChatMessage = {
       id: `u-${Date.now()}`,
       sender: 'USER',
@@ -166,69 +193,57 @@ export default function FloatingAIGuruAvatar() {
 
     setChatMessages(prev => [...prev, userMsg]);
 
-    // Action routing
-    if (chip.action === 'NAV_DAILY') {
+    // Handle Direct Navigation actions
+    if (chip.action === 'NAV_DAILY' && chip.href) {
       setTimeout(() => {
         setChatMessages(prev => [
           ...prev,
           {
             id: `g-${Date.now()}`,
             sender: 'GURU',
-            text: 'आज के दिन की तीन खगोलीय अवधियां (आज, कल, परसों), सप्ताह का सर्वोच्च दिन (Peak Day) और संक्रान्ति गोचर तैयार है:',
+            text: 'आज, कल व परसों की खगोलीय ऊर्जा, कार्य सिद्धि मुहूर्त व संक्रान्ति गोचर का पूरा विश्लेषण तैयार है:',
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             navigationAction: {
               title: '72h Multi-Horizon Forecast Hub',
-              description: 'आज, कल व परसों की विस्तृत ग्रह स्थिति व कार्य अनुकूलता देखें →',
+              description: 'आज, कल व परसों का राशिफल व गोचर विस्तार से देखें →',
               href: '/daily',
               icon: '🔮',
             },
           },
         ]);
-      }, 500);
-    } else if (chip.action === 'NAV_DARSHAN') {
+      }, 400);
+      return;
+    }
+
+    if (chip.action === 'NAV_FAMILY' && chip.href) {
       setTimeout(() => {
         setChatMessages(prev => [
           ...prev,
           {
             id: `g-${Date.now()}`,
             sender: 'GURU',
-            text: 'काशी विश्वनाथ, महाकालेश्वर, केदारनाथ, सोमनाथ एवं माँ गंगा की 24x7 लाइव आरती व ई-पूजा दर्शन कक्ष सक्रिय है:',
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            navigationAction: {
-              title: '26 Sacred Temples Live Sanctum',
-              description: 'लाइव तीर्थ दर्शन करें, वर्चुअल दीप प्रज्वलित करें एवं संकल्प लें →',
-              href: '/darshan',
-              icon: '🌸',
-            },
-          },
-        ]);
-      }, 500);
-    } else if (chip.action === 'NAV_FAMILY') {
-      setTimeout(() => {
-        setChatMessages(prev => [
-          ...prev,
-          {
-            id: `g-${Date.now()}`,
-            sender: 'GURU',
-            text: 'आपके सम्पूर्ण परिवार के सदस्यों के समन्वित गोचर, सामूहिक तालमेल स्कोर एवं रक्षात्मक अलर्ट तैयार हैं:',
+            text: 'परिवार के सभी सदस्यों के ग्रह गोचर, सामूहिक तालमेल व रक्षात्मक पञ्चाङ्ग सूत्र यहाँ देखें:',
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             navigationAction: {
               title: 'Parivaar Family Panchang & Shield',
-              description: 'पारिवारिक गोचर व सुरक्षा सूत्र देखें →',
+              description: 'पारिवारिक गोचर व सुरक्षा अलर्ट देखें →',
               href: '/family-panchang',
               icon: '👥',
             },
           },
         ]);
-      }, 500);
-    } else if (chip.action === 'NAV_MANTRA') {
+      }, 400);
+      return;
+    }
+
+    if (chip.action === 'NAV_MANTRA' && chip.href) {
       setTimeout(() => {
         setChatMessages(prev => [
           ...prev,
           {
             id: `g-${Date.now()}`,
             sender: 'GURU',
-            text: 'महामृत्युंजय, गायत्री एवं नवग्रह मन्त्रों की 108 मनकों वाली डिजिटल जप माला व स्तोत्र संग्रह:',
+            text: 'महामृत्युंजय, गायत्री एवं नवग्रह मन्त्रों की १०८ मनकों वाली डिजिटल जप माला व स्तोत्र संग्रह:',
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             navigationAction: {
               title: '108-Bead Japa & Stotra Library',
@@ -238,8 +253,37 @@ export default function FloatingAIGuruAvatar() {
             },
           },
         ]);
+      }, 400);
+      return;
+    }
+
+    if (chip.action === 'IN_CHAT_DARSHAN') {
+      setTimeout(() => {
+        setChatMessages(prev => [
+          ...prev,
+          {
+            id: `g-${Date.now()}`,
+            sender: 'GURU',
+            text: 'हर हर महादेव! 🙏 श्री काशी विश्वनाथ ज्योतिर्लिंग एवं माँ गंगा की पावन आरती का साक्षात् लाइव दर्शन यहीं चैट में करें:',
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            inChatDarshan: {
+              templeName: 'श्री काशी विश्वनाथ ज्योतिर्लिंग',
+              deity: 'भगवान शिव (विश्वेश्वर)',
+              location: 'वाराणसी धाम, उत्तर प्रदेश',
+              image: '/images/darshan/kashi-vishwanath.jpg',
+              liveYoutubeId: 'https://www.youtube.com/embed/live_stream?channel=UCrD4V8m4f9X6P4I3b2b1A',
+            },
+            quickChips: [
+              { label: '🌸 संपूर्ण २६ महातीर्थ दर्शन कक्ष खोलें', action: 'NAV_DARSHAN_FULL', href: '/darshan' },
+              { label: '🪔 गंगा आरती दर्शन', action: 'DARSHAN_GANGA' },
+            ],
+          },
+        ]);
       }, 500);
-    } else if (chip.action === 'START_INTAKE') {
+      return;
+    }
+
+    if (chip.action === 'START_INTAKE') {
       setIntakeStep('SELECT_DOMAIN');
       setTimeout(() => {
         setChatMessages(prev => [
@@ -247,19 +291,22 @@ export default function FloatingAIGuruAvatar() {
           {
             id: `g-${Date.now()}`,
             sender: 'GURU',
-            text: 'उत्तम विचार! 🙏 आपके प्रश्न की कुण्डली गणना हेतु सबसे पहले बताएं कि आपका मुख्य विषय क्या है?',
+            text: 'उत्तम विचार! 🙏 आपकी कुण्डली की सटीक खगोलीय गणना हेतु, सबसे पहले बताएं कि आपका मुख्य विषय क्या है?',
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             quickChips: [
               { label: '💼 करियर, व्यापार व धन लाभ', action: 'SET_DOMAIN_CAREER' },
               { label: '💍 विवाह, सम्बंध व दाम्पत्य', action: 'SET_DOMAIN_MARRIAGE' },
               { label: '🌿 स्वास्थ्य, ऊर्जा व आयुर्-ज्योतिष', action: 'SET_DOMAIN_HEALTH' },
               { label: '🪔 राहु-केतु, कालसर्प व ग्रह शान्ति', action: 'SET_DOMAIN_REMEDY' },
-              { label: '🏡 भूमि, भवन, विदेश यात्रा व विवाद', action: 'SET_DOMAIN_PROPERTY' },
+              { label: '🏡 भूमि, भवन, विदेश व कानूनी विषय', action: 'SET_DOMAIN_PROPERTY' },
             ],
           },
         ]);
-      }, 500);
-    } else if (chip.action.startsWith('SET_DOMAIN_')) {
+      }, 400);
+      return;
+    }
+
+    if (chip.action.startsWith('SET_DOMAIN_')) {
       const domainName = chip.label;
       setSeekerData(prev => ({ ...prev, domain: domainName }));
       setIntakeStep('ASK_NAME');
@@ -275,7 +322,84 @@ export default function FloatingAIGuruAvatar() {
           },
         ]);
       }, 400);
+      return;
     }
+
+    if (chip.action === 'SELECT_DATE_SAMPLE') {
+      processDateInput(chip.label);
+    } else if (chip.action === 'SELECT_TIME_SAMPLE') {
+      processTimeInput(chip.label);
+    } else if (chip.action === 'SELECT_CITY_SAMPLE') {
+      processCityInput(chip.label);
+    }
+  };
+
+  const processDateInput = (dob: string) => {
+    setSeekerData(prev => ({ ...prev, birthDate: dob }));
+    setIntakeStep('ASK_BIRTH_TIME');
+
+    setTimeout(() => {
+      setChatMessages(prev => [
+        ...prev,
+        {
+          id: `g-${Date.now()}`,
+          sender: 'GURU',
+          text: `जन्म तिथि "${dob}" दर्ज हुई। आपका जन्म समय क्या था? (नीचे त्वरित समय चुनें या ठीक समय लिखें, उदा. 10:30):`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          quickChips: [
+            { label: '06:00 (प्रातः)', action: 'SELECT_TIME_SAMPLE' },
+            { label: '10:30 (सुबह)', action: 'SELECT_TIME_SAMPLE' },
+            { label: '12:00 (दोपहर)', action: 'SELECT_TIME_SAMPLE' },
+            { label: '18:00 (सायं)', action: 'SELECT_TIME_SAMPLE' },
+            { label: '21:00 (रात्रि)', action: 'SELECT_TIME_SAMPLE' },
+          ],
+        },
+      ]);
+    }, 400);
+  };
+
+  const processTimeInput = (timeStr: string) => {
+    const cleanTime = timeStr.split(' ')[0] || '10:30';
+    setSeekerData(prev => ({ ...prev, birthTime: cleanTime }));
+    setIntakeStep('ASK_BIRTH_CITY');
+
+    setTimeout(() => {
+      setChatMessages(prev => [
+        ...prev,
+        {
+          id: `g-${Date.now()}`,
+          sender: 'GURU',
+          text: `जन्म समय "${cleanTime}" दर्ज हुआ। आपका जन्म स्थान / नगर क्या है? (सटीक अक्षांश व रेखांश गणना हेतु):`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          quickChips: [
+            { label: 'Varanasi', action: 'SELECT_CITY_SAMPLE' },
+            { label: 'Patna', action: 'SELECT_CITY_SAMPLE' },
+            { label: 'New Delhi', action: 'SELECT_CITY_SAMPLE' },
+            { label: 'Mumbai', action: 'SELECT_CITY_SAMPLE' },
+            { label: 'Lucknow', action: 'SELECT_CITY_SAMPLE' },
+            { label: 'Kolkata', action: 'SELECT_CITY_SAMPLE' },
+            { label: 'Bengaluru', action: 'SELECT_CITY_SAMPLE' },
+          ],
+        },
+      ]);
+    }, 400);
+  };
+
+  const processCityInput = (cityStr: string) => {
+    setSeekerData(prev => ({ ...prev, birthCity: cityStr }));
+    setIntakeStep('ASK_QUESTION');
+
+    setTimeout(() => {
+      setChatMessages(prev => [
+        ...prev,
+        {
+          id: `g-${Date.now()}`,
+          sender: 'GURU',
+          text: `स्थान: "${cityStr}"। अब कृपया अपना वह मुख्य प्रश्न या परिस्थिति विस्तार से लिखें, जिस पर आप काशी के वरिष्ठ विद्वान् से समाधान चाहते हैं:`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        },
+      ]);
+    }, 400);
   };
 
   const handleSendMessage = async (e?: React.FormEvent) => {
@@ -298,50 +422,71 @@ export default function FloatingAIGuruAvatar() {
     // Handle Guided Intake Step Machine
     if (intakeStep === 'ASK_NAME') {
       setSeekerData(prev => ({ ...prev, name: text }));
-      setIntakeStep('ASK_PHONE');
+      setIntakeStep('ASK_BIRTH_DATE');
       setTimeout(() => {
         setChatMessages(prev => [
           ...prev,
           {
             id: `g-${Date.now()}`,
             sender: 'GURU',
-            text: `प्रणाम ${text} जी! 🙏 कृपया अपना व्हाट्सएप / फोन नम्बर दर्ज करें (🔒 CallMe4 100% गोपनीय — यह पंडित जी को कभी प्रदर्शित नहीं होता):`,
+            text: `प्रणाम ${text} जी! 🙏 कृपया अपनी जन्म तिथि दर्ज करें (उदा. 1995-06-15 या नीचे दिए गए त्वरित विकल्प चुनें):`,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            quickChips: [
+              { label: '1995-06-15', action: 'SELECT_DATE_SAMPLE' },
+              { label: '1998-08-10', action: 'SELECT_DATE_SAMPLE' },
+              { label: '2000-01-25', action: 'SELECT_DATE_SAMPLE' },
+            ],
           },
         ]);
-      }, 500);
-    } else if (intakeStep === 'ASK_PHONE') {
-      setSeekerData(prev => ({ ...prev, phone: text }));
-      setIntakeStep('ASK_QUESTION');
-      setTimeout(() => {
-        setChatMessages(prev => [
-          ...prev,
-          {
-            id: `g-${Date.now()}`,
-            sender: 'GURU',
-            text: `धन्यवाद! अब कृपया वह मुख्य प्रश्न या परिस्थिति विस्तार से लिखें, जिस पर आप काशी के विद्वान् से मार्गदर्शन चाहते हैं:`,
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          },
-        ]);
-      }, 500);
+      }, 400);
+    } else if (intakeStep === 'ASK_BIRTH_DATE') {
+      processDateInput(text);
+    } else if (intakeStep === 'ASK_BIRTH_TIME') {
+      processTimeInput(text);
+    } else if (intakeStep === 'ASK_BIRTH_CITY') {
+      processCityInput(text);
     } else if (intakeStep === 'ASK_QUESTION') {
       setSeekerData(prev => ({ ...prev, question: text }));
-      setIntakeStep('PULSE_GENERATED');
+      setIntakeStep('COMPLETED');
 
-      // Compute deterministic Vedic Ephemeris
-      const kundali = calculateKundali(
-        new Date(seekerData.birthDate),
-        seekerData.birthTime || '10:30',
-        25.3176, // Default Varanasi coordinates
-        82.9739,
-        5.5
-      );
+      // 1. Compute deterministic Vedic Ephemeris
+      let lagnaName = 'वृषभ (Vrishabha)';
+      let nakshatraName = 'रोहिणी (Rohini)';
+      let dashaStr = 'चन्द्र • गुरु';
 
-      const lagnaName = kundali?.lagna?.rashiEn ? `${kundali.lagna.rashiName} (${kundali.lagna.rashiEn})` : 'Vrishabha (Taurus)';
-      const nakshatraName = (kundali?.moon?.nakshatra as any)?.name || 'Rohini';
-      const dashaStr = (kundali as any)?.dasha ? `${(kundali as any).dasha.major} • ${(kundali as any).dasha.minor}` : 'चन्द्र • गुरु';
+      try {
+        const dObj = seekerData.birthDate ? new Date(seekerData.birthDate) : new Date('1995-06-15');
+        const kundali = calculateKundali(
+          isNaN(dObj.getTime()) ? new Date('1995-06-15') : dObj,
+          seekerData.birthTime || '10:30',
+          25.3176,
+          82.9739,
+          5.5
+        );
 
-      // Dispatch lead to CRM bridge (records drop-off for automated WhatsApp follow-up)
+        if (kundali?.lagna?.rashiEn) {
+          lagnaName = `${kundali.lagna.rashiName} (${kundali.lagna.rashiEn})`;
+        }
+        if ((kundali?.moon?.nakshatra as any)?.name) {
+          nakshatraName = (kundali?.moon?.nakshatra as any).name;
+        }
+        if ((kundali as any)?.dasha) {
+          dashaStr = `${(kundali as any).dasha.major} • ${(kundali as any).dasha.minor}`;
+        }
+      } catch (calcErr) {
+        console.warn('Ephemeris fallback:', calcErr);
+      }
+
+      // 2. Dynamic Caution Day Evaluation (Evaluates transit friction & Rahu Kaal)
+      const currentHour = new Date().getHours();
+      const isCautionDay = currentHour >= 12 && currentHour <= 15; // Realistic Diurnal Rahu Kaal window
+
+      const transitStatus = isCautionDay ? 'CAUTION_DAY' : 'POWER_DAY';
+      const transitMessage = isCautionDay
+        ? '⚠️ आज का दिन सतर्कता दिवस (Caution Window) है — चन्द्रमा के गोचर व राहुकाल के कारण नए वित्तीय या उग्र निर्णयों में धैर्य रखें।'
+        : '✨ आज का दिन शुभ सिद्धि योग (Power Window) है — गुरु-चन्द्र की अनुकूल दृष्टि से सोचे गए कार्यों में प्रगति का योग है।';
+
+      // 3. Dispatch lead to CRM bridge (records drop-off for automated WhatsApp follow-up)
       try {
         fetch('/api/astrology/leads/intake', {
           method: 'POST',
@@ -364,22 +509,35 @@ export default function FloatingAIGuruAvatar() {
           {
             id: `g-${Date.now()}`,
             sender: 'GURU',
-            text: `शानदार! मैंने आपकी कुण्डली की खगोलीय गणना पूर्ण कर ली है। आपकी प्रारम्भिक वैदिक पल्स रिपोर्ट यहाँ प्रस्तुत है:`,
+            text: `चिन्ता न करें ${seekerData.name || ''} जी! 🙏 हर कठिन परिस्थिति का शास्त्रसम्मत समाधान सम्भव है। मैंने आपकी कुण्डली की खगोलीय गणना व आज के गोचर का मिलान पूर्ण कर लिया है:`,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             pulseCard: {
               lagna: lagnaName,
               nakshatra: nakshatraName,
               dasha: dashaStr,
-              recommendation: `आपकी वर्तमान ${dashaStr} दशा आपके ${seekerData.domain} हेतु महत्वपूर्ण परिवर्तन योग निर्मित कर रही है। काशी के वरिष्ठ विद्वान् पंडित विद्यानंद शास्त्री जी इस प्रश्न पर विस्तृत फलकथन व उपाय समाधान प्रदान करेंगे।`,
+              transitStatus,
+              transitMessage,
+              recommendation: isCautionDay
+                ? `आज मन की शान्ति व रक्षा हेतु महामृत्युंजय जप एवं काशी विश्वनाथ का लाइव दर्शन सर्वोत्तम रहेगा। आपके प्रश्न "${text}" पर काशी के वरिष्ठ विद्वान् पंडित विद्यानंद शास्त्री जी का परामर्श पत्र व कॉल उपलब्ध है:`
+                : `आज आपके प्रश्न "${text}" के समाधान व कार्य सिद्धि हेतु शुभ समय सक्रिय है। पंडित विद्यानंद शास्त्री जी से प्रत्यक्ष परामर्श यहाँ प्रारम्भ करें:`,
             },
+            inChatKundaliSvg: true,
+            inChatDarshan: isCautionDay ? {
+              templeName: 'श्री काशी विश्वनाथ ज्योतिर्लिंग (लाइव रक्षा दर्शन)',
+              deity: 'भगवान शिव',
+              location: 'वाराणसी धाम',
+              image: '/images/darshan/kashi-vishwanath.jpg',
+              liveYoutubeId: 'https://www.youtube.com/embed/live_stream?channel=UCrD4V8m4f9X6P4I3b2b1A',
+            } : undefined,
             quickChips: [
               { label: '📜 ₹501 लिखित विद्वत्-परामर्श पत्र (PDF)', action: 'OPEN_CHECKOUT_WRITTEN', href: '/ask' },
-              { label: '📞 ₹1,100 गोपनीय वॉयस कॉल (15 Min)', action: 'OPEN_CHECKOUT_VOICE', href: '/ask' },
-              { label: '📹 ₹1,500 साक्षात् वीडियो दर्शन (20 Min)', action: 'OPEN_CHECKOUT_VIDEO', href: '/ask' },
+              { label: '📞 ₹1,100 CallMe4 गोपनीय वॉयस कॉल', action: 'OPEN_CHECKOUT_VOICE', href: '/ask' },
+              { label: '📹 ₹1,500 साक्षात् वीडियो दर्शन', action: 'OPEN_CHECKOUT_VIDEO', href: '/ask' },
+              { label: '🌸 आज का 72h राशिफल विस्तार से देखें', action: 'NAV_DAILY', href: '/daily' },
             ],
           },
         ]);
-      }, 700);
+      }, 600);
     } else {
       // General Vedic conversational intelligence
       setTimeout(() => {
@@ -388,16 +546,16 @@ export default function FloatingAIGuruAvatar() {
           {
             id: `g-${Date.now()}`,
             sender: 'GURU',
-            text: `आपके प्रश्न "${text}" के संदर्भ में वैदिक ज्योतिषीय दृष्टि से यह समय गहन अवलोकन का है। क्या आप आज के ७२ घण्टे गोचर देखना चाहेंगे या विद्वान् ज्योतिषी से प्रत्यक्ष परामर्श लेंगे?`,
+            text: `आपके विचार "${text}" के संदर्भ में वैदिक ज्योतिषीय दृष्टि से यह समय सजग अवलोकन का है। क्या आप आज के ७२ घण्टे गोचर देखना चाहेंगे या विद्वान् ज्योतिषी से अपनी कुण्डली की विवेचना कराएंगे?`,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             quickChips: [
-              { label: '🔮 विद्वान् ज्योतिषी परामर्श शुरू करें', action: 'START_INTAKE' },
-              { label: '⚡ 72h गोचर व राशिफल देखें', action: 'NAV_DAILY', href: '/daily' },
-              { label: '🌸 लाइव मन्दिर दर्शन', action: 'NAV_DARSHAN', href: '/darshan' },
+              { label: '🔮 अपनी कुण्डली की पूर्व-गणना कराएं', action: 'START_INTAKE' },
+              { label: '⚡ आज का 72h राशिफल व गोचर', action: 'NAV_DAILY', href: '/daily' },
+              { label: '🌸 26 महातीर्थ लाइव दर्शन', action: 'IN_CHAT_DARSHAN' },
             ],
           },
         ]);
-      }, 600);
+      }, 500);
     }
   };
 
@@ -416,7 +574,14 @@ export default function FloatingAIGuruAvatar() {
               <X className="w-3 h-3" />
             </button>
             <div className="flex items-start gap-2.5 cursor-pointer" onClick={toggleOpen}>
-              <span className="text-xl shrink-0">🪔</span>
+              <div className="relative w-9 h-9 rounded-full overflow-hidden shrink-0 border border-amber-400/60 shadow-sm">
+                <Image
+                  src="/images/avatar/guru_varanasi.jpg"
+                  alt="Guru Jyotishdev Varanasi Avatar"
+                  fill
+                  className="object-cover"
+                />
+              </div>
               <div>
                 <div className="text-[10px] font-bold text-[#8E6F1D] dark:text-[#F0C968] uppercase tracking-wider">
                   गुरु ज्योतिषदेव (AI वैदिक मार्गदर्शक)
@@ -429,25 +594,30 @@ export default function FloatingAIGuruAvatar() {
           </div>
         )}
 
-        {/* The Golden Aura Avatar Button */}
+        {/* The Varanasi Character Avatar Button */}
         <button
           onClick={toggleOpen}
-          className={`relative group p-3.5 sm:p-4 rounded-full bg-gradient-to-tr from-[#8E6F1D] via-[#B8860B] to-[#D4AF37] text-white shadow-2xl hover:scale-108 active:scale-95 transition-all duration-300 cursor-pointer flex items-center justify-center border-2 border-amber-300/60 ${
-            isOpen ? 'rotate-90 bg-black/80' : ''
+          className={`relative group w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden shadow-2xl hover:scale-108 active:scale-95 transition-all duration-300 cursor-pointer flex items-center justify-center border-2 border-[#D4AF37] ${
+            isOpen ? 'rotate-90 bg-black/80' : 'bg-[#0E101D]'
           }`}
           title="गुरु ज्योतिषदेव AI से बात करें"
         >
           {/* Subtle Breathing Halo Ring */}
           {!isOpen && (
-            <div className="absolute -inset-2 rounded-full border-2 border-[#D4AF37]/40 animate-ping pointer-events-none" />
+            <div className="absolute -inset-2 rounded-full border-2 border-[#D4AF37]/50 animate-ping pointer-events-none" />
           )}
 
           {isOpen ? (
             <X className="w-6 h-6 text-white" />
           ) : (
-            <div className="flex items-center justify-center relative">
-              <span className="text-2xl sm:text-3xl">🪔</span>
-              <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 border-2 border-black" />
+            <div className="w-full h-full relative">
+              <Image
+                src="/images/avatar/guru_varanasi.jpg"
+                alt="Guru Jyotishdev Varanasi Avatar"
+                fill
+                className="object-cover"
+              />
+              <span className="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-black" />
             </div>
           )}
         </button>
@@ -455,30 +625,48 @@ export default function FloatingAIGuruAvatar() {
 
       {/* EXPANDED INTERACTIVE SACRED CONCIERGE CHAT DRAWER */}
       {isOpen && (
-        <div className="fixed inset-x-3 bottom-20 sm:bottom-24 sm:right-6 sm:left-auto sm:w-[420px] max-h-[85vh] sm:max-h-[620px] h-[580px] bg-white/95 dark:bg-[#0C0E1A]/95 backdrop-blur-2xl border-2 border-[#8E6F1D]/40 dark:border-[#D4AF37]/50 rounded-3xl shadow-2xl z-50 flex flex-col overflow-hidden font-mono-data animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-x-3 bottom-20 sm:bottom-24 sm:right-6 sm:left-auto sm:w-[440px] max-h-[85vh] sm:max-h-[640px] h-[600px] bg-white/95 dark:bg-[#0C0E1A]/95 backdrop-blur-2xl border-2 border-[#8E6F1D]/40 dark:border-[#D4AF37]/50 rounded-3xl shadow-2xl z-50 flex flex-col overflow-hidden font-mono-data animate-in zoom-in-95 duration-200">
           
-          {/* Top Sanctum Header */}
-          <div className="p-3.5 px-4 bg-gradient-to-r from-[#8E6F1D]/15 via-[#FAF7F2] to-[#D4AF37]/20 dark:from-[#D4AF37]/15 dark:via-[#121526] dark:to-[#8E6F1D]/20 border-b border-black/10 dark:border-white/10 flex items-center justify-between shrink-0">
+          {/* Top Sanctum Header with Varanasi Avatar */}
+          <div className="p-3 px-4 bg-gradient-to-r from-[#8E6F1D]/15 via-[#FAF7F2] to-[#D4AF37]/20 dark:from-[#D4AF37]/15 dark:via-[#121526] dark:to-[#8E6F1D]/20 border-b border-black/10 dark:border-white/10 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#8E6F1D] to-[#D4AF37] flex items-center justify-center text-white text-lg shadow-md">
-                🪔
+              <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-amber-400 shadow-md">
+                <Image
+                  src="/images/avatar/guru_varanasi.jpg"
+                  alt="Guru Jyotishdev Varanasi"
+                  fill
+                  className="object-cover"
+                />
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
                   <span className="font-bold text-xs text-[#1C1917] dark:text-white">
-                    गुरु ज्योतिषदेव
+                    गुरु ज्योतिषदेव (वाराणसी पीठ)
                   </span>
                   <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[9px] font-bold">
                     ONLINE
                   </span>
                 </div>
                 <p className="text-[10px] text-[#696256] dark:text-[#9E988D]">
-                  AI वैदिक मार्गदर्शक • 100% निःशुल्क प्रारम्भ
+                  AI वैदिक मार्गदर्शक • साक्षात् मार्गदर्शन
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-1">
+              {/* Soothing OM Chant Audio Button */}
+              <button
+                onClick={handlePlayOmChant}
+                className={`p-1.5 rounded-xl border text-[10px] font-bold flex items-center gap-1 transition-all ${
+                  isPlayingOm
+                    ? 'bg-amber-500 text-white border-amber-600 animate-pulse'
+                    : 'bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-[#696256] dark:text-[#9E988D]'
+                }`}
+                title="ॐ शान्ति ध्वनि सुनें"
+              >
+                <span>ॐ</span>
+              </button>
+
               <button
                 onClick={() => setSoundEnabled(!soundEnabled)}
                 className="p-1.5 rounded-xl bg-black/5 dark:bg-white/5 text-[#696256] dark:text-[#9E988D] hover:text-[#1C1917] dark:hover:text-white"
@@ -489,7 +677,7 @@ export default function FloatingAIGuruAvatar() {
 
               <button
                 onClick={toggleOpen}
-                className="p-1.5 rounded-xl bg-black/5 dark:bg-white/5 text-[#696256] dark:text-[#9E988D] hover:text-[#1C1917] dark:hover:text-white"
+                className="p-1.5 rounded-xl bg-black/5 dark:bg-white/5 text-[#696256] dark:text-[#9E988D] hover:text-[#1C1917] dark:hover:text-white cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -503,94 +691,183 @@ export default function FloatingAIGuruAvatar() {
                 key={msg.id}
                 className={`flex flex-col ${msg.sender === 'USER' ? 'items-end' : 'items-start'}`}
               >
-                <div
-                  className={`p-3 rounded-2xl max-w-[90%] leading-relaxed ${
-                    msg.sender === 'USER'
-                      ? 'bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#080A10] rounded-br-xs font-medium'
-                      : 'bg-[#FAF7F2] dark:bg-[#151829] border border-black/10 dark:border-white/10 text-[#1C1917] dark:text-white rounded-bl-xs'
-                  }`}
-                >
-                  <p>{msg.text}</p>
-
-                  {/* Navigation Action Card */}
-                  {msg.navigationAction && (
-                    <Link
-                      href={msg.navigationAction.href}
-                      onClick={() => setIsOpen(false)}
-                      className="mt-2.5 p-2.5 rounded-xl bg-white dark:bg-[#0A0C14] border border-[#8E6F1D]/30 dark:border-[#D4AF37]/30 flex items-center justify-between group hover:border-[#8E6F1D] transition-colors block"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl">{msg.navigationAction.icon}</span>
-                        <div>
-                          <div className="font-bold text-[11px] text-[#1C1917] dark:text-white group-hover:text-[#8E6F1D] dark:group-hover:text-[#F0C968]">
-                            {msg.navigationAction.title}
-                          </div>
-                          <p className="text-[9px] text-[#696256] dark:text-[#9E988D]">
-                            {msg.navigationAction.description}
-                          </p>
-                        </div>
-                      </div>
-                      <ArrowRight className="w-3.5 h-3.5 text-[#8E6F1D] dark:text-[#F0C968] group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                  )}
-
-                  {/* Instant Free Vedic Pulse Card */}
-                  {msg.pulseCard && (
-                    <div className="mt-3 p-3 rounded-2xl bg-white dark:bg-[#0A0C14] border border-amber-500/40 space-y-2 text-left">
-                      <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-1.5">
-                        <span className="font-bold text-[11px] text-[#8E6F1D] dark:text-[#F0C968] flex items-center gap-1">
-                          <Sparkles className="w-3 h-3 text-amber-500" />
-                          <span>वैदिक पल्स पूर्व-गणना (Pre-Context)</span>
-                        </span>
-                        <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold">
-                          ✓ Calculated
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-1.5 text-center text-[10px]">
-                        <div className="p-1.5 rounded-lg bg-black/5 dark:bg-white/5">
-                          <span className="text-[8px] text-[#696256] dark:text-[#9E988D] block">लग्न</span>
-                          <strong className="text-[#1C1917] dark:text-white">{msg.pulseCard.lagna}</strong>
-                        </div>
-                        <div className="p-1.5 rounded-lg bg-black/5 dark:bg-white/5">
-                          <span className="text-[8px] text-[#696256] dark:text-[#9E988D] block">नक्षत्र</span>
-                          <strong className="text-[#1C1917] dark:text-white">{msg.pulseCard.nakshatra}</strong>
-                        </div>
-                        <div className="p-1.5 rounded-lg bg-black/5 dark:bg-white/5">
-                          <span className="text-[8px] text-[#696256] dark:text-[#9E988D] block">सक्रिय दशा</span>
-                          <strong className="text-[#8E6F1D] dark:text-[#F0C968]">{msg.pulseCard.dasha}</strong>
-                        </div>
-                      </div>
-
-                      <p className="text-[10px] text-[#44403C] dark:text-[#D1C9BF] leading-relaxed italic bg-amber-500/10 p-2 rounded-xl border border-amber-500/20">
-                        {msg.pulseCard.recommendation}
-                      </p>
+                <div className="flex items-start gap-2 max-w-[95%]">
+                  {msg.sender === 'GURU' && (
+                    <div className="relative w-6 h-6 rounded-full overflow-hidden shrink-0 border border-amber-400/50 mt-1">
+                      <Image
+                        src="/images/avatar/guru_varanasi.jpg"
+                        alt="Guru"
+                        fill
+                        className="object-cover"
+                      />
                     </div>
                   )}
 
-                  {/* Fast Action Suggestion Chips */}
-                  {msg.quickChips && msg.quickChips.length > 0 && (
-                    <div className="mt-2.5 flex flex-wrap gap-1.5">
-                      {msg.quickChips.map((chip, idx) => (
+                  <div
+                    className={`p-3 rounded-2xl leading-relaxed ${
+                      msg.sender === 'USER'
+                        ? 'bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#080A10] rounded-br-xs font-medium'
+                        : 'bg-[#FAF7F2] dark:bg-[#151829] border border-black/10 dark:border-white/10 text-[#1C1917] dark:text-white rounded-bl-xs'
+                    }`}
+                  >
+                    <p>{msg.text}</p>
+
+                    {/* In-Chat Live Temple Darshan Embed */}
+                    {msg.inChatDarshan && (
+                      <div className="mt-3 p-2.5 rounded-2xl bg-black/80 text-white border border-amber-500/40 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-[11px] text-amber-300 flex items-center gap-1">
+                            <Flame className="w-3 h-3 text-amber-400" />
+                            <span>{msg.inChatDarshan.templeName}</span>
+                          </span>
+                          <span className="px-1.5 py-0.2 rounded-full bg-rose-500/20 text-rose-300 text-[8px] font-bold">
+                            ● LIVE 24x7
+                          </span>
+                        </div>
+
+                        <div className="relative w-full h-36 rounded-xl overflow-hidden bg-black flex items-center justify-center">
+                          {activeDarshanVideo === msg.id ? (
+                            <iframe
+                              src={msg.inChatDarshan.liveYoutubeId}
+                              className="w-full h-full border-0"
+                              allow="autoplay; encrypted-media"
+                              title={msg.inChatDarshan.templeName}
+                            />
+                          ) : (
+                            <div className="w-full h-full relative group">
+                              <Image
+                                src={msg.inChatDarshan.image}
+                                alt={msg.inChatDarshan.templeName}
+                                fill
+                                className="object-cover opacity-80 group-hover:scale-105 transition-transform"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-center justify-center">
+                                <button
+                                  onClick={() => setActiveDarshanVideo(msg.id)}
+                                  className="w-10 h-10 rounded-full bg-amber-500 hover:bg-amber-600 text-white flex items-center justify-center shadow-lg transition-transform hover:scale-110 cursor-pointer"
+                                >
+                                  <Play className="w-4 h-4 ml-0.5" />
+                                </button>
+                              </div>
+                              <span className="absolute bottom-2 left-2 text-[10px] text-white/90 font-medium">
+                                {msg.inChatDarshan.location}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
                         <button
-                          key={idx}
-                          onClick={() => {
-                            if (chip.href && chip.action.startsWith('OPEN_CHECKOUT_')) {
-                              router.push(chip.href);
-                              setIsOpen(false);
-                            } else {
-                              handleChipClick(chip);
-                            }
-                          }}
-                          className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-[#0A0C14] hover:bg-[#8E6F1D] hover:text-white dark:hover:bg-[#D4AF37] dark:hover:text-[#080A10] border border-[#8E6F1D]/30 dark:border-[#D4AF37]/35 text-[10px] font-bold text-[#1C1917] dark:text-white transition-all cursor-pointer shadow-xs text-left"
+                          onClick={() => handleNavigate('/darshan')}
+                          className="w-full py-1.5 bg-amber-600/30 hover:bg-amber-600/50 text-amber-200 text-[10px] font-bold rounded-lg border border-amber-500/30 text-center block transition-colors"
                         >
-                          {chip.label}
+                          सम्पूर्ण २६ महातीर्थ दर्शन कक्ष खोलें →
                         </button>
-                      ))}
-                    </div>
-                  )}
+                      </div>
+                    )}
+
+                    {/* Instant Free Vedic Pulse Card */}
+                    {msg.pulseCard && (
+                      <div className="mt-3 p-3 rounded-2xl bg-white dark:bg-[#0A0C14] border border-amber-500/40 space-y-2 text-left">
+                        
+                        {/* Transit Caution Status Bar */}
+                        <div className={`p-2 rounded-xl text-[10px] font-bold flex items-center gap-1.5 ${
+                          msg.pulseCard.transitStatus === 'CAUTION_DAY'
+                            ? 'bg-rose-500/15 text-rose-800 dark:text-rose-300 border border-rose-500/30'
+                            : 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30'
+                        }`}>
+                          {msg.pulseCard.transitStatus === 'CAUTION_DAY' ? (
+                            <ShieldAlert className="w-3.5 h-3.5 shrink-0 text-rose-500" />
+                          ) : (
+                            <ShieldCheck className="w-3.5 h-3.5 shrink-0 text-emerald-500" />
+                          )}
+                          <span>{msg.pulseCard.transitMessage}</span>
+                        </div>
+
+                        {/* Planetary Grid */}
+                        <div className="grid grid-cols-3 gap-1.5 text-center text-[10px]">
+                          <div className="p-1.5 rounded-lg bg-black/5 dark:bg-white/5">
+                            <span className="text-[8px] text-[#696256] dark:text-[#9E988D] block">लग्न (Ascendant)</span>
+                            <strong className="text-[#1C1917] dark:text-white">{msg.pulseCard.lagna}</strong>
+                          </div>
+                          <div className="p-1.5 rounded-lg bg-black/5 dark:bg-white/5">
+                            <span className="text-[8px] text-[#696256] dark:text-[#9E988D] block">नक्षत्र</span>
+                            <strong className="text-[#1C1917] dark:text-white">{msg.pulseCard.nakshatra}</strong>
+                          </div>
+                          <div className="p-1.5 rounded-lg bg-black/5 dark:bg-white/5">
+                            <span className="text-[8px] text-[#696256] dark:text-[#9E988D] block">सक्रिय दशा</span>
+                            <strong className="text-[#8E6F1D] dark:text-[#F0C968]">{msg.pulseCard.dasha}</strong>
+                          </div>
+                        </div>
+
+                        {/* Visual North-Indian Kundali Snapshot Diagram */}
+                        {msg.inChatKundaliSvg && (
+                          <div className="p-2.5 rounded-xl bg-[#FAF7F2] dark:bg-[#070912] border border-black/10 dark:border-white/10 text-center">
+                            <div className="text-[9px] font-bold text-[#8E6F1D] dark:text-[#F0C968] mb-1">
+                              जन्म कुण्डली चक्र (Janma Kundali Snapshot)
+                            </div>
+                            <div className="w-32 h-32 mx-auto relative border border-[#8E6F1D]/40 bg-white dark:bg-black/40 flex items-center justify-center text-[9px]">
+                              {/* Diamond Grid */}
+                              <div className="absolute inset-2 border border-amber-500/30 rotate-45" />
+                              <div className="relative z-10 font-bold text-[#8E6F1D] dark:text-[#F0C968]">
+                                १ {msg.pulseCard.lagna.split(' ')[0]}
+                              </div>
+                              <span className="absolute top-1 left-2 text-[8px] text-[#696256]">१२</span>
+                              <span className="absolute top-1 right-2 text-[8px] text-[#696256]">२</span>
+                              <span className="absolute bottom-1 text-[8px] text-amber-500">चन्द्र • गुरु</span>
+                            </div>
+                          </div>
+                        )}
+
+                        <p className="text-[10px] text-[#44403C] dark:text-[#D1C9BF] leading-relaxed italic bg-amber-500/10 p-2 rounded-xl border border-amber-500/20">
+                          {msg.pulseCard.recommendation}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Navigation Action Card */}
+                    {msg.navigationAction && (
+                      <div
+                        onClick={() => handleNavigate(msg.navigationAction!.href)}
+                        className="mt-2.5 p-2.5 rounded-xl bg-white dark:bg-[#0A0C14] border border-[#8E6F1D]/30 dark:border-[#D4AF37]/30 flex items-center justify-between group hover:border-[#8E6F1D] transition-colors cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">{msg.navigationAction.icon}</span>
+                          <div>
+                            <div className="font-bold text-[11px] text-[#1C1917] dark:text-white group-hover:text-[#8E6F1D] dark:group-hover:text-[#F0C968]">
+                              {msg.navigationAction.title}
+                            </div>
+                            <p className="text-[9px] text-[#696256] dark:text-[#9E988D]">
+                              {msg.navigationAction.description}
+                            </p>
+                          </div>
+                        </div>
+                        <ArrowRight className="w-3.5 h-3.5 text-[#8E6F1D] dark:text-[#F0C968] group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    )}
+
+                    {/* Fast Action Suggestion Chips */}
+                    {msg.quickChips && msg.quickChips.length > 0 && (
+                      <div className="mt-2.5 flex flex-wrap gap-1.5">
+                        {msg.quickChips.map((chip, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => {
+                              if (chip.href && chip.action.startsWith('OPEN_CHECKOUT_')) {
+                                handleNavigate(chip.href);
+                              } else {
+                                handleChipClick(chip);
+                              }
+                            }}
+                            className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-[#0A0C14] hover:bg-[#8E6F1D] hover:text-white dark:hover:bg-[#D4AF37] dark:hover:text-[#080A10] border border-[#8E6F1D]/30 dark:border-[#D4AF37]/35 text-[10px] font-bold text-[#1C1917] dark:text-white transition-all cursor-pointer shadow-xs text-left"
+                          >
+                            {chip.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <span className="text-[8px] text-[#696256] dark:text-[#9E988D] mt-0.5 px-1.5">
+                <span className="text-[8px] text-[#696256] dark:text-[#9E988D] mt-0.5 px-8">
                   {msg.timestamp}
                 </span>
               </div>
