@@ -16,7 +16,7 @@ import {
 import { localSiderealTime, projectStar, SiderealTime } from '../src/lib/astronomy/projection';
 import { STARS } from '../src/lib/astronomy/stars';
 import { getCelestialDetail, getConstellationDetail, parseCelestialSelection, PLANET_DETAILS } from '../src/lib/astronomy/celestialCatalog';
-import { altitudeBand, angularSeparationDeg, calculateMoonPhase, calculateSolarDayEvents, compassDirection, findNextHorizonEvent, planObservation, skyLightState, summarizeObservations } from '../src/lib/astronomy/observation';
+import { altitudeBand, angularSeparationDeg, calculateMoonPhase, calculateSolarDayEvents, compassDirection, findNextHorizonEvent, isAboveObservationHorizon, isWithinLimitingMagnitude, OBSERVATION_LIMITS, planObservation, skyLightState, summarizeObservations } from '../src/lib/astronomy/observation';
 import { applyViewportTransform, clampViewportTransform, DEFAULT_VIEWPORT_TRANSFORM, zoomViewportAt } from '../src/lib/astronomy/viewTransform';
 import { localEphemerisResult } from '../src/lib/astronomy/providers/localApproximation';
 import { compareWithReference, findReferenceObservation, MISSING_REFERENCE_FIXTURE_STATUS, parseReferenceFixture, referenceFixtureStatus } from '../src/lib/astronomy/providers/referenceFixture';
@@ -184,6 +184,18 @@ test.describe('Observatory coordinate and ephemeris invariants', () => {
     expect(phase.fraction).toBeLessThan(1);
     expect(phase.illumination).toBeGreaterThanOrEqual(0);
     expect(phase.illumination).toBeLessThanOrEqual(1);
+  });
+
+  test('observation filters keep masking and limiting-magnitude semantics explicit', () => {
+    expect(OBSERVATION_LIMITS.minimumAltitudeDeg.max).toBe(20);
+    expect(OBSERVATION_LIMITS.limitingMagnitude.step).toBe(0.5);
+    expect(isAboveObservationHorizon(0, 0)).toBe(true);
+    expect(isAboveObservationHorizon(-0.1, 0)).toBe(false);
+    expect(isAboveObservationHorizon(8, 10)).toBe(false);
+    expect(isAboveObservationHorizon(10, 10)).toBe(true);
+    expect(isWithinLimitingMagnitude(4.5, 4.5)).toBe(true);
+    expect(isWithinLimitingMagnitude(4.51, 4.5)).toBe(false);
+    expect(isWithinLimitingMagnitude(Number.NaN, 4.5)).toBe(false);
   });
 
   test('the observation planner provides bounded physical-body windows and node exceptions', () => {

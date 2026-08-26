@@ -19,6 +19,7 @@ import {
   type ObserverLocation,
 } from '@/lib/astronomy/projection';
 import { calculateCanonicalBodies, type CanonicalBody } from '@/lib/astronomy/canonicalBodies';
+import { isAboveObservationHorizon, isWithinLimitingMagnitude } from '@/lib/astronomy/observation';
 import { constellationDisplayName, type CelestialSelection } from '@/lib/astronomy/celestialCatalog';
 import {
   CONSTELLATION_LINES,
@@ -40,6 +41,8 @@ export interface SkyCanvasRendererProps {
   onSelectConstellation?: (id: string) => void;
   showMandala?: boolean;
   showConstellations?: boolean;
+  minimumAltitudeDeg?: number;
+  limitingMagnitude?: number;
   className?: string;
   labelled?: boolean;
 }
@@ -66,15 +69,27 @@ function parseDate(value: string | Date): Date {
 }
 
 function drawPath(ctx: CanvasRenderingContext2D, points: CanvasSkyPoint[], close = false): void {
-  const visible = points.filter(point => point.visible);
-  if (visible.length < 2) return;
-  ctx.beginPath();
-  visible.forEach((point, index) => {
-    if (index === 0) ctx.moveTo(point.x, point.y);
-    else ctx.lineTo(point.x, point.y);
+  let segment: CanvasSkyPoint[] = [];
+  const flush = () => {
+    if (segment.length < 2) {
+      segment = [];
+      return;
+    }
+    ctx.beginPath();
+    segment.forEach((point, index) => {
+      if (index === 0) ctx.moveTo(point.x, point.y);
+      else ctx.lineTo(point.x, point.y);
+    });
+    if (close) ctx.closePath();
+    ctx.stroke();
+    segment = [];
+  };
+
+  points.forEach(point => {
+    if (point.visible) segment.push(point);
+    else flush();
   });
-  if (close) ctx.closePath();
-  ctx.stroke();
+  flush();
 }
 
 function drawText(
@@ -141,6 +156,8 @@ function drawSky(
   selectedConstellation: string | null | undefined,
   showMandala: boolean,
   showConstellations: boolean,
+  minimumAltitudeDeg: number,
+  limitingMagnitude: number,
   view: ViewportTransform,
   targetsRef: React.MutableRefObject<DrawnTarget[]>,
 ): void {
@@ -192,6 +209,15 @@ function drawSky(
     const ringRadius = points[0]?.radius ?? 0;
     drawText(ctx, `${altitude}°`, cx + ringRadius * 0.7, cy - ringRadius * 0.7, 'rgba(214,220,255,0.55)', '9px "JetBrains Mono", monospace', 'left');
   });
+  if (minimumAltitudeDeg > 0) {
+    const maskPoints = altitudeRingPoints(minimumAltitudeDeg, date, observer, width, height);
+    ctx.strokeStyle = 'rgba(242,198,93,0.78)';
+    ctx.setLineDash([4, 4]);
+    drawPath(ctx, maskPoints);
+    const maskRadius = maskPoints[0]?.radius ?? 0;
+    drawText(ctx, `MASK ≥${minimumAltitudeDeg}°`, cx + maskRadius * 0.72, cy - maskRadius * 0.72, '#F2C65D', 'bold 8px "JetBrains Mono", monospace', 'left');
+    ctx.setLineDash([]);
+  }
   ctx.restore();
 
   if (showMandala) drawMandala(ctx, width, height, 'rgba(232,225,198,0.64)', 'rgba(212,175,55,0.56)');
@@ -202,16 +228,22 @@ function drawSky(
   ctx.strokeStyle = 'rgba(212,175,55,0.68)';
   ctx.lineWidth = 1.35;
   ctx.setLineDash([5, 5]);
-  const eclipticPoints = Array.from({ length: 73 }, (_, index) =>
-    projectEclipticLongitude(index * 5, date, observer, width, height),
-  );
+  const eclipticPoints = Array.from({ length: 73 }, (_, index) => {
+    const point = projectEclipticLongitude(index * 5, date, observer, width, height);
+    return { ...point, visible: point.visible && isAboveObservationHorizon(point.altitudeDeg, minimumAltitudeDeg) };
+  });
   drawPath(ctx, eclipticPoints);
   ctx.restore();
 
   const projectedStars = new Map<string, CanvasSkyPoint>();
   STARS.forEach((star: StarRecord) => {
     const point = projectStar(star, date, observer, width, height);
-    projectedStars.set(star.id, point);
+    projectedStars.set(star.id, {
+      ...point,
+      visible: point.visible
+        && isAboveObservationHorizon(point.altitudeDeg, minimumAltitudeDeg)
+        && isWithinLimitingMagnitude(star.magnitude, limitingMagnitude),
+    });
   });
   const targets: DrawnTarget[] = [];
   const constellationPoints = new Map<string, CanvasSkyPoint[]>();
@@ -290,7 +322,8 @@ function drawSky(
 
   const bodies = calculateCanonicalBodies(date).filter(body => VISIBLE_PLANETS.includes(body.body));
   bodies.forEach(body => {
-    const point = projectEclipticLongitude(body.tropicalLongitude, date, observer, width, height, body.tropicalLatitude);
+    const projected = projectEclipticLongitude(body.tropicalLongitude, date, observer, width, height, body.tropicalLatitude);
+    const point = { ...projected, visible: projected.visible && isAboveObservationHorizon(projected.altitudeDeg, minimumAltitudeDeg) };
     if (!point.visible) return;
     targets.push({
       selection: { kind: 'planet', id: body.body },
@@ -366,6 +399,8 @@ function SkyCanvasRenderer({
   onSelectConstellation,
   showMandala = true,
   showConstellations = true,
+  minimumAltitudeDeg = 0,
+  limitingMagnitude = 4.5,
   className = '',
   labelled = true,
 }: SkyCanvasRendererProps) {
@@ -388,6 +423,8 @@ function SkyCanvasRenderer({
       selectedConstellation,
       showMandala,
       showConstellations,
+      minimumAltitudeDeg,
+      limitingMagnitude,
       view,
       targetsRef,
     );
@@ -395,7 +432,7 @@ function SkyCanvasRenderer({
     const resizeObserver = new ResizeObserver(render);
     resizeObserver.observe(canvas);
     return () => resizeObserver.disconnect();
-  }, [dateValue, observer.latitude, observer.longitude, selectedPlanet, selectedConstellation, showMandala, showConstellations, view.scale, view.offsetX, view.offsetY]);
+  }, [dateValue, observer.latitude, observer.longitude, selectedPlanet, selectedConstellation, showMandala, showConstellations, minimumAltitudeDeg, limitingMagnitude, view.scale, view.offsetX, view.offsetY]);
 
   const pointFromEvent = (event: React.PointerEvent<HTMLCanvasElement>): ViewportPoint => {
     const rect = event.currentTarget.getBoundingClientRect();

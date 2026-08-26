@@ -173,6 +173,21 @@ export function altitudeBand(altitudeDeg: number): ObservationSummary['altitudeB
   return 'below horizon';
 }
 
+export const DEFAULT_MINIMUM_ALTITUDE_DEG = 0;
+export const DEFAULT_LIMITING_MAGNITUDE = 4.5;
+export const OBSERVATION_LIMITS = {
+  minimumAltitudeDeg: { min: 0, max: 20, step: 1 },
+  limitingMagnitude: { min: 1, max: 6, step: 0.5 },
+} as const;
+
+export function isAboveObservationHorizon(altitudeDeg: number, minimumAltitudeDeg = 0): boolean {
+  return Number.isFinite(altitudeDeg) && altitudeDeg >= minimumAltitudeDeg;
+}
+
+export function isWithinLimitingMagnitude(magnitude: number, limitingMagnitude = 6): boolean {
+  return Number.isFinite(magnitude) && magnitude <= limitingMagnitude;
+}
+
 export function summarizeObservations(
   date: Date | number | string,
   observer: ObserverLocation,

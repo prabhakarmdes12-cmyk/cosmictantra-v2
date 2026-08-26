@@ -11,6 +11,7 @@ import { calculateCanonicalBody, type CanonicalBodyName } from '@/lib/astronomy/
 import { constellationDisplayName, constellationIds, type CelestialSelection } from '@/lib/astronomy/celestialCatalog';
 import { CITIES } from '@/lib/cities';
 import { projectStar } from '@/lib/astronomy/projection';
+import { DEFAULT_LIMITING_MAGNITUDE, DEFAULT_MINIMUM_ALTITUDE_DEG, isAboveObservationHorizon, isWithinLimitingMagnitude, OBSERVATION_LIMITS } from '@/lib/astronomy/observation';
 import { STARS } from '@/lib/astronomy/stars';
 
 const PLANETS: CanonicalBodyName[] = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'];
@@ -36,6 +37,11 @@ function findCity(value?: string): ObservatoryCity {
 function validDate(value?: string): Date {
   const date = value ? new Date(value) : new Date();
   return Number.isFinite(date.getTime()) ? date : new Date();
+}
+
+function validRange(value: string | undefined, min: number, max: number, fallback: number): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.max(min, Math.min(max, parsed)) : fallback;
 }
 
 function toDateTimeInput(date: Date, timezoneOffsetHours = 0): string {
@@ -65,6 +71,8 @@ export interface ObservatoryExperienceProps {
   initialCity?: string;
   initialTime?: string;
   initialPlanet?: string;
+  initialHorizonMask?: string;
+  initialLimitingMagnitude?: string;
   initialSelection?: CelestialSelection | null;
 }
 
@@ -72,6 +80,8 @@ export function ObservatoryExperience({
   initialCity,
   initialTime,
   initialPlanet,
+  initialHorizonMask,
+  initialLimitingMagnitude,
   initialSelection = null,
 }: ObservatoryExperienceProps) {
   const [city, setCity] = useState<ObservatoryCity>(() => findCity(initialCity));
@@ -81,6 +91,8 @@ export function ObservatoryExperience({
     const value = PLANETS.find(body => body.toLowerCase() === (initialPlanetSelection || initialPlanet || '').toLowerCase());
     return value || 'Sun';
   });
+  const [minimumAltitudeDeg, setMinimumAltitudeDeg] = useState(() => validRange(initialHorizonMask, OBSERVATION_LIMITS.minimumAltitudeDeg.min, OBSERVATION_LIMITS.minimumAltitudeDeg.max, DEFAULT_MINIMUM_ALTITUDE_DEG));
+  const [limitingMagnitude, setLimitingMagnitude] = useState(() => validRange(initialLimitingMagnitude, OBSERVATION_LIMITS.limitingMagnitude.min, OBSERVATION_LIMITS.limitingMagnitude.max, DEFAULT_LIMITING_MAGNITUDE));
   const [showMandala, setShowMandala] = useState(true);
   const [showConstellations, setShowConstellations] = useState(true);
   const [selectedConstellation, setSelectedConstellation] = useState<string | null>(() => initialSelection?.kind === 'constellation' ? initialSelection.id : null);
@@ -90,9 +102,9 @@ export function ObservatoryExperience({
   const constellationOptions = useMemo(() => constellationIds().map(id => ({ id, name: constellationDisplayName(id) })), []);
   const visibleBrightAnchors = useMemo(() => STARS
     .map(star => ({ star, point: projectStar(star, date, { latitude: city.lat, longitude: city.lng }, 600, 600) }))
-    .filter(item => item.point.visible && item.star.magnitude <= 2.5)
+    .filter(item => item.point.visible && isAboveObservationHorizon(item.point.altitudeDeg, minimumAltitudeDeg) && isWithinLimitingMagnitude(item.star.magnitude, limitingMagnitude))
     .sort((left, right) => left.star.magnitude - right.star.magnitude)
-    .slice(0, 14), [date, city.lat, city.lng]);
+    .slice(0, 14), [date, city.lat, city.lng, minimumAltitudeDeg, limitingMagnitude]);
   const dateInput = toDateTimeInput(date, city.tz);
 
   useEffect(() => {
@@ -100,6 +112,8 @@ export function ObservatoryExperience({
     params.set('city', city.id);
     params.set('time', date.toISOString());
     params.set('planet', selectedPlanet);
+    params.set('horizon', String(minimumAltitudeDeg));
+    params.set('mag', String(limitingMagnitude));
     if (detailSelection) {
       params.set('object', detailSelection.id);
       params.set('objectKind', detailSelection.kind);
@@ -108,9 +122,15 @@ export function ObservatoryExperience({
       params.delete('objectKind');
     }
     window.history.replaceState(window.history.state, '', `${window.location.pathname}?${params.toString()}${window.location.hash}`);
-  }, [city.id, date, selectedPlanet, detailSelection]);
+  }, [city.id, date, selectedPlanet, minimumAltitudeDeg, limitingMagnitude, detailSelection]);
   const query = (path: string) => {
-    const params = new URLSearchParams({ city: city.id, time: date.toISOString(), planet: selectedPlanet });
+    const params = new URLSearchParams({
+      city: city.id,
+      time: date.toISOString(),
+      planet: selectedPlanet,
+      horizon: String(minimumAltitudeDeg),
+      mag: String(limitingMagnitude),
+    });
     return `${path}?${params.toString()}`;
   };
 
@@ -200,7 +220,7 @@ export function ObservatoryExperience({
           <div className="rounded-2xl border border-white/[0.09] bg-[#090C16] p-3 shadow-2xl sm:p-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-1 font-mono-data text-[10px] uppercase tracking-[0.14em] text-[#A6ADC5]">
               <span><span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#D4AF37] shadow-[0_0_10px_#D4AF37]" />Local stereographic sky · zenith centred</span>
-              <span className="text-[#71809F]">Horizon altitude 0° · north at top</span>
+              <span className="text-[#71809F]">Horizon 0° · mask ≥{minimumAltitudeDeg}° · north at top</span>
             </div>
             <div className="h-[420px] sm:h-[600px]">
               <SkyCanvasRenderer
@@ -211,6 +231,8 @@ export function ObservatoryExperience({
                 onSelectObject={selectObject}
                 showMandala={showMandala}
                 showConstellations={showConstellations}
+                minimumAltitudeDeg={minimumAltitudeDeg}
+                limitingMagnitude={limitingMagnitude}
               />
             </div>
           </div>
@@ -254,6 +276,22 @@ export function ObservatoryExperience({
               <label className="flex cursor-pointer items-center justify-between gap-3 py-1.5 text-[#CBD0E0]"><span>Constellation lines</span><input type="checkbox" checked={showConstellations} onChange={event => setShowConstellations(event.target.checked)} className="accent-[#D4AF37]" /></label>
             </div>
 
+            <div className="rounded-2xl border border-[#91C7A5]/20 bg-[#0A1515] p-4" aria-labelledby="sky-conditions-title">
+              <div id="sky-conditions-title" className="font-mono-data text-[10px] font-bold uppercase tracking-[0.16em] text-[#91C7A5]">Sky conditions</div>
+              <p className="mt-2 text-[10px] leading-relaxed text-[#8FA89A]">Display filters for field work. They do not change the calculated coordinates or the approximate planner.</p>
+              <label className="mt-3 block font-mono-data text-[10px] text-[#C8D9CE]">
+                <span className="flex justify-between gap-2"><span>Minimum altitude</span><output>{minimumAltitudeDeg}°</output></span>
+                <input type="range" min={OBSERVATION_LIMITS.minimumAltitudeDeg.min} max={OBSERVATION_LIMITS.minimumAltitudeDeg.max} step={OBSERVATION_LIMITS.minimumAltitudeDeg.step} value={minimumAltitudeDeg} onChange={event => setMinimumAltitudeDeg(Number(event.target.value))} aria-label="Minimum altitude observation mask" className="mt-2 w-full accent-[#91C7A5]" />
+                <span className="mt-1 flex justify-between text-[9px] text-[#718F7B]"><span>mathematical horizon</span><span>local obstruction buffer</span></span>
+              </label>
+              <label className="mt-4 block font-mono-data text-[10px] text-[#C8D9CE]">
+                <span className="flex justify-between gap-2"><span>Limiting magnitude</span><output>{limitingMagnitude.toFixed(1)}</output></span>
+                <input type="range" min={OBSERVATION_LIMITS.limitingMagnitude.min} max={OBSERVATION_LIMITS.limitingMagnitude.max} step={OBSERVATION_LIMITS.limitingMagnitude.step} value={limitingMagnitude} onChange={event => setLimitingMagnitude(Number(event.target.value))} aria-label="Limiting stellar magnitude" className="mt-2 w-full accent-[#91C7A5]" />
+                <span className="mt-1 flex justify-between text-[9px] text-[#718F7B]"><span>bright anchors</span><span>fainter catalogue stars</span></span>
+              </label>
+              <p className="mt-3 font-mono-data text-[9px] leading-relaxed text-[#718F7B]">The canvas will hide stars and grahas below the mask and stars fainter than the selected limit.</p>
+            </div>
+
             <div className="rounded-2xl border border-white/[0.09] bg-[#090D1A] p-4">
               <div className="font-mono-data text-[10px] font-bold uppercase tracking-[0.16em] text-[#9DA6C4]">Constellation guide</div>
               <p className="mt-2 text-[10px] leading-relaxed text-[#8993B0]">Choose a pattern without needing to hit a small canvas target. It will glow in the sky; open its field notes when ready.</p>
@@ -284,7 +322,7 @@ export function ObservatoryExperience({
                   </button>
                 ))}
               </div>
-              {visibleBrightAnchors.length === 0 && <p className="mt-3 text-[10px] text-[#7F89A7]">No bright catalogue anchor is above the mathematical horizon at this instant.</p>}
+              {visibleBrightAnchors.length === 0 && <p className="mt-3 text-[10px] text-[#7F89A7]">No bright catalogue anchor clears the selected observation mask at this instant.</p>}
             </div>
           </aside>
         </section>
@@ -292,6 +330,7 @@ export function ObservatoryExperience({
         <SkyAtAGlance
           date={date}
           observer={{ latitude: city.lat, longitude: city.lng }}
+          minimumAltitudeDeg={minimumAltitudeDeg}
           selectedPlanet={selectedPlanet}
           onSelectObject={selectObject}
         />

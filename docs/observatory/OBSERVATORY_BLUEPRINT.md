@@ -43,6 +43,7 @@ The Evidence-backed Observation + Student Study Desk v1 slice then added:
 - an integrated astronomy/Jyotish study desk with optional official-source link-outs rather than live media dependencies;
 - an approximate selected-body observation planner with current horizon status, sampled next rise/set estimate, Moon separation, and explicit Rahu/Ketu exclusion;
 - a browser-local observation notebook that saves reproducible snapshots and exports JSON/CSV without an account or runtime service;
+- field-condition controls for a user-selected minimum-altitude mask and limiting stellar magnitude, kept separate from the local calculations;
 - a provenance block that states quality, model, frame, epoch, fixture status, Moon discrepancy and node semantics;
 - implementation/validation notes in `docs/observatory/EVIDENCE_OBSERVATION_V1.md`.
 
@@ -146,8 +147,8 @@ The implementation does **not** claim:
 | File | Responsibility |
 | --- | --- |
 | `ObservatoryExperience.tsx` | Primary state owner: city, instant, selected graha, selected constellation, visual layers, URL synchronization, quick time controls, route links, and sheet mounting. |
-| `SkyCanvasRenderer.tsx` | Draws the local sky canvas: background, horizon, altitude rings, Nakshatra mandala, ecliptic, stars, constellation lines, grahas, compass, and hit targets. |
-| `SkyAtAGlance.tsx` | Converts canonical graha coordinates to practical altitude/azimuth/direction/sky-band cards, ranks visible objects, and copies a field readout. |
+| `SkyCanvasRenderer.tsx` | Draws the local sky canvas: background, horizon, altitude rings, optional horizon-mask ring, Nakshatra mandala, ecliptic, magnitude-filtered stars, constellation lines, grahas, compass, and hit targets. |
+| `SkyAtAGlance.tsx` | Converts canonical graha coordinates to practical altitude/azimuth/direction/sky-band cards, applies the display-only minimum-altitude mask, ranks visible objects, and copies a field readout. |
 | `CanvasViewControls.tsx` | Shared accessible zoom percentage, bounded zoom-in/out, and reset controls for dense canvas instruments. |
 | `CelestialArtwork.tsx` | Renders original inline SVG planet/node portraits and constellation schematic maps. |
 | `CelestialDetailSheet.tsx` | Shared responsive detail surface with contextual calculations, artwork, provenance, actions, focus lifecycle, share/copy behavior, and cross-route links. |
@@ -167,7 +168,7 @@ The implementation does **not** claim:
 | `src/lib/astronomy/eclipticProjection.ts` | Rashi and Nakshatra constants, boundary-safe lookup, tropical-to-sidereal conversion, and planisphere geometry helpers. |
 | `src/lib/astronomy/celestialCatalog.ts` | Typed selections, planet/constellation explanatory copy, constellation names/stories, and deep-link validation. |
 | `src/lib/astronomy/viewTransform.ts` | Pure display-only scale, pan, focus zoom, clamping, and zoom-label utilities shared by canvas instruments. |
-| `src/lib/astronomy/observation.ts` | Explicitly approximate local solar events, twilight state, Moon phase, compass directions, altitude bands, horizon crossings, angular separation, and observation plans. |
+| `src/lib/astronomy/observation.ts` | Explicitly approximate local solar events, twilight state, Moon phase, compass directions, altitude bands, horizon crossings, angular separation, observation plans, and display-filter bounds. |
 | `src/lib/astronomy/observationLog.ts` | Validated browser-local observation-log schema with persistence and CSV serialization. |
 | `src/lib/astronomy/providers/` | Shared provider/provenance types, local canonical-body adapter, and fail-closed reference-fixture parser for the planned JPL/SPICE seam. |
 | `src/lib/astronomy/ephemeris.ts` | Small compatibility re-export for canonical body calculations and provider contracts. |
@@ -874,6 +875,17 @@ The field-retention pass adds a portable study record without creating a cloud a
 5. Kept Rahu/Ketu entries explicitly as mathematical-node study notes with no physical altitude or azimuth.
 6. Added deterministic round-trip, malformed-record, note-limit, and CSV-escaping coverage.
 
+### Step 11 — field-condition filters
+
+The observer-control pass adds practical visibility controls while keeping the calculated sky immutable:
+
+1. Added a minimum-altitude observation mask from 0° to 20°.
+2. Added a limiting stellar-magnitude filter from 1.0 to 6.0.
+3. Applied both filters only to the sky canvas, bright-anchor list, and practical readout; planner geometry and canonical coordinates remain unchanged.
+4. Added a visible mask ring and labels so hidden near-horizon objects are explained rather than silently lost.
+5. Preserved `horizon` and `mag` in the main Observatory deep link.
+6. Added deterministic bounds and threshold tests.
+
 ---
 
 ## 12. Design decisions and trade-offs
@@ -932,7 +944,13 @@ The field-retention pass adds a portable study record without creating a cloud a
 **Why:** a bounded selected-body field cue is useful immediately and is supported by the current deterministic model, while the label keeps the accuracy boundary visible.
 **Trade-off:** the estimate omits refraction, terrain, obstruction, brightness and local conditions; field users still need a reviewed ephemeris for exact rise/transit/set planning.
 
-### Decision J — conditional pass rather than hiding known discrepancies
+### Decision J — field masks are display filters, not physical horizon data
+
+**Choice:** let observers set a minimum altitude and limiting stellar magnitude, but apply them only to the rendered sky and practical readout.
+**Why:** users need a quick way to account for a roofline, trees, binocular comfort, or a teaching brightness threshold without pretending the product knows their terrain or sky quality.
+**Trade-off:** a masked object can still be mathematically above the horizon, and the magnitude control is not a naked-eye or light-pollution prediction. The labels keep that distinction visible.
+
+### Decision K — conditional pass rather than hiding known discrepancies
 
 **Choice:** retain explicit blockers in the qualification report.
 **Why:** trust is more valuable than a misleading “production accurate” label.
@@ -951,7 +969,7 @@ npx playwright test tests/observatory.spec.ts --reporter=line
 ```
 
 ```text
-23 passed
+24 passed
 ```
 
 ```bash
@@ -1113,7 +1131,7 @@ Use this checklist when Chromium or a real browser is available.
 - Add IANA timezone identifiers to city data for DST-correct civil time.
 - Add user geolocation with a privacy-first permission flow and URL-safe custom coordinates.
 - Extend the local notebook with optional reviewed photographs, equipment metadata, and classroom sharing only after a privacy/rights workflow exists.
-- Add optional limiting magnitude and horizon masking controls.
+- Upgrade the user mask with reviewed terrain profiles, skyline import, or site-specific obstruction data only when a provenance path exists.
 
 ### P2 — education and personalization
 

@@ -23,5 +23,5 @@ function validIso(value?: string): string {
 
 export default function ObservatoryPage({ searchParams }: { searchParams: SearchParams }) {
   const initialSelection = parseCelestialSelection(first(searchParams?.object), first(searchParams?.objectKind));
-  return <ObservatoryExperience initialCity={first(searchParams?.city)} initialTime={validIso(first(searchParams?.time))} initialPlanet={first(searchParams?.planet)} initialSelection={initialSelection} />;
+  return <ObservatoryExperience initialCity={first(searchParams?.city)} initialTime={validIso(first(searchParams?.time))} initialPlanet={first(searchParams?.planet)} initialHorizonMask={first(searchParams?.horizon)} initialLimitingMagnitude={first(searchParams?.mag)} initialSelection={initialSelection} />;
 }

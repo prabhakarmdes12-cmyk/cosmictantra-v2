@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
 import { calculateCanonicalBodies, type CanonicalBody, type CanonicalBodyName } from '@/lib/astronomy/canonicalBodies';
 import { getRashiForLongitude } from '@/lib/astronomy/eclipticProjection';
 import { equatorialToHorizontal, type ObserverLocation } from '@/lib/astronomy/projection';
-import { altitudeBand } from '@/lib/astronomy/observation';
+import { altitudeBand, isAboveObservationHorizon } from '@/lib/astronomy/observation';
 import type { CelestialSelection } from '@/lib/astronomy/celestialCatalog';
 
 const OBSERVABLE_BODIES: CanonicalBodyName[] = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'];
@@ -23,6 +23,7 @@ interface SkyRow {
   azimuthDeg: number;
   direction: string;
   visible: boolean;
+  horizonMasked: boolean;
   twilight: boolean;
   altitudeBand: ReturnType<typeof altitudeBand>;
   rashi: ReturnType<typeof getRashiForLongitude>;
@@ -31,6 +32,7 @@ interface SkyRow {
 export interface SkyAtAGlanceProps {
   date: Date | string;
   observer: ObserverLocation;
+  minimumAltitudeDeg?: number;
   selectedPlanet?: string | null;
   onSelectObject?: (selection: CelestialSelection) => void;
 }
@@ -49,18 +51,20 @@ function altitudeLabel(altitudeDeg: number): string {
 }
 
 function statusFor(row: SkyRow): string {
-  if (row.visible) return 'above horizon';
+  if (row.visible) return 'above mask';
+  if (row.horizonMasked) return 'masked by horizon';
   if (row.twilight) return 'near horizon';
   return 'below horizon';
 }
 
 function statusColor(row: SkyRow): string {
   if (row.visible) return 'text-[#91C7A5]';
+  if (row.horizonMasked) return 'text-[#E19A72]';
   if (row.twilight) return 'text-[#F2C65D]';
   return 'text-[#7F89A7]';
 }
 
-export default function SkyAtAGlance({ date, observer, selectedPlanet, onSelectObject }: SkyAtAGlanceProps) {
+export default function SkyAtAGlance({ date, observer, minimumAltitudeDeg = 0, selectedPlanet, onSelectObject }: SkyAtAGlanceProps) {
   const dateValue = date instanceof Date ? date.toISOString() : date;
   const rows = useMemo<SkyRow[]>(() => {
     const instant = parseDate(dateValue);
@@ -79,14 +83,15 @@ export default function SkyAtAGlance({ date, observer, selectedPlanet, onSelectO
           altitudeDeg: horizontal.altitudeDeg,
           azimuthDeg: horizontal.azimuthDeg,
           direction: directionForAzimuth(horizontal.azimuthDeg),
-          visible: horizontal.altitudeDeg >= 0,
+          visible: isAboveObservationHorizon(horizontal.altitudeDeg, minimumAltitudeDeg),
+          horizonMasked: horizontal.altitudeDeg >= 0 && !isAboveObservationHorizon(horizontal.altitudeDeg, minimumAltitudeDeg),
           twilight: horizontal.altitudeDeg >= -6,
           altitudeBand: altitudeBand(horizontal.altitudeDeg),
           rashi: getRashiForLongitude(body.siderealLongitude),
         };
       })
       .sort((left, right) => Number(right.visible) - Number(left.visible) || right.altitudeDeg - left.altitudeDeg);
-  }, [dateValue, observer.latitude, observer.longitude]);
+  }, [dateValue, observer.latitude, observer.longitude, minimumAltitudeDeg]);
 
   const visibleRows = rows.filter(row => row.visible);
   const bestPlaced = visibleRows[0];
@@ -119,8 +124,8 @@ export default function SkyAtAGlance({ date, observer, selectedPlanet, onSelectO
         </div>
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
           <div className="rounded-xl border border-white/[0.08] bg-[#070A14] px-3 py-2 text-right font-mono-data text-[10px]">
-            <div className="text-[#F2C65D]">{visibleRows.length} / {rows.length} above horizon</div>
-            <div className="mt-1 text-[#7F89A7]">true north · mathematical horizon</div>
+            <div className="text-[#F2C65D]">{visibleRows.length} / {rows.length} above mask</div>
+            <div className="mt-1 text-[#7F89A7]">true north · minimum altitude {minimumAltitudeDeg}°</div>
           </div>
           <button type="button" onClick={copyReadout} aria-live="polite" className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-2 font-mono-data text-[10px] font-bold text-[#C9D0E5] transition-colors hover:border-[#D4AF37]/60 hover:text-[#F2C65D]"><Copy className="h-3.5 w-3.5" /> {copied ? 'Copied' : 'Copy readout'}</button>
         </div>
@@ -133,7 +138,7 @@ export default function SkyAtAGlance({ date, observer, selectedPlanet, onSelectO
         </div>
       ) : (
         <div className="mt-4 flex items-center gap-2 rounded-xl border border-white/[0.08] bg-[#070A14] px-3 py-2 text-[10px] text-[#929CB8]">
-          <Compass className="h-3.5 w-3.5 shrink-0" /> No listed graha is above the mathematical horizon at this instant.
+          <Compass className="h-3.5 w-3.5 shrink-0" /> No listed graha is above the selected observation mask at this instant.
         </div>
       )}
 
@@ -162,7 +167,7 @@ export default function SkyAtAGlance({ date, observer, selectedPlanet, onSelectO
           );
         })}
       </div>
-      <p className="mt-4 flex items-start gap-1.5 font-mono-data text-[9px] leading-relaxed text-[#707A98]"><Compass className="mt-0.5 h-3 w-3 shrink-0" /> Altitude is measured from the mathematical horizon and azimuth clockwise from true north. Clouds, terrain, atmospheric refraction, and light pollution are not modeled.</p>
+      <p className="mt-4 flex items-start gap-1.5 font-mono-data text-[9px] leading-relaxed text-[#707A98]"><Compass className="mt-0.5 h-3 w-3 shrink-0" /> Altitude is measured from the mathematical horizon and azimuth clockwise from true north. The observation mask is a user-selected obstruction buffer; clouds, atmospheric refraction, and light pollution are not modeled.</p>
     </section>
   );
 }

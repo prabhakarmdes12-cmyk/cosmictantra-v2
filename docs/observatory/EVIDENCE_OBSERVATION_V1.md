@@ -11,7 +11,7 @@ This note records what is implemented after the strategic review in [`WORLD_CLAS
 - The ecliptic planisphere has the same interaction model in [`EclipticInstrument.tsx`](../../src/components/observatory/EclipticInstrument.tsx). The tropical ring, sidereal/Nakshatra reading and canonical graha values remain calculated exactly as before; the viewport only changes pixels on screen.
 - Both Gochara rashi wheels are navigable with the reusable controls in [`CanvasViewControls.tsx`](../../src/components/observatory/CanvasViewControls.tsx). The wheel is still a sidereal comparison surface, not a physical solar-system scale diagram.
 - Bright-star names and magnitudes progressively appear in the local sky at higher zoom. The DOM rails, planet selectors, constellation select, and `SkyAtAGlance` cards remain the accessible alternative to canvas targeting.
-- [`observation.ts`](../../src/lib/astronomy/observation.ts) provides deterministic, explicitly approximate solar events, twilight state, lunar phase, compass direction, altitude bands, angular separation, sampled horizon crossings and selected-body observation plans. It uses the same canonical body and horizontal-coordinate path as the sky instrument.
+- [`observation.ts`](../../src/lib/astronomy/observation.ts) provides deterministic, explicitly approximate solar events, twilight state, lunar phase, compass direction, altitude bands, angular separation, sampled horizon crossings, selected-body observation plans, and display-filter bounds. It uses the same canonical body and horizontal-coordinate path as the sky instrument.
 - [`ObservatoryStudentDesk.tsx`](../../src/components/observatory/ObservatoryStudentDesk.tsx) is integrated into the main `/observatory` route. It combines field planning, twilight, Moon phase, approximate next horizon crossing, Moon separation, tropical/sidereal study context, rashi/Nakshatra/pada, reading guidance, a local observation notebook, and optional official study links. External sources are links only; they are not runtime calculation dependencies.
 - [`CelestialDetailSheet.tsx`](../../src/components/observatory/CelestialDetailSheet.tsx) now exposes a provenance block with quality, frame, local provider/model, epoch context, fixture status, and explicit physical-node semantics. The known lunar qualification discrepancy is visible for the Moon rather than hidden behind extra decimals.
 
@@ -30,6 +30,10 @@ The local model continues to calculate tropical ecliptic values first. Lahiri si
 ### Planning signals are not almanac claims
 
 Solar events and selected-body horizon events are sampled from the local canonical body path and horizontally converted at a ten-minute step, then linearly interpolated across threshold crossings. The result is useful for a teaching field briefing, but it does not model refraction, terrain, obstruction, clouds, light pollution, brightness, or a reviewed almanac. Rahu/Ketu are excluded from physical horizon planning. Moon separation is a bounded RA/declination teaching signal, and Moon phase is a Sun–Moon longitude teaching signal; neither is sub-degree lunar evidence.
+
+### Display filters are not new astronomy
+
+The main Observatory now exposes a minimum-altitude mask from 0° to 20° and a stellar limiting-magnitude filter from 1.0 to 6.0. The filters are applied only at the presentation/readout boundary: canonical body positions, the mathematical horizon planner, and the ecliptic/tropical/sidereal calculations remain unchanged. The altitude mask is an observer-selected obstruction buffer, not terrain data; the magnitude control is a teaching proxy, not a sky-quality or naked-eye visibility prediction. Both settings are preserved in `horizon` and `mag` query parameters.
 
 ### A local notebook, not a hidden account system
 
@@ -75,7 +79,7 @@ The detailed NASA, ISRO, Roscosmos, ESA/ESO, JPL and NAIF inventory and risk not
 
 ## Validation record
 
-- `npx playwright test tests/observatory.spec.ts` — **23 passed**. This includes canonical astronomy invariants, Rahu/Ketu node semantics, viewport focus/clamping behavior, local solar event signals, altitude/direction helpers, bounded Moon phase output, sampled horizon-crossing and angular-separation planner signals, local observation-log round trips/CSV escaping, the local provider adapter, and fail-closed reference-fixture validation.
+- `npx playwright test tests/observatory.spec.ts` — **24 passed**. This includes canonical astronomy invariants, Rahu/Ketu node semantics, viewport focus/clamping behavior, local solar event signals, altitude/direction helpers, display-only horizon/magnitude filters, bounded Moon phase output, sampled horizon-crossing and angular-separation planner signals, local observation-log round trips/CSV escaping, the local provider adapter, and fail-closed reference-fixture validation.
 - `npm run typecheck` — **blocked only by the pre-existing Prisma setup issue:** `src/lib/db.ts(1,10): Module "@prisma/client" has no exported member 'PrismaClient'` in the generated-client-free environment. No Observatory implementation type errors were reported.
 - `npm run dev -- --hostname 0.0.0.0` plus HTTP checks — `/observatory`, `/observatory/ecliptic`, `/observatory/timemachine` and `/observatory/gochara` returned HTTP 200 with representative city/time/planet links. The unrelated analytics API still reports the known missing generated Prisma client.
 - Full browser interaction/responsive QA remains dependent on Chromium availability. The qualification guardrail remains **CONDITIONAL PASS**.

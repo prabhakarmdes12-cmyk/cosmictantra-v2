@@ -63,7 +63,7 @@ This is one product milestone, not three unrelated features. A zoomed view witho
 | --- | --- | --- | --- | --- |
 | Coordinate geometry | Strong foundation | Real local horizontal conversion, precession, stereographic projection, ecliptic sampling, and separate tropical/sidereal display | Compact low-precision ephemerides, limited star catalogue, no frozen external reference fixture | Add the reference adapter and visible error/quality metadata |
 | Scientific trust | Transparent but conditional | Sources and model names are shown; known limitations are documented rather than hidden | Moon discrepancy of **1.135216°**; no committed Horizons fixture; no body-specific tolerance table | Close or explicitly govern the two qualification blockers |
-| Direct field usefulness | Good early utility | Altitude, azimuth, compass direction, horizon status, best-placed object, copyable readout, twilight state, Moon phase/separation, approximate sampled horizon crossing, local JSON/CSV notebook, and city/time links | No refraction, terrain, clouds, light pollution, brightness model, precision rise/set/transit scheduler, telescope field of view, or custom observer | Add reviewed precision observation planning after the reference layer |
+| Direct field usefulness | Good early utility | Altitude, azimuth, compass direction, horizon status, best-placed object, copyable readout, twilight state, Moon phase/separation, approximate sampled horizon crossing, display-only horizon/magnitude filters, local JSON/CSV notebook, and city/time links | No refraction, terrain, clouds, light pollution, brightness model, precision rise/set/transit scheduler, telescope field of view, or custom observer | Add reviewed precision observation planning after the reference layer |
 | Interaction | Coherent | Shared `CelestialSelection`, accessible rails/selects, target priority, responsive detail sheet, shareable context | Canvas is effectively a fixed viewport; no pan/zoom, measurement, or progressive detail | Build the zoomable inspection viewport |
 | Educational clarity | Good foundation | Astronomy and Vedic lens are separated; node semantics are explicit; tours can reuse the detail contract | No guided sequence, source-linked media, mission context, comparison mode, or learner progress | Add curated tours after provenance exists |
 | Visual identity | Distinctive | Original inline SVG artwork, constellation diagrams, dark/gold/violet visual language, no initial remote image failure | Artwork is interpretive and not a substitute for real images, textures, terrain, or instrument data | Add evidence-labelled media as a second layer, not a replacement |
@@ -427,13 +427,13 @@ That semantic boundary is part of the world-class experience.
 
 ### 8.1 Precision observation planner
 
-The current local layer already offers an approximate, ten-minute sampled horizon cue, twilight state, Moon phase and RA/declination separation for a selected body. Once the reference layer is trusted, extend it into a precision planner:
+The current local layer already offers an approximate, ten-minute sampled horizon cue, twilight state, Moon phase, RA/declination separation, a display-only altitude mask, and a display-only stellar magnitude filter for a selected body. Once the reference layer is trusted, extend it into a precision planner:
 
 - rise, transit, and set windows with stated standard-altitude/refraction assumptions;
 - civil, nautical, and astronomical twilight;
-- horizon/terrain masking;
+- replace the manual mask with reviewed horizon/terrain profiles;
 - lunar illumination and angular separation;
-- limiting magnitude and light-pollution estimate;
+- derive a reviewed sky-quality/limiting-magnitude estimate rather than treating the current slider as a visibility prediction;
 - telescope/binocular field-of-view presets;
 - “best objects in the next two hours” from the selected city;
 - export to a calendar or field checklist;
