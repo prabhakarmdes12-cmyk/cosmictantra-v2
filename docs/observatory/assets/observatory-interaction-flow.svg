@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 760" role="img" aria-labelledby="title desc">
+  <title id="title">CosmicTantra Observatory selection and detail interaction flow</title>
+  <desc id="desc">The interaction flow from a canvas target, accessible selector, or shared URL into a validated celestial selection, calculation, responsive detail sheet, and follow-up action.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#050713"/><stop offset="1" stop-color="#111936"/></linearGradient>
+    <linearGradient id="gold" x1="0" x2="1"><stop stop-color="#D4AF37"/><stop offset="1" stop-color="#F2C65D"/></linearGradient>
+    <linearGradient id="purple" x1="0" x2="1"><stop stop-color="#25265C"/><stop offset="1" stop-color="#141735"/></linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0 L9 3 L0 6 Z" fill="#F2C65D"/></marker>
+    <style>
+      .title { font: 700 26px 'JetBrains Mono', monospace; letter-spacing: 3px; fill: #F7F1DF; }
+      .subtitle { font: 12px Inter, sans-serif; fill: #99A4C7; }
+      .label { font: 700 10px 'JetBrains Mono', monospace; letter-spacing: 1.7px; fill: #F2C65D; }
+      .heading { font: 700 16px Inter, sans-serif; fill: #F1F3FF; }
+      .body { font: 11px Inter, sans-serif; fill: #AFB8D5; }
+      .code { font: 10px 'JetBrains Mono', monospace; fill: #A9B0FF; }
+      .num { font: 700 13px 'JetBrains Mono', monospace; fill: #0A0D19; }
+    </style>
+  </defs>
+  <rect width="1280" height="760" rx="28" fill="url(#bg)"/>
+  <text x="48" y="58" class="title">SELECTION → FIELD NOTES</text>
+  <text x="48" y="84" class="subtitle">Every route resolves to the same typed selection and keeps the observer context visible.</text>
+  <path d="M48 112 H1232" stroke="#FFFFFF" stroke-opacity=".1"/>
+
+  <text x="48" y="146" class="label">01 · THREE ENTRY MODES</text>
+  <g transform="translate(48 168)">
+    <rect width="300" height="122" rx="17" fill="#0D1224" stroke="#D4AF37" stroke-opacity=".6"/>
+    <circle cx="29" cy="30" r="14" fill="url(#gold)"/><text x="29" y="35" text-anchor="middle" class="num">A</text>
+    <text x="55" y="35" class="heading">Canvas hit target</text>
+    <text x="22" y="66" class="body">Tap a planet, star, or constellation</text><text x="22" y="84" class="body">line; target priority favors planets.</text><text x="22" y="106" class="code">onSelectObject(selection)</text>
+  </g>
+  <g transform="translate(48 310)">
+    <rect width="300" height="122" rx="17" fill="#0D1224" stroke="#D4AF37" stroke-opacity=".6"/>
+    <circle cx="29" cy="30" r="14" fill="url(#gold)"/><text x="29" y="35" text-anchor="middle" class="num">B</text>
+    <text x="55" y="35" class="heading">Accessible selector</text>
+    <text x="22" y="66" class="body">Planet rail, constellation guide,</text><text x="22" y="84" class="body">or Sky at a glance cards.</text><text x="22" y="106" class="code">button → { kind, id }</text>
+  </g>
+  <g transform="translate(48 452)">
+    <rect width="300" height="122" rx="17" fill="#0D1224" stroke="#D4AF37" stroke-opacity=".6"/>
+    <circle cx="29" cy="30" r="14" fill="url(#gold)"/><text x="29" y="35" text-anchor="middle" class="num">C</text>
+    <text x="55" y="35" class="heading">Validated share URL</text>
+    <text x="22" y="66" class="body">City, ISO time, object id, and kind</text><text x="22" y="84" class="body">reopen the same detail state.</text><text x="22" y="106" class="code">parseCelestialSelection()</text>
+  </g>
+
+  <path d="M348 229 C400 229 400 337 454 337" fill="none" stroke="#F2C65D" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M348 371 H454" fill="none" stroke="#F2C65D" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M348 513 C400 513 400 399 454 399" fill="none" stroke="#F2C65D" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <text x="454" y="146" class="label">02 · ONE TYPED CONTRACT</text>
+  <g transform="translate(454 248)">
+    <rect width="300" height="178" rx="20" fill="url(#purple)" stroke="#A9B0FF" stroke-opacity=".7"/>
+    <text x="25" y="39" class="heading">CelestialSelection</text>
+    <text x="25" y="62" class="code">{ kind: 'planet', id: 'Moon' }</text>
+    <text x="25" y="87" class="code">{ kind: 'constellation', id: 'Ori' }</text>
+    <path d="M25 105 H274" stroke="#FFFFFF" stroke-opacity=".14"/>
+    <text x="25" y="131" class="body">Prevents arbitrary object ids, keeps</text><text x="25" y="149" class="body">planet and constellation behavior explicit,</text><text x="25" y="167" class="body">and drives every instrument consistently.</text>
+  </g>
+
+  <path d="M754 337 H838" fill="none" stroke="#9EA8FF" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <text x="838" y="146" class="label">03 · CONTEXTUAL DETAIL</text>
+  <g transform="translate(838 168)">
+    <rect width="382" height="258" rx="20" fill="#0D1224" stroke="#8B8BF5" stroke-opacity=".7"/>
+    <text x="25" y="39" class="heading">Calculation context</text>
+    <text x="25" y="68" class="body">• Canonical body longitude and source</text>
+    <text x="25" y="89" class="body">• Tropical + Lahiri sidereal coordinates</text>
+    <text x="25" y="110" class="body">• Rashi, Nakshatra, pada, motion</text>
+    <text x="25" y="131" class="body">• Altitude, azimuth, horizon status</text>
+    <text x="25" y="152" class="body">• City anchor + UTC observation instant</text>
+    <path d="M25 173 H355" stroke="#FFFFFF" stroke-opacity=".14"/>
+    <text x="25" y="199" class="code">CelestialArtwork(selection)</text>
+    <text x="25" y="221" class="code">CelestialDetailSheet(context)</text>
+    <text x="25" y="243" class="small">Nodes deliberately show no physical altitude.</text>
+  </g>
+
+  <path d="M1029 426 V493" fill="none" stroke="#9EA8FF" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <text x="48" y="622" class="label">04 · ACTIONS + SAFETY</text>
+  <g transform="translate(48 645)">
+    <rect width="1180" height="72" rx="16" fill="#090D1A" stroke="#FFFFFF" stroke-opacity=".15"/>
+    <text x="24" y="29" class="heading">Responsive sheet actions</text>
+    <text x="24" y="51" class="body">Close / Escape · Tab trap + focus restore · copy coordinates · copy/share deep link · open Ecliptic · compare Gochara · return to sky</text>
+  </g>
+</svg>
