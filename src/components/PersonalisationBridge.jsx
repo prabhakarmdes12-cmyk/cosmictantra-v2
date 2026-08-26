@@ -89,13 +89,11 @@ export default function PersonalisationBridge({
           </div>
 
           {/* Marquee Content / Glimpse text */}
-          <div className="flex-1 overflow-hidden whitespace-nowrap text-[11px] sm:text-xs text-[#365314] dark:text-[#D9F99D] font-medium flex items-center gap-4">
-            <div className="inline-flex items-center gap-4 animate-marquee sm:animate-none">
-              <span>{todayGlimpse}</span>
-              <span className="opacity-40">•</span>
-              <span>{tomorrowGlimpse}</span>
-              <span className="opacity-40">•</span>
-              <span>{dayAfterGlimpse}</span>
+          <div className="flex-1 overflow-hidden whitespace-nowrap text-[11px] sm:text-xs text-[#365314] dark:text-[#D9F99D] font-medium flex items-center min-w-0">
+            <div className="inline-flex items-center gap-3 sm:gap-4 truncate">
+              <span className="font-bold text-[#203608] dark:text-[#BEF264]">{todayGlimpse}</span>
+              <span className="opacity-40 hidden lg:inline">•</span>
+              <span className="hidden lg:inline">{tomorrowGlimpse}</span>
             </div>
           </div>
 

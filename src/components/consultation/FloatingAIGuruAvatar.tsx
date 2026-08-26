@@ -54,7 +54,8 @@ interface ChatMessage {
     deity: string;
     location: string;
     image: string;
-    liveYoutubeId: string;
+    officialLiveUrl?: string;
+    timings?: string;
   };
   inChatKundaliSvg?: boolean;
 }
@@ -66,7 +67,8 @@ export default function FloatingAIGuruAvatar() {
   const [tooltipText, setTooltipText] = useState('आज का दिन कैसा रहेगा? मुझसे पूछें 🙏');
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isPlayingOm, setIsPlayingOm] = useState(false);
-  const [activeDarshanVideo, setActiveDarshanVideo] = useState<string | null>(null);
+  const [offeredDiyaMsgIds, setOfferedDiyaMsgIds] = useState<Record<string, boolean>>({});
+  const [offeredFlowersMsgIds, setOfferedFlowersMsgIds] = useState<Record<string, boolean>>({});
 
   // In-Chat Step Machine
   const [intakeStep, setIntakeStep] = useState<
@@ -190,6 +192,16 @@ export default function FloatingAIGuruAvatar() {
   // Specific sacred ritual audio: Lighting Diya / Temple Bell
   const handlePlayDiyaBell = () => {
     if (soundEnabled) chitiSensory.playBell();
+  };
+
+  const handleOfferDiya = (msgId: string) => {
+    handlePlayDiyaBell();
+    setOfferedDiyaMsgIds(prev => ({ ...prev, [msgId]: true }));
+  };
+
+  const handleOfferFlowers = (msgId: string) => {
+    if (soundEnabled) chitiSensory.playFlowerDrop();
+    setOfferedFlowersMsgIds(prev => ({ ...prev, [msgId]: true }));
   };
 
   const handleChipClick = (chip: { label: string; action: string; href?: string }) => {
@@ -343,12 +355,13 @@ export default function FloatingAIGuruAvatar() {
               templeName: 'दशाश्वमेध घाट माँ गंगा महाआरती',
               deity: 'माँ गंगा व भगवान विश्वनाथ',
               location: 'दशाश्वमेध घाट, वाराणसी',
-              image: '/images/darshan/dashashwamedh_ganga_aarti_1787746607595.jpg',
-              liveYoutubeId: 'https://www.youtube.com/embed/live_stream?channel=UCrD4V8m4f9X6P4I3b2b1A',
+              image: '/images/darshan/ganga-aarti.jpg',
+              officialLiveUrl: 'https://www.youtube.com/@gangaarti/live',
+              timings: 'सांध्य महाआरती प्रतिदिन सायं ०६:३० बजे',
             },
             quickChips: [
               { label: '🌸 सम्पूर्ण २६ महातीर्थ दर्शन कक्ष खोलें', action: 'NAV_DARSHAN_FULL', href: '/darshan' },
-              { label: '📿 दैनिक मन्त्र जप', action: 'NAV_MANTRA', href: '/remedy-tracker' },
+              { label: '🪔 काशी विश्वनाथ दर्शन', action: 'IN_CHAT_DARSHAN' },
             ],
           },
         ]);
@@ -371,7 +384,8 @@ export default function FloatingAIGuruAvatar() {
               deity: 'भगवान शिव (विश्वेश्वर)',
               location: 'वाराणसी धाम, उत्तर प्रदेश',
               image: '/images/darshan/kashi-vishwanath.jpg',
-              liveYoutubeId: 'https://www.youtube.com/embed/live_stream?channel=UCrD4V8m4f9X6P4I3b2b1A',
+              officialLiveUrl: 'https://www.youtube.com/@ShriKashiVishwanathTempleTrust/live',
+              timings: 'मंगला आरती ०३:०० • सांध्य आरती ०७:०० सायं',
             },
             quickChips: [
               { label: '🌸 संपूर्ण २६ महातीर्थ दर्शन कक्ष खोलें', action: 'NAV_DARSHAN_FULL', href: '/darshan' },
@@ -816,57 +830,114 @@ export default function FloatingAIGuruAvatar() {
                   >
                     <p>{msg.text}</p>
 
-                    {/* In-Chat Live Temple Darshan Embed */}
+                    {/* In-Chat Live Temple Darshan Sanctum Card */}
                     {msg.inChatDarshan && (
-                      <div className="mt-3 p-2.5 rounded-2xl bg-black/80 text-white border border-amber-500/40 space-y-2">
+                      <div className="mt-3 p-3 rounded-2xl bg-[#0B0C12] text-white border border-[#D4AF37]/50 shadow-xl space-y-2.5 overflow-hidden text-left">
+                        {/* Sanctum Top Bar */}
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-xs text-amber-300 flex items-center gap-1">
-                            <Flame className="w-3.5 h-3.5 text-amber-400" />
+                          <span className="font-bold text-xs text-[#F0C968] flex items-center gap-1.5 font-editorial">
+                            <Flame className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
                             <span>{msg.inChatDarshan.templeName}</span>
                           </span>
-                          <span className="px-1.5 py-0.2 rounded-full bg-rose-500/20 text-rose-300 text-[9px] font-bold">
-                            ● LIVE 24x7
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[9px] font-mono-data font-bold flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            <span>LIVE SANCTUM</span>
                           </span>
                         </div>
 
-                        <div className="relative w-full h-40 rounded-xl overflow-hidden bg-black flex items-center justify-center">
-                          {activeDarshanVideo === msg.id ? (
-                            <iframe
-                              src={msg.inChatDarshan.liveYoutubeId}
-                              className="w-full h-full border-0"
-                              allow="autoplay; encrypted-media"
-                              title={msg.inChatDarshan.templeName}
-                            />
+                        {/* HD Sanctum Window with Dynamic Ritual Elements */}
+                        <div className="relative w-full h-44 rounded-xl overflow-hidden bg-black border border-white/10 group shadow-inner">
+                          <Image
+                            src={msg.inChatDarshan.image}
+                            alt={msg.inChatDarshan.templeName}
+                            fill
+                            className="object-cover transition-transform duration-700 group-hover:scale-105"
+                          />
+                          
+                          {/* Sacred Ambient Vignette & Gradient */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/30 pointer-events-none" />
+
+                          {/* Floating Flowers Overlay when offered */}
+                          {offeredFlowersMsgIds[msg.id] && (
+                            <div className="absolute inset-0 pointer-events-none flex items-center justify-center animate-fade-in">
+                              <div className="text-3xl animate-bounce">🌺 🌸 🪷</div>
+                            </div>
+                          )}
+
+                          {/* Glowing Diya Flame when offered */}
+                          {offeredDiyaMsgIds[msg.id] ? (
+                            <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none animate-fade-in">
+                              <div className="text-2xl animate-pulse drop-shadow-[0_0_15px_#F59E0B]">🪔</div>
+                              <span className="text-[10px] font-mono-data font-bold text-amber-300 bg-black/70 px-2 py-0.5 rounded-full mt-0.5 border border-amber-400/40">
+                                दीप प्रज्वलित • हर हर महादेव!
+                              </span>
+                            </div>
                           ) : (
-                            <div className="w-full h-full relative group">
-                              <Image
-                                src={msg.inChatDarshan.image}
-                                alt={msg.inChatDarshan.templeName}
-                                fill
-                                className="object-cover opacity-80 group-hover:scale-105 transition-transform"
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-center justify-center">
-                                <button
-                                  onClick={() => { handlePlayDiyaBell(); setActiveDarshanVideo(msg.id); }}
-                                  className="w-11 h-11 rounded-full bg-amber-500 hover:bg-amber-600 text-white flex items-center justify-center shadow-lg transition-transform hover:scale-110 cursor-pointer"
-                                >
-                                  <Play className="w-5 h-5 ml-0.5" />
-                                </button>
-                              </div>
-                              <span className="absolute bottom-2 left-2 text-[11px] text-white/90 font-medium">
-                                {msg.inChatDarshan.location}
+                            <div className="absolute top-2 right-2">
+                              <span className="text-[9px] font-mono-data text-amber-200/90 bg-black/60 px-2 py-0.5 rounded-md backdrop-blur-xs border border-white/10">
+                                {msg.inChatDarshan.timings}
                               </span>
                             </div>
                           )}
+
+                          {/* Location Badge */}
+                          <div className="absolute bottom-2 left-2 flex items-center pointer-events-none">
+                            <span className="text-[11px] text-white/95 font-semibold drop-shadow-md">
+                              {msg.inChatDarshan.location}
+                            </span>
+                          </div>
                         </div>
 
+                        {/* Sacred Interactive Ritual Control Actions */}
+                        <div className="grid grid-cols-2 gap-1.5 pt-1">
+                          <button
+                            onClick={() => handleOfferDiya(msg.id)}
+                            className={`py-1.5 px-2 rounded-xl text-xs font-mono-data font-bold border transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95 ${
+                              offeredDiyaMsgIds[msg.id]
+                                ? 'bg-amber-500 text-black border-amber-400'
+                                : 'bg-white/10 hover:bg-amber-500/20 text-amber-200 border-amber-500/30'
+                            }`}
+                          >
+                            <span>🪔</span>
+                            <span>{offeredDiyaMsgIds[msg.id] ? 'दीप अर्पित ✓' : 'दीप दान करें'}</span>
+                          </button>
+
+                          <button
+                            onClick={() => handleOfferFlowers(msg.id)}
+                            className={`py-1.5 px-2 rounded-xl text-xs font-mono-data font-bold border transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95 ${
+                              offeredFlowersMsgIds[msg.id]
+                                ? 'bg-rose-500 text-white border-rose-400'
+                                : 'bg-white/10 hover:bg-rose-500/20 text-rose-200 border-rose-500/30'
+                            }`}
+                          >
+                            <span>🌸</span>
+                            <span>{offeredFlowersMsgIds[msg.id] ? 'पुष्प अर्पित ✓' : 'पुष्प अर्पण'}</span>
+                          </button>
+                        </div>
+
+                        {/* External Official Live Stream Link */}
+                        {msg.inChatDarshan.officialLiveUrl && (
+                          <a
+                            href={msg.inChatDarshan.officialLiveUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => playClick()}
+                            className="w-full py-2 bg-gradient-to-r from-red-600/30 via-red-500/20 to-red-600/30 hover:from-red-600/50 hover:to-red-600/50 text-red-200 text-xs font-mono-data font-bold rounded-xl border border-red-500/40 text-center flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95"
+                          >
+                            <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+                            <span>साक्षात् महाआरती लाइव देखें (YouTube)</span>
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        )}
+
+                        {/* Dedicated 26-Temple Darshan Room Navigation */}
                         <Link
                           href="/darshan"
                           onClick={(e) => {
                             e.preventDefault();
                             handleNavigate('/darshan');
                           }}
-                          className="w-full py-2 bg-amber-600/30 hover:bg-amber-600/50 text-amber-200 text-xs font-bold rounded-lg border border-amber-500/30 text-center block transition-colors cursor-pointer"
+                          className="w-full py-2 bg-[#8E6F1D] hover:bg-[#A88424] text-white text-xs font-mono-data font-bold rounded-xl border border-[#D4AF37]/50 text-center block transition-all cursor-pointer shadow-md active:scale-95"
                         >
                           सम्पूर्ण २६ महातीर्थ दर्शन कक्ष खोलें →
                         </Link>
