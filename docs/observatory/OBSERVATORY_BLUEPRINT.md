@@ -38,7 +38,7 @@ The latest usefulness pass added the practical layer that turns a visualization 
 The Evidence-backed Observation + Student Study Desk v1 slice then added:
 
 - bounded display-only zoom, pan, pinch, wheel, double-click, keyboard navigation, and reset controls across the local sky, ecliptic, and Gochara canvases;
-- progressive bright-star labels and an accessible visible-anchor list;
+- progressive bright-star labels, a deterministic faint-field texture, altitude/azimuth grid tiers, and an accessible visible-anchor list;
 - approximate solar events, civil/nautical/astronomical twilight state, Moon phase, altitude bands, field cues, and a reusable student briefing;
 - an integrated astronomy/Jyotish study desk with optional official-source link-outs rather than live media dependencies;
 - an approximate selected-body observation planner with current horizon status, sampled next rise/set estimate, Moon separation, and explicit Rahu/Ketu exclusion;
@@ -147,7 +147,7 @@ The implementation does **not** claim:
 | File | Responsibility |
 | --- | --- |
 | `ObservatoryExperience.tsx` | Primary state owner: city, instant, selected graha, selected constellation, visual layers, URL synchronization, quick time controls, route links, and sheet mounting. |
-| `SkyCanvasRenderer.tsx` | Draws the local sky canvas: background, horizon, altitude rings, optional horizon-mask ring, Nakshatra mandala, ecliptic, magnitude-filtered stars, constellation lines, grahas, compass, and hit targets. |
+| `SkyCanvasRenderer.tsx` | Draws the local sky canvas: twilight-aware background, horizon, altitude rings, optional horizon-mask ring, zoom-gated context field, Nakshatra mandala, ecliptic, magnitude-filtered stars, constellation lines, shaded grahas, compass, and hit targets. |
 | `SkyAtAGlance.tsx` | Converts canonical graha coordinates to practical altitude/azimuth/direction/sky-band cards, applies the display-only minimum-altitude mask, ranks visible objects, and copies a field readout. |
 | `CanvasViewControls.tsx` | Shared accessible zoom percentage, bounded zoom-in/out, and reset controls for dense canvas instruments. |
 | `CelestialArtwork.tsx` | Renders original inline SVG planet/node portraits and constellation schematic maps. |
@@ -168,6 +168,7 @@ The implementation does **not** claim:
 | `src/lib/astronomy/eclipticProjection.ts` | Rashi and Nakshatra constants, boundary-safe lookup, tropical-to-sidereal conversion, and planisphere geometry helpers. |
 | `src/lib/astronomy/celestialCatalog.ts` | Typed selections, planet/constellation explanatory copy, constellation names/stories, and deep-link validation. |
 | `src/lib/astronomy/viewTransform.ts` | Pure display-only scale, pan, focus zoom, clamping, and zoom-label utilities shared by canvas instruments. |
+| `src/lib/astronomy/contextStars.ts` | Fixed-seed, display-only faint-field texture tiers with a galactic-plane orientation; never a selectable catalogue or ephemeris input. |
 | `src/lib/astronomy/observation.ts` | Explicitly approximate local solar events, twilight state, Moon phase, compass directions, altitude bands, horizon crossings, angular separation, observation plans, and display-filter bounds. |
 | `src/lib/astronomy/observationLog.ts` | Validated browser-local observation-log schema with persistence and CSV serialization. |
 | `src/lib/astronomy/providers/` | Shared provider/provenance types, local canonical-body adapter, and fail-closed reference-fixture parser for the planned JPL/SPICE seam. |
@@ -326,11 +327,14 @@ The visual canvas contains:
 - 30-degree and 60-degree altitude rings;
 - Nakshatra mandala;
 - dashed ecliptic;
-- 70 bright-star anchors;
+- 70 catalogue bright-star anchors;
+- a zoom-gated 900-point illustrative faint-field texture, never used for selection;
 - connected constellation lines;
 - selected-constellation highlighting;
 - seven physical graha markers;
 - Saturn ring treatment;
+- phase-aware Moon disc, shaded planet markers, bright-star diffraction accents, and a restrained twilight glow;
+- zoom-tiered altitude/azimuth grid and selected-body local coordinate callout;
 - zenith, cardinal labels, and quiet coordinate annotations.
 
 Rahu and Ketu remain in the nine-graha rail but are not drawn as physical sky objects in this local visual view.
@@ -346,13 +350,13 @@ Rahu and Ketu remain in the nine-graha rail but are not drawn as physical sky ob
 - **Layers:** Nakshatra mandala and constellation lines.
 - **Constellation guide:** keyboard-accessible select plus explicit “Open field notes” action.
 - **Bright anchor list:** visible bright-star DOM buttons with altitude readout; selecting one highlights the catalogue constellation.
-- **Canvas navigation:** bounded zoom/pan controls, wheel/pinch/double-click, arrow-key pan, `+`/`−`, `R`/`0` reset, and progressive bright-star labels.
+- **Canvas navigation:** bounded zoom/pan controls, wheel/pinch/double-click, arrow-key pan, `+`/`−`, `R`/`0` reset, progressive context-star density, altitude/azimuth grid tiers, and catalogue bright-star labels.
 - **Sky at a glance:** seven physical graha observation cards with altitude band and direction.
 - **Student Desk:** approximate twilight/event briefing, Moon phase, selected-graha field cue, coordinate-study guidance, and optional source links.
 
 #### URL synchronization
 
-The primary experience uses `history.replaceState` to keep the current city, instant, selected planet, and active object in the URL without creating a history entry for every click. This makes copying the browser URL useful even before pressing the sheet's share button.
+The primary experience uses `history.replaceState` to keep the current city, instant, selected planet, observation mask (`horizon`/`mag`), and active object in the URL without creating a history entry for every click. This makes copying the browser URL useful even before pressing the sheet's share button.
 
 ### 7.2 Sky at a glance
 
@@ -886,6 +890,17 @@ The observer-control pass adds practical visibility controls while keeping the c
 5. Preserved `horizon` and `mag` in the main Observatory deep link.
 6. Added deterministic bounds and threshold tests.
 
+### Progressive sky detail — zoom realism
+
+The local sky keeps its existing 70-star catalogue and calculation pipeline, but the renderer now reveals detail in layers instead of simply enlarging the same diagram:
+
+1. At 1.2× it adds a faint deterministic context field, with a fixed galactic-plane orientation and no selectable/context-derived values.
+2. At 1.35× it adds bright-star diffraction accents and an altitude-grid cue.
+3. At 1.75× it begins naming the brightest catalogue anchors; at 2.3× it adds more anchor labels and fine altitude/azimuth graduations.
+4. At 2.15× it shows the fine grid and local bearing labels; selected physical bodies gain an anchored altitude/azimuth/longitude callout.
+5. The Sun, Moon, and planets use restrained display shading, and the Moon disc follows the existing approximate Sun–Moon phase angle.
+6. The canvas copy explicitly calls the faint field illustrative; context points are never promoted into a precision catalogue.
+
 ---
 
 ## 12. Design decisions and trade-offs
@@ -950,7 +965,13 @@ The observer-control pass adds practical visibility controls while keeping the c
 **Why:** users need a quick way to account for a roofline, trees, binocular comfort, or a teaching brightness threshold without pretending the product knows their terrain or sky quality.
 **Trade-off:** a masked object can still be mathematically above the horizon, and the magnitude control is not a naked-eye or light-pollution prediction. The labels keep that distinction visible.
 
-### Decision K — conditional pass rather than hiding known discrepancies
+### Decision K — visual depth without precision theatre
+
+**Choice:** use a fixed-seed, non-selectable faint-star texture, restrained object shading, phase-aware Moon rendering, and zoom-gated coordinate grids to make the local sky feel observational.
+**Why:** zoom should reveal useful visual structure, not just magnify a sparse diagram.
+**Trade-off:** the context field is illustrative rather than measured. It is named in the UI and kept out of target hit-testing, object lists, ephemeris values, and qualification claims.
+
+### Decision L — conditional pass rather than hiding known discrepancies
 
 **Choice:** retain explicit blockers in the qualification report.
 **Why:** trust is more valuable than a misleading “production accurate” label.
@@ -969,7 +990,7 @@ npx playwright test tests/observatory.spec.ts --reporter=line
 ```
 
 ```text
-24 passed
+25 passed
 ```
 
 ```bash

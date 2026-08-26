@@ -4,7 +4,7 @@
 **Review scope:** the existing local sky, ecliptic, Time Machine, Gochara, deep-link, artwork, and qualification work
 **Document status:** strategic baseline; no NASA, ISRO, Roscosmos, media, tile, 3D or external-reference implementation has been added. The local viewport, observation, Student Desk and provenance slice is recorded in [`EVIDENCE_OBSERVATION_V1.md`](EVIDENCE_OBSERVATION_V1.md).
 
-> **Recommendation in one sentence:** build an **Evidence-backed Observation Layer v1** before building a large media catalogue or a full 3D solar system. It should add a frozen precision-reference path, a true zoomable/deep-inspection model, and a shared provenance contract across all four existing instruments.
+> **Recommendation in one sentence:** finish the **Evidence-backed Observation Layer v1** before building a large media catalogue or a full 3D solar system. The local instruments now have a progressive zoom/deep-inspection baseline; the remaining trust-critical step is a frozen precision-reference path and a shared provenance contract across all four instruments.
 
 This is the shortest path from a good deterministic visualization to a trustworthy, memorable observatory. It improves the current product for every route, creates the seam where images, videos, surface tiles, mission data, and 3D objects can later attach, and does not weaken the existing local computation or make the browser depend on an external service.
 
@@ -25,7 +25,7 @@ The Observatory is already a credible product foundation rather than a placehold
 - the shared detail sheet, accessible DOM controls, source labels, and practical sky readout give the suite a coherent interaction model;
 - the current browser experience is deterministic and does not require a live astronomy API.
 
-It is **not yet world-class** because its visual richness and scientific depth stop at the first layer. A user can see a calculated point, but cannot yet progressively inspect the field, verify the reference path, explore a body surface, follow a mission, or understand the provenance of a scientific image without leaving the product.
+It is **not yet world-class** because its scientific depth and external evidence stop before the reference/media layer. A user can now progressively inspect the local field, but cannot yet verify the reference path, explore a body surface, follow a mission, or understand the provenance of a scientific image without leaving the product.
 
 ### The one next milestone
 
@@ -39,7 +39,7 @@ It is **not yet world-class** because its visual richness and scientific depth s
 The milestone has three tightly coupled deliverables:
 
 1. **Precision reference adapter** — generate and review a small JPL Horizons comparison fixture, define body-specific error budgets, and keep the local approximation as the deterministic fallback.
-2. **Zoomable inspection viewport** — add pan, zoom, reset, keyboard controls, target-aware hit testing, grid/label density, and a selected-object field-of-view mode to the existing local sky and ecliptic canvases.
+2. **Zoomable inspection viewport** — shipped baseline: pan, zoom, reset, keyboard controls, target-aware hit testing, progressive grid/label density, a faint context field, and a selected-body local-coordinate callout on the existing local sky canvas; the ecliptic viewport retains the shared camera model.
 3. **Shared provenance contract** — show model/provider/frame/epoch/quality information in the detail sheet on all four routes, with a clear distinction between physical bodies and mathematical nodes.
 
 This is one product milestone, not three unrelated features. A zoomed view without evidence invites false precision; an evidence drawer without useful inspection feels like paperwork; a 3D object before either is mostly decoration.
@@ -63,8 +63,8 @@ This is one product milestone, not three unrelated features. A zoomed view witho
 | --- | --- | --- | --- | --- |
 | Coordinate geometry | Strong foundation | Real local horizontal conversion, precession, stereographic projection, ecliptic sampling, and separate tropical/sidereal display | Compact low-precision ephemerides, limited star catalogue, no frozen external reference fixture | Add the reference adapter and visible error/quality metadata |
 | Scientific trust | Transparent but conditional | Sources and model names are shown; known limitations are documented rather than hidden | Moon discrepancy of **1.135216°**; no committed Horizons fixture; no body-specific tolerance table | Close or explicitly govern the two qualification blockers |
-| Direct field usefulness | Good early utility | Altitude, azimuth, compass direction, horizon status, best-placed object, copyable readout, twilight state, Moon phase/separation, approximate sampled horizon crossing, display-only horizon/magnitude filters, local JSON/CSV notebook, and city/time links | No refraction, terrain, clouds, light pollution, brightness model, precision rise/set/transit scheduler, telescope field of view, or custom observer | Add reviewed precision observation planning after the reference layer |
-| Interaction | Coherent | Shared `CelestialSelection`, accessible rails/selects, target priority, responsive detail sheet, shareable context | Canvas is effectively a fixed viewport; no pan/zoom, measurement, or progressive detail | Build the zoomable inspection viewport |
+| Direct field usefulness | Good early utility | Altitude, azimuth, compass direction, horizon status, best-placed object, copyable readout, twilight state, Moon phase/separation, approximate sampled horizon crossing, display-only horizon/magnitude filters, progressive zoomed context field, local JSON/CSV notebook, and city/time links | No refraction, terrain, clouds, light pollution, brightness model, precision rise/set/transit scheduler, telescope field of view, or custom observer | Add reviewed precision observation planning after the reference layer |
+| Interaction | Good early utility | Shared `CelestialSelection`, accessible rails/selects, target priority, responsive detail sheet, shareable context, bounded pan/zoom, progressive field detail, and transformed hit targets | No measurement tool, telescope field of view, semantic object tree, or full browser gesture QA | Add measurement and accessible data-table surfaces after Chromium validation |
 | Educational clarity | Good foundation | Astronomy and Vedic lens are separated; node semantics are explicit; tours can reuse the detail contract | No guided sequence, source-linked media, mission context, comparison mode, or learner progress | Add curated tours after provenance exists |
 | Visual identity | Distinctive | Original inline SVG artwork, constellation diagrams, dark/gold/violet visual language, no initial remote image failure | Artwork is interpretive and not a substitute for real images, textures, terrain, or instrument data | Add evidence-labelled media as a second layer, not a replacement |
 | Planetary depth | Not started | The body contract already has a natural selected-object entry point | No globe, surface map, elevation, lighting, feature metadata, mission site, or 3D model | Add a Moon/Mars surface atlas after the shared viewport |

@@ -90,7 +90,7 @@
   <g transform="translate(52 644)">
     <rect width="1318" height="110" rx="18" fill="#090D1A" stroke="#FFFFFF" stroke-opacity=".14"/>
     <text x="24" y="34" class="boxTitle">Deterministic and transparent by default</text>
-    <text x="24" y="59" class="boxText">15 Observatory invariants · 13 existing engine/feature tests · route smoke checks · no live sky request in the browser</text>
+    <text x="24" y="59" class="boxText">25 Observatory tests · 13 existing engine/feature tests · route smoke checks · no live sky request in the browser</text>
     <text x="24" y="82" class="boxText">Release status: CONDITIONAL PASS · Moon discrepancy 1.135216° · JPL Horizons fixture still requires networked reference generation</text>
     <text x="24" y="101" class="mono">typecheck · tests/observatory.spec.ts · test:engines · npm run reference:generate</text>
   </g>

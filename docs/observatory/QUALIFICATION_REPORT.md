@@ -10,7 +10,7 @@ This qualification covers the four public Observatory routes and the coordinate/
 
 | Route | Qualification target |
 | --- | --- |
-| `/observatory` | Zenith-centred stereographic local sky, 70 bright-star anchors, constellation lines, seven visible grahas, ecliptic, altitude rings, zenith/cardinal markers, Nakshatra Mandala, and planet rail |
+| `/observatory` | Zenith-centred stereographic local sky, 70 catalogue anchors, zoom-gated faint field, constellation lines, seven visible grahas, ecliptic, altitude rings, zoom-tiered alt/az grid, zenith/cardinal markers, Nakshatra Mandala, and planet rail |
 | `/observatory/ecliptic` | Top-down tropical ecliptic planisphere, 12 rashi sectors, 27 Nakshatra subdivisions, and all nine calculated grahas (including Rahu/Ketu) in the tropical/sidereal inspector |
 | `/observatory/timemachine` | Birth date/time input, 0–100% scrubber, live sky at the scrubbed instant, and birth-to-now rashi change table |
 | `/observatory/gochara` | Canvas-drawn natal/current sidereal wheels, nine-graha selector, Rahu/Ketu inclusion, change indicators, and Moon-reference transit panel |
@@ -47,6 +47,7 @@ Both nodes are marked retrograde and remain exactly opposite modulo 360°.
 - The 70-star catalogue and constellation sticks are versioned source data.
 - The planisphere uses tropical longitude for the astronomy ring and exposes the sidereal conversion in the inspector instead of mixing frames.
 - Canvas components use `ResizeObserver`, bounded device-pixel ratios, accessible `role="img"` labels, display-only bounded zoom/pan, wheel/pinch/double-click navigation, keyboard controls, and transformed target hit areas.
+- The local sky reveals fixed-seed faint context stars, progressive catalogue labels, altitude/azimuth grid tiers, a directional twilight glow, phase-aware Moon rendering, and a selected-body local-coordinate callout only as display detail; the context stars are not selectable or measurement data.
 - The Time Machine labels its slider as an inspection interpolation; it does not imply a physically linear orbit.
 - Gochara is explicitly described as a computational comparison and not a complete Jyotish judgement.
 - Planet and constellation targets are hit-tested independently. Planet targets have priority over nearby star/line targets; a selected constellation highlights its stars and stick-figure lines.
@@ -84,7 +85,7 @@ The Observatory unit suite checks:
 - observation-log schema validation, local persistence round trips, and CSV escaping;
 - display-only horizon-mask and limiting-magnitude bounds without changing calculated coordinates.
 
-A local Next development-server smoke check returned HTTP 200 for `/observatory`, `/observatory/ecliptic`, `/observatory/timemachine`, and `/observatory/gochara`; representative city/time/planet/object deep-link requests also returned HTTP 200 after the planner, notebook, and display-filter slices. The isolated Observatory suite passed 24/24 and the existing engine suite passed 13/13 in this environment. `npm run typecheck` is blocked by the generated Prisma client issue, and `npm run build` is blocked during Prisma engine checksum retrieval. The full Playwright command also attempts the repository's responsive browser suite, but its Chromium executable is not installed in this sandbox.
+A local Next development-server smoke check returned HTTP 200 for `/observatory`, `/observatory/ecliptic`, `/observatory/timemachine`, and `/observatory/gochara`; representative city/time/planet/object deep-link requests also returned HTTP 200 after the planner, notebook, display-filter, and zoom-detail slices. The isolated Observatory suite passed 25/25 and the existing engine suite passed 13/13 in this environment. `npm run typecheck` is blocked by the generated Prisma client issue, and `npm run build` is blocked during Prisma engine checksum retrieval. The full Playwright command also attempts the repository's responsive browser suite, but its Chromium executable is not installed in this sandbox.
 
 For a production-style HTTP smoke check after `npm run build && npm start`, request each route without query parameters and with a Panchang-style deep-link query. The expected status is HTTP 200 for all four routes.
 

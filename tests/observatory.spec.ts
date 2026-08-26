@@ -14,6 +14,7 @@ import {
   tropicalToSiderealLongitude,
 } from '../src/lib/astronomy/eclipticProjection';
 import { localSiderealTime, projectStar, SiderealTime } from '../src/lib/astronomy/projection';
+import { CONTEXT_STARS, contextStarsForZoom } from '../src/lib/astronomy/contextStars';
 import { STARS } from '../src/lib/astronomy/stars';
 import { getCelestialDetail, getConstellationDetail, parseCelestialSelection, PLANET_DETAILS } from '../src/lib/astronomy/celestialCatalog';
 import { altitudeBand, angularSeparationDeg, calculateMoonPhase, calculateSolarDayEvents, compassDirection, findNextHorizonEvent, isAboveObservationHorizon, isWithinLimitingMagnitude, OBSERVATION_LIMITS, planObservation, skyLightState, summarizeObservations } from '../src/lib/astronomy/observation';
@@ -29,6 +30,16 @@ test.describe('Observatory coordinate and ephemeris invariants', () => {
     expect(STARS).toHaveLength(70);
     expect(STARS.find(star => star.id === 'sirius')?.raHours).toBeCloseTo(6.7525, 3);
     expect(STARS.every(star => Number.isFinite(star.raHours) && Number.isFinite(star.decDeg))).toBe(true);
+  });
+
+  test('zoomed sky detail is deterministic and progressively denser', () => {
+    expect(CONTEXT_STARS).toHaveLength(900);
+    expect(contextStarsForZoom(1)).toHaveLength(0);
+    expect(contextStarsForZoom(1.3)).toHaveLength(220);
+    expect(contextStarsForZoom(2)).toHaveLength(560);
+    expect(contextStarsForZoom(4)).toHaveLength(900);
+    expect(CONTEXT_STARS.every(star => star.raHours >= 0 && star.raHours < 24 && star.decDeg >= -90 && star.decDeg <= 90)).toBe(true);
+    expect(new Set(CONTEXT_STARS.map(star => star.id)).size).toBe(900);
   });
 
   test('sidereal time is expressed in a 24-hour range', () => {
