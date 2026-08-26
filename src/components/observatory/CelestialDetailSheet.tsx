@@ -15,6 +15,7 @@ export interface CelestialDetailSheetProps {
   date: string | Date;
   observer: ObserverLocation;
   cityId?: string;
+  cityName?: string;
   onClose: () => void;
 }
 
@@ -33,7 +34,8 @@ function longitude(value: number): string {
   return `${String(degrees).padStart(3, '0')}° ${String(minutes).padStart(2, '0')}′`;
 }
 
-export default function CelestialDetailSheet({ selection, date, observer, cityId = 'varanasi', onClose }: CelestialDetailSheetProps) {
+export default function CelestialDetailSheet({ selection, date, observer, cityId = 'varanasi', cityName, onClose }: CelestialDetailSheetProps) {
+  const observerLabel = cityName || cityId;
   const detail = getCelestialDetail(selection);
   const dateValue = validDate(date);
   const body = selection.kind === 'planet' ? calculateCanonicalBody(selection.id as CanonicalBodyName, dateValue) : null;
@@ -45,6 +47,7 @@ export default function CelestialDetailSheet({ selection, date, observer, cityId
     : [];
   const highestStar = visibleStars.reduce((highest, item) => !highest || item.point.altitudeDeg > highest.point.altitudeDeg ? item : highest, null as (typeof visibleStars[number] | null));
   const skyPosition = body ? equatorialToHorizontal({ raHours: body.rightAscensionHours, decDeg: body.declinationDeg }, dateValue, observer) : null;
+  const isMathematicalNode = body?.source === 'mean-node';
   const rashi = body ? getRashiForLongitude(body.siderealLongitude) : null;
   const nakshatra = body ? getNakshatraForLongitude(body.siderealLongitude) : null;
   const query = `city=${encodeURIComponent(cityId)}&time=${encodeURIComponent(dateValue.toISOString())}${selection.kind === 'planet' ? `&planet=${encodeURIComponent(selection.id)}` : ''}`;
@@ -117,9 +120,11 @@ export default function CelestialDetailSheet({ selection, date, observer, cityId
     }
   };
 
-  const visibilityLabel = body
-    ? skyPosition && skyPosition.altitudeDeg >= 0 ? 'Above horizon' : 'Below horizon'
-    : visibleStars.length > 0 ? `${visibleStars.length} anchors visible` : 'Below horizon';
+  const visibilityLabel = isMathematicalNode
+    ? 'Mathematical node'
+    : body
+      ? skyPosition && skyPosition.altitudeDeg >= 0 ? 'Above horizon' : 'Below horizon'
+      : visibleStars.length > 0 ? `${visibleStars.length} anchors visible` : 'Below horizon';
 
   return (
     <div className="celestial-sheet-backdrop fixed inset-0 z-[70] flex items-end justify-center bg-[#010208]/75 p-0 backdrop-blur-sm sm:items-stretch sm:justify-end" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
@@ -141,7 +146,7 @@ export default function CelestialDetailSheet({ selection, date, observer, cityId
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#D4AF37]/40 bg-[#D4AF37]/10 text-2xl text-[#F2C65D]">{body ? SYMBOLS[body.body] : '✦'}</span>
               <div className="min-w-0"><div className="font-mono-data text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: detail.accent }}>{detail.eyebrow}</div><h2 id="celestial-detail-title" className="mt-1 font-editorial text-3xl font-bold text-[#F8F3E7]">{detail.displayName}</h2>{detail.sanskritName && <div className="mt-1 font-mono-data text-xs text-[#AEB6D0]">{detail.sanskritName} · {detail.symbol}</div>}</div>
             </div>
-            <p id="celestial-detail-description" className="mt-4 text-xs leading-relaxed text-[#8F99B5]">Calculated for {dateValue.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' })} UTC · anchor {cityId} · observer {observer.latitude.toFixed(2)}° {observer.latitude >= 0 ? 'N' : 'S'}, {Math.abs(observer.longitude).toFixed(2)}° {observer.longitude >= 0 ? 'E' : 'W'}</p>
+            <p id="celestial-detail-description" className="mt-4 text-xs leading-relaxed text-[#8F99B5]">Calculated for {dateValue.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' })} UTC · anchor {observerLabel} · observer {observer.latitude.toFixed(2)}° {observer.latitude >= 0 ? 'N' : 'S'}, {Math.abs(observer.longitude).toFixed(2)}° {observer.longitude >= 0 ? 'E' : 'W'}</p>
           </header>
 
           {body ? (
@@ -149,8 +154,8 @@ export default function CelestialDetailSheet({ selection, date, observer, cityId
               <section className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 <div className="rounded-xl border border-white/[0.08] bg-[#0D1222] p-3"><div className="font-mono-data text-[9px] uppercase tracking-wider text-[#8993B0]">Tropical</div><div className="mt-1 font-mono-data text-sm font-bold text-[#E3E7F5]">{longitude(body.tropicalLongitude)}</div></div>
                 <div className="rounded-xl border border-white/[0.08] bg-[#0D1222] p-3"><div className="font-mono-data text-[9px] uppercase tracking-wider text-[#8993B0]">Sidereal</div><div className="mt-1 font-mono-data text-sm font-bold text-[#F2C65D]">{longitude(body.siderealLongitude)}</div></div>
-                <div className="rounded-xl border border-white/[0.08] bg-[#0D1222] p-3"><div className="font-mono-data text-[9px] uppercase tracking-wider text-[#8993B0]">Altitude</div><div className="mt-1 font-mono-data text-sm font-bold text-[#E3E7F5]">{skyPosition ? `${skyPosition.altitudeDeg.toFixed(1)}°` : '—'}</div></div>
-                <div className="rounded-xl border border-white/[0.08] bg-[#0D1222] p-3"><div className="font-mono-data text-[9px] uppercase tracking-wider text-[#8993B0]">Azimuth</div><div className="mt-1 font-mono-data text-sm font-bold text-[#E3E7F5]">{skyPosition ? `${skyPosition.azimuthDeg.toFixed(1)}°` : '—'}</div></div>
+                <div className="rounded-xl border border-white/[0.08] bg-[#0D1222] p-3"><div className="font-mono-data text-[9px] uppercase tracking-wider text-[#8993B0]">{isMathematicalNode ? 'Physical altitude' : 'Altitude'}</div><div className="mt-1 font-mono-data text-sm font-bold text-[#E3E7F5]">{!isMathematicalNode && skyPosition ? `${skyPosition.altitudeDeg.toFixed(1)}°` : '—'}</div></div>
+                <div className="rounded-xl border border-white/[0.08] bg-[#0D1222] p-3"><div className="font-mono-data text-[9px] uppercase tracking-wider text-[#8993B0]">{isMathematicalNode ? 'Physical azimuth' : 'Azimuth'}</div><div className="mt-1 font-mono-data text-sm font-bold text-[#E3E7F5]">{!isMathematicalNode && skyPosition ? `${skyPosition.azimuthDeg.toFixed(1)}°` : '—'}</div></div>
               </section>
               <section className="rounded-2xl border border-[#D4AF37]/25 bg-[#0D1222] p-4"><div className="font-mono-data text-[10px] font-bold uppercase tracking-[0.16em] text-[#D4AF37]">Coordinate reading</div><dl className="mt-3 grid grid-cols-2 gap-x-5 gap-y-3 text-xs"><div><dt className="text-[#8993B0]">Rashi</dt><dd className="mt-1 font-bold text-[#E4E8F5]">{rashi?.glyph} {rashi?.name}</dd></div><div><dt className="text-[#8993B0]">Nakshatra</dt><dd className="mt-1 font-bold text-[#E4E8F5]">{nakshatra?.name} · Pada {nakshatra?.pada}</dd></div><div><dt className="text-[#8993B0]">Right ascension</dt><dd className="mt-1 font-mono-data text-[#C9D0E5]">{body.rightAscensionHours.toFixed(3)}h</dd></div><div><dt className="text-[#8993B0]">Declination</dt><dd className="mt-1 font-mono-data text-[#C9D0E5]">{body.declinationDeg.toFixed(2)}°</dd></div><div><dt className="text-[#8993B0]">Motion</dt><dd className="mt-1 font-bold text-[#C9D0E5]">{body.isRetrograde ? 'Retrograde' : 'Direct'}</dd></div><div><dt className="text-[#8993B0]">Model</dt><dd className="mt-1 font-mono-data text-[10px] text-[#C9D0E5]">{body.source}</dd></div></dl></section>
             </>

@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Ecliptic Instrument — Rashi & Nakshatra Planisphere',
-  description: 'Top-down tropical ecliptic planisphere with 12 rashi sectors, 27 Nakshatra divisions, and a tropical-to-sidereal graha inspector.',
+  description: 'Top-down tropical ecliptic planisphere with 12 rashi sectors, 27 Nakshatra divisions, and a tropical-to-sidereal inspector for all nine grahas including Rahu and Ketu.',
   alternates: { canonical: '/observatory/ecliptic' },
 };
 
@@ -48,6 +48,7 @@ export default function EclipticPage({ searchParams }: { searchParams: SearchPar
           selectedPlanet={planet}
           observer={{ latitude: city.lat, longitude: city.lng }}
           cityId={city.id}
+          cityName={city.name}
           initialSelection={initialSelection}
         />
         <footer className="border-t border-white/[0.09] pt-5 text-[10px] leading-relaxed text-[#7F89A7]">Tropical longitude is used for the planisphere because it is the astronomy reference frame. Sidereal longitude is tropical longitude minus the displayed Chitra Paksha ayanamsha; no coordinate frame is silently mixed.</footer>

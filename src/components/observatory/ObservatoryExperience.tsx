@@ -1,11 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Clock3, LocateFixed, RotateCcw, SlidersHorizontal } from 'lucide-react';
 import CelestialDetailSheet from './CelestialDetailSheet';
+import SkyAtAGlance from './SkyAtAGlance';
 import SkyCanvasRenderer from './SkyCanvasRenderer';
 import { calculateCanonicalBody, type CanonicalBodyName } from '@/lib/astronomy/canonicalBodies';
-import type { CelestialSelection } from '@/lib/astronomy/celestialCatalog';
+import { constellationDisplayName, constellationIds, type CelestialSelection } from '@/lib/astronomy/celestialCatalog';
 import { CITIES } from '@/lib/cities';
 
 const PLANETS: CanonicalBodyName[] = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'];
@@ -33,9 +35,17 @@ function validDate(value?: string): Date {
   return Number.isFinite(date.getTime()) ? date : new Date();
 }
 
-function toDateTimeInput(date: Date): string {
+function toDateTimeInput(date: Date, timezoneOffsetHours = 0): string {
+  const shifted = new Date(date.getTime() + timezoneOffsetHours * 60 * 60 * 1000);
   const pad = (value: number) => String(value).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  return `${shifted.getUTCFullYear()}-${pad(shifted.getUTCMonth() + 1)}-${pad(shifted.getUTCDate())}T${pad(shifted.getUTCHours())}:${pad(shifted.getUTCMinutes())}`;
+}
+
+function dateFromDateTimeInput(value: string, timezoneOffsetHours = 0): Date {
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(value);
+  if (!match) return new Date(value);
+  const [, year, month, day, hours, minutes] = match;
+  return new Date(Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hours), Number(minutes)) - timezoneOffsetHours * 60 * 60 * 1000);
 }
 
 function formatCoordinate(value: number, positive: string, negative: string): string {
@@ -74,15 +84,42 @@ export function ObservatoryExperience({
   const [detailSelection, setDetailSelection] = useState<CelestialSelection | null>(initialSelection);
 
   const selectedBody = useMemo(() => calculateCanonicalBody(selectedPlanet, date), [selectedPlanet, date]);
-  const dateInput = toDateTimeInput(date);
+  const constellationOptions = useMemo(() => constellationIds().map(id => ({ id, name: constellationDisplayName(id) })), []);
+  const dateInput = toDateTimeInput(date, city.tz);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    params.set('city', city.id);
+    params.set('time', date.toISOString());
+    params.set('planet', selectedPlanet);
+    if (detailSelection) {
+      params.set('object', detailSelection.id);
+      params.set('objectKind', detailSelection.kind);
+    } else {
+      params.delete('object');
+      params.delete('objectKind');
+    }
+    window.history.replaceState(window.history.state, '', `${window.location.pathname}?${params.toString()}${window.location.hash}`);
+  }, [city.id, date, selectedPlanet, detailSelection]);
   const query = (path: string) => {
     const params = new URLSearchParams({ city: city.id, time: date.toISOString(), planet: selectedPlanet });
     return `${path}?${params.toString()}`;
   };
 
   const handleDateChange = (value: string) => {
-    const next = new Date(value);
+    const next = dateFromDateTimeInput(value, city.tz);
     if (Number.isFinite(next.getTime())) setDate(next);
+  };
+
+  const shiftDate = (hours: number) => {
+    setDate(current => new Date(current.getTime() + hours * 60 * 60 * 1000));
+  };
+
+  const setTodayAt = (hours: number, minutes = 0) => {
+    const now = new Date();
+    const local = new Date(now.getTime() + city.tz * 60 * 60 * 1000);
+    const target = new Date(Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate(), hours, minutes) - city.tz * 60 * 60 * 1000);
+    setDate(target);
   };
 
   const selectObject = (selection: CelestialSelection) => {
@@ -112,7 +149,7 @@ export function ObservatoryExperience({
 
         <section className="grid gap-4 rounded-2xl border border-white/[0.09] bg-[#0A0D18] p-4 sm:grid-cols-2 lg:grid-cols-[1.15fr_1fr_1fr_auto] lg:items-end">
           <label className="block text-[10px] font-bold uppercase tracking-[0.16em] text-[#9DA6C4]">
-            Geographic anchor
+            <span className="flex items-center gap-1.5"><LocateFixed className="h-3 w-3 text-[#D4AF37]" /> Geographic anchor</span>
             <select
               value={city.id}
               onChange={event => setCity(findCity(event.target.value))}
@@ -122,7 +159,7 @@ export function ObservatoryExperience({
             </select>
           </label>
           <label className="block text-[10px] font-bold uppercase tracking-[0.16em] text-[#9DA6C4]">
-            Observation instant
+            <span>Observation instant · {city.name} local</span>
             <input
               type="datetime-local"
               value={dateInput}
@@ -133,10 +170,22 @@ export function ObservatoryExperience({
           <div className="rounded-xl border border-white/[0.07] bg-[#070A13] px-3 py-3 font-mono-data text-[10px] text-[#B4BBD4]">
             <div className="text-[#D4AF37]">{city.name} · UTC{city.tz >= 0 ? '+' : ''}{city.tz}</div>
             <div className="mt-1">{formatCoordinate(city.lat, 'N', 'S')} · {formatCoordinate(city.lng, 'E', 'W')}</div>
-            <div className="mt-1 text-[#7F89A7]">{date.toISOString()}</div>
+            <div className="mt-1 text-[#7F89A7]">{date.toISOString()} · calculations in UTC</div>
           </div>
-          <button type="button" onClick={() => setDate(new Date())} className="rounded-xl border border-[#D4AF37]/45 px-4 py-3 font-mono-data text-[10px] font-bold uppercase tracking-[0.14em] text-[#F2C65D] transition-colors hover:bg-[#D4AF37]/10">Use now</button>
+          <button type="button" onClick={() => setDate(new Date())} className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#D4AF37]/45 px-4 py-3 font-mono-data text-[10px] font-bold uppercase tracking-[0.14em] text-[#F2C65D] transition-colors hover:bg-[#D4AF37]/10"><Clock3 className="h-3.5 w-3.5" /> Use now</button>
         </section>
+
+        <nav aria-label="Quick observation times" className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/[0.08] bg-[#080C17] px-3 py-3">
+          <span className="mr-1 flex items-center gap-1.5 font-mono-data text-[10px] font-bold uppercase tracking-[0.14em] text-[#9DA6C4]"><SlidersHorizontal className="h-3 w-3 text-[#D4AF37]" /> Quick time</span>
+          <button type="button" onClick={() => setDate(new Date())} className="rounded-lg border border-white/10 px-3 py-2 font-mono-data text-[10px] text-[#C9D0E5] transition-colors hover:border-[#D4AF37]/60 hover:text-[#F2C65D]">Now</button>
+          <button type="button" onClick={() => setTodayAt(18)} className="rounded-lg border border-white/10 px-3 py-2 font-mono-data text-[10px] text-[#C9D0E5] transition-colors hover:border-[#D4AF37]/60 hover:text-[#F2C65D]">Dusk · 18:00</button>
+          <button type="button" onClick={() => setTodayAt(21)} className="rounded-lg border border-white/10 px-3 py-2 font-mono-data text-[10px] text-[#C9D0E5] transition-colors hover:border-[#D4AF37]/60 hover:text-[#F2C65D]">Night · 21:00</button>
+          <button type="button" onClick={() => setTodayAt(0)} className="rounded-lg border border-white/10 px-3 py-2 font-mono-data text-[10px] text-[#C9D0E5] transition-colors hover:border-[#D4AF37]/60 hover:text-[#F2C65D]">Midnight · 00:00</button>
+          <span className="hidden h-5 w-px bg-white/10 sm:block" />
+          <button type="button" onClick={() => shiftDate(-1)} aria-label="Move observation one hour earlier" className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-3 py-2 font-mono-data text-[10px] text-[#C9D0E5] transition-colors hover:border-[#D4AF37]/60 hover:text-[#F2C65D]"><RotateCcw className="h-3 w-3" /> −1 hour</button>
+          <button type="button" onClick={() => shiftDate(1)} aria-label="Move observation one hour later" className="rounded-lg border border-white/10 px-3 py-2 font-mono-data text-[10px] text-[#C9D0E5] transition-colors hover:border-[#D4AF37]/60 hover:text-[#F2C65D]">+1 hour</button>
+          <span className="ml-auto hidden font-mono-data text-[9px] text-[#707A98] sm:inline">Times use the selected anchor’s fixed UTC offset.</span>
+        </nav>
 
         <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_270px]">
           <div className="rounded-2xl border border-white/[0.09] bg-[#090C16] p-3 shadow-2xl sm:p-4">
@@ -195,15 +244,41 @@ export function ObservatoryExperience({
               <label className="flex cursor-pointer items-center justify-between gap-3 py-1.5 text-[#CBD0E0]"><span>Nakshatra mandala</span><input type="checkbox" checked={showMandala} onChange={event => setShowMandala(event.target.checked)} className="accent-[#D4AF37]" /></label>
               <label className="flex cursor-pointer items-center justify-between gap-3 py-1.5 text-[#CBD0E0]"><span>Constellation lines</span><input type="checkbox" checked={showConstellations} onChange={event => setShowConstellations(event.target.checked)} className="accent-[#D4AF37]" /></label>
             </div>
+
+            <div className="rounded-2xl border border-white/[0.09] bg-[#090D1A] p-4">
+              <div className="font-mono-data text-[10px] font-bold uppercase tracking-[0.16em] text-[#9DA6C4]">Constellation guide</div>
+              <p className="mt-2 text-[10px] leading-relaxed text-[#8993B0]">Choose a pattern without needing to hit a small canvas target. It will glow in the sky; open its field notes when ready.</p>
+              <select
+                aria-label="Choose a constellation to highlight"
+                value={selectedConstellation || ''}
+                onChange={event => {
+                  const value = event.target.value || null;
+                  setSelectedConstellation(value);
+                  if (value) setDetailSelection(null);
+                }}
+                className="mt-3 block w-full rounded-xl border border-white/10 bg-[#050710] px-3 py-3 font-mono-data text-xs text-[#F0F1F8] outline-none transition-colors focus:border-[#D4AF37]"
+              >
+                <option value="">Select a pattern…</option>
+                {constellationOptions.map(option => <option key={option.id} value={option.id}>{option.name} · {option.id}</option>)}
+              </select>
+              {selectedConstellation && <button type="button" onClick={() => setDetailSelection({ kind: 'constellation', id: selectedConstellation })} className="mt-2 w-full rounded-xl border border-[#8B8BF5]/40 bg-[#8B8BF5]/10 px-3 py-2.5 font-mono-data text-[10px] font-bold uppercase tracking-[0.12em] text-[#C4C5FF] transition-colors hover:bg-[#8B8BF5]/20">Open {constellationDisplayName(selectedConstellation)} field notes</button>}
+            </div>
           </aside>
         </section>
+
+        <SkyAtAGlance
+          date={date}
+          observer={{ latitude: city.lat, longitude: city.lng }}
+          selectedPlanet={selectedPlanet}
+          onSelectObject={selectObject}
+        />
 
         <footer className="flex flex-col gap-3 border-t border-white/[0.09] pt-5 text-xs text-[#9CA4BD] sm:flex-row sm:items-center sm:justify-between">
           <span>Instrument reference: 70 Yale BSC bright-star anchors · J2000 precession · local mean sidereal time.</span>
           <Link href={`/panchang/${city.id}`} className="font-mono-data text-[10px] font-bold uppercase tracking-[0.14em] text-[#F2C65D] hover:underline">Open {city.name} Panchang ↗</Link>
         </footer>
       </div>
-      {detailSelection && <CelestialDetailSheet selection={detailSelection} date={date} observer={{ latitude: city.lat, longitude: city.lng }} cityId={city.id} onClose={() => setDetailSelection(null)} />}
+      {detailSelection && <CelestialDetailSheet selection={detailSelection} date={date} observer={{ latitude: city.lat, longitude: city.lng }} cityId={city.id} cityName={city.name} onClose={() => setDetailSelection(null)} />}
     </main>
   );
 }

@@ -162,7 +162,7 @@ function TimeMachine({ initialCity, initialTime, initialPlanet, initialSelection
           </div>
         </section>
       </div>
-      {detailSelection && <CelestialDetailSheet selection={detailSelection} date={simulatedDate} observer={{ latitude: city.lat, longitude: city.lng }} cityId={city.id} onClose={() => setDetailSelection(null)} />}
+      {detailSelection && <CelestialDetailSheet selection={detailSelection} date={simulatedDate} observer={{ latitude: city.lat, longitude: city.lng }} cityId={city.id} cityName={city.name} onClose={() => setDetailSelection(null)} />}
     </main>
   );
 }

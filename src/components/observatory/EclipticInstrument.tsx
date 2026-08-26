@@ -22,14 +22,15 @@ export interface EclipticInstrumentProps {
   onSelectObject?: (selection: CelestialSelection) => void;
   observer?: ObserverLocation;
   cityId?: string;
+  cityName?: string;
   initialSelection?: CelestialSelection | null;
   className?: string;
 }
 
-const DISPLAY_BODIES = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'];
+const DISPLAY_BODIES = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'];
 const PLANET_COLORS: Record<string, string> = {
   Sun: '#F2B84B', Moon: '#E6EEF8', Mars: '#E2745A', Mercury: '#86C7B8',
-  Jupiter: '#D8A16B', Venus: '#F5B7D2', Saturn: '#AFA6D9',
+  Jupiter: '#D8A16B', Venus: '#F5B7D2', Saturn: '#AFA6D9', Rahu: '#B38BEA', Ketu: '#E19A72',
 };
 const PLANET_SYMBOLS: Record<string, string> = {
   Sun: '☉', Moon: '☽', Mars: '♂', Mercury: '☿', Jupiter: '♃', Venus: '♀', Saturn: '♄', Rahu: '☊', Ketu: '☋',
@@ -186,6 +187,7 @@ function EclipticInstrument({
   onSelectObject,
   observer = { latitude: 25.3176, longitude: 82.9739 },
   cityId = 'varanasi',
+  cityName,
   initialSelection = null,
   className = '',
 }: EclipticInstrumentProps) {
@@ -274,7 +276,7 @@ function EclipticInstrument({
             <div className="flex items-center justify-between gap-3 border-b border-white/[0.08] pb-2"><dt className="text-[#AAB2CC]">Rashi</dt><dd className="font-bold">{rashi.glyph} {rashi.name}</dd></div>
             <div className="flex items-center justify-between gap-3"><dt className="text-[#AAB2CC]">Nakshatra</dt><dd className="font-bold">{nakshatra.name} · P{nakshatra.pada}</dd></div>
           </dl>
-          <p className="mt-5 text-[10px] leading-relaxed text-[#8E97B5]">The outer zodiac is tropical for astronomy; the inspector subtracts Lahiri ayanamsha for the Vedic rashi and nakshatra reading.</p>
+          <p className="mt-5 text-[10px] leading-relaxed text-[#8E97B5]">The outer zodiac is tropical for astronomy; the inspector subtracts Lahiri ayanamsha for the Vedic rashi and nakshatra reading. Rahu and Ketu are mathematical lunar nodes, included as calculated ecliptic points rather than physical planets.</p>
         </aside>
       </div>
 
@@ -296,7 +298,7 @@ function EclipticInstrument({
         <div className="rounded-lg border border-white/[0.07] bg-[#090D1A] px-3 py-2">{formatLongitude(selectedBody.tropicalLongitude)} tropical</div>
         <div className="rounded-lg border border-white/[0.07] bg-[#090D1A] px-3 py-2">Lahiri {ayanamsha.toFixed(2)}°</div>
       </div>
-      {detailSelection && <CelestialDetailSheet selection={detailSelection} date={dateValue} observer={observer} cityId={cityId} onClose={() => setDetailSelection(null)} />}
+      {detailSelection && <CelestialDetailSheet selection={detailSelection} date={dateValue} observer={observer} cityId={cityId} cityName={cityName} onClose={() => setDetailSelection(null)} />}
     </div>
   );
 }
