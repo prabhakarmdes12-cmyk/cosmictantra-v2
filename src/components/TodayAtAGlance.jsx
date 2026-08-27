@@ -103,6 +103,25 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
   const pada = isHi ? toHindiDigits(panchangData.nakshatra?.pada || 1) : (panchangData.nakshatra?.pada || 1);
   const moonIllum = isHi ? toHindiDigits(panchangData.moon?.illumination || 75) : (panchangData.moon?.illumination || 75);
 
+  const today = new Date();
+  const year = today.getFullYear();
+  const monthIdx = today.getMonth();
+  const dayNum = today.getDate();
+  const dayOfWeek = today.getDay();
+  const vikramSamvat = year + 57;
+
+  const ENGLISH_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const HINDI_MONTHS = ['जनवरी', 'फ़रवरी', 'मार्च', 'अप्रैल', 'मई', 'जून', 'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर'];
+  const ENGLISH_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const HINDI_DAYS = ['रविवार', 'सोमवार', 'मंगलवार', 'बुधवार', 'गुरुवार', 'शुक्रवार', 'शनिवार'];
+  const LUNAR_MONTHS_HI = ['चैत्र', 'वैशाख', 'ज्येष्ठ', 'आषाढ़', 'श्रावण', 'भाद्रपद', 'आश्विन', 'कार्तिक', 'मार्गशीर्ष', 'पौष', 'माघ', 'फाल्गुन'];
+  const LUNAR_MONTHS_EN = ['Chaitra', 'Vaishakha', 'Jyeshtha', 'Ashadha', 'Shravana', 'Bhadrapada', 'Ashwin', 'Kartika', 'Margashirsha', 'Pausha', 'Magha', 'Phalguna'];
+
+  const englishFullDate = `${ENGLISH_DAYS[dayOfWeek]}, ${dayNum} ${ENGLISH_MONTHS[monthIdx]} ${year}`;
+  const hindiFullDate = `${HINDI_DAYS[dayOfWeek]}, ${toHindiDigits(dayNum)} ${HINDI_MONTHS[monthIdx]} ${toHindiDigits(year)}`;
+  const lunarMonthHi = LUNAR_MONTHS_HI[(monthIdx + 4) % 12];
+  const lunarMonthEn = LUNAR_MONTHS_EN[(monthIdx + 4) % 12];
+
   const getUsefulGuidance = () => {
     return [
       {
@@ -128,7 +147,7 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
           <div>
             <div className="text-[11px] font-mono-data text-[#826315] dark:text-[#E5C378] uppercase tracking-[0.24em] mb-1.5 flex items-center gap-2 font-bold">
               <Flame className="w-3.5 h-3.5 text-[#A6461D] dark:text-[#F0A554]" />
@@ -168,6 +187,29 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
               <span>{t.personalizeBtn}</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
+          </div>
+        </div>
+
+        {/* Dual Gregorian Date & Vedic Lunar Maas Banner */}
+        <div className="w-full rounded-2xl bg-gradient-to-r from-[#8E6F1D]/10 via-[#D4AF37]/10 to-transparent border border-[#8E6F1D]/25 dark:border-[#D4AF37]/35 p-4 sm:p-5 mb-8 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1 border-b border-black/10 dark:border-white/10 pb-2">
+            <h3 className="font-editorial text-lg sm:text-2xl font-bold text-[#181512] dark:text-white">
+              {englishFullDate} <span className="text-[#8E6F1D] dark:text-[#F0C968] font-normal text-sm sm:text-base">/ {hindiFullDate}</span>
+            </h3>
+            <div className="text-xs font-mono-data font-bold text-[#8E6F1D] dark:text-[#F0C968]">
+              विक्रम संवत् {toHindiDigits(vikramSamvat)} (Samvat {vikramSamvat})
+            </div>
+          </div>
+          <div className="text-xs sm:text-sm font-mono-data text-[#57524A] dark:text-[#D1C9BF] flex flex-wrap items-center gap-x-3 gap-y-1 pt-2">
+            <span>🕉️ <strong>{lunarMonthHi} मास ({lunarMonthEn} Maas)</strong></span>
+            <span>•</span>
+            <span>{tithiPaksha} {tithiName}</span>
+            <span>•</span>
+            <span>✦ {nakshatraName} (पाद {pada})</span>
+            <span>•</span>
+            <span>योग: {yogaName}</span>
+            <span>•</span>
+            <span>करण: {karanaName}</span>
           </div>
         </div>
 

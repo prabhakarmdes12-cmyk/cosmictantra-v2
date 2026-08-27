@@ -74,6 +74,26 @@ const KARANA_HI_MAP: Record<string, string> = {
   'Kintughna': 'किस्तुघ्न'
 };
 
+const ENGLISH_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const HINDI_MONTHS = ['जनवरी', 'फ़रवरी', 'मार्च', 'अप्रैल', 'मई', 'जून', 'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर'];
+const ENGLISH_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const HINDI_DAYS = ['रविवार', 'सोमवार', 'मंगलवार', 'बुधवार', 'गुरुवार', 'शुक्रवार', 'शनिवार'];
+
+const LUNAR_MONTHS_LIST = [
+  { en: 'Chaitra', hi: 'चैत्र' },
+  { en: 'Vaishakha', hi: 'वैशाख' },
+  { en: 'Jyeshtha', hi: 'ज्येष्ठ' },
+  { en: 'Ashadha', hi: 'आषाढ़' },
+  { en: 'Shravana', hi: 'श्रावण' },
+  { en: 'Bhadrapada', hi: 'भाद्रपद' },
+  { en: 'Ashwin', hi: 'आश्विन' },
+  { en: 'Kartika', hi: 'कार्तिक' },
+  { en: 'Margashirsha', hi: 'मार्गशीर्ष' },
+  { en: 'Pausha', hi: 'पौष' },
+  { en: 'Magha', hi: 'माघ' },
+  { en: 'Phalguna', hi: 'फाल्गुन' }
+];
+
 export default function CosmicNowDial({
   panchangData,
   currentCity,
@@ -284,13 +304,29 @@ export default function CosmicNowDial({
   const displaySunset = isHi ? toHindiDigits(sunsetStr) : sunsetStr;
   const displayRahuTime = isHi ? toHindiDigits(rahuTime) : rahuTime;
 
+  // Date hierarchy variables
+  const year = now.getFullYear();
+  const monthIdx = now.getMonth();
+  const dayNum = now.getDate();
+  const dayOfWeek = now.getDay();
+  const vikramSamvat = year + 57;
+
+  const englishFullDate = `${ENGLISH_DAYS[dayOfWeek]}, ${dayNum} ${ENGLISH_MONTHS[monthIdx]} ${year}`;
+  const hindiFullDate = `${HINDI_DAYS[dayOfWeek]}, ${toHindiDigits(dayNum)} ${HINDI_MONTHS[monthIdx]} ${toHindiDigits(year)}`;
+
+  const lunarMonthObj = LUNAR_MONTHS_LIST[(monthIdx + 4) % 12] || LUNAR_MONTHS_LIST[5];
+  const rituIdx = Math.floor(monthIdx / 2) % 6;
+  const rituListHi = ['शिशिर ऋतु', 'वसन्त ऋतु', 'ग्रीष्म ऋतु', 'वर्षा ऋतु', 'शरद ऋतु', 'हेमन्त ऋतु'];
+  const rituHi = rituListHi[rituIdx];
+  const ayanaHi = monthIdx < 6 ? 'उत्तरायण' : 'दक्षिणायन';
+
   return (
     <div className="relative rounded-3xl bg-[#FAF7F2]/95 dark:bg-[#0A0C14]/95 backdrop-blur-xl border border-[#8E6F1D]/30 dark:border-[#D4AF37]/45 p-5 sm:p-7 shadow-2xl dark:shadow-[0_0_50px_rgba(212,175,55,0.14)] select-none transition-all duration-300">
       {/* Sacred Geometry Concentric Brass Border */}
       <div className="absolute inset-1.5 rounded-[22px] border border-[#8E6F1D]/15 dark:border-[#D4AF37]/20 pointer-events-none" />
 
       {/* Top Telemetry Header */}
-      <div className="relative z-10 flex items-center justify-between border-b border-black/[0.08] dark:border-white/[0.1] pb-3.5 mb-4">
+      <div className="relative z-10 flex items-center justify-between border-b border-black/[0.08] dark:border-white/[0.1] pb-3 mb-3">
         <div className="flex items-center gap-2.5">
           <span className={`w-2.5 h-2.5 rounded-full ${isWarning ? 'bg-rose-500 shadow-[0_0_8px_#F43F5E]' : 'bg-[#E29A48] dark:bg-[#F59E0B] shadow-[0_0_10px_#F59E0B]'} animate-pulse shrink-0`} />
           <div>
@@ -318,6 +354,25 @@ export default function CosmicNowDial({
           <span>{currentCity.name}</span>
           <ChevronDown className="w-3 h-3 opacity-60" />
         </button>
+      </div>
+
+      {/* Prominent Bilingual Dual Date & Vedic Lunar Maas Banner */}
+      <div className="relative z-10 p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-[#D4AF37]/10 to-transparent border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 mb-4 space-y-1">
+        <div className="flex flex-wrap items-baseline justify-between gap-1 border-b border-black/5 dark:border-white/10 pb-1.5">
+          <div className="font-editorial text-xs sm:text-sm font-bold text-[#1C1917] dark:text-white">
+            {englishFullDate} <span className="text-[#8E6F1D] dark:text-[#F0C968] font-normal text-[11px] sm:text-xs">/ {hindiFullDate}</span>
+          </div>
+          <div className="text-[10px] sm:text-[11px] font-mono-data font-bold text-[#8E6F1D] dark:text-[#F0C968]">
+            विक्रम संवत् {toHindiDigits(vikramSamvat)}
+          </div>
+        </div>
+        <div className="text-[10px] sm:text-[11px] font-mono-data text-[#57524A] dark:text-[#D1C9BF] flex flex-wrap items-center gap-x-2.5 pt-0.5">
+          <span>🕉️ <strong>{lunarMonthObj.hi} मास ({lunarMonthObj.en} Maas)</strong></span>
+          <span>•</span>
+          <span>{tithiPaksha} {tithiName}</span>
+          <span>•</span>
+          <span>{rituHi} ({ayanaHi})</span>
+        </div>
       </div>
 
       {/* Signature Vedic Day Arc Instrument */}
