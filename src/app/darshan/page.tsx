@@ -730,6 +730,30 @@ const SIDDHA_STUTI_DATA: ShrineItem[] = [
     mapQuery: 'Kedarnath Temple Himalayas',
     timingsHi: 'दैनिक सिद्ध स्तोत्र पाठ व ध्यान साधना',
     color: '#6366F1'
+  },
+  {
+    id: 'siddha-2',
+    order: 2,
+    name: '2. Radhe Radhe Barsane Wali Radhe (84 Kos Yatra)',
+    nameHi: '२. राधे राधे बरसाने वाली राधे (८४ कोस यात्रा)',
+    deity: 'Shri Radha Rani & Braj Dham',
+    deityHi: 'लाडिली जी श्री राधारानी',
+    location: 'Barsana & Braj 84 Kos',
+    locationHi: 'श्री धाम बरसाना (ब्रज मण्डल)',
+    state: 'Uttar Pradesh',
+    category: 'SIDDHA_STUTI',
+    shloka: 'तप्तकाञ्चनगौराङ्गि राधे वृन्दावनेश्वरि । वृषभानुसुते देवि प्रणमामि हरिप्रिये ॥',
+    shlokaMeaning: 'तपे हुए सुवर्ण के समान गौर वर्ण वाली, वृन्दावन की अधीश्वरी, राजा वृषभानु की सुपुत्री और श्रीहरि की परम प्रिया हे श्री राधारानी! मैं आपको बारम्बार प्रणाम करता हूँ।',
+    angaOrSignificance: 'ब्रज चौरासी कोस यात्रा का परम सिद्ध महासंकीर्तन — श्री धाम बरसाना लाडिली जी का दिव्य भक्ति रस। (#radheradhe #barsanadham #84kosyatra)',
+    bhairavOrLord: 'श्री बाँके बिहारी जी',
+    imageUrl: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=1400&q=85',
+    videoId: 'AEjEMXYFU0A',
+    liveUrl: 'https://www.youtube.com/watch?v=AEjEMXYFU0A',
+    trustUrl: 'https://radharani.org',
+    helpline: '+91 565 244 000',
+    mapQuery: 'Radharani Temple Barsana',
+    timingsHi: 'प्रातः मंगला ०५:०० • सांध्य शृंगार आरती ०७:३०',
+    color: '#EC4899'
   }
 ];
 
