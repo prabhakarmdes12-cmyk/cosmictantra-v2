@@ -1055,7 +1055,50 @@ export default function FloatingAIGuruAvatar() {
         ]);
       }, 400);
     } else {
-      // General Vedic Conversational Assistant
+      // General Query -> Call /api/guru/chat backend AI Gateway with deterministic fallback
+      try {
+        const res = await fetch('/api/guru/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: text,
+            history: chatMessages.slice(-4).map(m => ({
+              role: m.sender === 'USER' ? 'user' : 'assistant',
+              content: m.text
+            })),
+            context: {
+              city: seekerData.birthCity || 'Varanasi',
+              profileName: seekerData.name
+            }
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setChatMessages(prev => [
+            ...prev,
+            {
+              id: `g-${Date.now()}`,
+              sender: 'GURU',
+              text: data.text || 'हर हर महादेव! 🙏',
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              provenance: data.provenance,
+              ...(data.structuredCard || {}),
+              quickChips: data.quickChips || [
+                { label: '🕉️ आज का पञ्चाङ्ग व राहुकाल', action: 'INTENT_PANCHANG' },
+                { label: '🪔 काशी विश्वनाथ लाइव दर्शन', action: 'INTENT_DARSHAN_KASHI' },
+                { label: '🚩 काशी यात्रा परिपथ', action: 'INTENT_JOURNEY_KASHI' },
+                { label: '📜 विद्वान् ज्योतिषी परामर्श', action: 'INTENT_SCHOLAR' }
+              ]
+            }
+          ]);
+          return;
+        }
+      } catch (e) {
+        console.warn('/api/guru/chat fetch fallback:', e);
+      }
+
+      // Fallback
       setTimeout(() => {
         setChatMessages(prev => [
           ...prev,
