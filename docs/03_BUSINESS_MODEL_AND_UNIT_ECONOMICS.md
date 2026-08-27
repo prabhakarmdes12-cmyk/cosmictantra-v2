@@ -1,67 +1,60 @@
-﻿# 💰 COSMICTANTRA — BUSINESS MODEL & UNIT ECONOMICS
+# 💰 COSMICTANTRA — BUSINESS MODEL, UNIT ECONOMICS & MARKETPLACE PRICING
 **Company**: CosmicTantra Technologies Pvt. Ltd. · **Edition**: 2026
 
 ---
 
-## 1. 💵 REVENUE ARCHITECTURE
+## 1. 🎯 REVENUE STREAMS & MONETIZATION PRIMITIVES
 
-CosmicTantra operates on a **High-Velocity Core Transaction + High-Margin Ancillary Services** model:
+Unlike traditional call apps that monetize user anxiety via per-minute timers, CosmicTantra monetizes through **transparent, fixed-fee scholarly services** and **consecrated physical commerce**:
 
-```
-                                  [ REVENUE ENGINES ]
-                                           │
-         ┌─────────────────────────────────┼─────────────────────────────────┐
-         │                                 │                                 │
- [ CORE ENGINE: ₹199 ]             [ PUJA & UPAYA: ₹1,500–₹5,000 ]    [ SAAS SUBSCRIPTION: ₹499/yr ]
- • Fixed Written Folio PDF         • Verified Temple Pujas (Kashi)    • Parivaar Family Panchang
- • 24h WhatsApp Delivery           • Customized Yantra & Samagri      • Unlimited Chart Archive
- • 82% Gross Margin                • 35% Take Rate                    • 92% Gross Margin
-```
-
----
-
-## 2. 📊 UNIT ECONOMICS WATERFALL (PER ₹199 WRITTEN FOLIO)
-
-| Component | Amount (₹) | % of Revenue | Notes |
+| Service Primitive | Pricing | Duration / Deliverable | Target User Segment |
 |---|---|---|---|
-| **Gross Order Value (AOV)** | **₹199.00** | 100.0% | Inclusive of GST |
-| Payment Gateway Fee (Razorpay) | ₹4.70 | 2.4% | 2% + GST |
-| WhatsApp Delivery & Cloud API | ₹1.80 | 0.9% | Meta Cloud API + Serverless Compute |
-| Scholar Review Payout (Dakshina) | ₹60.00 | 30.2% | Verified Senior Pandit Ji |
-| **Gross Profit (Contribution Margin)** | **₹132.50** | **66.5%** | Highly Defensible Unit Economics |
-
-### Scholar Productivity & Earnings:
-* A senior Pandit Ji reviews and signs an automated pre-calculated case in **6 to 8 minutes**.
-* Capacity: **7 to 9 cases per hour** = **₹420 to ₹540 per hour** in part-time earnings.
-* High scholar retention (> 94%) with zero travel or tele-calling fatigue.
+| **प्रश्न (Prashna Folio)** | **₹501** | Archival 4-Page PDF Folio signed by scholar | Specific career, marriage, or financial decision. |
+| **सभा (Web Sabha Voice)** | **₹1,100** | 20-min interactive in-browser WebRTC consultation | High-engagement chart consultation with live sync. |
+| **वाणी (Phone Sabha)** | **₹1,100** | 20-min masked PSTN phone call via Exotel | Older devotees & Tier-2/3 seekers (Zero app friction). |
+| **दर्शन (Video Sabha)** | **₹1,500** | 20-min high-definition video consultation | Comprehensive family & annual life roadmap. |
+| **अनुष्ठान (Sankalpa Puja)** | **₹2,100–₹11,000** | Vedic ritual conducted at Kashi / Haridwar | Life transitions, Grah Shanti, Mahamrityunjaya. |
+| **पवित्र सामग्री (Vedic Store)** | **₹299–₹2,499** | A2 Cow Ghee, Bhimseni Camphor, Rudraksha | Daily home worship & prescribed Upayas. |
 
 ---
 
-## 3. 📈 CUSTOMER ACQUISITION (CAC) & LIFETIME VALUE (LTV)
+## 2. 📊 UNIT ECONOMICS BREAKDOWN (₹1,100 SABHA VOICE SESSION)
 
-### CAC Breakdown (Blended: ₹32.40):
-1. **Organic / Programmatic Ephemeris SEO (42%)**: Free acquisition via location-specific `/panchang/[city]` (120+ cities) and `/festivals/[slug]`.
-2. **Viral 9:16 WhatsApp Daily Cards (36%)**: Users generate daily forecast image cards and share them into family WhatsApp groups (watermarked with `cosmictantra.chiti.tech`).
-3. **Targeted Digital Media (22%)**: Search intent ads for *"Marriage Muhurat 2026"*, *"Career Kundali Analysis"*.
-
-### LTV Modeling (12-Month Horizon):
-* **Initial Question (Day 0)**: ₹199
-* **Follow-up / Marriage Kundali Milan (Day 45)**: ₹199 (38% conversion) = ₹75.62
-* **Annual Varshaphala / Birthday Kundali (Month 6–12)**: ₹299 (24% conversion) = ₹71.76
-* **Blended 12-Month LTV**: **₹346.38**
-* **LTV : CAC Ratio**: **10.7 : 1** (Best-in-class Consumer SaaS/Tech metrics)
-
----
-
-## 4. 🚀 3-YEAR FINANCIAL PROJECTIONS
-
-| Metric | Year 1 (2026) | Year 2 (2027) | Year 3 (2028) |
-|---|---|---|---|
-| **Daily Active Users (DAU)** | 45,000 | 280,000 | 1,200,000 |
-| **Monthly Consultations** | 18,000 | 115,000 | 520,000 |
-| **Annualized Run-Rate (ARR)** | **₹4.3 Cr ($520K)** | **₹27.4 Cr ($3.3M)** | **₹124 Cr ($15M)** |
-| **Verified Scholar Network** | 45 | 280 | 1,200 |
-| **EBITDA Margin** | +18.4% | +28.6% | +34.2% |
+```text
+Gross Customer Payment:                     ₹1,100.00
+  - Payment Gateway Fee (Razorpay ~2%):     -   ₹22.00
+  - Scholar Payout (75% net honorarium):    -  ₹825.00
+  - Infrastructure Cost:
+      • WebRTC Media (LiveKit/Agora):       -    ₹1.20 (~₹0.06/min × 20m)
+      • Or Exotel Masked PSTN (2-Legs):     -   ₹24.00 (~₹0.60/min/leg × 20m)
+      • AI Gateway & Ephemeris Compute:     -    ₹0.40
+─────────────────────────────────────────────────────
+Net Contribution Margin per Session:        ₹227.40 – ₹251.40 (21%–23% Net)
+Scholar Earnings per Hour:                  ₹2,475.00 / hr (Highly attractive)
+```
 
 ---
-*CosmicTantra Technologies Pvt. Ltd. · Financial Model*
+
+## 3. 🔄 THE LONGITUDINAL RETENTION FLYWHEEL
+
+```text
+    [ ASTRONOMICAL OBSERVATORY / DAILY PANCHANG ]
+              │ (Free Daily Habit)
+              ▼
+    [ KASHI SAHAYAK AI DIALOGUE ]
+              │ (17 Scripture Insights + Vedic Empathy)
+              ▼
+    [ COSMICTANTRA SABHA CONSULTATION ]
+              │ (₹501 / ₹1,100 / ₹1,500 Scholar Session)
+              ▼
+    [ SESSION ARTIFACTS IN COSMIC ID VAULT ]
+              │ (Folio PDF + Upaya Card + Muhurat Date)
+              ▼
+    [ PHYSICAL UPAYA SAMAGRI ORDER (/store) ]
+              │ (Consecrated Camphor, Daan, Mala)
+              ▼
+    [ AUTOMATED UPAYA TRACKER & 90-DAY FOLLOW-UP ]
+```
+
+---
+*CosmicTantra Technologies Pvt. Ltd. · Business Model & Unit Economics*
