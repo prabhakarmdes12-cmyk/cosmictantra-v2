@@ -712,7 +712,7 @@ export default function DarshanPage() {
   const [cycleSpeedSec, setCycleSpeedSec] = useState<number>(30);
   const [progressSec, setProgressSec] = useState<number>(0);
   const [displayMode, setDisplayMode] = useState<'IMAGE' | 'VIDEO'>('IMAGE');
-  const [videoStreamSource, setVideoStreamSource] = useState<'LOCAL' | 'YOUTUBE'>('LOCAL');
+  const [videoStreamSource, setVideoStreamSource] = useState<'LOCAL' | 'YOUTUBE'>('YOUTUBE');
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [flowers, setFlowers] = useState<Array<{ id: number; x: number; icon: string; size: number }>>([]);

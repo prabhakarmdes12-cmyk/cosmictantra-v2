@@ -54,6 +54,7 @@ interface ChatMessage {
     deity: string;
     location: string;
     image: string;
+    embedUrl: string;
     officialLiveUrl?: string;
     timings?: string;
   };
@@ -357,6 +358,7 @@ export default function FloatingAIGuruAvatar() {
               deity: 'माँ गंगा व भगवान विश्वनाथ',
               location: 'दशाश्वमेध घाट, वाराणसी',
               image: '/images/darshan/ganga-aarti.jpg',
+              embedUrl: 'https://www.youtube-nocookie.com/embed?listType=search&list=Varanasi+Dashashwamedh+Ghat+Ganga+Aarti+Live&autoplay=1&mute=0&rel=0&playsinline=1',
               officialLiveUrl: 'https://www.youtube.com/@gangaarti/live',
               timings: 'सांध्य महाआरती प्रतिदिन सायं ०६:३० बजे',
             },
@@ -385,6 +387,7 @@ export default function FloatingAIGuruAvatar() {
               deity: 'भगवान शिव (विश्वेश्वर)',
               location: 'वाराणसी धाम, उत्तर प्रदेश',
               image: '/images/darshan/kashi-vishwanath.jpg',
+              embedUrl: 'https://www.youtube-nocookie.com/embed?listType=search&list=Shri+Kashi+Vishwanath+Temple+Varanasi+Live+Darshan+Aarti&autoplay=1&mute=0&rel=0&playsinline=1',
               officialLiveUrl: 'https://www.youtube.com/@ShriKashiVishwanathTempleTrust/live',
               timings: 'मंगला आरती ०३:०० • सांध्य आरती ०७:०० सायं',
             },
@@ -646,7 +649,9 @@ export default function FloatingAIGuruAvatar() {
               deity: 'भगवान शिव',
               location: 'वाराणसी धाम',
               image: '/images/darshan/kashi-vishwanath.jpg',
-              liveYoutubeId: 'https://www.youtube.com/embed/live_stream?channel=UCrD4V8m4f9X6P4I3b2b1A',
+              embedUrl: 'https://www.youtube-nocookie.com/embed?listType=search&list=Shri+Kashi+Vishwanath+Temple+Varanasi+Live+Darshan+Aarti&autoplay=1&mute=0&rel=0&playsinline=1',
+              officialLiveUrl: 'https://www.youtube.com/@ShriKashiVishwanathTempleTrust/live',
+              timings: 'मंगला आरती ०३:०० • सांध्य आरती ०७:०० सायं',
             } : undefined,
             quickChips: [
               { label: '📜 ₹501 लिखित विद्वत्-परामर्श पत्र (PDF)', action: 'OPEN_CHECKOUT_WRITTEN', href: '/ask' },
@@ -862,26 +867,25 @@ export default function FloatingAIGuruAvatar() {
                           </div>
                         </div>
 
-                        {/* HD Sanctum Window OR Real Playing Video */}
+                        {/* Live Stream Screen OR HD Sanctum Window */}
                         {activeDarshanVideoMsgIds[msg.id] ? (
-                          <div className="relative w-full h-44 rounded-xl overflow-hidden bg-black border border-white/10 shadow-inner">
-                            <video
-                              src="/kashi-hero-video.mp4"
-                              controls
-                              autoPlay
-                              loop
-                              playsInline
-                              className="w-full h-full object-cover"
+                          <div className="relative w-full h-48 rounded-xl overflow-hidden bg-black border border-white/10 shadow-inner">
+                            <iframe
+                              src={msg.inChatDarshan.embedUrl}
+                              className="w-full h-full border-0 absolute inset-0"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                              allowFullScreen
+                              title={msg.inChatDarshan.templeName}
                             />
-                            <div className="absolute top-2 left-2 pointer-events-none">
+                            <div className="absolute top-2 left-2 pointer-events-none z-20">
                               <span className="px-2 py-0.5 rounded-full bg-red-600/90 text-white text-[9px] font-mono-data font-bold flex items-center gap-1 shadow-md">
                                 <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-                                24x7 HD STREAM
+                                24x7 LIVE STREAM
                               </span>
                             </div>
                           </div>
                         ) : (
-                          <div className="relative w-full h-44 rounded-xl overflow-hidden bg-black border border-white/10 group shadow-inner">
+                          <div className="relative w-full h-48 rounded-xl overflow-hidden bg-black border border-white/10 group shadow-inner">
                             <Image
                               src={msg.inChatDarshan.image}
                               alt={msg.inChatDarshan.templeName}
@@ -896,10 +900,11 @@ export default function FloatingAIGuruAvatar() {
                             <div className="absolute inset-0 flex items-center justify-center">
                               <button
                                 onClick={() => { handlePlayDiyaBell(); setActiveDarshanVideoMsgIds(prev => ({ ...prev, [msg.id]: true })); }}
-                                className="w-11 h-11 rounded-full bg-amber-500 hover:bg-amber-600 text-white flex items-center justify-center shadow-lg transition-transform hover:scale-110 cursor-pointer"
-                                title="Play Aarti Video"
+                                className="px-4 py-2 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 shadow-xl transition-transform hover:scale-105 cursor-pointer font-mono-data font-bold text-xs"
+                                title="Play Live Stream"
                               >
-                                <Play className="w-5 h-5 ml-0.5 fill-white" />
+                                <Play className="w-4 h-4 fill-white" />
+                                <span>साक्षात् लाइव दर्शन चलाएं</span>
                               </button>
                             </div>
 
