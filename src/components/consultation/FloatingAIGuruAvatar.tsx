@@ -691,13 +691,13 @@ export default function FloatingAIGuruAvatar() {
             experience: '३५+ वर्ष अनुभव • ५०,०००+ कुण्डली समाधान',
             tiers: [
               { label: '📜 ₹501 लिखित परामर्श पत्र (PDF)', price: '₹501', mode: 'WRITTEN', href: '/ask' },
-              { label: '📞 ₹1,100 CallMe4 गोपनीय वॉयस कॉल', price: '₹1,100', mode: 'VOICE', href: '/ask' },
-              { label: '📹 ₹1,500 साक्षात् वीडियो दर्शन', price: '₹1,500', mode: 'VIDEO', href: '/ask' }
+              { label: '📞 ₹1,100 सभा (Web/Phone Sabha)', price: '₹1,100', mode: 'VOICE', href: '/ask' },
+              { label: '📹 ₹1,500 साक्षात् दर्शन (Video Sabha)', price: '₹1,500', mode: 'VIDEO', href: '/ask' }
             ]
           },
           quickChips: [
             { label: '📜 ₹501 लिखित परामर्श पत्र चुनें', action: 'OPEN_CHECKOUT_WRITTEN', href: '/ask' },
-            { label: '📞 ₹1,100 वॉयस कॉल परामर्श', action: 'OPEN_CHECKOUT_VOICE', href: '/ask' },
+            { label: '📞 ₹1,100 सभा परामर्श (Web/Phone)', action: 'OPEN_CHECKOUT_VOICE', href: '/ask' },
             { label: '🌸 आज का पञ्चाङ्ग देखें', action: 'INTENT_PANCHANG' }
           ]
         }
@@ -1005,13 +1005,13 @@ export default function FloatingAIGuruAvatar() {
               experience: '३५+ वर्ष अनुभव • ५०,०००+ कुण्डली समाधान',
               tiers: [
                 { label: '📜 ₹501 लिखित परामर्श पत्र (PDF)', price: '₹501', mode: 'WRITTEN', href: '/ask' },
-                { label: '📞 ₹1,100 CallMe4 वॉयस कॉल', price: '₹1,100', mode: 'VOICE', href: '/ask' },
+                { label: '📞 ₹1,100 सभा (Web/Phone Sabha)', price: '₹1,100', mode: 'VOICE', href: '/ask' },
                 { label: '📹 ₹1,500 साक्षात् वीडियो दर्शन', price: '₹1,500', mode: 'VIDEO', href: '/ask' }
               ]
             },
             quickChips: [
               { label: '📜 ₹501 लिखित विद्वत्-परामर्श पत्र (PDF)', action: 'OPEN_CHECKOUT_WRITTEN', href: '/ask' },
-              { label: '📞 ₹1,100 CallMe4 गोपनीय वॉयस कॉल', action: 'OPEN_CHECKOUT_VOICE', href: '/ask' },
+              { label: '📞 ₹1,100 सभा परामर्श (Web/Phone)', action: 'OPEN_CHECKOUT_VOICE', href: '/ask' },
               { label: '📹 ₹1,500 साक्षात् वीडियो दर्शन', action: 'OPEN_CHECKOUT_VIDEO', href: '/ask' },
               { label: '🌸 आज का पञ्चाङ्ग विस्तार से देखें', action: 'INTENT_PANCHANG' },
             ],
