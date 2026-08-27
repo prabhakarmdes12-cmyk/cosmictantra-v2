@@ -127,8 +127,8 @@ export default function AIGuruChatbotModal({
       setTimeout(() => {
         setIsTyping(false);
         const greetingText = lang === 'hi'
-          ? `प्रणाम! 🙏 मैं गुरु ज्योतिषदेव (AI वैदिक मार्गदर्शक) हूँ। मैं आपकी कुण्डली की प्रत्यक्ष खगोलीय गणना कर काशी के विद्वान् ज्योतिषी हेतु आपकी संपूर्ण विवेचना तैयार करूंगा।\n\nकृपया अपना नाम बताएं या अपने सेव किए प्रोफाइल से आगे बढ़ें:`
-          : `Namaste! 🙏 I am Guru Jyotishdev (AI Vedic Guide). I will calculate your birth ephemeris and prepare a comprehensive pre-context dossier for our practicing Banaras Vedic Scholars.\n\nPlease share your full name or continue with your saved profile:`;
+          ? `प्रणाम! 🙏 मैं काशी सहायक (CosmicTantra Vedic Assistant) हूँ। मैं आपकी कुण्डली की प्रत्यक्ष खगोलीय गणना कर काशी के विद्वान् ज्योतिषी हेतु आपकी संपूर्ण विवेचना तैयार करूंगा।\n\nकृपया अपना नाम बताएं या अपने सेव किए प्रोफाइल से आगे बढ़ें:`
+          : `Namaste! 🙏 I am Kashi Sahayak (CosmicTantra Vedic Assistant). I will calculate your birth ephemeris and prepare a comprehensive pre-context dossier for our practicing Banaras Vedic Scholars.\n\nPlease share your full name or continue with your saved profile:`;
         
         setMessages([
           {
@@ -515,15 +515,15 @@ export default function AIGuruChatbotModal({
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-bold text-sm text-[#1C1917] dark:text-white">
-                  {lang === 'hi' ? 'गुरु ज्योतिषदेव (AI वैदिक मार्गदर्शक)' : 'Guru Jyotishdev (AI Vedic Guide)'}
+                  {lang === 'hi' ? 'काशी सहायक' : 'Kashi Sahayak'}
                 </span>
                 <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>ONLINE</span>
+                  <span>AI-ASSISTED</span>
                 </span>
               </div>
               <p className="text-[11px] text-[#696256] dark:text-[#9E988D]">
-                {lang === 'hi' ? 'काशी हिन्दू विश्वविद्यालय परम्परा • त्वरित खगोलीय विवेचना' : 'Kashi Banaras Tradition • Pre-Context Engine'}
+                {lang === 'hi' ? 'CosmicTantra Vedic Assistant • विद्वान् समीक्षा उपलब्ध' : 'CosmicTantra Vedic Assistant • Scholar Escalation Available'}
               </p>
             </div>
           </div>
