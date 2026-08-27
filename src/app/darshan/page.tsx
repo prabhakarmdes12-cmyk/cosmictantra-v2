@@ -40,7 +40,8 @@ import {
   Settings,
   Tv2,
   ListFilter,
-  AlertCircle
+  AlertCircle,
+  X
 } from 'lucide-react';
 import CosmicTantraShell from '@/components/layout/CosmicTantraShell';
 import { playBell, playTick, playConch, playFlowerDrop } from '@/lib/chitiAudio';
@@ -904,13 +905,95 @@ export default function DarshanPage() {
     } catch {}
   }, []);
 
-  // Listen for fullscreen change events
+  // Exit Fullscreen Mode Gracefully
+  const handleExitFullscreen = () => {
+    playTick();
+    setIsFullscreen(false);
+    try {
+      const doc = document as any;
+      if (doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement) {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        } else if (doc.webkitExitFullscreen) {
+          doc.webkitExitFullscreen();
+        } else if (doc.mozCancelFullScreen) {
+          doc.mozCancelFullScreen();
+        } else if (doc.msExitFullscreen) {
+          doc.msExitFullscreen();
+        }
+      }
+    } catch {}
+  };
+
+  // Toggle Fullscreen Mode
+  const handleToggleFullscreen = () => {
+    playTick();
+    const doc = document as any;
+    const isCurrentlyFs = !!(
+      doc.fullscreenElement ||
+      doc.webkitFullscreenElement ||
+      doc.mozFullScreenElement ||
+      doc.msFullscreenElement ||
+      isFullscreen
+    );
+
+    if (!isCurrentlyFs) {
+      setIsFullscreen(true);
+      const elem = cinemaStageRef.current as any;
+      if (elem) {
+        try {
+          if (elem.requestFullscreen) {
+            elem.requestFullscreen().catch(() => {
+              setIsFullscreen(true);
+            });
+          } else if (elem.webkitRequestFullscreen) {
+            elem.webkitRequestFullscreen();
+          } else if (elem.mozRequestFullScreen) {
+            elem.mozRequestFullScreen();
+          } else if (elem.msRequestFullscreen) {
+            elem.msRequestFullscreen();
+          }
+        } catch {
+          setIsFullscreen(true);
+        }
+      }
+    } else {
+      handleExitFullscreen();
+    }
+  };
+
+  // Listen for fullscreen change events & global Escape key
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+      const doc = document as any;
+      const isNativeFs = !!(
+        doc.fullscreenElement ||
+        doc.webkitFullscreenElement ||
+        doc.mozFullScreenElement ||
+        doc.msFullscreenElement
+      );
+      setIsFullscreen(isNativeFs);
     };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        handleExitFullscreen();
+      }
+    };
+
     document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   // Autoplay Parikrama Engine (Supports 15s, 30s, 60s, 180s [3 Min], 0 [Full Play])
@@ -941,20 +1024,6 @@ export default function DarshanPage() {
 
     return () => clearInterval(timer);
   }, [isParikramaPlaying, cycleSpeedSec, currentDataset.length]);
-
-  // Toggle Fullscreen Mode
-  const handleToggleFullscreen = () => {
-    playTick();
-    if (!document.fullscreenElement) {
-      if (cinemaStageRef.current?.requestFullscreen) {
-        cinemaStageRef.current.requestFullscreen().catch(() => {});
-      }
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen().catch(() => {});
-      }
-    }
-  };
 
   // Category switch
   const handleCategorySwitch = (cat: 'JYOTIRLINGA' | 'SHAKTI_PEETH' | 'CHAR_DHAM' | 'GANGA_AARTI' | 'SIDDHA_STUTI') => {
@@ -1225,11 +1294,23 @@ export default function DarshanPage() {
               <div 
                 ref={cinemaStageRef}
                 className={`relative bg-[#05060A] rounded-3xl border border-[#8E6F1D]/40 shadow-2xl overflow-hidden flex flex-col justify-between transition-all h-full ${
-                  isFullscreen ? 'fixed inset-0 z-[9999] rounded-none border-none h-screen w-screen' : 'min-h-[460px] sm:min-h-[520px] lg:min-h-[560px]'
+                  isFullscreen ? 'fixed inset-0 z-[9999] rounded-none border-none h-screen w-screen max-h-screen bg-black' : 'min-h-[460px] sm:min-h-[520px] lg:min-h-[560px]'
                 } ${
                   hasLitDiya ? 'ring-2 ring-amber-400/90 shadow-[inset_0_0_60px_rgba(245,158,11,0.5),0_0_40px_rgba(251,191,36,0.65)]' : ''
                 }`}
               >
+                {/* Dedicated High-Visibility Floating Exit Fullscreen Button */}
+                {isFullscreen && (
+                  <button
+                    onClick={handleExitFullscreen}
+                    className="fixed top-4 right-4 z-[99999] px-4 py-2 rounded-full bg-black/90 hover:bg-red-600 text-white text-xs font-mono-data font-bold border-2 border-amber-400/80 hover:border-red-400 flex items-center gap-2 shadow-2xl transition-all cursor-pointer hover:scale-105 active:scale-95"
+                    title="Exit Fullscreen (Esc)"
+                  >
+                    <X className="w-4 h-4 text-amber-300" />
+                    <span>फुलस्क्रीन बन्द करें [Esc]</span>
+                  </button>
+                )}
+
                 {/* Sacred Deep Daan Border Diya Illumination (Places Glowing Diyas in Screen Borders) */}
                 {hasLitDiya && (
                   <div className="absolute inset-0 pointer-events-none z-40 overflow-hidden">
@@ -1294,28 +1375,29 @@ export default function DarshanPage() {
                 )}
 
                 {/* Top Glassmorphic HUD Bar */}
-                <div className="absolute top-0 inset-x-0 z-30 p-2.5 sm:p-4 bg-gradient-to-b from-black/95 via-black/60 to-transparent flex items-center justify-between gap-2 text-white">
+                <div className="absolute top-0 inset-x-0 z-30 p-2.5 sm:p-4 bg-gradient-to-b from-black/95 via-black/70 to-transparent flex items-center justify-between gap-2 text-white">
                   
                   {/* Shrine Title & Badge */}
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded-full bg-red-600/90 text-white text-[10px] font-mono-data font-bold uppercase tracking-wider flex items-center gap-1 shadow-md">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="px-2 py-0.5 rounded-full bg-red-600/90 text-white text-[10px] font-mono-data font-bold uppercase tracking-wider flex items-center gap-1 shadow-md shrink-0">
                       <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
                       24x7 LIVE DARSHAN
                     </span>
 
-                    <div>
-                      <h2 className="font-editorial font-bold text-sm sm:text-base text-white leading-none">
+                    <div className="min-w-0">
+                      <h2 className="font-editorial font-bold text-sm sm:text-base text-white leading-none truncate">
                         {activeShrine.nameHi}
                       </h2>
-                      <span className="text-[10px] font-mono-data text-[#D1C9BF] hidden sm:inline">
+                      <span className="text-[10px] font-mono-data text-[#D1C9BF] hidden sm:inline truncate">
                         {activeShrine.locationHi} • {activeShrine.state}
                       </span>
                     </div>
                   </div>
 
-                  {/* Mode Toggle & Fullscreen Button */}
-                  <div className="flex items-center gap-1.5">
-                    <div className="inline-flex items-center rounded-xl bg-black/60 backdrop-blur-md border border-white/15 p-0.5 text-xs font-mono-data">
+                  {/* Mode Toggle & Fullscreen Controls */}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {/* Mode Toggle (Image vs Video) */}
+                    <div className="inline-flex items-center rounded-xl bg-black/70 backdrop-blur-md border border-white/20 p-0.5 text-xs font-mono-data">
                       <button
                         onClick={() => { playTick(); setDisplayMode('IMAGE'); }}
                         className={`px-2 py-0.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
@@ -1323,7 +1405,7 @@ export default function DarshanPage() {
                         }`}
                       >
                         <ImageIcon className="w-3 h-3" />
-                        <span>साक्षात् छवि</span>
+                        <span className="hidden xs:inline">साक्षात् छवि</span>
                       </button>
                       <button
                         onClick={() => { playTick(); setDisplayMode('VIDEO'); }}
@@ -1332,24 +1414,64 @@ export default function DarshanPage() {
                         }`}
                       >
                         <Play className="w-3 h-3" />
-                        <span>वीडियो / लाइव</span>
+                        <span className="hidden xs:inline">वीडियो / लाइव</span>
                       </button>
                     </div>
 
+                    {/* In Video Mode: Video Stream Source Switcher (Local HD vs YouTube Live) */}
+                    {displayMode === 'VIDEO' && (
+                      <div className="hidden sm:inline-flex items-center rounded-xl bg-black/70 backdrop-blur-md border border-white/20 p-0.5 text-xs font-mono-data">
+                        <button
+                          onClick={() => { playTick(); setVideoStreamSource('LOCAL'); }}
+                          className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                            videoStreamSource === 'LOCAL' ? 'bg-amber-600 text-white' : 'text-white/70 hover:text-white'
+                          }`}
+                          title="Play HD Aarti Local Video"
+                        >
+                          🎬 HD
+                        </button>
+                        <button
+                          onClick={() => { playTick(); setVideoStreamSource('YOUTUBE'); }}
+                          className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                            videoStreamSource === 'YOUTUBE' ? 'bg-red-600 text-white' : 'text-white/70 hover:text-white'
+                          }`}
+                          title="Play YouTube Live Stream"
+                        >
+                          🔴 यूट्यूब
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Direct YouTube Link */}
+                    {activeShrine.liveUrl && (
+                      <a
+                        href={activeShrine.liveUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => playBell()}
+                        className="p-1.5 rounded-xl bg-black/70 hover:bg-red-600 backdrop-blur-md border border-white/20 hover:border-red-400 text-white transition-all cursor-pointer hidden md:flex items-center gap-1 text-[10px] font-mono-data font-bold"
+                        title="Open Official Live Channel on YouTube"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5 text-red-400 hover:text-white" />
+                        <span>YouTube ↗</span>
+                      </a>
+                    )}
+
+                    {/* Fullscreen Button */}
                     <button
                       onClick={handleToggleFullscreen}
-                      className="p-1.5 rounded-xl bg-black/60 backdrop-blur-md border border-white/15 hover:border-amber-400 text-white transition-all cursor-pointer"
+                      className="p-1.5 rounded-xl bg-black/70 hover:bg-amber-600/60 backdrop-blur-md border border-white/20 hover:border-amber-400 text-white transition-all cursor-pointer"
                       title={isFullscreen ? "Exit Fullscreen (Esc)" : "Fullscreen Mode"}
                     >
-                      {isFullscreen ? <Minimize2 className="w-4 h-4 text-amber-400" /> : <Maximize2 className="w-4 h-4 text-amber-400" />}
+                      {isFullscreen ? <Minimize2 className="w-4 h-4 text-amber-300" /> : <Maximize2 className="w-4 h-4 text-amber-300" />}
                     </button>
                   </div>
                 </div>
 
                 {/* Main Visual Screen: Real HD Photo OR Video Launcher */}
-                <div className="relative w-full flex-1 flex items-center justify-center overflow-hidden min-h-[300px] sm:min-h-[380px]">
+                <div className="relative w-full flex-1 flex items-center justify-center overflow-hidden min-h-[340px] sm:min-h-[420px] lg:min-h-[460px] bg-black">
                   {displayMode === 'IMAGE' ? (
-                    <div className="relative w-full h-full min-h-[300px] sm:min-h-[380px]">
+                    <div className="relative w-full h-full min-h-[340px] sm:min-h-[420px]">
                       {!imgLoadError ? (
                         <img
                           src={activeShrine.imageUrl}
@@ -1377,10 +1499,21 @@ export default function DarshanPage() {
                         </div>
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-black/40 pointer-events-none" />
+
+                      {/* Sacred Shloka Overlay Subtitle */}
+                      <div className="absolute bottom-4 inset-x-2 sm:inset-x-6 z-20 pointer-events-none text-center space-y-0.5 max-w-3xl mx-auto drop-shadow-xl">
+                        <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-amber-400/30 text-amber-300 text-[10px] font-mono-data font-bold uppercase">
+                          <Flame className="w-2.5 h-2.5 text-amber-400 animate-bounce" />
+                          <span>{activeShrine.deityHi} • {activeShrine.locationHi}</span>
+                        </div>
+                        <p className="font-serif text-xs sm:text-base italic text-amber-100/95 font-medium leading-tight drop-shadow-md">
+                          "{activeShrine.shloka}"
+                        </p>
+                      </div>
                     </div>
                   ) : (
                     /* Video / Live Stream Screen: Plays Real HD Aarti Video / YouTube Live */
-                    <div className="relative w-full h-full min-h-[300px] sm:min-h-[380px] bg-black flex items-center justify-center overflow-hidden">
+                    <div className="relative w-full h-full min-h-[340px] sm:min-h-[420px] bg-black flex items-center justify-center overflow-hidden">
                       {videoStreamSource === 'LOCAL' ? (
                         <video
                           key={`video-local-${activeShrine.id}`}
@@ -1401,70 +1534,8 @@ export default function DarshanPage() {
                             allowFullScreen
                             title={activeShrine.nameHi}
                           />
-
-                          {/* Direct Launch Bar for Official Temple Trust Live Stream Channel */}
-                          <div className="absolute bottom-3 inset-x-3 sm:inset-x-6 z-30 flex flex-wrap items-center justify-between gap-2 bg-black/90 backdrop-blur-md p-2 sm:px-4 sm:py-2 rounded-2xl border border-red-500/40 text-white shadow-2xl">
-                            <div className="flex items-center gap-2">
-                              <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
-                              <span className="text-[11px] sm:text-xs font-mono-data font-bold text-red-200">
-                                🔴 {activeShrine.nameHi} (आधिकारिक 24x7 लाइव ट्रस्ट चैनल)
-                              </span>
-                            </div>
-
-                            <a
-                              href={activeShrine.liveUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={() => playBell()}
-                              className="px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-mono-data font-bold flex items-center gap-1.5 shadow-md transition-all cursor-pointer hover:scale-105"
-                            >
-                              <span>साक्षात् यूट्यूब लाइव खोलें ↗</span>
-                              <ExternalLink className="w-3.5 h-3.5" />
-                            </a>
-                          </div>
                         </div>
                       )}
-
-                      {/* Video Stream Source Switcher Overlay */}
-                      <div className="absolute top-14 left-3 z-30 flex items-center gap-1.5 bg-black/75 backdrop-blur-md p-1 rounded-xl border border-white/15 shadow-lg">
-                        <button
-                          onClick={() => { playTick(); setVideoStreamSource('LOCAL'); }}
-                          className={`px-2 py-0.5 rounded-lg text-[10px] font-mono-data font-bold transition-all cursor-pointer ${
-                            videoStreamSource === 'LOCAL' ? 'bg-[#8E6F1D] text-white shadow-xs' : 'text-white/70 hover:text-white'
-                          }`}
-                        >
-                          🎬 पावन आरती (HD Video)
-                        </button>
-                        <button
-                          onClick={() => { playTick(); setVideoStreamSource('YOUTUBE'); }}
-                          className={`px-2 py-0.5 rounded-lg text-[10px] font-mono-data font-bold transition-all cursor-pointer ${
-                            videoStreamSource === 'YOUTUBE' ? 'bg-red-600 text-white shadow-xs' : 'text-white/70 hover:text-white'
-                          }`}
-                        >
-                          🔴 यूट्यूब लाइव
-                        </button>
-                      </div>
-
-                      {/* Top Right Live Badge */}
-                      <div className="absolute top-14 right-3 z-30 pointer-events-none">
-                        <span className="px-2.5 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-mono-data font-bold uppercase flex items-center gap-1 shadow-md">
-                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-                          24x7 LIVE STREAM
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Sacred Shloka Overlay Subtitle */}
-                  {displayMode === 'IMAGE' && (
-                    <div className="absolute bottom-20 sm:bottom-22 inset-x-2 sm:inset-x-6 z-20 pointer-events-none text-center space-y-0.5 max-w-3xl mx-auto drop-shadow-xl">
-                      <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-amber-400/30 text-amber-300 text-[10px] font-mono-data font-bold uppercase">
-                        <Flame className="w-2.5 h-2.5 text-amber-400 animate-bounce" />
-                        <span>{activeShrine.deityHi} • {activeShrine.locationHi}</span>
-                      </div>
-                      <p className="font-serif text-xs sm:text-base italic text-amber-100/95 font-medium leading-tight drop-shadow-md">
-                        "{activeShrine.shloka}"
-                      </p>
                     </div>
                   )}
                 </div>
