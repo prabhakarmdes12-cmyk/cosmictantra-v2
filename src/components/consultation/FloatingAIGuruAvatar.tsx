@@ -908,10 +908,12 @@ export default function FloatingAIGuruAvatar() {
                               </button>
                             </div>
 
-                            {/* Floating Flowers Overlay when offered */}
+                            {/* Floating Flowers Overlay when offered (4x Divine Petals Shower) */}
                             {offeredFlowersMsgIds[msg.id] && (
-                              <div className="absolute inset-0 pointer-events-none flex items-center justify-center animate-fade-in">
-                                <div className="text-3xl animate-bounce">🌺 🌸 🪷</div>
+                              <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center animate-fade-in z-20">
+                                <div className="flex flex-wrap gap-2 justify-center max-w-[220px] text-2xl animate-bounce drop-shadow-lg">
+                                  🌸 🌺 🪷 🌼 🌹 🏵️ 🍃 🌸 🌺 🪷 🌼 🌹
+                                </div>
                               </div>
                             )}
 

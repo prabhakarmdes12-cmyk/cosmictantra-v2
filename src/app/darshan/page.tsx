@@ -715,7 +715,7 @@ export default function DarshanPage() {
   const [videoStreamSource, setVideoStreamSource] = useState<'LOCAL' | 'YOUTUBE'>('YOUTUBE');
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [flowers, setFlowers] = useState<Array<{ id: number; x: number; icon: string; size: number }>>([]);
+  const [flowers, setFlowers] = useState<Array<{ id: number; x: number; icon: string; size: number; duration?: string; delay?: string; rot?: number }>>([]);
   const [diyasLitCount, setDiyasLitCount] = useState<number>(148392);
   const [hasLitDiya, setHasLitDiya] = useState<boolean>(false);
   const [bellRinging, setBellRinging] = useState<boolean>(false);
@@ -866,20 +866,23 @@ export default function DarshanPage() {
     setIsParikramaPlaying(prev => !prev);
   };
 
-  // Flower Drop Animation Trigger
+  // Flower Drop Animation Trigger (4x Divine Shower: 72 Sacred Petals)
   const handleOfferFlowers = () => {
     playFlowerDrop();
-    const icons = ['🌸', '🌺', '🌼', '🍃', '🏵️', '🌹'];
-    const newBatch = Array.from({ length: 18 }).map((_, i) => ({
-      id: Date.now() + i,
-      x: Math.floor(Math.random() * 92) + 4,
+    const icons = ['🌸', '🌺', '🌼', '🍃', '🏵️', '🌹', '🪷', '🌷', '🌿', '✨'];
+    const newBatch = Array.from({ length: 72 }).map((_, i) => ({
+      id: Date.now() + i + Math.random(),
+      x: Math.floor(Math.random() * 96) + 2,
       icon: icons[Math.floor(Math.random() * icons.length)],
-      size: Math.floor(Math.random() * 18) + 22,
+      size: Math.floor(Math.random() * 20) + 18,
+      duration: (2.4 + Math.random() * 1.6).toFixed(2),
+      delay: (Math.random() * 0.8).toFixed(2),
+      rot: Math.floor(Math.random() * 720) - 360,
     }));
     setFlowers(prev => [...prev, ...newBatch]);
     setTimeout(() => {
       setFlowers(prev => prev.filter(f => !newBatch.some(nb => nb.id === f.id)));
-    }, 2800);
+    }, 4500);
   };
 
   // Ring Bell Trigger
@@ -949,7 +952,7 @@ export default function DarshanPage() {
 
   return (
     <CosmicTantraShell>
-      {/* Floating Flowers Canvas */}
+      {/* Floating Flowers Canvas (4x Divine Shower) */}
       {flowers.length > 0 && (
         <div className="fixed inset-0 pointer-events-none z-[100] overflow-hidden">
           {flowers.map(f => (
@@ -957,9 +960,10 @@ export default function DarshanPage() {
               key={f.id}
               style={{
                 left: `${f.x}%`,
-                top: '-30px',
+                top: '-40px',
                 fontSize: `${f.size}px`,
-                animation: 'flowerFall 2.6s cubic-bezier(0.25, 1, 0.5, 1) forwards'
+                animation: `flowerFall ${f.duration || '2.8'}s cubic-bezier(0.25, 1, 0.5, 1) forwards`,
+                animationDelay: `${f.delay || '0'}s`,
               }}
               className="absolute select-none drop-shadow-md"
             >
@@ -968,9 +972,9 @@ export default function DarshanPage() {
           ))}
           <style jsx>{`
             @keyframes flowerFall {
-              0% { transform: translateY(0) rotate(0deg) scale(0.8); opacity: 1; }
-              70% { opacity: 0.95; }
-              100% { transform: translateY(105vh) rotate(360deg) scale(1.1); opacity: 0; }
+              0% { transform: translateY(0) rotate(0deg) scale(0.7); opacity: 1; }
+              75% { opacity: 0.95; }
+              100% { transform: translateY(105vh) rotate(360deg) scale(1.15); opacity: 0; }
             }
           `}</style>
         </div>
