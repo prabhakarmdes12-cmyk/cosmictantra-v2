@@ -257,7 +257,7 @@ const JYOTIRLINGA_DATA: ShrineItem[] = [
     angaOrSignificance: 'एकमात्र ज्योतिर्लिंग जिसमें ब्रह्मा, विष्णु और महेश तीनों के तीन मुख लिंग में समाहित हैं।',
     bhairavOrLord: 'त्र्यम्बक भैरव',
     imageUrl: 'https://images.unsplash.com/photo-1624555130581-1d9cca783bc0?auto=format&fit=crop&w=1400&q=85',
-    videoId: 'uK7_xGf7b-o',
+    videoId: '4-7t0q639fQ',
     liveUrl: 'https://www.youtube.com/@trimbakeshwar/live',
     trustUrl: 'https://trimbakeshwartrust.com',
     helpline: '+91 2594 233 215',
