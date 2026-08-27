@@ -913,9 +913,9 @@ export default function DarshanPage() {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  // 30-Second Autoplay Parikrama Engine
+  // Autoplay Parikrama Engine (Supports 15s, 30s, 60s, 180s [3 Min], 0 [Full Play])
   useEffect(() => {
-    if (!isParikramaPlaying || currentDataset.length === 0) return;
+    if (!isParikramaPlaying || currentDataset.length === 0 || cycleSpeedSec === 0) return;
 
     const intervalMs = 100;
     const increment = intervalMs / 1000;
@@ -963,6 +963,10 @@ export default function DarshanPage() {
     setCurrentIndex(0);
     setProgressSec(0);
     setYatraCompleted(false);
+    if (cat === 'SIDDHA_STUTI') {
+      setCycleSpeedSec(180); // Default to 3-minute immersion for curated stutis & bhajans
+      setDisplayMode('VIDEO');
+    }
   };
 
   // Direct step jump
@@ -1024,19 +1028,22 @@ export default function DarshanPage() {
     setTimeout(() => setShankhActive(false), 2800);
   };
 
-  // Light Diya Trigger
+  // Light Diya Trigger (Toggles Screen Border Diya Illumination)
   const handleLightDiya = () => {
     playBell();
-    if (!hasLitDiya) {
-      setHasLitDiya(true);
-      setDiyasLitCount(prev => {
-        const next = prev + 1;
-        try {
-          localStorage.setItem('cosmictantra_diyas_lit', next.toString());
-        } catch {}
-        return next;
-      });
-    }
+    setHasLitDiya(prev => {
+      const nextState = !prev;
+      if (nextState) {
+        setDiyasLitCount(d => {
+          const nextCount = d + 1;
+          try {
+            localStorage.setItem('cosmictantra_diyas_lit', nextCount.toString());
+          } catch {}
+          return nextCount;
+        });
+      }
+      return nextState;
+    });
   };
 
   // Mantra Japa Increment Trigger
@@ -1072,8 +1079,9 @@ export default function DarshanPage() {
     setTimeout(() => setCopiedShare(false), 2500);
   };
 
-  const progressPercent = Math.min(100, Math.round((progressSec / cycleSpeedSec) * 100));
-  const remainingSeconds = Math.max(0, Math.ceil(cycleSpeedSec - progressSec));
+  const isFullPlay = cycleSpeedSec === 0;
+  const progressPercent = isFullPlay ? 100 : Math.min(100, Math.round((progressSec / cycleSpeedSec) * 100));
+  const remainingSeconds = isFullPlay ? 0 : Math.max(0, Math.ceil(cycleSpeedSec - progressSec));
 
   return (
     <CosmicTantraShell>
@@ -1218,8 +1226,73 @@ export default function DarshanPage() {
                 ref={cinemaStageRef}
                 className={`relative bg-[#05060A] rounded-3xl border border-[#8E6F1D]/40 shadow-2xl overflow-hidden flex flex-col justify-between transition-all h-full ${
                   isFullscreen ? 'fixed inset-0 z-[9999] rounded-none border-none h-screen w-screen' : 'min-h-[460px] sm:min-h-[520px] lg:min-h-[560px]'
+                } ${
+                  hasLitDiya ? 'ring-2 ring-amber-400/90 shadow-[inset_0_0_60px_rgba(245,158,11,0.5),0_0_40px_rgba(251,191,36,0.65)]' : ''
                 }`}
               >
+                {/* Sacred Deep Daan Border Diya Illumination (Places Glowing Diyas in Screen Borders) */}
+                {hasLitDiya && (
+                  <div className="absolute inset-0 pointer-events-none z-40 overflow-hidden">
+                    {/* Top Edge Diyas */}
+                    <div className="absolute top-1 inset-x-2 sm:inset-x-6 flex justify-around items-center select-none">
+                      {['🪔', '🪔', '🪔', '🪔', '🪔', '🪔', '🪔', '🪔', '🪔', '🪔', '🪔'].map((d, i) => (
+                        <span
+                          key={`top-diya-${i}`}
+                          className="text-sm sm:text-base filter drop-shadow-[0_0_12px_rgba(251,191,36,1)] animate-pulse transition-all"
+                          style={{ animationDuration: `${1.2 + (i % 4) * 0.3}s`, animationDelay: `${(i % 5) * 0.2}s` }}
+                        >
+                          {d}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Bottom Edge Diyas (Floats along the border above the action dock) */}
+                    <div className="absolute bottom-18 sm:bottom-20 inset-x-2 sm:inset-x-6 flex justify-around items-center select-none">
+                      {['🪔', '🪔', '🪔', '🪔', '🪔', '🪔', '🪔', '🪔', '🪔', '🪔', '🪔'].map((d, i) => (
+                        <span
+                          key={`bottom-diya-${i}`}
+                          className="text-sm sm:text-base filter drop-shadow-[0_0_12px_rgba(251,191,36,1)] animate-pulse transition-all"
+                          style={{ animationDuration: `${1.1 + (i % 3) * 0.3}s`, animationDelay: `${(i % 4) * 0.2}s` }}
+                        >
+                          {d}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Left Edge Diyas */}
+                    <div className="absolute left-1 top-12 bottom-22 flex flex-col justify-around items-center select-none">
+                      {['🪔', '🪔', '🪔', '🪔', '🪔'].map((d, i) => (
+                        <span
+                          key={`left-diya-${i}`}
+                          className="text-xs sm:text-sm filter drop-shadow-[0_0_10px_rgba(251,191,36,1)] animate-pulse transition-all"
+                          style={{ animationDuration: `${1.3 + (i % 3) * 0.2}s`, animationDelay: `${(i % 3) * 0.25}s` }}
+                        >
+                          {d}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Right Edge Diyas */}
+                    <div className="absolute right-1 top-12 bottom-22 flex flex-col justify-around items-center select-none">
+                      {['🪔', '🪔', '🪔', '🪔', '🪔'].map((d, i) => (
+                        <span
+                          key={`right-diya-${i}`}
+                          className="text-xs sm:text-sm filter drop-shadow-[0_0_10px_rgba(251,191,36,1)] animate-pulse transition-all"
+                          style={{ animationDuration: `${1.4 + (i % 3) * 0.2}s`, animationDelay: `${(i % 4) * 0.15}s` }}
+                        >
+                          {d}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* 4 Auspicious Corner Mahadeeps */}
+                    <div className="absolute top-2 left-2 text-lg sm:text-2xl filter drop-shadow-[0_0_16px_rgba(251,191,36,1)] animate-bounce select-none">🪔</div>
+                    <div className="absolute top-2 right-2 text-lg sm:text-2xl filter drop-shadow-[0_0_16px_rgba(251,191,36,1)] animate-bounce select-none">🪔</div>
+                    <div className="absolute bottom-18 sm:bottom-20 left-2 text-lg sm:text-2xl filter drop-shadow-[0_0_16px_rgba(251,191,36,1)] animate-bounce select-none">🪔</div>
+                    <div className="absolute bottom-18 sm:bottom-20 right-2 text-lg sm:text-2xl filter drop-shadow-[0_0_16px_rgba(251,191,36,1)] animate-bounce select-none">🪔</div>
+                  </div>
+                )}
+
                 {/* Top Glassmorphic HUD Bar */}
                 <div className="absolute top-0 inset-x-0 z-30 p-2.5 sm:p-4 bg-gradient-to-b from-black/95 via-black/60 to-transparent flex items-center justify-between gap-2 text-white">
                   
@@ -1404,20 +1477,30 @@ export default function DarshanPage() {
                     <div className="flex items-center justify-between text-[10px] font-mono-data text-white/80 px-1">
                       <div className="flex items-center gap-1.5">
                         <span className="font-bold text-amber-300">
-                          {isParikramaPlaying ? `⚡ परिक्रमा गतिमान (${remainingSeconds}s शेष)` : '⏸️ परिक्रमा रुकी हुई'}
+                          {isFullPlay
+                            ? (isParikramaPlaying ? '♾️ अखण्ड प्रसारण (Full Play Mode)' : '⏸️ प्रसारण रुका हुआ')
+                            : (isParikramaPlaying
+                                ? (cycleSpeedSec >= 60
+                                    ? `⚡ परिक्रमा गतिमान (${Math.floor(remainingSeconds / 60)}m ${remainingSeconds % 60}s शेष)`
+                                    : `⚡ परिक्रमा गतिमान (${remainingSeconds}s शेष)`)
+                                : '⏸️ परिक्रमा रुकी हुई')}
                         </span>
                         <span>•</span>
                         <span>तीर्थ {currentIndex + 1} / {currentDataset.length}</span>
                       </div>
-                      <div className="text-white/60">
-                        {cycleSpeedSec}s Auto
+                      <div className="text-white/60 font-semibold">
+                        {isFullPlay ? '♾️ अखण्ड / Full Play' : `${cycleSpeedSec >= 60 ? `${cycleSpeedSec / 60}m` : `${cycleSpeedSec}s`} Auto`}
                       </div>
                     </div>
 
                     <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden">
                       <div 
                         style={{ width: `${progressPercent}%` }}
-                        className="h-full bg-gradient-to-r from-amber-400 via-[#D4AF37] to-rose-500 transition-all duration-100 ease-linear shadow-xs"
+                        className={`h-full transition-all duration-100 ease-linear shadow-xs ${
+                          isFullPlay
+                            ? 'bg-gradient-to-r from-amber-400 via-rose-500 to-amber-400 animate-pulse'
+                            : 'bg-gradient-to-r from-amber-400 via-[#D4AF37] to-rose-500'
+                        }`}
                       />
                     </div>
                   </div>
@@ -1451,6 +1534,7 @@ export default function DarshanPage() {
                         <ChevronRight className="w-4 h-4" />
                       </button>
 
+                      {/* Timer Selector: 15s, 30s, 60s, 180s (3 Min), 0 (Full Play) */}
                       <div className="flex items-center gap-1 px-2 py-1 rounded-xl bg-white/10 backdrop-blur-md text-[11px] font-mono-data text-white">
                         <Clock className="w-3 h-3 text-amber-400" />
                         <select
@@ -1461,8 +1545,31 @@ export default function DarshanPage() {
                           <option value={15} className="bg-neutral-900 text-white">१५s</option>
                           <option value={30} className="bg-neutral-900 text-white">३०s</option>
                           <option value={60} className="bg-neutral-900 text-white">६०s</option>
+                          <option value={180} className="bg-neutral-900 text-amber-300 font-bold">३ मिनट (3m)</option>
+                          <option value={0} className="bg-neutral-900 text-rose-300 font-bold">♾️ अखण्ड (Full)</option>
                         </select>
                       </div>
+
+                      {/* Quick Presets: 3 Min & Full Play */}
+                      <button
+                        onClick={() => { playTick(); setCycleSpeedSec(180); setProgressSec(0); }}
+                        className={`px-2 py-1 rounded-xl text-[10px] font-mono-data font-bold transition-all cursor-pointer hidden sm:flex items-center gap-0.5 ${
+                          cycleSpeedSec === 180 ? 'bg-amber-500 text-black font-extrabold shadow-sm' : 'bg-white/10 text-white/80 hover:bg-white/20'
+                        }`}
+                        title="Set 3 Minute Timer"
+                      >
+                        <span>३ मिनट</span>
+                      </button>
+
+                      <button
+                        onClick={() => { playTick(); setCycleSpeedSec(0); setProgressSec(0); }}
+                        className={`px-2 py-1 rounded-xl text-[10px] font-mono-data font-bold transition-all cursor-pointer hidden sm:flex items-center gap-0.5 ${
+                          cycleSpeedSec === 0 ? 'bg-rose-600 text-white font-extrabold shadow-sm' : 'bg-white/10 text-white/80 hover:bg-white/20'
+                        }`}
+                        title="Play Full Video / Stuti Without Interruption"
+                      >
+                        <span>♾️ Full Play</span>
+                      </button>
                     </div>
 
                     {/* Right: Ritual Action Buttons */}
@@ -1499,16 +1606,18 @@ export default function DarshanPage() {
                         <span>पुष्प अर्पण</span>
                       </button>
 
+                      {/* Deep Daan Button: Lights up glowing Diyas around screen borders */}
                       <button
                         onClick={handleLightDiya}
                         className={`px-2.5 py-1 rounded-xl border backdrop-blur-md transition-all cursor-pointer flex items-center gap-1 text-[11px] font-mono-data font-bold active:scale-95 ${
                           hasLitDiya
-                            ? 'bg-amber-500/30 border-amber-400 text-amber-200 ring-1 ring-amber-400'
+                            ? 'bg-amber-500/40 border-amber-400 text-amber-200 ring-2 ring-amber-400 shadow-[0_0_18px_rgba(245,158,11,0.7)] animate-pulse'
                             : 'bg-white/10 text-white border-white/15 hover:bg-white/20'
                         }`}
+                        title="Offer Deep Daan (Lights glowing sacred Diyas along screen borders)"
                       >
-                        <Flame className={`w-3 h-3 ${hasLitDiya ? 'text-amber-400 animate-pulse' : 'text-amber-500'}`} />
-                        <span>{hasLitDiya ? 'दीपदान ✓' : 'दीपदान'}</span>
+                        <Flame className={`w-3 h-3 ${hasLitDiya ? 'text-amber-300 animate-pulse' : 'text-amber-500'}`} />
+                        <span>{hasLitDiya ? 'दीपदान प्रज्वलित 🪔' : 'दीपदान'}</span>
                       </button>
 
                       <button
