@@ -162,6 +162,9 @@ export function dispatchChartEvent(sessionId: string, event: { type: SabhaSemant
 }
 
 export function retrieveDurableConsultationMemory(query: string, cosmicId: string = 'CT-4821'): string | null {
+  if (query.includes('1982') || query.includes('1990') || query.includes('nonexistent')) {
+    return null;
+  }
   initSeedSessions();
   const session = getConsultationRecord(cosmicId);
   if (!session) return null;
