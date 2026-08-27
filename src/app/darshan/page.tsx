@@ -113,7 +113,7 @@ const JYOTIRLINGA_DATA: ShrineItem[] = [
     angaOrSignificance: 'दक्षिण का कैलास — यह ज्योतिर्लिंग और शक्तिपीठ (माँ भ्रमराम्बा) दोनों का दुर्लभ संगम है।',
     bhairavOrLord: 'शम्बरानन्द भैरव',
     imageUrl: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=1400&q=85',
-    videoId: '3R-3m_Q9qQ8',
+    videoId: 'rfppvswfMyc',
     liveUrl: 'https://www.youtube.com/@srisailadevasthanam/live',
     trustUrl: 'https://srisailadevasthanam.org',
     helpline: '+91 8524 288 888',
