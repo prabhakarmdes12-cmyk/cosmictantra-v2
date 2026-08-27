@@ -10,6 +10,7 @@ import dynamic from 'next/dynamic';
 
 // Primary Above-the-Fold Components (Eager)
 import GlobalHeader from '@/components/layout/GlobalHeader';
+import LanguageSelectorModal from '@/components/layout/LanguageSelectorModal';
 import PersonalisationBridge from '@/components/PersonalisationBridge';
 import HeroSection from '@/components/HeroSection';
 import TodayAtAGlance from '@/components/TodayAtAGlance';
@@ -48,6 +49,7 @@ export default function AppLandingPage() {
 
   // Modals state
   const [isCityModalOpen, setIsCityModalOpen] = useState(false);
+  const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isCapabilityModalOpen, setIsCapabilityModalOpen] = useState(false);
   const [isConsultationModalOpen, setIsConsultationModalOpen] = useState(false);
@@ -62,7 +64,7 @@ export default function AppLandingPage() {
         setTheme(savedTheme);
       }
       const savedLang = localStorage.getItem('cosmictantra_lang');
-      if (savedLang === 'en' || savedLang === 'hi') {
+      if (savedLang) {
         setLang(savedLang);
       }
     } catch {}
@@ -134,7 +136,7 @@ export default function AppLandingPage() {
         theme={theme}
         onThemeToggle={handleToggleTheme}
         lang={lang}
-        onLangToggle={handleToggleLang}
+        onLangToggle={() => setIsLanguageModalOpen(true)}
       />
 
       {/* 2. Personalisation Bridge */}
@@ -284,6 +286,13 @@ export default function AppLandingPage() {
       />
 
       {/* Modals & Dialogs */}
+      <LanguageSelectorModal
+        isOpen={isLanguageModalOpen}
+        currentLang={lang}
+        onClose={() => setIsLanguageModalOpen(false)}
+        onSelectLang={(newLang) => setLang(newLang)}
+      />
+
       <CitySelectorModal
         isOpen={isCityModalOpen}
         onClose={() => setIsCityModalOpen(false)}

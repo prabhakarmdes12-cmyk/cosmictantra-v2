@@ -66,6 +66,28 @@ export async function processKashiSahayakQuery(
     structuredCard = { muhurtaCard: toolResult };
     provenance.calculation = 'मुहूर्त चिंतामणि एवं दृक् गणना';
     provenance.scholar = 'पं. विद्यानंद शास्त्री (वाराणसी) उपलब्ध';
+  } else if (
+    q.includes('sad') || q.includes('feeling sad') || q.includes('depress') ||
+    q.includes('anxious') || q.includes('lonely') || q.includes('scared') ||
+    q.includes('उदास') || q.includes('दुखी') || q.includes('तनाव') ||
+    q.includes('घबराहट') || q.includes('परेशान') || q.includes('अकेला')
+  ) {
+    executedToolName = 'get_mantra';
+    toolResult = await executeVedicTool('get_mantra', { mantraType: 'mrityunjaya' });
+    structuredCard = {
+      mantraCard: toolResult,
+      inChatDarshan: {
+        templeName: 'श्री काशी विश्वनाथ ज्योतिर्लिंग',
+        deity: 'भगवान शिव (विश्वेश्वर)',
+        location: 'वाराणसी धाम, उत्तर प्रदेश',
+        image: '/images/darshan/kashi-vishwanath.jpg',
+        embedUrl: 'https://www.youtube-nocookie.com/embed/-rqYkZ3x0jM?autoplay=1&mute=0&rel=0&playsinline=1&modestbranding=1',
+        officialLiveUrl: 'https://www.youtube.com/@ShriKashiVishwanathTempleTrust/live',
+        timings: 'मंगला आरती ०३:०० • सांध्य आरती ०७:०० सायं'
+      }
+    };
+    provenance.source = 'ऋग्वेद महामृत्युंजय संहिता एवं साक्षात् दर्शन';
+    provenance.interpretation = 'काशी सहायक • सांत्वना व आत्म-बल';
   }
 
   // 3. Try LLM for natural speech if available, or synthesize seamlessly
@@ -107,7 +129,12 @@ export async function processKashiSahayakQuery(
     } else if (executedToolName === 'get_kashi_journey') {
       responseText = `हर हर महादेव! 🙏 काशी (वाराणसी) की पावन तीर्थ यात्रा का शास्त्रसम्मत परिपथ तैयार है।`;
     } else if (executedToolName === 'get_mantra') {
-      responseText = `हर हर महादेव! 🙏 प्रामाणिक शास्त्रसम्मत मन्त्र संग्रह:`;
+      const isDistress = q.includes('sad') || q.includes('depress') || q.includes('anxious') || q.includes('lonely') || q.includes('उदास') || q.includes('दुखी') || q.includes('तनाव') || q.includes('घबराहट');
+      if (isDistress) {
+        responseText = `हर हर महादेव! 🙏 मन की व्यथा व उदासी समझी जा सकती है। ज्योतिष में मन का कारक चन्द्रमा है, और गोचर चक्र के प्रभाव से मन में कभी-कभी अशान्ति या भारीपन आना स्वाभाविक है। यह स्थायी नहीं है।\\n\\nभगवान विश्वनाथ का ध्यान और महामृत्युंजय मन्त्र का शांत श्रवण आपके चित्त को शांति व ऊर्जा प्रदान करेगा। नीचे साक्षात् दर्शन व मन्त्र जप उपस्थित है:`;
+      } else {
+        responseText = `हर हर महादेव! 🙏 प्रामाणिक शास्त्रसम्मत मन्त्र संग्रह:`;
+      }
     } else if (executedToolName === 'get_muhurat') {
       responseText = `हर हर महादेव! 🙏 विवाह व मांगलिक कार्यों हेतु आगामी शुभ मुहूर्त खिड़कियाँ:`;
     } else {
