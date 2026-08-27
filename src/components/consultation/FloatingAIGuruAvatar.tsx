@@ -35,6 +35,7 @@ import { getActiveProfile } from '@/lib/profileStore';
 import { calculateKundali } from '@/lib/astrologyEngine';
 import { calculatePanchang } from '@/engines/panchang.js';
 import { chitiSensory } from '@/lib/chitiAudio';
+import { ScriptureInsight, findScriptureInsight } from '@/lib/ai/scriptureMap';
 
 // Provenance Metadata Schema
 interface ProvenanceMeta {
@@ -52,6 +53,7 @@ interface ChatMessage {
   text: string;
   timestamp: string;
   provenance?: ProvenanceMeta;
+  scriptureCard?: ScriptureInsight;
   panchangCard?: {
     dateStr: string;
     tithi: string;
@@ -1353,6 +1355,52 @@ export default function FloatingAIGuruAvatar() {
                             </div>
                           ))}
                         </div>
+                      </div>
+                    )}
+
+                    {/* Authentic Sacred Scripture Wisdom Card (Gita / Ramcharitmanas / Vedas) */}
+                    {msg.scriptureCard && (
+                      <div className="mt-3 p-4 rounded-2xl bg-gradient-to-b from-[#8E6F1D]/10 to-transparent dark:from-[#D4AF37]/15 dark:to-[#0A0C14] border border-[#8E6F1D]/35 dark:border-[#D4AF37]/40 space-y-3 text-left shadow-lg">
+                        <div className="border-b border-black/10 dark:border-white/10 pb-2 flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <span className="px-2 py-0.5 rounded-full bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-black font-mono-data font-bold text-[9px] uppercase tracking-wider">
+                              {msg.scriptureCard.sourceType}
+                            </span>
+                            <span className="font-editorial text-xs sm:text-sm font-bold text-[#8E6F1D] dark:text-[#F0C968]">
+                              {msg.scriptureCard.sourceGrantha}
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-mono-data text-[#857E74]">
+                            {msg.scriptureCard.situation}
+                          </span>
+                        </div>
+
+                        <div className="p-3.5 rounded-xl bg-[#8E6F1D]/10 dark:bg-black/50 border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 text-center shadow-inner">
+                          <p className="font-editorial font-bold text-sm sm:text-base text-[#8E6F1D] dark:text-[#F0C968] leading-relaxed whitespace-pre-line">
+                            {msg.scriptureCard.verse}
+                          </p>
+                          {msg.scriptureCard.transliteration && (
+                            <p className="font-mono-data text-[10px] text-[#857E74] dark:text-[#A8A29E] mt-2 italic">
+                              {msg.scriptureCard.transliteration}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="space-y-1 text-xs font-mono-data leading-relaxed">
+                          <p className="text-[#1C1917] dark:text-[#FAF7F2]">
+                            <strong className="text-[#8E6F1D] dark:text-[#F0C968]">भावार्थ:</strong> {msg.scriptureCard.meaningHi}
+                          </p>
+                          <p className="text-[11px] text-[#78716C] dark:text-[#A8A29E] italic">
+                            {msg.scriptureCard.meaningEn}
+                          </p>
+                        </div>
+
+                        {msg.scriptureCard.suggestedAction && (
+                          <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] font-mono-data text-[#8E6F1D] dark:text-[#F0C968] flex items-start gap-2">
+                            <span className="shrink-0">✦</span>
+                            <span><strong>शास्त्रसम्मत उपाय:</strong> {msg.scriptureCard.suggestedAction}</span>
+                          </div>
+                        )}
                       </div>
                     )}
 

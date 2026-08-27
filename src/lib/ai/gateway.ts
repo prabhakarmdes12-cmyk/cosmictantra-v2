@@ -5,6 +5,7 @@ import { VEDIC_TOOLS } from './tools/registry';
 import { executeVedicTool } from './tools/executor';
 import { callLocalLLM } from './providers/local';
 import { callOpenRouter } from './providers/openrouter';
+import { findScriptureInsight } from './scriptureMap';
 
 export async function processKashiSahayakQuery(
   userQuery: string,
@@ -28,22 +29,28 @@ export async function processKashiSahayakQuery(
     };
   }
 
-  // 2. Deterministic Tool Dispatching Cascade (LLM Last, Deterministic Systems First)
+  // 2. Deterministic Tool & Scripture Wisdom Cascade
   const q = userQuery.toLowerCase();
+  const scriptureMatch = findScriptureInsight(userQuery);
+
   let executedToolName: string | undefined;
   let toolResult: any;
-  let structuredCard: any;
+  let structuredCard: any = {};
   let provenance: ProvenanceMeta = {
     calculation: 'CosmicTantra Lahiri Engine',
     location: userContext?.city || 'Varanasi (काशी)',
-    source: 'प्रामाणिक दृक् पञ्चाङ्ग / शास्त्र',
-    interpretation: 'काशी सहायक • AI-Assisted'
+    source: scriptureMatch ? scriptureMatch.sourceGrantha : 'प्रामाणिक दृक् पञ्चाङ्ग / शास्त्र',
+    interpretation: scriptureMatch ? 'काशी सहायक • शास्त्रसम्मत उद्बोधन' : 'काशी सहायक • AI-Assisted'
   };
+
+  if (scriptureMatch) {
+    structuredCard.scriptureCard = scriptureMatch;
+  }
 
   if (q.includes('आज') || q.includes('राहुकाल') || q.includes('पंचांग') || q.includes('पञ्चाङ्ग') || q.includes('तिथि') || q.includes('चौघड़िया')) {
     executedToolName = 'get_panchang';
     toolResult = await executeVedicTool('get_panchang', { city: userContext?.city || 'Varanasi' });
-    structuredCard = { panchangCard: toolResult };
+    structuredCard.panchangCard = toolResult;
     provenance.source = 'प्रामाणिक दृक् पञ्चाङ्ग';
   } else if (q.includes('दर्शन') || q.includes('विश्वनाथ') || q.includes('सोमनाथ') || q.includes('महाकाल') || q.includes('गंगा आरती')) {
     executedToolName = 'get_temple_darshan';
@@ -137,6 +144,8 @@ export async function processKashiSahayakQuery(
       }
     } else if (executedToolName === 'get_muhurat') {
       responseText = `हर हर महादेव! 🙏 विवाह व मांगलिक कार्यों हेतु आगामी शुभ मुहूर्त खिड़कियाँ:`;
+    } else if (scriptureMatch) {
+      responseText = scriptureMatch.kashiSahayakBridge;
     } else {
       responseText = `हर हर महादेव! 🙏 मैं काशी सहायक हूँ। मैं आपके लिए पञ्चाङ्ग निकाल सकता हूँ, महातीर्थों का लाइव दर्शन करा सकता हूँ, अथवा काशी के विद्वान् ज्योतिषी से आपकी कुण्डली की विवेचना करा सकता हूँ।`;
     }
@@ -147,7 +156,7 @@ export async function processKashiSahayakQuery(
     provenance,
     structuredCard,
     toolCallsExecuted: executedToolName ? [executedToolName] : [],
-    quickChips: [
+    quickChips: scriptureMatch?.quickChips || [
       { label: '🕉️ आज का पञ्चाङ्ग व राहुकाल', action: 'INTENT_PANCHANG' },
       { label: '🪔 काशी विश्वनाथ लाइव दर्शन', action: 'INTENT_DARSHAN_KASHI' },
       { label: '🚩 काशी यात्रा परिपथ', action: 'INTENT_JOURNEY_KASHI' },
