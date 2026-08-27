@@ -3,62 +3,47 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Phone, 
-  Video, 
   Globe, 
   ShieldCheck, 
   Clock, 
-  AlertTriangle, 
   CheckCircle2, 
-  Plus, 
-  User, 
   Sparkles, 
   Award,
-  Mic,
-  MicOff,
-  PhoneOff,
-  RefreshCw,
-  FileText,
-  Calendar,
-  Share2
+  Activity
 } from 'lucide-react';
 import { chitiSensory } from '@/lib/chitiAudio';
-import { ConsultationRecord, SabhaChartEvent, TransportChannel } from '@/lib/sabha/types';
+import { ConsultationSession, TransportChannel } from '@/lib/sabha/types';
 import { dispatchChartEvent, saveConsultationRecord } from '@/lib/sabha/orchestrator';
+import { SabhaTimerEngine } from '@/lib/sabha/timer';
 
 interface SabhaCockpitProps {
-  session: ConsultationRecord;
-  role: 'SCHOLAR' | 'SEEKER';
-  onComplete?: (record: ConsultationRecord) => void;
+  session: ConsultationSession;
+  role: 'SCHOLAR' | 'DEVOTEE';
+  onComplete?: (session: ConsultationSession) => void;
 }
 
 export default function SabhaCockpit({ session, role, onComplete }: SabhaCockpitProps) {
-  const [record, setRecord] = useState<ConsultationRecord>(session);
-  const [remainingSecs, setRemainingSecs] = useState<number>(session.remainingSeconds || 1200);
-  const [isMuted, setIsMuted] = useState(false);
+  const [currentSession, setCurrentSession] = useState<ConsultationSession>(session);
   const [activeChannel, setActiveChannel] = useState<TransportChannel>(session.transportChannel);
-  const [focusedBhava, setFocusedBhava] = useState<number | null>(10);
-  const [focusedPlanet, setFocusedPlanet] = useState<string | null>('JUPITER');
-  const [scholarNoteInput, setScholarNoteInput] = useState(session.scholarNotes || '');
-  const [prescribedUpayas, setPrescribedUpayas] = useState<string[]>(session.prescribedUpayas || []);
-  const [recommendedWindow, setRecommendedWindow] = useState(session.recommendedWindow || '२७ नवम्बर – १५ दिसम्बर २०२६');
-  const [isRecordAudioConsent, setIsRecordAudioConsent] = useState(session.isAudioRecorded || false);
-  const [isSessionComplete, setIsSessionComplete] = useState(false);
-  const [showPstnNotice, setShowPstnNotice] = useState(false);
+  const [focusedBhava, setFocusedBhava] = useState<number | null>(session.currentChartFocus?.bhavaNumber || 10);
+  const [focusedPlanet, setFocusedPlanet] = useState<string | null>(session.currentChartFocus?.planet || 'JUPITER');
+  const [scholarNoteInput, setScholarNoteInput] = useState<string>(session.scholarRecord?.finalInterpretation || '');
+  const [prescribedUpayas, setPrescribedUpayas] = useState<string[]>(session.scholarRecord?.prescribedUpayas || []);
+  const [recommendedWindow, setRecommendedWindow] = useState<string>(session.scholarRecord?.recommendedMuhuratWindow || '२७ नवम्बर – १५ दिसम्बर २०२६');
+  const [isRecordAudioConsent, setIsRecordAudioConsent] = useState<boolean>(session.consent?.optionalRecording || false);
+  const [isSessionComplete, setIsSessionComplete] = useState<boolean>(session.state === 'COMPLETED');
+  const [showPstnNotice, setShowPstnNotice] = useState<boolean>(false);
+  const [timerState, setTimerState] = useState(() => SabhaTimerEngine.computeTimerState(session));
 
-  // Timer countdown
+  // Server-authoritative timer interval
   useEffect(() => {
-    if (remainingSecs <= 0 || isSessionComplete) return;
+    if (isSessionComplete) return;
     const interval = setInterval(() => {
-      setRemainingSecs(prev => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          return 0;
-        }
-        return prev - 1;
-      });
+      const state = SabhaTimerEngine.computeTimerState(currentSession);
+      setTimerState(state);
     }, 1000);
     return () => clearInterval(interval);
-  }, [remainingSecs, isSessionComplete]);
+  }, [currentSession, isSessionComplete]);
 
   const formatTimer = (secs: number) => {
     const m = Math.floor(secs / 60);
@@ -70,8 +55,7 @@ export default function SabhaCockpit({ session, role, onComplete }: SabhaCockpit
   const handleFocusBhava = (bhavaNum: number) => {
     chitiSensory.playTick();
     setFocusedBhava(bhavaNum);
-    dispatchChartEvent(record.consultationId, {
-      timestamp: Date.now(),
+    dispatchChartEvent(currentSession.sessionId, {
       type: 'BHAVA_FOCUS',
       target: { bhavaNumber: bhavaNum }
     });
@@ -80,8 +64,7 @@ export default function SabhaCockpit({ session, role, onComplete }: SabhaCockpit
   const handleFocusPlanet = (planet: string) => {
     chitiSensory.playTick();
     setFocusedPlanet(planet);
-    dispatchChartEvent(record.consultationId, {
-      timestamp: Date.now(),
+    dispatchChartEvent(currentSession.sessionId, {
       type: 'PLANET_FOCUS',
       target: { planet }
     });
@@ -92,11 +75,8 @@ export default function SabhaCockpit({ session, role, onComplete }: SabhaCockpit
     if (!prescribedUpayas.includes(upaya)) {
       const updated = [...prescribedUpayas, upaya];
       setPrescribedUpayas(updated);
-      dispatchChartEvent(record.consultationId, {
-        timestamp: Date.now(),
-        type: 'UPAYA_PROPOSED',
-        target: { upayaTitle: upaya }
-      });
+      currentSession.scholarRecord.prescribedUpayas = updated;
+      saveConsultationRecord(currentSession);
     }
   };
 
@@ -104,34 +84,49 @@ export default function SabhaCockpit({ session, role, onComplete }: SabhaCockpit
     chitiSensory.playBell();
     setActiveChannel('PSTN_PHONE');
     setShowPstnNotice(true);
-    setRecord(prev => ({ ...prev, transportChannel: 'PSTN_PHONE', networkQuality: 'PSTN_FALLBACK' }));
+    setCurrentSession(prev => ({
+      ...prev,
+      transportChannel: 'PSTN_PHONE',
+      activeTransport: 'PSTN_PHONE'
+    }));
   };
 
   const handleExtendTenMinutes = () => {
     chitiSensory.playBell();
-    setRemainingSecs(prev => prev + 600);
+    setCurrentSession(prev => {
+      const updated = { ...prev, extensionSeconds: (prev.extensionSeconds || 0) + 600 };
+      saveConsultationRecord(updated);
+      return updated;
+    });
   };
 
   const handleFinalApprove = () => {
     chitiSensory.playBell();
-    const updated: ConsultationRecord = {
-      ...record,
-      status: 'COMPLETED',
-      remainingSeconds: 0,
-      scholarNotes: scholarNoteInput,
-      prescribedUpayas,
-      recommendedWindow,
-      isAudioRecorded: isRecordAudioConsent
+    const updated: ConsultationSession = {
+      ...currentSession,
+      state: 'COMPLETED',
+      endedAt: Date.now(),
+      scholarRecord: {
+        ...currentSession.scholarRecord,
+        finalInterpretation: scholarNoteInput,
+        prescribedUpayas,
+        recommendedMuhuratWindow: recommendedWindow,
+        approvedAt: Date.now()
+      },
+      consent: {
+        ...currentSession.consent,
+        optionalRecording: isRecordAudioConsent
+      }
     };
-    setRecord(updated);
+    setCurrentSession(updated);
     saveConsultationRecord(updated);
     setIsSessionComplete(true);
     if (onComplete) onComplete(updated);
   };
 
-  const timerWarning = remainingSecs <= 120 && remainingSecs > 30;
-  const timerConcluding = remainingSecs <= 30 && remainingSecs > 0;
-  const timerGrace = remainingSecs === 0;
+  const timerWarning = timerState.remainingSeconds <= 120 && timerState.remainingSeconds > 30;
+  const timerConcluding = timerState.remainingSeconds <= 30 && timerState.remainingSeconds > 0;
+  const timerGrace = timerState.isGracePeriod;
 
   return (
     <div className="w-full max-w-7xl mx-auto rounded-3xl bg-[#FAF7F2] dark:bg-[#07080C] border border-[#8E6F1D]/30 dark:border-[#D4AF37]/35 shadow-2xl overflow-hidden font-mono-data text-[#1C1917] dark:text-[#FAF7F2]">
@@ -147,24 +142,24 @@ export default function SabhaCockpit({ session, role, onComplete }: SabhaCockpit
           <div>
             <div className="flex items-center gap-2">
               <span className="font-editorial text-lg font-bold text-[#1C1917] dark:text-white">
-                {record.seekerName}
+                {currentSession.beneficiary.name}
               </span>
               <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-300 text-[10px] font-bold">
-                {record.cosmicId}
+                {currentSession.profile.cosmicId}
               </span>
-              {record.familyAssisted && (
+              {currentSession.payer.id !== currentSession.beneficiary.id && (
                 <span className="px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-300 text-[9px] font-bold hidden sm:inline">
-                  परिवार सहायता: {record.familyAssisted.memberName}
+                  परिवार सहायता: {currentSession.payer.name}
                 </span>
               )}
             </div>
             <div className="text-[11px] text-[#857E74] dark:text-[#A8A29E] mt-0.5">
-              विषय: <span className="font-bold text-[#1C1917] dark:text-[#EFECE6]">{record.topic}</span> • दक्षिणा: ₹{record.amount}
+              विषय: <span className="font-bold text-[#1C1917] dark:text-[#EFECE6]">{currentSession.question}</span> • दक्षिणा: ₹{currentSession.payment.amountInr}
             </div>
           </div>
         </div>
 
-        {/* Center: Live Timer with Graceful Status */}
+        {/* Center: Live Server-Authoritative Timer */}
         <div className="flex items-center gap-3">
           <div className={`px-4 py-2 rounded-2xl border flex items-center gap-2 ${
             timerGrace 
@@ -175,11 +170,11 @@ export default function SabhaCockpit({ session, role, onComplete }: SabhaCockpit
           }`}>
             <Clock className="w-4 h-4" />
             <span className="text-sm sm:text-base font-bold tracking-wider">
-              {formatTimer(remainingSecs)}
+              {formatTimer(timerState.remainingSeconds)}
             </span>
           </div>
 
-          {remainingSecs <= 300 && !isSessionComplete && (
+          {timerState.remainingSeconds <= 300 && !isSessionComplete && (
             <button
               onClick={handleExtendTenMinutes}
               className="px-3 py-2 rounded-2xl bg-[#8E6F1D] hover:bg-[#D4AF37] text-white hover:text-black font-bold text-xs transition-all shadow-xs cursor-pointer"
@@ -222,13 +217,13 @@ export default function SabhaCockpit({ session, role, onComplete }: SabhaCockpit
 
       </div>
 
-      {/* 2. PSTN ALERT NOTICE (When Falling back to Phone Call) */}
+      {/* 2. PSTN ALERT NOTICE */}
       {showPstnNotice && (
         <div className="p-3 bg-amber-500/15 border-b border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs flex items-center justify-between gap-3 px-6">
           <div className="flex items-center gap-2">
             <Phone className="w-4 h-4 text-amber-500 animate-bounce" />
             <span>
-              <strong>सामान्य फ़ोन कॉल सक्रिय:</strong> पंडित जी का कॉल आपके मोबाइल ({record.seekerPhoneMasked}) पर Exotel सुरक्षित वर्चुअल नम्बर से आ रहा है। दोनों पक्षों का नम्बर पूर्णतः गोपनीय रहेगा।
+              <strong>सामान्य फ़ोन कॉल सक्रिय:</strong> पंडित जी का कॉल आपके पंजीकृत मोबाइल ({currentSession.beneficiary.phoneMasked}) पर सुरक्षित वर्चुअल नम्बर से आ रहा है।
             </span>
           </div>
           <button onClick={() => setShowPstnNotice(false)} className="text-xs font-bold underline">
@@ -237,7 +232,7 @@ export default function SabhaCockpit({ session, role, onComplete }: SabhaCockpit
         </div>
       )}
 
-      {/* 3. MAIN COCKPIT BODY: 3-PANE VERTICAL JYOTISH WORKBENCH */}
+      {/* 3. MAIN COCKPIT BODY */}
       <div className="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* LEFT COLUMN: Interactive Kundali & Semantic Chart Sync (5 Cols) */}
@@ -248,11 +243,11 @@ export default function SabhaCockpit({ session, role, onComplete }: SabhaCockpit
                 जन्म कुण्डली व भाव संरेखण (Live Sync)
               </span>
               <span className="text-[10px] text-[#857E74]">
-                लग्नेश: शुक्र • लग्न: वृषभ (Taurus)
+                लग्न: {currentSession.evidence.lagnaSign}
               </span>
             </div>
 
-            {/* North Indian Diamond Chart Representation with Clickable Bhavas */}
+            {/* Clickable Bhavas */}
             <div className="relative w-full aspect-square max-w-[320px] mx-auto border-2 border-[#8E6F1D]/40 dark:border-[#D4AF37]/50 rounded-2xl p-2 bg-[#FAF7F2] dark:bg-[#0E1017] shadow-inner grid grid-cols-3 grid-rows-3 gap-1 text-center">
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].slice(0, 9).map((bNum) => {
                 const isFocused = focusedBhava === bNum;
@@ -299,10 +294,10 @@ export default function SabhaCockpit({ session, role, onComplete }: SabhaCockpit
             <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs space-y-1">
               <div className="flex justify-between font-bold text-[#8E6F1D] dark:text-[#F0C968]">
                 <span>सक्रिय दशा:</span>
-                <span>{record.evidenceConsulted.vimshottariDasha}</span>
+                <span>{currentSession.evidence.vimshottariDasha.mahadasha} महादशा • {currentSession.evidence.vimshottariDasha.antardasha} अन्तर्दशा</span>
               </div>
               <div className="text-[10.5px] text-[#57524A] dark:text-[#D1C9BF]">
-                ✦ गोचर: {record.evidenceConsulted.currentTransit}
+                ✦ गोचर: गुरु गोचर १०म भाव (कर्म क्षेत्र)
               </div>
             </div>
 
@@ -323,8 +318,8 @@ export default function SabhaCockpit({ session, role, onComplete }: SabhaCockpit
 
               <div className="p-2.5 rounded-xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 text-[11px] space-y-1.5 text-[#57524A] dark:text-[#D1C9BF]">
                 <div>• गुरु अन्तर्दशा प्रारम्भ: <strong>२७ नवम्बर २०२६</strong></div>
-                <div>• १०वें भाव पर गुरु गोचर की अमृत दृष्टि</div>
-                <div>• पूर्व परामर्श (२५ अगस्त): व्यापार विस्तार पर चर्चा</div>
+                <div>• १०वें भाव पर गुरु गोचर की शुभ दृष्टि</div>
+                <div>• जातक प्रश्न: {currentSession.question}</div>
               </div>
             </div>
 
@@ -332,7 +327,7 @@ export default function SabhaCockpit({ session, role, onComplete }: SabhaCockpit
             <button
               onClick={() => {
                 chitiSensory.playTick();
-                setScholarNoteInput(prev => prev + '\n• गुरु अन्तर्दशा में व्यापार विस्तार अनुकूल।');
+                setScholarNoteInput((prev: string) => prev + '\n• गुरु अन्तर्दशा में व्यापार विस्तार अनुकूल।');
               }}
               className="w-full py-2 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-[#8E6F1D]/15 text-xs font-bold text-[#8E6F1D] dark:text-[#F0C968] transition-colors cursor-pointer"
             >

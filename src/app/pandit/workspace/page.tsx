@@ -300,7 +300,7 @@ export default function PanditWorkspace() {
                       session={activeSabhaRecord} 
                       role="SCHOLAR" 
                       onComplete={(rec) => {
-                        updateStatus(rec.consultationId, 'APPROVED');
+                        updateStatus(rec.sessionId, 'APPROVED');
                         setApprovedSuccess(true);
                       }} 
                     />
