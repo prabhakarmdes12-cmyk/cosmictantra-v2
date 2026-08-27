@@ -6,6 +6,7 @@ import { executeVedicTool } from './tools/executor';
 import { callLocalLLM } from './providers/local';
 import { callOpenRouter } from './providers/openrouter';
 import { findScriptureInsight } from './scriptureMap';
+import { retrieveDurableConsultationMemory } from '../sabha/orchestrator';
 
 export async function processKashiSahayakQuery(
   userQuery: string,
@@ -25,6 +26,26 @@ export async function processKashiSahayakQuery(
         { label: '🕉️ आज का पञ्चाङ्ग देखें', action: 'INTENT_PANCHANG' },
         { label: '🪔 काशी विश्वनाथ लाइव दर्शन', action: 'INTENT_DARSHAN_KASHI' },
         { label: '📿 महामृत्युंजय मन्त्र जप', action: 'INTENT_MANTRA_MRITYUNJAYA' }
+      ]
+    };
+  }
+
+  // 1.5 Durable Consultation Memory Retrieval (Cosmic ID Anchor)
+  const memoryText = retrieveDurableConsultationMemory(userQuery);
+  if (memoryText) {
+    return {
+      text: `हर हर महादेव! 🙏 आपके कॉस्मिक प्रोफाइल (CT-4821) के स्वीकृत परामर्श अभिलेख से प्राप्त विवरण:\n\n${memoryText}`,
+      provenance: {
+        calculation: 'CosmicTantra Sabha Verified Vault',
+        location: 'Varanasi (काशी)',
+        source: 'पं. विद्यानंद शास्त्री अधिकृत अभिलेख',
+        scholar: 'सत्यापित मानव ज्योतिषी परामर्श',
+        interpretation: 'अक्षुण्ण अभिलेख प्रतिलिपि'
+      },
+      quickChips: [
+        { label: '📜 आगामी अनुवर्ती सभा बुक करें', action: 'INTENT_SCHOLAR' },
+        { label: '🪔 काशी विश्वनाथ दीप दान', action: 'INTENT_DARSHAN_KASHI' },
+        { label: '🕉️ आज का पञ्चाङ्ग व गोचर', action: 'INTENT_PANCHANG' }
       ]
     };
   }

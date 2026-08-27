@@ -40,7 +40,11 @@ export default function ConsultationModal({
     timezone: kundaliData?.meta?.timezone || 5.5,
     category: 'Career & Business Decision',
     question: initialQuestion || '',
-    language: lang === 'hi' ? 'Hindi (शुद्ध हिंदी विवेचना)' : 'English Synthesis'
+    language: lang === 'hi' ? 'Hindi (शुद्ध हिंदी विवेचना)' : 'English Synthesis',
+    mode: 'SABHA', // 'PRASHNA' | 'SABHA' | 'DARSHAN'
+    transportChannel: 'WEB_RTC', // 'WEB_RTC' | 'PSTN_PHONE'
+    isFamilyAssisted: false,
+    familyMemberName: ''
   });
 
   const [step, setStep] = useState('FORM'); // 'FORM' | 'CONFIRM' | 'SUCCESS'
@@ -263,11 +267,110 @@ export default function ConsultationModal({
               />
             </div>
 
+            {/* Consultation Mode Selector (Service Primitives) */}
+            <div className="space-y-1.5">
+              <label className="text-[#57524A] dark:text-[#8E8A82] font-bold block">
+                {lang === 'hi' ? 'परामर्श का प्रारूप चुनें (Consultation Format)' : 'Select Consultation Format'} *
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: 'PRASHNA', titleHi: 'प्रश्न (लिखित)', titleEn: 'Written Folio', price: 501, subHi: 'पीडीएफ पत्र', subEn: 'Folio PDF' },
+                  { id: 'SABHA', titleHi: 'सभा (वाणी कॉल)', titleEn: 'Web Sabha', price: 1100, subHi: '२० मिनट वार्ता', subEn: '20m Voice' },
+                  { id: 'DARSHAN', titleHi: 'दर्शन (वीडियो)', titleEn: 'Video Darshan', price: 1500, subHi: 'साक्षात् दर्शन', subEn: '20m Video' }
+                ].map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => {
+                      chitiSensory.playTick();
+                      setFormData({ ...formData, mode: m.id });
+                    }}
+                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                      formData.mode === m.id
+                        ? 'bg-[#8E6F1D]/15 dark:bg-[#D4AF37]/20 border-[#8E6F1D] dark:border-[#D4AF37] shadow-sm'
+                        : 'bg-[#FAF7F2] dark:bg-[#060709] border-black/[0.08] dark:border-white/[0.08] hover:border-amber-500/40'
+                    }`}
+                  >
+                    <div className="font-bold text-xs text-[#1C1917] dark:text-[#FAF7F2]">
+                      {lang === 'hi' ? m.titleHi : m.titleEn}
+                    </div>
+                    <div className="text-[11px] font-bold text-[#8E6F1D] dark:text-[#F0C968] mt-0.5">
+                      ₹{m.price}
+                    </div>
+                    <div className="text-[9px] text-[#857E74] dark:text-[#8E8A82]">
+                      {lang === 'hi' ? m.subHi : m.subEn}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Transport Channel Selection (For Voice Sabha) */}
+            {formData.mode === 'SABHA' && (
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 space-y-2">
+                <label className="text-[11px] text-[#8E6F1D] dark:text-[#F0C968] font-bold block">
+                  {lang === 'hi' ? 'पंडित जी से कैसे जुड़ना चाहेंगे? (Call Channel)' : 'How would you like Pandit Ji to call?'}
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      chitiSensory.playTick();
+                      setFormData({ ...formData, transportChannel: 'WEB_RTC' });
+                    }}
+                    className={`p-2 rounded-lg border text-left transition-all cursor-pointer ${
+                      formData.transportChannel === 'WEB_RTC'
+                        ? 'bg-white dark:bg-black border-[#8E6F1D] text-[#8E6F1D] dark:text-[#F0C968] font-bold shadow-xs'
+                        : 'bg-black/5 dark:bg-white/5 border-transparent text-[#857E74]'
+                    }`}
+                  >
+                    <div>🌐 {lang === 'hi' ? 'इंटरनेट कॉल (अनुशंसित)' : 'Internet Call (Recommended)'}</div>
+                    <div className="text-[9px] font-normal text-[#857E74]">
+                      {lang === 'hi' ? 'फोन नंबर साझा नहीं होगा • ब्राउज़र में' : 'Zero phone number shared • In app'}
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      chitiSensory.playTick();
+                      setFormData({ ...formData, transportChannel: 'PSTN_PHONE' });
+                    }}
+                    className={`p-2 rounded-lg border text-left transition-all cursor-pointer ${
+                      formData.transportChannel === 'PSTN_PHONE'
+                        ? 'bg-white dark:bg-black border-[#8E6F1D] text-[#8E6F1D] dark:text-[#F0C968] font-bold shadow-xs'
+                        : 'bg-black/5 dark:bg-white/5 border-transparent text-[#857E74]'
+                    }`}
+                  >
+                    <div>📞 {lang === 'hi' ? 'सामान्य फ़ोन कॉल' : 'Normal Phone Call'}</div>
+                    <div className="text-[9px] font-normal text-[#857E74]">
+                      {lang === 'hi' ? 'पंडित जी का कॉल आपके मोबाइल पर आएगा' : 'Pandit Ji calls your mobile privately'}
+                    </div>
+                  </button>
+                </div>
+
+                {/* Family Assisted Option */}
+                <div className="pt-2 border-t border-black/5 dark:border-white/5 flex items-center justify-between text-[11px]">
+                  <label className="flex items-center gap-1.5 cursor-pointer text-[#857E74] dark:text-[#A8A29E]">
+                    <input
+                      type="checkbox"
+                      checked={formData.isFamilyAssisted}
+                      onChange={(e) => setFormData({ ...formData, isFamilyAssisted: e.target.checked })}
+                      className="rounded accent-[#8E6F1D]"
+                    />
+                    <span>{lang === 'hi' ? 'परिवार के सदस्य हेतु बुक कर रहे हैं (माता-पिता आदि)' : 'Booking for family member (e.g. Mother in hometown)'}</span>
+                  </label>
+                </div>
+              </div>
+            )}
+
             {/* Price Banner */}
             <div className="p-3 rounded-xl bg-[#FAF7F2] dark:bg-[#060709] border border-black/[0.08] dark:border-white/[0.08] flex items-center justify-between">
               <div>
                 <div className="font-bold text-sm text-[#1C1917] dark:text-[#EFECE6]">
-                  {lang === 'hi' ? 'निश्चित दक्षिणा: ₹५०१' : 'Honorarium: ₹501'}
+                  {lang === 'hi' 
+                    ? `निश्चित दक्षिणा: ₹${formData.mode === 'PRASHNA' ? 501 : formData.mode === 'SABHA' ? 1100 : 1500}` 
+                    : `Honorarium: ₹${formData.mode === 'PRASHNA' ? 501 : formData.mode === 'SABHA' ? 1100 : 1500}`}
                 </div>
                 <div className="text-[10px] text-[#857E74] dark:text-[#6B6760]">
                   {lang === 'hi' ? 'खगोलीय गणना + विद्वत्-विवेचन पत्र सम्मिलित' : 'Includes Sidereal Ephemeris + Scholar Review'}

@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import CosmicTantraShell from '@/components/layout/CosmicTantraShell';
 import { chitiSensory } from '@/lib/chitiAudio';
+import SabhaCockpit from '@/components/sabha/SabhaCockpit';
+import { getConsultationRecord } from '@/lib/sabha/orchestrator';
 
 interface Consultation {
   id: string;
@@ -79,10 +81,20 @@ export default function PanditWorkspace() {
   const [approvedSuccess, setApprovedSuccess] = useState(false);
   const [prescribedItems, setPrescribedItems] = useState<string[]>(initialConsultations[0]?.prescribedUpayas || []);
 
+  const [isSabhaLiveOpen, setIsSabhaLiveOpen] = useState(false);
+  const [activeSabhaRecord, setActiveSabhaRecord] = useState<any>(null);
+
   const updateStatus = (id: string, newStatus: Consultation['status']) => {
     setConsultations(prev =>
       prev.map(c => (c.id === id ? { ...c, status: newStatus } : c))
     );
+  };
+
+  const handleOpenLiveSabha = () => {
+    chitiSensory.playBell();
+    const rec = getConsultationRecord(selectedCase?.id || 'CT-2026-0825-001');
+    setActiveSabhaRecord(rec);
+    setIsSabhaLiveOpen(true);
   };
 
   const handleSelectCase = (c: Consultation) => {
@@ -249,44 +261,51 @@ export default function PanditWorkspace() {
                   </div>
                 </div>
 
-                {/* 1-CLICK CALLME4 ENCRYPTED ACTIONS BAR */}
-                <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-[#8E6F1D]/10 to-indigo-500/10 border border-emerald-500/30 flex flex-wrap items-center justify-between gap-3">
+                {/* COSMICTANTRA SABHA (सभा कक्ष) COCKPIT LAUNCHER */}
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-[#8E6F1D]/15 to-emerald-500/15 border border-[#8E6F1D]/40 dark:border-[#D4AF37]/50 flex flex-wrap items-center justify-between gap-3 shadow-md">
                   <div className="space-y-0.5">
-                    <span className="font-bold text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
-                      <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                      <span>CallMe4 100% गोपनीय कॉलिंग सक्रिय (Number Masked)</span>
+                    <span className="font-bold text-xs text-[#8E6F1D] dark:text-[#F0C968] flex items-center gap-1.5">
+                      <Award className="w-4 h-4 text-amber-500" />
+                      <span>कॉस्मिकतंत्र सभा कक्ष (CosmicTantra Sabha Cockpit)</span>
                     </span>
                     <span className="text-[10px] text-[#696256] dark:text-[#9E988D] block">
-                      जातक को आपका फोन नंबर कभी प्रदर्शित नहीं होगा।
+                      वेब सभा (WebRTC) • फ़ोन सभा (Exotel Masked PSTN) • स्वचालित साक्ष्य सिंक्रोनाइज़ेशन
                     </span>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <Link
-                      href={`/consultation/room/${selectedCase.id}?mode=voice&role=pandit`}
-                      className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md hover:scale-105 transition-all"
+                    <button
+                      onClick={handleOpenLiveSabha}
+                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#8E6F1D] to-[#D4AF37] hover:opacity-90 text-white font-bold text-xs flex items-center gap-1.5 shadow-md hover:scale-105 transition-all cursor-pointer"
                     >
-                      <Phone className="w-3.5 h-3.5" />
-                      <span>Start Voice Call</span>
-                    </Link>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>{isSabhaLiveOpen ? 'सभा कक्ष खुला है' : '🏛️ सभा कक्ष प्रारम्भ करें'}</span>
+                    </button>
 
-                    <Link
-                      href={`/consultation/room/${selectedCase.id}?mode=video&role=pandit`}
-                      className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md hover:scale-105 transition-all"
+                    <button
+                      onClick={() => setIsSabhaLiveOpen(false)}
+                      className={`px-3 py-2 rounded-xl border border-black/10 dark:border-white/10 text-xs font-bold text-[#857E74] hover:text-[#1C1917] transition-all ${
+                        isSabhaLiveOpen ? 'inline-block' : 'hidden'
+                      }`}
                     >
-                      <Video className="w-3.5 h-3.5" />
-                      <span>Video Darshan</span>
-                    </Link>
-
-                    <Link
-                      href={`/consultation/room/${selectedCase.id}?mode=chat&role=pandit`}
-                      className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-[#1C1917] dark:text-white transition-colors"
-                      title="Open Secure Chat"
-                    >
-                      <MessageSquare className="w-4 h-4 text-amber-500" />
-                    </Link>
+                      संक्षिप्त दृश्य
+                    </button>
                   </div>
                 </div>
+
+                {/* LIVE SABHA COCKPIT EMBEDDED IF ACTIVE */}
+                {isSabhaLiveOpen && activeSabhaRecord && (
+                  <div className="my-2">
+                    <SabhaCockpit 
+                      session={activeSabhaRecord} 
+                      role="SCHOLAR" 
+                      onComplete={(rec) => {
+                        updateStatus(rec.consultationId, 'APPROVED');
+                        setApprovedSuccess(true);
+                      }} 
+                    />
+                  </div>
+                )}
 
                 {/* Seeker Question */}
                 <div className="p-3.5 rounded-2xl bg-[#FAF7F2] dark:bg-[#070912] border border-black/5 dark:border-white/5 space-y-1">
