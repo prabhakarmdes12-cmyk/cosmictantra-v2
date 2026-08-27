@@ -1,3 +1,4 @@
+import VedicSankalpaCard916 from './panchang/VedicSankalpaCard916';
 import React, { useState } from 'react';
 import { Sun, Moon, Clock, Share2, AlertTriangle, CheckCircle2, ChevronRight, X, Flame } from 'lucide-react';
 import { analytics, ANALYTICS_EVENTS } from '../lib/analytics';
@@ -374,93 +375,14 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
 
       </div>
 
-      {/* Share Modal */}
+      {/* 9:16 Vedic Sankalpa & Daily Panchang Story Card */}
       {showShareModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-150">
-          <div className="relative w-full max-w-md rounded-2xl bg-[#FFFFFF] dark:bg-[#080A12] border border-black/[0.12] dark:border-[#D4AF37]/40 p-6 shadow-2xl space-y-5 text-left font-mono-data">
-            <div className="flex items-center justify-between border-b border-black/[0.08] dark:border-white/[0.08] pb-3">
-              <div className="flex items-center gap-2">
-                <Flame className="w-4 h-4 text-[#A6461D] dark:text-[#F0A554]" />
-                <span className="font-editorial text-base font-bold text-[#181512] dark:text-[#F5F2EB]">
-                  {isHi ? 'CosmicTantra काशी दैनिक पञ्चाङ्ग' : 'CosmicTantra Kashi Daily Card'}
-                </span>
-              </div>
-              <button 
-                onClick={() => {
-                  chitiSensory.playTick();
-                  setShowShareModal(false);
-                }}
-                className="p-1 rounded text-[#696256] dark:text-[#8E887E] hover:opacity-100 cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Card Output */}
-            <div className="rounded-xl bg-[#FAF7F2] dark:bg-[#040508] border border-black/[0.1] dark:border-[#D4AF37]/35 p-5 space-y-3 text-center">
-              <div className="text-[10px] uppercase tracking-[0.24em] text-[#826315] dark:text-[#E5C378] font-bold">
-                ॥ श्री काशी विश्वनाथ ॥
-              </div>
-              <div className="font-editorial text-2xl font-bold text-[#181512] dark:text-[#F5F2EB]">
-                {isHi ? `${tithiPaksha} ${tithiName}` : panchangData.tithi.fullName}
-              </div>
-              <div className="text-xs text-[#3D3D99] dark:text-[#9E9EF8] font-bold">
-                {isHi ? `नक्षत्र: ${nakshatraName} (पाद ${pada})` : `Nakshatra: ${nakshatraName} (Pada ${pada})`}
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 text-xs py-2 border-y border-black/[0.08] dark:border-white/[0.08] text-left text-[#4A443B] dark:text-[#C4BEB3]">
-                <div><span>{isHi ? 'स्थान:' : 'City:'}</span> <strong className="text-[#181512] dark:text-[#F5F2EB]">{isHi ? (panchangData.cityHi || panchangData.city) : panchangData.city}</strong></div>
-                <div><span>{isHi ? 'सूर्योदय:' : 'Sunrise:'}</span> <strong className="text-[#A6461D] dark:text-[#F0A554]">{sunrise}</strong></div>
-                <div><span>{isHi ? 'राहुकाल:' : 'Rahu Kaal:'}</span> <strong className="text-[#821322] dark:text-[#fca5a5]">{rahuKalam}</strong></div>
-                <div><span>{isHi ? 'अभिजित:' : 'Abhijit:'}</span> <strong className="text-[#094A2D] dark:text-[#34d399]">{abhijitMuhurat}</strong></div>
-              </div>
-
-              <div className="flex items-center justify-between text-[9px] text-[#696256] dark:text-[#8E887E] pt-1">
-                <span>cosmictantra.com</span>
-                <span>{isHi ? 'चित्रा पक्षीय निरयण पञ्चाङ्ग' : 'Chitra Paksha Sidereal Ephemeris'}</span>
-              </div>
-            </div>
-
-            <div className="flex gap-2.5">
-              <button
-                onClick={() => {
-                  chitiSensory.playTick();
-                  const shareText = isHi
-                    ? `✨ CosmicTantra काशी पञ्चाङ्ग (${panchangData.cityHi || panchangData.city})\n• तिथि: ${tithiPaksha} ${tithiName}\n• नक्षत्र: ${nakshatraName}\n• राहु काल: ${rahuKalam}\n• अभिजित मुहूर्त: ${abhijitMuhurat}\n\nसम्पूर्ण निरयण पञ्चाङ्ग देखें: https://cosmictantra.chiti.tech`
-                    : `✨ CosmicTantra Kashi Panchang (${panchangData.city})\n• Tithi: ${panchangData.tithi.fullName}\n• Nakshatra: ${panchangData.nakshatra.name}\n• Rahu Kaal: ${panchangData.timings.rahuKalam}\n• Abhijit Muhurat: ${panchangData.timings.abhijitMuhurat}\n\nSee full Vedic ephemeris: https://cosmictantra.chiti.tech`;
-                  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, '_blank');
-                  setShowShareModal(false);
-                }}
-                className="flex-1 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#1EBE57] text-white font-bold text-xs uppercase transition-colors flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
-              >
-                <span>{isHi ? 'व्हाट्सएप पर साझा करें' : 'Share on WhatsApp'}</span>
-              </button>
-              <button
-                onClick={() => {
-                  chitiSensory.playTick();
-                  const shareText = isHi
-                    ? `✨ CosmicTantra काशी वैदिक समय (${panchangData.cityHi || panchangData.city})\n• तिथि: ${tithiPaksha} ${tithiName}\n• नक्षत्र: ${nakshatraName}\n• राहु काल: ${rahuKalam}\n• अभिजित: ${abhijitMuhurat}\nhttps://cosmictantra.chiti.tech`
-                    : `✨ CosmicTantra Kashi Vedic Time (${panchangData.city})\n• Tithi: ${panchangData.tithi.fullName}\n• Nakshatra: ${panchangData.nakshatra.name}\n• Rahu Kaal: ${panchangData.timings.rahuKalam}\n• Abhijit: ${panchangData.timings.abhijitMuhurat}\nhttps://cosmictantra.chiti.tech`;
-                  navigator.clipboard.writeText(shareText);
-                  alert(isHi ? 'दैनिक पञ्चाङ्ग कार्ड कॉपी हो गया!' : 'Vedic daily card copied to clipboard!');
-                  setShowShareModal(false);
-                }}
-                className="px-3.5 py-2.5 rounded-xl bg-[#826315] dark:bg-[#D4AF37] text-white dark:text-[#060709] font-bold text-xs uppercase hover:bg-[#965B18] dark:hover:bg-[#E5C378] transition-colors cursor-pointer"
-              >
-                {isHi ? 'कॉपी करें' : 'Copy Text'}
-              </button>
-              <button
-                onClick={() => {
-                  chitiSensory.playTick();
-                  setShowShareModal(false);
-                }}
-                className="px-4 py-2.5 rounded-lg bg-[#FAF7F2] dark:bg-[#101322] border border-black/[0.1] dark:border-white/[0.08] text-xs text-[#181512] dark:text-[#F5F2EB] font-bold cursor-pointer"
-              >
-                {isHi ? 'बन्द करें' : 'Close'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <VedicSankalpaCard916
+          panchangData={panchangData}
+          currentCity={currentCity}
+          onClose={() => setShowShareModal(false)}
+          lang={lang}
+        />
       )}
     </section>
   );
