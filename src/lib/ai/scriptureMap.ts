@@ -1,5 +1,5 @@
 /**
- * SACRED SCRIPTURE WISDOM MAP (श्रीमद्भगवद्गीता, श्रीरामचरितमानस, उपनिषद् एवं वैदिक संहिता)
+ * SACRED SCRIPTURE WISDOM MAP (श्रीमद्भगवद्गीता, श्रीरामचरितमानस, उपनिषद्, चाणक्य नीति एवं वैदिक संहिता)
  * Matches seeker life situations, dilemmas, and emotional states with authentic shlokas and chaupais.
  */
 
@@ -27,7 +27,7 @@ export const SCRIPTURE_WISDOM_REGISTRY: ScriptureInsight[] = [
     sourceGrantha: 'श्रीमद्भगवद्गीता (अध्याय २, श्लोक १४)',
     sourceType: 'GITA',
     verse: 'मात्रास्पर्शास्तु कौन्तेय शीतोष्णसुखदुःखदाः ।\nआगमापायिनोऽनित्यास्तांस्तितिक्षस्व भारत ॥',
-    transliteration: "mātrā-sparśās tu kaunteya śītoṣṇa-sukha-duḥkha-dāḥ ।\\nāgamāpāyino 'nityās tāṁs titikṣasva bhārata ॥",
+    transliteration: "mātrā-sparśās tu kaunteya śītoṣṇa-sukha-duḥkha-dāḥ ।\nāgamāpāyino 'nityās tāṁs titikṣasva bhārata ॥",
     meaningHi: 'हे कुन्तीपुत्र! सर्दी-गर्मी और सुख-दुख देने वाले इन्द्रिय और विषयों के संयोग तो उत्पत्ति और विनाशशील तथा अनित्य हैं, इसलिए हे भारत! तुम उन्हें धैर्यपूर्वक सहन करो। यह समय भी बीत जाएगा।',
     meaningEn: 'O son of Kunti, the nonpermanent appearance of happiness and distress, and their disappearance in due course, are like the appearance and disappearance of winter and summer seasons. One must learn to tolerate them without being disturbed.',
     kashiSahayakBridge: 'हर हर महादेव! 🙏 आपके मन की व्यथा और उदासी को हम समझ सकते हैं। जब मन भारी हो, तो भगवान श्रीकृष्ण का यह अमर वचन स्मरण करें। ज्योतिष में मन का स्वामी चन्द्रमा है — जिस प्रकार चन्द्रमा की कलाएं घटती-बढ़ती हैं, उसी प्रकार जीवन के सुख-दुख भी अनित्य हैं।',
@@ -67,7 +67,7 @@ export const SCRIPTURE_WISDOM_REGISTRY: ScriptureInsight[] = [
     sourceGrantha: 'श्रीमद्भगवद्गीता (अध्याय २, श्लोक ४७)',
     sourceType: 'GITA',
     verse: 'कर्मण्येवाधिकारस्ते मा फलेषु कदाचन ।\nमा कर्मफलहेतुर्भूर्मा ते सङ्गोऽस्त्वकर्मणि ॥',
-    transliteration: "karmaṇy-evādhikāras te mā phaleṣu kadācana ।\\nmā karma-phala-hetur bhūr mā te saṅgo 'stv akarmaṇi ॥",
+    transliteration: "karmaṇy-evādhikāras te mā phaleṣu kadācana ।\nmā karma-phala-hetur bhūr mā te saṅgo 'stv akarmaṇi ॥",
     meaningHi: 'तुम्हारा अधिकार केवल कर्म करने में है, उसके फलों में कभी नहीं। इसलिए तुम कर्मफल के हेतु मत बनो और न ही तुम्हारी अकर्मण्यता (कर्म न करने) में आसक्ति हो।',
     meaningEn: 'You have a right to perform your prescribed duty, but you are not entitled to the fruits of action. Never consider yourself the cause of the results of your activities, and never be attached to not doing your duty.',
     kashiSahayakBridge: 'हर हर महादेव! 🙏 कार्यक्षेत्र और उद्यम में मन का एकाग्र होना ही विजय का मूल मन्त्र है। गीता का यह श्लोक बताता है कि परिणाम की अति-चिन्ता कार्यक्षमता को घटा देती है। आप श्रेष्ठ कर्म करें, समय आपके पक्ष में अवश्य होगा।',
@@ -156,6 +156,206 @@ export const SCRIPTURE_WISDOM_REGISTRY: ScriptureInsight[] = [
       { label: '🪔 दशाश्वमेध गंगा महाआरती', action: 'INTENT_DARSHAN_GANGA' },
       { label: '📿 शिव ताण्डव स्तोत्रम्', action: 'INTENT_MANTRA_SHIVATANDAV' },
       { label: '🚩 काशी पंच-तीर्थ यात्रा', action: 'INTENT_JOURNEY_KASHI' }
+    ]
+  },
+
+  // 8. Financial Stress, Debt & Wealth Insecurity (आर्थिक तंगी / कर्ज / धन हानि)
+  {
+    id: 'FINANCIAL_STRESS',
+    situation: 'आर्थिक तंगी, कर्ज व धन की चिन्ता',
+    keywords: ['money', 'debt', 'poverty', 'loan', 'finance', 'loss', 'wealth', 'पैसा', 'धन', 'कर्ज', 'तंगी', 'घाटा', 'नुकसान', 'कंगाली', 'उधार'],
+    sourceGrantha: 'श्रीमद्भगवद्गीता (अध्याय ९, श्लोक २२)',
+    sourceType: 'GITA',
+    verse: 'अनन्याश्चिन्तयन्तो मां ये जनाः पर्युपासते ।\nतेषां नित्याभियुक्तानां योगक्षेमं वहाम्यहम् ॥',
+    transliteration: 'ananyāś cintayanto māṁ ye janāḥ paryupāsate ।\nteṣāṁ nityābhiyuktānāṁ yoga-kṣemaṁ vahāmy aham ॥',
+    meaningHi: 'जो अनन्य भक्तजन मेरा चिन्तन करते हुए मेरी उपासना करते हैं, उन नित्य युक्त पुरुषों के योग (अप्राप्त की प्राप्ति) और क्षेम (प्राप्त की रक्षा) का वहन मैं स्वयं करता हूँ।',
+    meaningEn: 'To those who are constantly devoted to Me and worship Me with love, I provide what they lack and preserve what they already possess.',
+    kashiSahayakBridge: 'हर हर महादेव! 🙏 आर्थिक उतार-चढ़ाव जीवन में परीक्षा की घड़ी लाते हैं। ज्योतिष में धन भाव (द्वितीय व एकादश भाव) और गुरु-शुक्र का संतुलन महत्वपूर्ण है। पुरुषार्थ के साथ ईश्वर पर निष्ठा रखने से मार्ग स्वतः खुलते हैं।',
+    suggestedAction: 'माँ लक्ष्मी व अन्नपूर्णा का ध्यान करें तथा कनकधारा स्तोत्र अथवा श्री सूक्त का पाठ करें।',
+    quickChips: [
+      { label: '📜 धन व कर्म भाव कुण्डली विश्लेषण', action: 'INTENT_SCHOLAR' },
+      { label: '🪔 माँ अन्नपूर्णा (काशी) दर्शन', action: 'INTENT_DARSHAN_KASHI' },
+      { label: '🕉️ आज का शुभ चौघड़िया', action: 'INTENT_PANCHANG' }
+    ]
+  },
+
+  // 9. Anger, Loss of Temper & Restlessness (क्रोध / गुस्सा / अशांति)
+  {
+    id: 'ANGER_MANAGEMENT',
+    situation: 'क्रोध, उग्रता व विवेक का लोप',
+    keywords: ['angry', 'anger', 'rage', 'furious', 'temper', 'frustrated', 'गुस्सा', 'क्रोध', 'चिड़चिड़ापन', 'आक्रोश', 'झुंझलाहट'],
+    sourceGrantha: 'श्रीमद्भगवद्गीता (अध्याय २, श्लोक ६३)',
+    sourceType: 'GITA',
+    verse: 'क्रोधाद्भवति संमोहः संमोहात्स्मृतिविभ्रमः ।\nस्मृतिभ्रंशाद् बुद्धिनाशो बुद्धिनाशात्प्रणश्यति ॥',
+    transliteration: 'krodhād bhavati saṁmohaḥ saṁmohāt smṛti-vibhramaḥ ।\nsmṛti-bhraṁśād buddhi-nāśo buddhi-nāśāt praṇaśyati ॥',
+    meaningHi: 'क्रोध से मूढ़ता (अविवेक) उत्पन्न होती है, मूढ़ता से स्मरण शक्ति भ्रमित हो जाती है, स्मृति-भ्रम से बुद्धि (निर्णय शक्ति) का नाश हो जाता है और बुद्धि का नाश होने से मनुष्य का पतन हो जाता है।',
+    meaningEn: 'From anger arises delusion; from delusion comes confusion of memory; from confusion of memory intellect is lost; and through loss of intellect, a person is ruined.',
+    kashiSahayakBridge: 'हर हर महादेव! 🙏 क्रोध में लिया गया कोई भी निर्णय कल्याणकारी नहीं होता। ज्योतिष में मंगल और राहु का उग्र प्रभाव क्रोध को बढ़ाता है। भगवान शिव (शीतल चन्द्रमा धारण करने वाले) का ध्यान मन को शांत करता है।',
+    suggestedAction: 'शीतल जल से आचमन करें और ॐ नमः शिवाय का ११ बार शांत उच्चारण करें।',
+    quickChips: [
+      { label: '📿 ॐ नमः शिवाय जप', action: 'INTENT_MANTRA_MRITYUNJAYA' },
+      { label: '🪔 सोमनाथ ज्योतिर्लिंग दर्शन', action: 'INTENT_DARSHAN_SOMNATH' },
+      { label: '📜 चन्द्र-मंगल शान्ति परामर्श', action: 'INTENT_SCHOLAR' }
+    ]
+  },
+
+  // 10. Domestic Discord & Family Unity (पारिवारिक कलह / गृह क्लेश)
+  {
+    id: 'FAMILY_DISCORD',
+    situation: 'पारिवारिक कलह, मतभेद व गृह क्लेश',
+    keywords: ['family fight', 'parents', 'house dispute', 'relative', 'property fight', 'परिवार', 'गृह क्लेश', 'घर का झगड़ा', 'माता पिता', 'सास बहू', 'भाई भाई'],
+    sourceGrantha: 'अथर्ववेद (काण्ड ३, सूक्त ३०, मन्त्र १) • संमनस्य सूक्तम्',
+    sourceType: 'VEDA',
+    verse: 'सहृदयं सांमनस्यमविद्वेषं कृणोमि वः ।\nअन्यो अन्यमभि हर्यत वत्सं जातमिवाघ्न्या ॥',
+    transliteration: 'sahṛdayaṁ sāṁmanasyam avidveṣaṁ kṛṇomi vaḥ ।\nanyo anyam abhi haryata vatsaṁ jātam ivāghnyā ॥',
+    meaningHi: 'मैं तुम्हारे मनों को एक समान हृदय वाला, समान विचार वाला और द्वेषरहित बनाता हूँ। तुम सब आपस में एक-दूसरे से वैसा ही निश्छल प्रेम करो, जैसा गाय अपने नवजात बछड़े से करती है।',
+    meaningEn: 'I unite your hearts, your minds, and free you from malice. Love one another unconditionally, just as a cow cherishes her newborn calf.',
+    kashiSahayakBridge: 'हर हर महादेव! 🙏 परिवार सुख और शान्ति का आधार है। जब घर में कलह हो, तो ज्योतिष में चतुर्थ भाव (गृह सुख) और शुक्र-गुरु की स्थिति को देखना चाहिए। अथर्ववेद का संमनस्य सूक्त घर में प्रेम और सौहार्द की पुनर्स्थापना करता है।',
+    suggestedAction: 'घर में सांध्य काल में कपूर व गूगल की धूप दें और परिवार के साथ श्री राम स्तुति का पाठ करें।',
+    quickChips: [
+      { label: '👥 परिवार पञ्चाङ्ग व गोचर देखें', action: 'NAV_FAMILY', href: '/family-panchang' },
+      { label: '📜 गृह-दोष व वास्तु परामर्श', action: 'INTENT_SCHOLAR' },
+      { label: '🪔 दशाश्वमेध गंगा आरती दर्शन', action: 'INTENT_DARSHAN_GANGA' }
+    ]
+  },
+
+  // 11. Self-Doubt, Confusion of Right & Wrong / Dharma Crisis (धर्मसंकट / सही गलत का संशय)
+  {
+    id: 'DHARMA_CRISIS',
+    situation: 'धर्मसंकट, संशय व आत्म-उद्धार',
+    keywords: ['confused', 'right or wrong', 'dilemma', 'decision', 'doubt', 'धर्मसंकट', 'संशय', 'क्या सही है', 'निर्णय', 'उलझन', 'भ्रम'],
+    sourceGrantha: 'श्रीमद्भगवद्गीता (अध्याय ६, श्लोक ५)',
+    sourceType: 'GITA',
+    verse: 'उद्धरेदात्मनात्मानं नात्मानमवसादयेत् ।\nआत्मैव ह्यात्मनो बन्धुरात्मैव रिपुरात्मनः ॥',
+    transliteration: 'uddhared ātmanātmānaṁ nātmānam avasādayet ।\nātmaiva hy ātmano bandhur ātmaiva ripur ātmanaḥ ॥',
+    meaningHi: 'मनुष्य को चाहिए कि वह अपने मन के द्वारा अपना उद्धार करे, अपने आपको पतन की ओर न ले जाए; क्योंकि यह मन ही मनुष्य का मित्र है और यही मन उसका सबसे बड़ा शत्रु भी है।',
+    meaningEn: 'One must elevate oneself by one’s own mind, not degrade oneself. The mind is the friend of the conditioned soul, and its enemy as well.',
+    kashiSahayakBridge: 'हर हर महादेव! 🙏 जीवन में कई बार ऐसा मोड़ आता है जब उचित और अनुचित का निर्णय कठिन हो जाता है। ऐसे में अपनी आत्मा की शुद्ध आवाज़ को सुनें। जब मन शुद्ध होता है, तो निर्णय स्वतः स्पष्ट हो जाता है।',
+    suggestedAction: 'गायत्री मन्त्र का जप करते हुए सूर्य नारायण को अर्घ्य दें, इससे मेधा शक्ति व निर्णय क्षमता तीव्र होती है।',
+    quickChips: [
+      { label: '📿 गायत्री मन्त्र साधना', action: 'INTENT_MANTRA_GAYATRI' },
+      { label: '📜 विद्वान् ज्योतिषी धर्म-विवेचना', action: 'INTENT_SCHOLAR' },
+      { label: '🕉️ आज का अभिजीत मुहूर्त', action: 'INTENT_PANCHANG' }
+    ]
+  },
+
+  // 12. Facing Enemies, Jealousy, Slander & Evil Eye (शत्रु बाधा / ईर्ष्या / निंदा / नज़र दोष)
+  {
+    id: 'ENEMY_JEALOUSY',
+    situation: 'शत्रु बाधा, ईर्ष्या, निंदा व नज़र दोष',
+    keywords: ['enemy', 'jealous', 'evil eye', 'gossip', 'slander', 'hatred', 'शत्रु', 'ईर्ष्या', 'जलन', 'नज़र', 'निंदा', 'षड्यंत्र', 'विरोधी'],
+    sourceGrantha: 'श्रीरामचरितमानस (उत्तरकाण्ड) / भैरव स्तोत्रम्',
+    sourceType: 'RAMCHARITMANAS',
+    verse: 'संत सहहिं दुख परहित लागी ।\nपरदुख हेतु असंत अभागी ॥\nराम कृपा नासहिं सब रोगा ।\nजो एहि भाँति बनै संजोगो ॥',
+    transliteration: 'santa sahahiṁ dukha parahita lāgī ।\nparadukha hetu asanta abhāgī ॥',
+    meaningHi: 'सज्जन पुरुष दूसरों के कल्याण हेतु कष्ट सहते हैं, जबकि अभागे दुर्जन दूसरों को दुख देने में ही लगे रहते हैं। प्रभु की कृपा से सभी प्रकार की बाधाएं और ईर्ष्या स्वतः भस्म हो जाती हैं।',
+    meaningEn: 'Noble souls bear hardships for the welfare of others, whereas the wicked create troubles out of malice. By divine grace, all hostility and negativity dissolve completely.',
+    kashiSahayakBridge: 'हर हर महादेव! 🙏 संसार में उन्नति करने वाले के प्रति ईर्ष्या होना स्वाभाविक है। काशी के कोतवाल श्री काल भैरव जी की छत्रछाया में किसी भी प्रकार की शत्रु बाधा या नकारात्मक दृष्टि नहीं टिक सकती।',
+    suggestedAction: 'श्री काल भैरव अष्टकम् का श्रवण करें तथा मंगलवार या शनिवार को सरसों के तेल का दीप प्रज्वलित करें।',
+    quickChips: [
+      { label: '🪔 श्री काल भैरव (काशी) दर्शन', action: 'INTENT_DARSHAN_KASHI' },
+      { label: '📿 शिव ताण्डव स्तोत्रम्', action: 'INTENT_MANTRA_SHIVATANDAV' },
+      { label: '📜 षष्ठ भाव व शत्रु शान्ति परामर्श', action: 'INTENT_SCHOLAR' }
+    ]
+  },
+
+  // 13. Loneliness & Feeling Abandoned / Isolated (अकेलापन / कोई अपना नहीं)
+  {
+    id: 'LONELINESS_ISOLATION',
+    situation: 'अकेलापन, अलगाव व आत्मीयता का अभाव',
+    keywords: ['alone', 'lonely', 'nobody cares', 'isolated', 'abandoned', 'अकेला', 'कोई नहीं है', 'अकेलापन', 'उदासी', 'तनहाई'],
+    sourceGrantha: 'श्रीमद्भगवद्गीता (अध्याय ९, श्लोक १८)',
+    sourceType: 'GITA',
+    verse: 'गतिर्भर्ता प्रभुः साक्षी निवासः शरणं सुहृत् ।\nप्रभवः प्रलयः स्थानं निधानं बीजमव्ययम् ॥',
+    transliteration: 'gatir bhartā prabhuḥ sākṣī nivāsaḥ śaraṇaṁ suhṛt ।\nprabhavaḥ pralayaḥ sthānaṁ nidhānaṁ bījam avyayam ॥',
+    meaningHi: 'मैं ही परम गति, भरण-पोषण करने वाला, स्वामी, साक्षी, सबका धाम, शरण लेने योग्य और सबका परम हितैषी मित्र (सुहृत्) हूँ। मैं ही सृष्टि का उद्भव, प्रलय, आधार और अविनाशी बीज हूँ।',
+    meaningEn: 'I am the goal, the upholder, the master, the witness, the abode, the refuge, and the dearest friend. I am the origin, the dissolution, the ground, the resting place, and the imperishable seed.',
+    kashiSahayakBridge: 'हर हर महादेव! 🙏 आप कभी अकेले नहीं हैं। जब सांसारिक सम्बन्ध दूर प्रतीत होते हैं, तब साक्षात् परमात्मा आपके परम सुहृद् (सच्चे मित्र) बनकर आपके हृदय में विराजमान रहते हैं।',
+    suggestedAction: 'काशी के मणिकर्णिका व दशाश्वमेध घाट का स्मरण करें और पवित्र ॐ नमः शिवाय का ध्यान करें।',
+    quickChips: [
+      { label: '🪔 दशाश्वमेध गंगा आरती दर्शन', action: 'INTENT_DARSHAN_GANGA' },
+      { label: '📿 महामृत्युंजय मन्त्र जप', action: 'INTENT_MANTRA_MRITYUNJAYA' },
+      { label: '🚩 काशी यात्रा परिपथ', action: 'INTENT_JOURNEY_KASHI' }
+    ]
+  },
+
+  // 14. Procrastination, Laziness & Inertia (आलस्य / प्रमाद / काम टालना)
+  {
+    id: 'PROCRASTINATION_LAZINESS',
+    situation: 'आलस्य, प्रमाद व कार्य में शिथिलता',
+    keywords: ['lazy', 'laziness', 'procrastination', 'waste time', 'bored', 'आलस', 'आलस्य', 'काम टालना', 'मन नहीं लगता', 'सुस्ती'],
+    sourceGrantha: 'चाणक्य नीति (अध्याय २) / भर्तृहरि नीतिशतकम्',
+    sourceType: 'CHANAKYA_NITI',
+    verse: 'आलस्यं हि मनुष्याणां शरीरस्थो महान् रिपुः ।\nनास्त्युद्यमसमो बन्धुः कृत्वा यं नावसीदति ॥',
+    transliteration: 'ālasyaṁ hi manuṣyāṇāṁ śarīra-stho mahān ripuḥ ।\nnāsty udyama-samo bandhuḥ kṛtvā yaṁ nāvasīdati ॥',
+    meaningHi: 'मनुष्यों के शरीर में रहने वाला आलस्य ही उसका सबसे बड़ा शत्रु है। परिश्रम (उद्यम) के समान कोई मित्र नहीं है, जिसे करने वाला कभी दुखी नहीं होता।',
+    meaningEn: 'Laziness is indeed the greatest enemy dwelling within the human body. There is no friend like purposeful hard work, by engaging in which one never meets sorrow.',
+    kashiSahayakBridge: 'हर हर महादेव! 🙏 काल चक्र निरंतर गतिमान है। ज्योतिष में शनि और सूर्य का संतुलन पुरुषार्थ को जगाता है। समय का सदुपयोग ही भाग्य को चमकाने की एकमात्र कुंजी है।',
+    suggestedAction: 'प्रातः सूर्योदय के समय सूर्य नमस्कार करें और आज का शुभ चौघड़िया देखकर तुरंत कार्य में जुट जाएं।',
+    quickChips: [
+      { label: '🕉️ आज का शुभ चौघड़िया', action: 'INTENT_PANCHANG' },
+      { label: '📅 शुभ कार्य मुहूर्त', action: 'INTENT_MUHURTA' },
+      { label: '📜 दशम भाव (कर्म) कुण्डली परामर्श', action: 'INTENT_SCHOLAR' }
+    ]
+  },
+
+  // 15. Addiction, Sensory Traps & Loss of Control (बुरी आदतें / व्यसन / इन्द्रिय लोभ)
+  {
+    id: 'ADDICTION_CONTROL',
+    situation: 'व्यसन, बुरी आदतें व इन्द्रिय संयम का अभाव',
+    keywords: ['addiction', 'bad habit', 'lust', 'overeating', 'cannot control', 'व्यसन', 'बुरी आदत', 'नशा', 'लत', 'संयम', 'इन्द्रिय'],
+    sourceGrantha: 'कठोपनिषद् (अध्याय १, वल्ली ३, मन्त्र ३-४) • रथ रूपक',
+    sourceType: 'UPANISHAD',
+    verse: 'आत्मानं रथिनं विद्धि शरीरं रथमेव तु ।\nबुद्धिं तु सारथिं विद्धि मनः प्रग्रहमेव च ॥\nइन्द्रियाणि हयानाहुर्विषयांस्तेषु गोचरान् ।',
+    transliteration: 'ātmānaṁ rathinaṁ viddhi śarīraṁ ratham eva tu ।\nbuddhiṁ tu sārathiṁ viddhi manaḥ pragraham eva ca ॥',
+    meaningHi: 'इस शरीर को रथ जानो और जीवात्मा को रथी (मालिक)। बुद्धि को सारथी और मन को लगाम समझो। इन्द्रियों को घोड़े कहा गया है और सांसारिक विषय उनके दौड़ने के मार्ग हैं। सारथी (बुद्धि) द्वारा लगाम (मन) को कसकर रखें।',
+    meaningEn: 'Know the Self as the lord of the chariot, the body as the chariot, the intellect as the charioteer, and the mind as the reins. The senses are the horses. When the intellect controls the reins of the mind, the journey is triumphant.',
+    kashiSahayakBridge: 'हर हर महादेव! 🙏 इन्द्रियों का स्वभाव चंचल है। जब बुद्धि रूपी सारथी सजग हो जाता है, तो कोई भी व्यसन या बुरी आदत टिक नहीं सकती। आप अपने मन के स्वामी हैं, उसके दास नहीं।',
+    suggestedAction: 'प्रतिदिन प्राणायाम करें और भगवान शिव के पंचाक्षर मन्त्र का जप करते हुए संकल्प धारण करें।',
+    quickChips: [
+      { label: '📿 महामृत्युंजय मन्त्र जप', action: 'INTENT_MANTRA_MRITYUNJAYA' },
+      { label: '🪔 काशी विश्वनाथ लाइव दर्शन', action: 'INTENT_DARSHAN_KASHI' },
+      { label: '📜 राहु-केतु शान्ति व मानसिक बल परामर्श', action: 'INTENT_SCHOLAR' }
+    ]
+  },
+
+  // 16. Parenting, Children’s Future & Education (संतान चिन्ता / बच्चों की शिक्षा व संस्कार)
+  {
+    id: 'PARENTING_CHILDREN',
+    situation: 'संतान चिन्ता, बच्चों की शिक्षा व संस्कार',
+    keywords: ['child', 'children', 'son', 'daughter', 'parenting', 'kids future', 'संतान', 'बच्चे', 'बेटा', 'बेटी', 'बच्चों की पढ़ाई', 'संस्कार'],
+    sourceGrantha: 'तैत्तिरीयोपनिषद् (शिक्षावल्ली) / श्रीरामचरितमानस',
+    sourceType: 'UPANISHAD',
+    verse: 'मातृदेवो भव । पितृदेवो भव । आचार्यदेवो भव ।\nभए कुमार जबहिं सब भ्राता । दीन्ह जनेऊ गुरु पितु माता ॥',
+    transliteration: 'mātṛ-devo bhava । pitṛ-devo bhava । ācārya-devo bhava ॥',
+    meaningHi: 'माता, पिता और गुरु को देवतुल्य आदर दें। जब संतान को सुसंस्कार, सद्गुरु का सान्निध्य और अनुशासन प्राप्त होता है, तो वह कुल का नाम उज्ज्वल करती है।',
+    meaningEn: 'Honor your mother as divine, honor your father as divine, and honor your preceptor as divine. Noble values and dedicated mentorship form the golden foundation of a child’s glorious future.',
+    kashiSahayakBridge: 'हर हर महादेव! 🙏 संतान का भविष्य माता-पिता का सबसे बड़ा संकल्प होता है। ज्योतिष में पंचम भाव (संतान व विद्या भाव) और गुरु (बृहस्पति) का शुभ प्रभाव ज्ञान व सद्बुद्धि प्रदान करता है।',
+    suggestedAction: 'बच्चों से प्रतिदिन सरस्वती वंदना अथवा गायत्री मन्त्र का उच्चारण कराएं और पंचम भाव का विश्लेषण कराएं।',
+    quickChips: [
+      { label: '📜 संतान व विद्या भाव कुण्डली विश्लेषण', action: 'INTENT_SCHOLAR' },
+      { label: '📿 गायत्री मन्त्र साधना', action: 'INTENT_MANTRA_GAYATRI' },
+      { label: '🕉️ आज का पञ्चाङ्ग व विद्या मुहूर्त', action: 'INTENT_PANCHANG' }
+    ]
+  },
+
+  // 17. Success, Gratitude & Avoiding Arrogance (सफलता / कृतज्ञता / अहंकार निवारण)
+  {
+    id: 'SUCCESS_GRATITUDE',
+    situation: 'सफलता, कृतज्ञता व अहंकार का शमन',
+    keywords: ['success', 'won', 'grateful', 'thank you', 'proud', 'achieved', 'सफलता मिली', 'जीत', 'धन्यवाद', 'कृतज्ञता', 'आभार', 'सफल'],
+    sourceGrantha: 'ईशावास्योपनिषद् (मन्त्र १)',
+    sourceType: 'UPANISHAD',
+    verse: 'ईशा वास्यमिदं सर्वं यत्किञ्च जगत्यां जगत् ।\nतेन त्यक्तेन भुञ्जीथा मा गृधः कस्यस्विद्धनम् ॥',
+    transliteration: 'īśā vāsyam idaṁ sarvaṁ yat kiñca jagatyāṁ jagat ।\ntena tyaktena bhuñjīthā mā gṛdhaḥ kasya svid dhanam ॥',
+    meaningHi: 'इस सम्पूर्ण चराचर ब्रह्माण्ड में जो कुछ भी है, वह सब ईश्वर से ही व्याप्त है। अतः त्याग भाव से उसका उपभोग करो, किसी अन्य के धन या यश का लोभ मत करो।',
+    meaningEn: 'Everything animate or inanimate that is within the universe is controlled and owned by the Supreme Lord. One should therefore accept only those things necessary, set apart as one’s quota, and not covet anything else.',
+    kashiSahayakBridge: 'हर हर महादेव! 🙏 आपकी सफलता पर हार्दिक बधाई! वैदिक परम्परा सिखाती है कि विजय की वेला में विनम्रता और ईश्वर के प्रति कृतज्ञता ही उस सफलता को अक्षुण्ण और स्थायी बनाती है।',
+    suggestedAction: 'भगवान विश्वनाथ के चरणों में दीप दान करें तथा किसी निर्धन को अन्न अथवा वस्त्र का दान करें।',
+    quickChips: [
+      { label: '🪔 काशी विश्वनाथ दीप दान', action: 'INTENT_DARSHAN_KASHI' },
+      { label: '📿 शिव ताण्डव स्तोत्रम्', action: 'INTENT_MANTRA_SHIVATANDAV' },
+      { label: '📜 आगामी जीवन दशा व वार्षिक विवेचना', action: 'INTENT_SCHOLAR' }
     ]
   }
 ];
