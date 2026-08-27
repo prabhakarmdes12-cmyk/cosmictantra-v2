@@ -353,7 +353,7 @@ const JYOTIRLINGA_DATA: ShrineItem[] = [
     angaOrSignificance: '१२वाँ अन्तिम ज्योतिर्लिंग — परम शिवभक्त घुश्मा की अनन्य भक्ति से प्रसन्न होकर भगवान यहाँ प्रकट हुए।',
     bhairavOrLord: 'कपाल भैरव',
     imageUrl: 'https://images.unsplash.com/photo-1624555130581-1d9cca783bc0?auto=format&fit=crop&w=1400&q=85',
-    videoId: 'J3b-aW7G26Y',
+    videoId: 'Uu83ro6p4iI',
     liveUrl: 'https://www.youtube.com/@grishneshwartemple/live',
     trustUrl: 'https://grishneshwar.org',
     helpline: '+91 2437 244 585',
