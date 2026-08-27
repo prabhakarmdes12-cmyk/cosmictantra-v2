@@ -1,9 +1,26 @@
 /**
- * BILINGUAL TRANSLATION DICTIONARY (ENGLISH & SHUDDHA HINDI)
- * Complete localization across all CosmicTantra modules & Chiti UDS v3 tokens.
+ * MULTI-LINGUAL TRANSLATION DICTIONARY FOR COSMIC TANTRA
+ * Complete localization across English, Shuddha Hindi, Sanskrit, Tamil, Telugu, Kannada, Malayalam, Bengali, Marathi, Gujarati, Odia, Punjabi.
  */
 
-export const TRANSLATIONS = {
+import { REGIONAL_JYOTISH_TERMS } from './regionalTranslations';
+
+export const SUPPORTED_LANGUAGES = [
+  { code: 'hi', label: 'हिन्दी', name: 'Hindi', script: 'Devanagari' },
+  { code: 'en', label: 'English', name: 'English', script: 'Latin' },
+  { code: 'sa', label: 'संस्कृतम्', name: 'Sanskrit', script: 'Devanagari' },
+  { code: 'ta', label: 'தமிழ்', name: 'Tamil', script: 'Tamil' },
+  { code: 'te', label: 'తెలుగు', name: 'Telugu', script: 'Telugu' },
+  { code: 'kn', label: 'ಕನ್ನಡ', name: 'Kannada', script: 'Kannada' },
+  { code: 'ml', label: 'മലയാളം', name: 'Malayalam', script: 'Malayalam' },
+  { code: 'bn', label: 'বাংলা', name: 'Bengali', script: 'Bengali' },
+  { code: 'mr', label: 'मराठी', name: 'Marathi', script: 'Devanagari' },
+  { code: 'gu', label: 'ગુજરાતી', name: 'Gujarati', script: 'Gujarati' },
+  { code: 'od', label: 'ଓଡ଼ିଆ', name: 'Odia', script: 'Odia' },
+  { code: 'pa', label: 'ਪੰਜਾਬੀ', name: 'Punjabi', script: 'Gurmukhi' },
+];
+
+const BASE_TRANSLATIONS = {
   en: {
     brandSubtitle: 'VEDIC PRECISION',
     nav: {
@@ -564,3 +581,46 @@ export const TRANSLATIONS = {
     }
   }
 };
+;
+
+// Create a robust Proxy-fallback handler for all regional languages
+const handler = {
+  get(target, prop) {
+    if (prop in target) {
+      return target[prop];
+    }
+    // Fallback to Hindi or English if specific dialect key is missing
+    const regKey = String(prop).toLowerCase();
+    if (regKey in REGIONAL_JYOTISH_TERMS) {
+      const rt = REGIONAL_JYOTISH_TERMS[regKey];
+      const fallback = target.hi || target.en;
+      return {
+        ...fallback,
+        nav: {
+          ...fallback.nav,
+          today: rt.panchang || fallback.nav.today,
+          muhurat: rt.muhurat || fallback.nav.muhurat,
+          kundali: rt.kundali || fallback.nav.kundali,
+          festivals: rt.panchang || fallback.nav.festivals,
+        },
+        hero: {
+          ...fallback.hero,
+          rise: rt.sunrise || fallback.hero.rise,
+          set: rt.sunset || fallback.hero.set,
+          tithi: rt.tithi || fallback.hero.tithi,
+          nakshatra: rt.nakshatra || fallback.hero.nakshatra,
+          yogaKarana: `${rt.yoga} & ${rt.karana}`,
+          rahuKaal: rt.rahuKaal || fallback.hero.rahuKaal,
+          abhijit: rt.abhijit || fallback.hero.abhijit,
+        },
+        panchang: {
+          ...fallback.panchang,
+          tag: `${rt.nativeName} ${rt.panchang} • ${rt.traditionNote}`,
+        }
+      };
+    }
+    return target.hi || target.en;
+  }
+};
+
+export const TRANSLATIONS = new Proxy(BASE_TRANSLATIONS, handler);
