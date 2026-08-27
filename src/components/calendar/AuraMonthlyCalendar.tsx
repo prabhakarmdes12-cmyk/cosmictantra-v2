@@ -41,6 +41,21 @@ const LORD_HI_MAP: Record<string, string> = {
   'Saturn': 'शनि देव', 'Rahu': 'राहु देव', 'Ketu': 'केतु देव'
 };
 
+export const ALL_MONTHS = [
+  { index: 0, en: 'January', hi: 'जनवरी', shortEn: 'Jan', shortHi: 'जन', vedicMaas: 'पौष - माघ', vedicMaasEn: 'Pausha - Magha' },
+  { index: 1, en: 'February', hi: 'फ़रवरी', shortEn: 'Feb', shortHi: 'फ़र', vedicMaas: 'माघ - फाल्गुन', vedicMaasEn: 'Magha - Phalguna' },
+  { index: 2, en: 'March', hi: 'मार्च', shortEn: 'Mar', shortHi: 'मार्च', vedicMaas: 'फाल्गुन - चैत्र', vedicMaasEn: 'Phalguna - Chaitra' },
+  { index: 3, en: 'April', hi: 'अप्रैल', shortEn: 'Apr', shortHi: 'अप्रै', vedicMaas: 'चैत्र - वैशाख', vedicMaasEn: 'Chaitra - Vaishakha' },
+  { index: 4, en: 'May', hi: 'मई', shortEn: 'May', shortHi: 'मई', vedicMaas: 'वैशाख - ज्येष्ठ', vedicMaasEn: 'Vaishakha - Jyeshtha' },
+  { index: 5, en: 'June', hi: 'जून', shortEn: 'Jun', shortHi: 'जून', vedicMaas: 'ज्येष्ठ - आषाढ़', vedicMaasEn: 'Jyeshtha - Ashadha' },
+  { index: 6, en: 'July', hi: 'जुलाई', shortEn: 'Jul', shortHi: 'जुला', vedicMaas: 'आषाढ़ - श्रावण', vedicMaasEn: 'Ashadha - Shravana' },
+  { index: 7, en: 'August', hi: 'अगस्त', shortEn: 'Aug', shortHi: 'अग', vedicMaas: 'श्रावण - भाद्रपद', vedicMaasEn: 'Shravana - Bhadrapada' },
+  { index: 8, en: 'September', hi: 'सितंबर', shortEn: 'Sep', shortHi: 'सितं', vedicMaas: 'भाद्रपद - आश्विन', vedicMaasEn: 'Bhadrapada - Ashwin' },
+  { index: 9, en: 'October', hi: 'अक्टूबर', shortEn: 'Oct', shortHi: 'अक्टू', vedicMaas: 'आश्विन - कार्तिक', vedicMaasEn: 'Ashwin - Kartika' },
+  { index: 10, en: 'November', hi: 'नवंबर', shortEn: 'Nov', shortHi: 'नवं', vedicMaas: 'कार्तिक - मार्गशीर्ष', vedicMaasEn: 'Kartika - Margashirsha' },
+  { index: 11, en: 'December', hi: 'दिसंबर', shortEn: 'Dec', shortHi: 'दिसं', vedicMaas: 'मार्गशीर्ष - पौष', vedicMaasEn: 'Margashirsha - Pausha' }
+];
+
 interface AuraMonthlyCalendarProps {
   initialLang?: string;
 }
@@ -257,28 +272,61 @@ export default function AuraMonthlyCalendar({ initialLang }: AuraMonthlyCalendar
       {/* 1. Main Calendar Header Card */}
       <div className="bg-white/90 dark:bg-[#0E101D]/90 backdrop-blur-md rounded-3xl border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 p-5 sm:p-8 shadow-xl space-y-6">
         
-        {/* Top Controls: City Selector, Language Toggle, Month Switcher, Today Jump */}
+        {/* 12-Month Quick Selector Bar (Jan to Dec with English + Hindi Month Names) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none border-b border-black/10 dark:border-white/10">
+          {ALL_MONTHS.map((m) => {
+            const isSelected = currentMonth === m.index;
+            return (
+              <button
+                key={m.index}
+                onClick={() => {
+                  playTick();
+                  setCurrentMonth(m.index);
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-mono-data font-bold transition-all cursor-pointer flex-shrink-0 flex items-center gap-1.5 border ${
+                  isSelected
+                    ? 'bg-[#8E6F1D] text-white dark:bg-[#D4AF37] dark:text-[#060709] border-[#8E6F1D] dark:border-[#D4AF37] shadow-md scale-105'
+                    : 'bg-[#FAF7F2] dark:bg-[#161826] border-black/5 dark:border-white/5 text-[#57524A] dark:text-[#D1C9BF] hover:border-[#8E6F1D]/40 hover:text-[#8E6F1D] dark:hover:text-[#F0C968]'
+                }`}
+                title={`${m.en} • ${m.hi} (${m.vedicMaas})`}
+              >
+                <span>{m.shortEn}</span>
+                <span className="opacity-75 text-[11px] font-normal">/ {m.shortHi}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Top Controls: Dual Month Title, Vedic Ephemeris, City Selector, Language Toggle, Month Switcher */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-black/10 dark:border-white/10 pb-5">
           
-          {/* Month & Lunar Info */}
-          <div className="space-y-1">
+          {/* Month & Lunar Info with Rich Text Hierarchy */}
+          <div className="space-y-1.5">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="px-2.5 py-0.5 rounded-full bg-[#8E6F1D]/15 dark:bg-[#D4AF37]/20 text-[#8E6F1D] dark:text-[#F0C968] text-[11px] font-mono-data font-bold uppercase tracking-wider">
-                {isHi ? `${monthData.lunarMonthHi} मास` : `${monthData.lunarMonthHi} मास • ${monthData.lunarMonth}`}
+              <span className="px-3 py-1 rounded-full bg-[#8E6F1D]/15 dark:bg-[#D4AF37]/20 text-[#8E6F1D] dark:text-[#F0C968] text-xs font-mono-data font-bold uppercase tracking-wider shadow-xs">
+                🕉️ {monthData.lunarMonthHi} मास • {monthData.lunarMonth} Maas
               </span>
               <span className="text-xs font-mono-data text-[#78716C] dark:text-[#A8A29E]">
-                {isHi 
-                  ? `विक्रम संवत् ${toHindiDigits(monthData.vikramSamvat)} • ${monthData.rituHi} (${monthData.ayanaHi})`
-                  : `Vikram Samvat ${monthData.vikramSamvat} • ${monthData.ritu} (${monthData.ayana})`}
+                {ALL_MONTHS[currentMonth].vedicMaas}
               </span>
             </div>
-            <h2 className="font-editorial text-2xl sm:text-4xl font-bold text-[#1C1917] dark:text-white tracking-tight">
-              {isHi ? (
-                <span>{monthData.monthNameHi} <span className="text-[#8E6F1D] dark:text-[#F0C968]">{toHindiDigits(monthData.year)}</span></span>
-              ) : (
-                <span>{monthData.monthName} {monthData.year} / <span className="text-[#8E6F1D] dark:text-[#F0C968]">{monthData.monthNameHi}</span></span>
-              )}
+
+            {/* Primary Month Title */}
+            <h2 className="font-editorial text-3xl sm:text-4xl lg:text-5xl font-bold text-[#1C1917] dark:text-white tracking-tight">
+              <span>{monthData.monthName} {monthData.year}</span>
+              <span className="text-[#8E6F1D] dark:text-[#F0C968] ml-2 font-normal">/ {monthData.monthNameHi} {toHindiDigits(monthData.year)}</span>
             </h2>
+
+            {/* Sub-Ephemeris Line */}
+            <div className="text-xs sm:text-sm font-mono-data text-[#57524A] dark:text-[#D1C9BF] flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span>📅 <strong>विक्रम संवत् {toHindiDigits(monthData.vikramSamvat)}</strong> (Vikram Samvat {monthData.vikramSamvat})</span>
+              <span>•</span>
+              <span>शक संवत् {toHindiDigits(monthData.shakaSamvat)}</span>
+              <span>•</span>
+              <span>🌿 {monthData.rituHi} ({monthData.ritu})</span>
+              <span>•</span>
+              <span>☀️ {monthData.ayanaHi}</span>
+            </div>
           </div>
 
           {/* Navigation Controls & City Switcher */}
@@ -463,7 +511,7 @@ export default function AuraMonthlyCalendar({ initialLang }: AuraMonthlyCalendar
             
             {/* Blank offset padding cells before 1st of month */}
             {Array.from({ length: monthData.firstDayOfWeek }).map((_, idx) => (
-              <div key={`blank-${idx}`} className="min-h-[110px] sm:min-h-[125px] rounded-2xl bg-black/[0.02] dark:bg-white/[0.01] border border-dashed border-black/5 dark:border-white/5 opacity-30" />
+              <div key={`blank-${idx}`} className="min-h-[115px] sm:min-h-[135px] rounded-2xl bg-black/[0.02] dark:bg-white/[0.01] border border-dashed border-black/5 dark:border-white/5 opacity-30" />
             ))}
 
             {/* Daily Panchang Cards */}
@@ -484,23 +532,23 @@ export default function AuraMonthlyCalendar({ initialLang }: AuraMonthlyCalendar
               let bgClass = 'bg-white dark:bg-[#121422]';
 
               if (isToday) {
-                borderClass = 'border-[#8E6F1D] dark:border-[#D4AF37] ring-2 ring-[#8E6F1D]/30';
+                borderClass = 'border-[#8E6F1D] dark:border-[#D4AF37] ring-2 ring-[#8E6F1D]/40 shadow-md';
                 bgClass = 'bg-[#FAF7F2] dark:bg-[#161828]';
               } else if (isPower) {
                 borderClass = 'border-amber-400/80 dark:border-amber-400/70 shadow-[0_0_12px_rgba(251,191,36,0.15)]';
-                bgClass = 'bg-gradient-to-br from-amber-500/5 to-transparent dark:bg-[#131718]';
+                bgClass = 'bg-gradient-to-br from-amber-500/10 to-transparent dark:bg-[#131718]';
               } else if (isCaution) {
                 borderClass = 'border-red-400/80 dark:border-red-400/70 shadow-[0_0_12px_rgba(239,68,68,0.12)]';
-                bgClass = 'bg-gradient-to-br from-red-500/5 to-transparent dark:bg-[#181116]';
+                bgClass = 'bg-gradient-to-br from-red-500/10 to-transparent dark:bg-[#181116]';
               }
 
               if (!isMatch) {
                 return (
                   <div 
                     key={day.dateString} 
-                    className="min-h-[110px] sm:min-h-[125px] p-2 rounded-2xl border border-black/5 dark:border-white/5 bg-black/[0.01] dark:bg-white/[0.01] opacity-30 flex flex-col justify-between"
+                    className="min-h-[115px] sm:min-h-[135px] p-2 rounded-2xl border border-black/5 dark:border-white/5 bg-black/[0.01] dark:bg-white/[0.01] opacity-30 flex flex-col justify-between"
                   >
-                    <span className="font-mono-data text-xs text-[#78716C]">{isHi ? toHindiDigits(day.dayNumber) : day.dayNumber}</span>
+                    <span className="font-mono-data text-xs text-[#78716C]">{day.dayNumber}</span>
                   </div>
                 );
               }
@@ -509,67 +557,83 @@ export default function AuraMonthlyCalendar({ initialLang }: AuraMonthlyCalendar
                 <div
                   key={day.dateString}
                   onClick={() => handleOpenDayInspector(day)}
-                  className={`min-h-[110px] sm:min-h-[125px] p-2.5 sm:p-3 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between relative group ${borderClass} ${bgClass} hover:scale-[1.02] hover:shadow-lg`}
+                  className={`min-h-[115px] sm:min-h-[135px] p-2 sm:p-2.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between relative group ${borderClass} ${bgClass} hover:scale-[1.02] hover:shadow-lg`}
                 >
                   
-                  {/* Cell Top Bar: Date Number & Moon Phase */}
+                  {/* Cell Top Bar: Dual Date Header (English Date + Hindi Date & Moon Phase) */}
                   <div>
-                    <div className="flex items-center justify-between">
-                      <span className={`font-editorial font-bold text-base sm:text-lg ${
-                        isToday 
-                          ? 'text-[#8E6F1D] dark:text-[#F0C968] underline decoration-2' 
-                          : 'text-[#1C1917] dark:text-white'
-                      }`}>
-                        {isHi ? toHindiDigits(day.dayNumber) : day.dayNumber}
-                      </span>
-                      <span className="text-xs" title={day.moonPhase.phaseName}>
-                        {day.moonPhase.icon}
-                      </span>
+                    <div className="flex items-center justify-between gap-1 border-b border-black/5 dark:border-white/5 pb-1 mb-1">
+                      {/* Left: English Date Number & Month Abbreviation */}
+                      <div className="flex items-baseline gap-1">
+                        <span className={`font-editorial font-extrabold text-base sm:text-lg leading-none ${
+                          isToday 
+                            ? 'text-[#8E6F1D] dark:text-[#F0C968] underline decoration-2' 
+                            : 'text-[#1C1917] dark:text-white'
+                        }`}>
+                          {day.dayNumber}
+                        </span>
+                        <span className="text-[9px] sm:text-[10px] font-mono-data font-bold uppercase text-[#8E6F1D] dark:text-[#F0C968]">
+                          {ALL_MONTHS[currentMonth].shortEn}
+                        </span>
+                      </div>
+
+                      {/* Right: Hindi Date & Tithi Number + Moon Phase Icon */}
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px] sm:text-[11px] font-mono-data font-bold text-[#78716C] dark:text-[#A8A29E]" title="हिन्दी तिथि संख्या">
+                          {toHindiDigits(day.dayNumber)} ({toHindiDigits(day.tithi.index > 15 ? day.tithi.index - 15 : day.tithi.index)})
+                        </span>
+                        <span className="text-xs" title={day.moonPhase.phaseName}>
+                          {day.moonPhase.icon}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Tithi with Paksha Dot */}
-                    <div className="flex items-center gap-1 mt-1 text-[11px] font-mono-data font-bold line-clamp-1">
+                    <div className="flex items-center gap-1 mt-0.5 text-[11px] font-mono-data font-bold line-clamp-1">
                       <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                        day.tithi.paksha === 'Shukla Paksha' ? 'bg-amber-400' : 'bg-blue-400'
+                        day.tithi.paksha === 'Shukla Paksha' ? 'bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)]' : 'bg-indigo-400'
                       }`} />
-                      <span className="text-[#57524A] dark:text-[#D1C9BF]">
-                        {isHi ? day.tithi.nameHi : day.tithi.name}
+                      <span className="text-[#1C1917] dark:text-[#EFECE6] truncate font-bold">
+                        {isHi ? day.tithi.nameHi : `${day.tithi.paksha === 'Shukla Paksha' ? 'Shukla' : 'Krishna'} ${day.tithi.name}`}
                       </span>
                     </div>
 
                     {/* Nakshatra */}
-                    <div className="text-[10px] font-mono-data text-[#78716C] dark:text-[#A8A29E] line-clamp-1 mt-0.5">
-                      ✦ {isHi ? day.nakshatra.nameHi : day.nakshatra.name}
+                    <div className="text-[9px] sm:text-[10px] font-mono-data text-[#57524A] dark:text-[#D1C9BF] line-clamp-1 mt-0.5">
+                      ✦ {isHi ? `${day.nakshatra.nameHi} (पाद ${toHindiDigits(day.nakshatra.pada)})` : `${day.nakshatra.name} (P${day.nakshatra.pada})`}
                     </div>
                   </div>
 
                   {/* Cell Bottom: Personal Energy Pill & Festival Banner */}
-                  <div className="space-y-1 mt-1.5">
+                  <div className="space-y-1 mt-1">
                     
                     {/* Festival Badge */}
                     {hasFestival && (
-                      <div className="px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-700 dark:text-purple-300 text-[9px] font-mono-data font-bold line-clamp-1">
+                      <div className="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-800 dark:text-purple-300 text-[8px] sm:text-[9px] font-mono-data font-bold line-clamp-1 border border-purple-500/30">
                         🪔 {isHi ? day.festivals[0].nameHi : day.festivals[0].name}
                       </div>
                     )}
 
                     {/* Personal Power/Caution Indicator */}
                     {isPower && (
-                      <div className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-800 dark:text-amber-300 text-[9px] font-mono-data font-bold flex items-center gap-1 line-clamp-1">
+                      <div className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-800 dark:text-amber-300 text-[8px] sm:text-[9px] font-mono-data font-bold flex items-center gap-1 line-clamp-1 border border-amber-500/30">
                         <Sparkles className="w-2.5 h-2.5 flex-shrink-0" />
                         <span>{isHi ? '🌟 शुभ ऊर्जा' : '🌟 POWER'}</span>
                       </div>
                     )}
                     {isCaution && (
-                      <div className="px-1.5 py-0.5 rounded bg-red-500/20 text-red-800 dark:text-red-300 text-[9px] font-mono-data font-bold flex items-center gap-1 line-clamp-1">
+                      <div className="px-1.5 py-0.5 rounded bg-red-500/20 text-red-800 dark:text-red-300 text-[8px] sm:text-[9px] font-mono-data font-bold flex items-center gap-1 line-clamp-1 border border-red-500/30">
                         <ShieldAlert className="w-2.5 h-2.5 flex-shrink-0" />
                         <span>{isHi ? '⚠️ सावधानी' : '⚠️ CAUTION'}</span>
                       </div>
                     )}
 
                     {/* Rahu Kaal Mini Indicator */}
-                    <div className="text-[8px] font-mono-data text-[#A8A29E] line-clamp-1">
-                      {isHi ? `राहु: ${toHindiDigits(day.timings.rahuKaal.start.split(' ')[0])}` : `Rahu: ${day.timings.rahuKaal.start.split(' ')[0]}`}
+                    <div className="text-[8px] font-mono-data text-[#78716C] dark:text-[#A8A29E] flex items-center justify-between">
+                      <span>{isHi ? `राहु: ${toHindiDigits(day.timings.rahuKaal.start.split(' ')[0])}` : `Rahu: ${day.timings.rahuKaal.start.split(' ')[0]}`}</span>
+                      {day.timings.abhijitMuhurat && (
+                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{isHi ? 'शुभ' : 'Abhijit'}</span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -610,14 +674,19 @@ export default function AuraMonthlyCalendar({ initialLang }: AuraMonthlyCalendar
             {/* Modal Top Bar */}
             <div className="flex items-start justify-between gap-4 border-b border-black/10 dark:border-white/10 pb-4">
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#8E6F1D]/15 dark:bg-[#D4AF37]/20 text-[#8E6F1D] dark:text-[#F0C968] text-xs font-mono-data font-bold">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#8E6F1D]/15 dark:bg-[#D4AF37]/20 text-[#8E6F1D] dark:text-[#F0C968] text-xs font-mono-data font-bold flex-wrap">
                   <span>{isHi ? inspectedDay.dayNameHi : inspectedDay.dayName}</span>
                   <span>•</span>
-                  <span>{isHi ? toHindiDigits(inspectedDay.dateString) : inspectedDay.dateString}</span>
+                  <span>{inspectedDay.dayNumber} {ALL_MONTHS[currentMonth].en} {currentYear}</span>
+                  <span>•</span>
+                  <span>दिनांक: {toHindiDigits(inspectedDay.dayNumber)} {ALL_MONTHS[currentMonth].hi}</span>
                 </div>
                 <h3 className="font-editorial text-2xl sm:text-3xl font-bold text-[#1C1917] dark:text-white mt-1">
                   {isHi ? 'दैनिक पञ्चाङ्ग व ऊर्जा विश्लेषण' : 'Daily Panchang & Personal Energy Matrix'}
                 </h3>
+                <div className="text-xs font-mono-data text-[#8E6F1D] dark:text-[#F0C968] font-bold mt-1">
+                  🕉️ {monthData.lunarMonthHi} मास ({monthData.lunarMonth}) • {inspectedDay.tithi.paksha === 'Shukla Paksha' ? (isHi ? 'शुक्ल पक्ष' : 'Shukla Paksha') : (isHi ? 'कृष्ण पक्ष' : 'Krishna Paksha')} {inspectedDay.tithi.nameHi} • विक्रम संवत् {toHindiDigits(monthData.vikramSamvat)}
+                </div>
               </div>
 
               <button
