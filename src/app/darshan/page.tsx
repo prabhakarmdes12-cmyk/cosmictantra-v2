@@ -778,6 +778,30 @@ const SIDDHA_STUTI_DATA: ShrineItem[] = [
     mapQuery: 'Radharani Temple Barsana',
     timingsHi: 'प्रातः मंगला ०५:०० • सांध्य शृंगार आरती ०७:३०',
     color: '#EC4899'
+  },
+  {
+    id: 'siddha-4',
+    order: 4,
+    name: '4. Sankata Stotra (Gupta Saptashati | Nigrahacharya Guru)',
+    nameHi: '४. संकटा स्तोत्र — गुप्त सप्तशती (निग्रहाचार्य गुरु)',
+    deity: 'Maa Sankata Devi (Mahashakti)',
+    deityHi: 'सर्वसंकटनाशिनी माँ संकटा देवी',
+    location: 'Koleshwari Parvat / Kashi',
+    locationHi: 'कौलेश्वरी पर्वत वन विहार',
+    state: 'Jharkhand / UP',
+    category: 'SIDDHA_STUTI',
+    shloka: 'संकटे पातु मां नित्यं सर्वसंकटनाशिनी । जय देवि जगन्मातः संकटे संकटाप्रिये ॥',
+    shlokaMeaning: 'समस्त संकटों का नाश करने वाली जगन्माता माँ संकटा देवी प्रत्येक घोर संकट में हमारी नित्य रक्षा करें।',
+    angaOrSignificance: 'गुप्त सप्तशती का अमोघ सिद्ध स्तोत्र — पूज्य निग्रहाचार्य श्रीभागवतानंद गुरु द्वारा कौलेश्वरी पर्वत पर उच्चारित। (#sankatastotra #guptasaptashati #nigrahacharya)',
+    bhairavOrLord: 'महाभैरव',
+    imageUrl: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1400&q=85',
+    videoId: 'HdZ8qNJ8XR4',
+    liveUrl: 'https://www.youtube.com/watch?v=HdZ8qNJ8XR4',
+    trustUrl: 'https://www.youtube.com/@SwamiNigrahacharya',
+    helpline: 'Toll Free: 1800 2026 888',
+    mapQuery: 'Sankata Devi Temple Kashi',
+    timingsHi: 'दैनिक गुप्त सप्तशती पाठ एवं सांध्य दीपदान',
+    color: '#DC2626'
   }
 ];
 
