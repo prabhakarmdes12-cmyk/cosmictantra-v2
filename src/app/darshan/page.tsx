@@ -712,6 +712,7 @@ export default function DarshanPage() {
   const [cycleSpeedSec, setCycleSpeedSec] = useState<number>(30);
   const [progressSec, setProgressSec] = useState<number>(0);
   const [displayMode, setDisplayMode] = useState<'IMAGE' | 'VIDEO'>('IMAGE');
+  const [videoStreamSource, setVideoStreamSource] = useState<'LOCAL' | 'YOUTUBE'>('LOCAL');
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [flowers, setFlowers] = useState<Array<{ id: number; x: number; icon: string; size: number }>>([]);
@@ -1164,44 +1165,55 @@ export default function DarshanPage() {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-black/40 pointer-events-none" />
                     </div>
                   ) : (
-                    /* Video / Live Stream Screen with Direct YouTube 1-Tap Launcher */
-                    <div className="relative w-full h-full min-h-[300px] sm:min-h-[380px] bg-gradient-to-b from-neutral-950 via-[#070912] to-black flex flex-col items-center justify-center p-6 text-center space-y-4">
-                      <div className="w-16 h-16 rounded-full bg-red-600/20 border-2 border-red-500 flex items-center justify-center animate-pulse">
-                        <Radio className="w-8 h-8 text-red-500" />
-                      </div>
+                    /* Video / Live Stream Screen: Plays Real HD Aarti Video / YouTube Live */
+                    <div className="relative w-full h-full min-h-[300px] sm:min-h-[380px] bg-black flex items-center justify-center overflow-hidden">
+                      {videoStreamSource === 'LOCAL' || activeShrine.category === 'GANGA_AARTI' ? (
+                        <video
+                          key={`video-local-${activeShrine.id}`}
+                          src="/kashi-hero-video.mp4"
+                          controls
+                          autoPlay
+                          loop
+                          playsInline
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <iframe
+                          key={`video-yt-${activeShrine.id}`}
+                          src={`https://www.youtube-nocookie.com/embed/${activeShrine.videoId || '5qap5aO4i9A'}?autoplay=1&mute=0&rel=0&playsinline=1`}
+                          className="w-full h-full border-0 absolute inset-0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                          allowFullScreen
+                          title={activeShrine.nameHi}
+                        />
+                      )}
 
-                      <div className="space-y-1 max-w-md">
-                        <span className="px-2.5 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-mono-data font-bold uppercase tracking-wider">
-                          🔴 अधिकृत 24x7 लाइव प्रसारण
-                        </span>
-                        <h3 className="font-editorial text-xl font-bold text-white pt-1">
-                          {activeShrine.nameHi}
-                        </h3>
-                        <p className="text-xs font-mono-data text-[#D1C9BF]">
-                          श्राइन बोर्ड ट्रस्ट द्वारा संचालित 24x7 लाइव दर्शन एवं आरती प्रसारण
-                        </p>
-                      </div>
-
-                      {/* Direct 1-Click Launchers */}
-                      <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-                        <a
-                          href={activeShrine.liveUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={() => playBell()}
-                          className="px-5 py-2.5 rounded-2xl bg-red-600 hover:bg-red-700 text-white text-xs font-mono-data font-bold flex items-center gap-2 shadow-lg transition-all cursor-pointer hover:scale-105"
-                        >
-                          <Play className="w-4 h-4 fill-white" />
-                          <span>यूट्यूब पर 24x7 लाइव देखें (YouTube ↗)</span>
-                        </a>
-
+                      {/* Video Stream Source Switcher Overlay */}
+                      <div className="absolute top-14 left-3 z-30 flex items-center gap-1.5 bg-black/75 backdrop-blur-md p-1 rounded-xl border border-white/15 shadow-lg">
                         <button
-                          onClick={() => { playTick(); setDisplayMode('IMAGE'); }}
-                          className="px-4 py-2.5 rounded-2xl border border-white/20 bg-white/10 hover:bg-white/20 text-white text-xs font-mono-data font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                          onClick={() => { playTick(); setVideoStreamSource('LOCAL'); }}
+                          className={`px-2 py-0.5 rounded-lg text-[10px] font-mono-data font-bold transition-all cursor-pointer ${
+                            videoStreamSource === 'LOCAL' ? 'bg-[#8E6F1D] text-white shadow-xs' : 'text-white/70 hover:text-white'
+                          }`}
                         >
-                          <ImageIcon className="w-3.5 h-3.5 text-amber-300" />
-                          <span>साक्षात् छवि मोड</span>
+                          🎬 पावन आरती (HD Video)
                         </button>
+                        <button
+                          onClick={() => { playTick(); setVideoStreamSource('YOUTUBE'); }}
+                          className={`px-2 py-0.5 rounded-lg text-[10px] font-mono-data font-bold transition-all cursor-pointer ${
+                            videoStreamSource === 'YOUTUBE' ? 'bg-red-600 text-white shadow-xs' : 'text-white/70 hover:text-white'
+                          }`}
+                        >
+                          🔴 यूट्यूब लाइव
+                        </button>
+                      </div>
+
+                      {/* Top Right Live Badge */}
+                      <div className="absolute top-14 right-3 z-30 pointer-events-none">
+                        <span className="px-2.5 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-mono-data font-bold uppercase flex items-center gap-1 shadow-md">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                          24x7 LIVE STREAM
+                        </span>
                       </div>
                     </div>
                   )}

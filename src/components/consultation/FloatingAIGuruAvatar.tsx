@@ -69,6 +69,7 @@ export default function FloatingAIGuruAvatar() {
   const [isPlayingOm, setIsPlayingOm] = useState(false);
   const [offeredDiyaMsgIds, setOfferedDiyaMsgIds] = useState<Record<string, boolean>>({});
   const [offeredFlowersMsgIds, setOfferedFlowersMsgIds] = useState<Record<string, boolean>>({});
+  const [activeDarshanVideoMsgIds, setActiveDarshanVideoMsgIds] = useState<Record<string, boolean>>({});
 
   // In-Chat Step Machine
   const [intakeStep, setIntakeStep] = useState<
@@ -839,54 +840,100 @@ export default function FloatingAIGuruAvatar() {
                             <Flame className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
                             <span>{msg.inChatDarshan.templeName}</span>
                           </span>
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[9px] font-mono-data font-bold flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                            <span>LIVE SANCTUM</span>
-                          </span>
-                        </div>
-
-                        {/* HD Sanctum Window with Dynamic Ritual Elements */}
-                        <div className="relative w-full h-44 rounded-xl overflow-hidden bg-black border border-white/10 group shadow-inner">
-                          <Image
-                            src={msg.inChatDarshan.image}
-                            alt={msg.inChatDarshan.templeName}
-                            fill
-                            className="object-cover transition-transform duration-700 group-hover:scale-105"
-                          />
                           
-                          {/* Sacred Ambient Vignette & Gradient */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/30 pointer-events-none" />
-
-                          {/* Floating Flowers Overlay when offered */}
-                          {offeredFlowersMsgIds[msg.id] && (
-                            <div className="absolute inset-0 pointer-events-none flex items-center justify-center animate-fade-in">
-                              <div className="text-3xl animate-bounce">🌺 🌸 🪷</div>
-                            </div>
-                          )}
-
-                          {/* Glowing Diya Flame when offered */}
-                          {offeredDiyaMsgIds[msg.id] ? (
-                            <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none animate-fade-in">
-                              <div className="text-2xl animate-pulse drop-shadow-[0_0_15px_#F59E0B]">🪔</div>
-                              <span className="text-[10px] font-mono-data font-bold text-amber-300 bg-black/70 px-2 py-0.5 rounded-full mt-0.5 border border-amber-400/40">
-                                दीप प्रज्वलित • हर हर महादेव!
-                              </span>
-                            </div>
-                          ) : (
-                            <div className="absolute top-2 right-2">
-                              <span className="text-[9px] font-mono-data text-amber-200/90 bg-black/60 px-2 py-0.5 rounded-md backdrop-blur-xs border border-white/10">
-                                {msg.inChatDarshan.timings}
-                              </span>
-                            </div>
-                          )}
-
-                          {/* Location Badge */}
-                          <div className="absolute bottom-2 left-2 flex items-center pointer-events-none">
-                            <span className="text-[11px] text-white/95 font-semibold drop-shadow-md">
-                              {msg.inChatDarshan.location}
-                            </span>
+                          {/* Image / Video Mode Switcher */}
+                          <div className="flex items-center gap-1 bg-black/60 p-0.5 rounded-lg border border-white/10 text-[10px] font-mono-data">
+                            <button
+                              onClick={() => { playClick(); setActiveDarshanVideoMsgIds(prev => ({ ...prev, [msg.id]: false })); }}
+                              className={`px-1.5 py-0.5 rounded-md font-bold transition-all cursor-pointer ${
+                                !activeDarshanVideoMsgIds[msg.id] ? 'bg-[#8E6F1D] text-white' : 'text-white/60 hover:text-white'
+                              }`}
+                            >
+                              छवि
+                            </button>
+                            <button
+                              onClick={() => { handlePlayDiyaBell(); setActiveDarshanVideoMsgIds(prev => ({ ...prev, [msg.id]: true })); }}
+                              className={`px-1.5 py-0.5 rounded-md font-bold transition-all cursor-pointer ${
+                                activeDarshanVideoMsgIds[msg.id] ? 'bg-[#8E6F1D] text-white' : 'text-white/60 hover:text-white'
+                              }`}
+                            >
+                              ▶ वीडियो
+                            </button>
                           </div>
                         </div>
+
+                        {/* HD Sanctum Window OR Real Playing Video */}
+                        {activeDarshanVideoMsgIds[msg.id] ? (
+                          <div className="relative w-full h-44 rounded-xl overflow-hidden bg-black border border-white/10 shadow-inner">
+                            <video
+                              src="/kashi-hero-video.mp4"
+                              controls
+                              autoPlay
+                              loop
+                              playsInline
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute top-2 left-2 pointer-events-none">
+                              <span className="px-2 py-0.5 rounded-full bg-red-600/90 text-white text-[9px] font-mono-data font-bold flex items-center gap-1 shadow-md">
+                                <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                                24x7 HD STREAM
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="relative w-full h-44 rounded-xl overflow-hidden bg-black border border-white/10 group shadow-inner">
+                            <Image
+                              src={msg.inChatDarshan.image}
+                              alt={msg.inChatDarshan.templeName}
+                              fill
+                              className="object-cover transition-transform duration-700 group-hover:scale-105"
+                            />
+                            
+                            {/* Sacred Ambient Vignette & Gradient */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/30 pointer-events-none" />
+
+                            {/* Center Play Button Overlay */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <button
+                                onClick={() => { handlePlayDiyaBell(); setActiveDarshanVideoMsgIds(prev => ({ ...prev, [msg.id]: true })); }}
+                                className="w-11 h-11 rounded-full bg-amber-500 hover:bg-amber-600 text-white flex items-center justify-center shadow-lg transition-transform hover:scale-110 cursor-pointer"
+                                title="Play Aarti Video"
+                              >
+                                <Play className="w-5 h-5 ml-0.5 fill-white" />
+                              </button>
+                            </div>
+
+                            {/* Floating Flowers Overlay when offered */}
+                            {offeredFlowersMsgIds[msg.id] && (
+                              <div className="absolute inset-0 pointer-events-none flex items-center justify-center animate-fade-in">
+                                <div className="text-3xl animate-bounce">🌺 🌸 🪷</div>
+                              </div>
+                            )}
+
+                            {/* Glowing Diya Flame when offered */}
+                            {offeredDiyaMsgIds[msg.id] ? (
+                              <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none animate-fade-in">
+                                <div className="text-2xl animate-pulse drop-shadow-[0_0_15px_#F59E0B]">🪔</div>
+                                <span className="text-[10px] font-mono-data font-bold text-amber-300 bg-black/70 px-2 py-0.5 rounded-full mt-0.5 border border-amber-400/40">
+                                  दीप प्रज्वलित • हर हर महादेव!
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="absolute top-2 right-2">
+                                <span className="text-[9px] font-mono-data text-amber-200/90 bg-black/60 px-2 py-0.5 rounded-md backdrop-blur-xs border border-white/10">
+                                  {msg.inChatDarshan.timings}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Location Badge */}
+                            <div className="absolute bottom-2 left-2 flex items-center pointer-events-none">
+                              <span className="text-[11px] text-white/95 font-semibold drop-shadow-md">
+                                {msg.inChatDarshan.location}
+                              </span>
+                            </div>
+                          </div>
+                        )}
 
                         {/* Sacred Interactive Ritual Control Actions */}
                         <div className="grid grid-cols-2 gap-1.5 pt-1">
