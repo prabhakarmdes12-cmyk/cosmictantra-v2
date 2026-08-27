@@ -802,6 +802,30 @@ const SIDDHA_STUTI_DATA: ShrineItem[] = [
     mapQuery: 'Sankata Devi Temple Kashi',
     timingsHi: 'दैनिक गुप्त सप्तशती पाठ एवं सांध्य दीपदान',
     color: '#DC2626'
+  },
+  {
+    id: 'siddha-5',
+    order: 5,
+    name: '5. Kalika Stuti (Prabal Dand Prachand | Nigrahacharya Guru)',
+    nameHi: '५. कालिका स्तोत्र — प्रबल दण्ड प्रचण्ड (निग्रहाचार्य गुरु)',
+    deity: 'Maa Mahakali / Kalika',
+    deityHi: 'शत्रुविनाशिनी माँ महाकाली',
+    location: 'Koleshwari Parvat / Kalighat',
+    locationHi: 'कौलेश्वरी पर्वत / कालीघाट',
+    state: 'Devbhoomi Sanatan',
+    category: 'SIDDHA_STUTI',
+    shloka: 'प्रबलदण्डप्रचण्डभुजदण्डखण्डितविपक्षचक्रप्रिये । रणचण्डि चण्डि वरदे महामहिषमर्दिनी कालिका जयति ॥',
+    shlokaMeaning: 'अपने प्रबल और प्रचण्ड भुजदण्डों से समस्त दुष्टों व विपक्षियों का संहार करने वाली, रणचण्डी, वरदायिनी माँ कालिका की जय हो।',
+    angaOrSignificance: 'ओजस्वी वीर रस से परिपूर्ण माँ कालिका की सिद्ध स्तुति — पूज्य निग्रहाचार्य श्रीभागवतानंद गुरु द्वारा मुखरित। (#kalikastuti #nigrahacharya #prabaldand)',
+    bhairavOrLord: 'कालभैरव',
+    imageUrl: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1400&q=85',
+    videoId: 'f50skV_MJJg',
+    liveUrl: 'https://www.youtube.com/watch?v=f50skV_MJJg',
+    trustUrl: 'https://www.youtube.com/@SwamiNigrahacharya',
+    helpline: 'Toll Free: 1800 2026 888',
+    mapQuery: 'Kalighat Temple Kolkata',
+    timingsHi: 'दैनिक कालिका स्तुति पाठ एवं महाआरती',
+    color: '#991B1B'
   }
 ];
 
