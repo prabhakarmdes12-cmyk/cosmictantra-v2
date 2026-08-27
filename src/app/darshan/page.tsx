@@ -1167,7 +1167,7 @@ export default function DarshanPage() {
                   ) : (
                     /* Video / Live Stream Screen: Plays Real HD Aarti Video / YouTube Live */
                     <div className="relative w-full h-full min-h-[300px] sm:min-h-[380px] bg-black flex items-center justify-center overflow-hidden">
-                      {videoStreamSource === 'LOCAL' || activeShrine.category === 'GANGA_AARTI' ? (
+                      {videoStreamSource === 'LOCAL' ? (
                         <video
                           key={`video-local-${activeShrine.id}`}
                           src="/kashi-hero-video.mp4"
@@ -1178,14 +1178,37 @@ export default function DarshanPage() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <iframe
-                          key={`video-yt-${activeShrine.id}`}
-                          src={`https://www.youtube-nocookie.com/embed/${activeShrine.videoId || '5qap5aO4i9A'}?autoplay=1&mute=0&rel=0&playsinline=1`}
-                          className="w-full h-full border-0 absolute inset-0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                          allowFullScreen
-                          title={activeShrine.nameHi}
-                        />
+                        <div className="relative w-full h-full bg-black flex items-center justify-center">
+                          <iframe
+                            key={`video-yt-${activeShrine.id}`}
+                            src={`https://www.youtube-nocookie.com/embed?listType=search&list=${encodeURIComponent(activeShrine.name + ' live darshan')}&autoplay=1&mute=0&rel=0&playsinline=1`}
+                            className="w-full h-full border-0 absolute inset-0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowFullScreen
+                            title={activeShrine.nameHi}
+                          />
+
+                          {/* Direct Launch Bar for Official Temple Trust Live Stream Channel */}
+                          <div className="absolute bottom-3 inset-x-3 sm:inset-x-6 z-30 flex flex-wrap items-center justify-between gap-2 bg-black/90 backdrop-blur-md p-2 sm:px-4 sm:py-2 rounded-2xl border border-red-500/40 text-white shadow-2xl">
+                            <div className="flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+                              <span className="text-[11px] sm:text-xs font-mono-data font-bold text-red-200">
+                                🔴 {activeShrine.nameHi} (आधिकारिक 24x7 लाइव ट्रस्ट चैनल)
+                              </span>
+                            </div>
+
+                            <a
+                              href={activeShrine.liveUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => playBell()}
+                              className="px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-mono-data font-bold flex items-center gap-1.5 shadow-md transition-all cursor-pointer hover:scale-105"
+                            >
+                              <span>साक्षात् यूट्यूब लाइव खोलें ↗</span>
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          </div>
+                        </div>
                       )}
 
                       {/* Video Stream Source Switcher Overlay */}
