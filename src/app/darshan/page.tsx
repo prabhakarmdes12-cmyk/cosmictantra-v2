@@ -56,7 +56,7 @@ interface ShrineItem {
   location: string;
   locationHi: string;
   state: string;
-  category: 'JYOTIRLINGA' | 'SHAKTI_PEETH' | 'CHAR_DHAM' | 'GANGA_AARTI';
+  category: 'JYOTIRLINGA' | 'SHAKTI_PEETH' | 'CHAR_DHAM' | 'GANGA_AARTI' | 'SIDDHA_STUTI';
   shloka: string;
   shlokaMeaning: string;
   angaOrSignificance: string;
@@ -705,8 +705,36 @@ const GANGA_AARTI_DATA: ShrineItem[] = [
   }
 ];
 
+// 5. Curated Siddha Stuti, Mahastotras & Bhajans of Bharat
+const SIDDHA_STUTI_DATA: ShrineItem[] = [
+  {
+    id: 'siddha-1',
+    order: 1,
+    name: '1. Hiremath Ji Maharaj Shiva Stotra',
+    nameHi: '१. पूज्य हीरेमठ जी महाराज शिव स्तोत्र',
+    deity: 'Lord Shiva (Kedareshwar Mahadev)',
+    deityHi: 'भगवान शिव (केदारेश्वर महादेव)',
+    location: 'Kedareshwar / Hiremath Gurukulam',
+    locationHi: 'श्री केदारेश्वर धाम (पूज्य हीरेमठ जी)',
+    state: 'Devbhoomi Uttarakhand',
+    category: 'SIDDHA_STUTI',
+    shloka: 'नमामीशमीशान निर्वाणरूपं विभुं व्यापकं ब्रह्मवेदस्वरूपम् ।',
+    shlokaMeaning: 'ईशान रूप, मोक्ष स्वरूप, सर्वव्यापक, ब्रह्म एवं वेद के साक्षात् स्वरूप भगवान शिव को मेरा बारम्बार प्रणाम है।',
+    angaOrSignificance: 'सिद्ध महात्मा पूज्य हीरेमठ जी महाराज द्वारा मुखरित अलौकिक शिव स्तुति — श्रवण मात्र से चित्त में असीम शान्ति एवं शिव तत्व की अनुभूति होती है। (#hiremathji #kedareshwarmahadev)',
+    bhairavOrLord: 'केदारेश्वर महादेव',
+    imageUrl: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1400&q=85',
+    videoId: 'wGNGRVe0irM',
+    liveUrl: 'https://www.youtube.com/watch?v=wGNGRVe0irM',
+    trustUrl: 'https://www.youtube.com/@hiremathji',
+    helpline: '+91 800 2026 888',
+    mapQuery: 'Kedarnath Temple Himalayas',
+    timingsHi: 'दैनिक सिद्ध स्तोत्र पाठ व ध्यान साधना',
+    color: '#6366F1'
+  }
+];
+
 export default function DarshanPage() {
-  const [activeCategory, setActiveCategory] = useState<'JYOTIRLINGA' | 'SHAKTI_PEETH' | 'CHAR_DHAM' | 'GANGA_AARTI'>('JYOTIRLINGA');
+  const [activeCategory, setActiveCategory] = useState<'JYOTIRLINGA' | 'SHAKTI_PEETH' | 'CHAR_DHAM' | 'GANGA_AARTI' | 'SIDDHA_STUTI'>('JYOTIRLINGA');
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [isParikramaPlaying, setIsParikramaPlaying] = useState<boolean>(true);
   const [cycleSpeedSec, setCycleSpeedSec] = useState<number>(30);
@@ -742,6 +770,7 @@ export default function DarshanPage() {
       case 'SHAKTI_PEETH': return SHAKTI_PEETH_DATA;
       case 'CHAR_DHAM': return CHAR_DHAM_DATA;
       case 'GANGA_AARTI': return GANGA_AARTI_DATA;
+      case 'SIDDHA_STUTI': return SIDDHA_STUTI_DATA;
       default: return JYOTIRLINGA_DATA;
     }
   }, [activeCategory]);
@@ -832,7 +861,7 @@ export default function DarshanPage() {
   };
 
   // Category switch
-  const handleCategorySwitch = (cat: 'JYOTIRLINGA' | 'SHAKTI_PEETH' | 'CHAR_DHAM' | 'GANGA_AARTI') => {
+  const handleCategorySwitch = (cat: 'JYOTIRLINGA' | 'SHAKTI_PEETH' | 'CHAR_DHAM' | 'GANGA_AARTI' | 'SIDDHA_STUTI') => {
     playBell();
     setActiveCategory(cat);
     setCurrentIndex(0);
@@ -1035,6 +1064,18 @@ export default function DarshanPage() {
             >
               <span>🌊</span>
               <span>माँ गंगा महाआरती (Ganga Aartis)</span>
+            </button>
+
+            <button
+              onClick={() => handleCategorySwitch('SIDDHA_STUTI')}
+              className={`px-3 py-1 rounded-xl text-[11px] font-mono-data font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                activeCategory === 'SIDDHA_STUTI'
+                  ? 'bg-[#6366F1] text-white shadow-sm'
+                  : 'bg-white/10 text-white/80 hover:bg-white/20'
+              }`}
+            >
+              <span>🎵</span>
+              <span>सिद्ध स्तुति व भजन (Siddha Stuti)</span>
             </button>
           </div>
 

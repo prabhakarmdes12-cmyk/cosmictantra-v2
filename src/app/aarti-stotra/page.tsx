@@ -43,7 +43,8 @@ interface SacredTextItem {
   deity: string;
   source: string;
   verified: boolean;
-  category: 'aarti' | 'stotra' | 'granth';
+  category: 'aarti' | 'stotra' | 'granth' | 'siddha-stuti';
+  videoId?: string;
   structure?: string;
   meaningSummary?: string;
   sections: VerseSection[];
@@ -1528,8 +1529,91 @@ const aartisData: SacredTextItem[] = [
   },
 ];
 
+// =========================================================================
+// 4. SIDDHA STUTI & BHAJAN (सिद्ध स्तुति एवं भक्ति भजन — CURATED SACRED AUDIO/VIDEO & TEXT)
+// =========================================================================
+const siddhaStutiData: SacredTextItem[] = [
+  {
+    id: 501,
+    slug: 'hiremath-ji-shiva-stotra',
+    category: 'siddha-stuti',
+    title: 'पूज्य हीरेमठ जी महाराज शिव स्तोत्र (Hiremath Ji Maharaj Shiva Stotra)',
+    subtitle: 'भगवान केदारेश्वर महादेव की अलौकिक दिव्य स्तुति (#hiremathji #kedareshwarmahadev)',
+    deity: 'Lord Shiva (Kedareshwar Mahadev)',
+    source: 'पूज्य सिद्ध संत हीरेमठ जी महाराज मुखरित',
+    structure: 'Rudrashtakam Stotra Bhakti Gaan',
+    videoId: 'wGNGRVe0irM',
+    meaningSummary: 'सिद्ध महात्मा पूज्य हीरेमठ जी महाराज द्वारा भावपूर्ण स्वर में मुखरित भगवान शिव की पावन स्तुति। इसके श्रवण व सस्वर पाठ से चित्त के समस्त क्लेश दूर होकर अन्तःकरण में असीम शिव तत्व व शान्ति का प्रादुर्भाव होता है।',
+    verified: true,
+    sections: [
+      {
+        id: 'hiremath-rudrashtakam',
+        title: '१. सम्पूर्ण श्री रुद्राष्टकम् सिद्ध स्तोत्र (श्लोक १ - ९)',
+        subtitle: 'Complete Sanskrit Verses with Word-by-Word Hindi Meaning',
+        verses: [
+          {
+            shlokaNo: 'श्लोक १',
+            sanskrit: `नमामीशमीशान निर्वाणरूपं विभुं व्यापकं ब्रह्मवेदस्वरूपम् ।
+निजं निर्गुणं निर्विकल्पं निरीहं चिदाकाशमाकाशवासं भजेऽहम् ॥`,
+            hindi: 'हे मोक्ष स्वरूप, सर्वव्यापक, ब्रह्म और वेद स्वरूप, ईशान दिशा के स्वामी, निर्गुण, निर्विकल्प, निष्काम, चिदाकाश रूप और आकाश को ही वस्त्र रूप में धारण करने वाले परमेश्वर शिव! मैं आपको नमस्कार व भजन करता हूँ।',
+          },
+          {
+            shlokaNo: 'श्लोक २',
+            sanskrit: `निराकारमोङ्कारमूलं तुरीयं गिरा ज्ञान गोतीतमीशं गिरीशम् ।
+करालं महाकाल कालं कृपालं गुणागार संसारपारं नतोऽहम् ॥`,
+            hindi: 'निराकार, ओंकार के मूल, तुरीय अवस्था में स्थित, वाणी, बुद्धि और इन्द्रियों से परे, कैलासपति, प्रलयंकारी, कालों के काल महाकाल, परम कृपालु, गुणों के धाम और संसार-सागर से पार उतारने वाले भगवान शिव को मैं प्रणाम करता हूँ।',
+          },
+          {
+            shlokaNo: 'श्लोक ३',
+            sanskrit: `तुषाराद्रि संकाश गौरं गभीरं मनोभूत कोटि प्रभा श्री शरीरम् ।
+स्फुरन्मौलि कल्लोलिनी चारु गङ्गा लसद्भालबालेन्दु कण्ठे भुजङ्गा ॥`,
+            hindi: 'जो हिमालय पर्वत के समान श्वेत वर्ण, गम्भीर, करोड़ों कामदेवों के समान कान्तिमान शरीर वाले हैं, जिनके मस्तक पर चंचल तरंगों वाली सुन्दर गंगा जी सुशोभित हैं, भाल पर बाल-चन्द्रमा और कण्ठ में नागराज विराजमान हैं।',
+          },
+          {
+            shlokaNo: 'श्लोक ४',
+            sanskrit: `चलत्कुण्डलं भ्रू सुनेत्रं विशालं प्रसन्नाननं नीलकण्ठं दयालम् ।
+मृगाधीशचर्माम्बरं मुण्डमालं प्रियं शङ्करं सर्वनाथं भजामि ॥`,
+            hindi: 'जिनके कानों में कुण्डल हिल रहे हैं, सुन्दर भौंहें और विशाल नेत्र हैं, मुखमण्डल प्रसन्नचित्त है, नीलकण्ठ और दयालु हैं, जो व्याघ्रचर्म धारण करते हैं और मुण्डमाला पहने हैं, उन सर्वेश्वर शंकर जी का मैं भजन करता हूँ।',
+          },
+          {
+            shlokaNo: 'श्लोक ५',
+            sanskrit: `प्रचण्डं प्रकृष्टं प्रगल्भं परेशं अखण्डं अजं भानुकोटिप्रकाशम् ।
+त्रयः शूल निर्मूलनं शूलपाणिं भजेऽहं भवानीपतिं भावगम्यम् ॥`,
+            hindi: 'प्रचण्ड, श्रेष्ठ, प्रगल्भ, परमेश्वर, अखण्ड, अजन्मा, करोड़ों सूर्यों के समान प्रकाशमान, तीनों तापों का नाश करने वाले त्रिशूलधारी, केवल प्रेम व भाव से प्राप्त होने वाले माँ भवानी के पति शिव को मैं भजता हूँ।',
+          },
+          {
+            shlokaNo: 'श्लोक ६',
+            sanskrit: `कलातीत कल्याण कल्पान्तकारी सदा सज्जनानन्ददाता पुरारी ।
+चिदानन्द संदोह मोहापहारी प्रसीद प्रसीद प्रभो मन्मथारी ॥`,
+            hindi: 'जो कलाओं से परे, कल्याणकारी, कल्प का अन्त (प्रलय) करने वाले, सत्पुरुषों को सदा आनन्द देने वाले, त्रिपुरारी, चिदानन्द के घन स्वरूप और मोह का नाश करने वाले हैं, हे कामदेव के शत्रु भगवान! आप मुझ पर प्रसन्न हों।',
+          },
+          {
+            shlokaNo: 'श्लोक ७',
+            sanskrit: `न यावद् उमानाथ पादारविन्दं भजन्तीह लोके परे वा नराणाम् ।
+न तावत् सुखं शान्ति सन्तापनाशं प्रसीद प्रभो सर्वभूताधिवासम् ॥`,
+            hindi: 'जब तक मनुष्य माँ पार्वती के पति आपके चरण-कमलों का भजन नहीं करते, तब तक उन्हें न तो सुख मिलता है, न शान्ति और न ही उनके संतापों का नाश होता है। हे समस्त प्राणियों के हृदय में निवास करने वाले प्रभु! मुझ पर प्रसन्न हों।',
+          },
+          {
+            shlokaNo: 'श्लोक ८',
+            sanskrit: `न जानामि योगं जपं नैव पूजां नतोऽहं सदा सर्वदा शम्भु तुभ्यम् ।
+जरा जन्म दुःखौघ तातप्यमानं प्रभो पाहि आपन्नमामीश शम्भो ॥`,
+            hindi: 'मैं न तो योग जानता हूँ, न जप और न ही पूजा। हे शम्भो! मैं केवल सदा-सर्वदा आपको नमन करता हूँ। बुढ़ापे और जन्म-मरण के दुःखों से संतप्त होते हुए मुझ शरणागत की हे प्रभो! रक्षा कीजिए।',
+          },
+          {
+            shlokaNo: 'फलश्रुति श्लोक ९',
+            sanskrit: `रुद्राष्टकमिदं प्रोक्तं विप्रेण हरतोषये ।
+ये पठन्ति नरा भक्त्या तेषां शम्भुः प्रसीदति ॥
+॥ इति श्रीगोस्वामितुलसीदासकृतं श्रीरुद्राष्टकं सम्पूर्णम् ॥`,
+            hindi: 'भगवान शंकर की प्रसन्नता के लिए विप्र द्वारा कथित इस रुद्राष्टक का जो मनुष्य भक्तिपूर्वक पाठ करते हैं, उन पर भगवान शम्भु सदा प्रसन्न रहते हैं।',
+          },
+        ],
+      },
+    ],
+  },
+];
+
 export default function AartiStotraLibrary() {
-  const [activeCategory, setActiveCategory] = useState<'aarti' | 'stotra' | 'granth'>('aarti');
+  const [activeCategory, setActiveCategory] = useState<'aarti' | 'stotra' | 'granth' | 'siddha-stuti'>('aarti');
   const [selectedId, setSelectedId] = useState<number>(1);
   const [activeSectionIndex, setActiveSectionIndex] = useState<number>(0);
   const [showHindi, setShowHindi] = useState<boolean>(true);
@@ -1539,7 +1623,7 @@ export default function AartiStotraLibrary() {
   const [bookmarkedKeys, setBookmarkedKeys] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [lastReadBookmark, setLastReadBookmark] = useState<{
-    category: 'aarti' | 'stotra' | 'granth';
+    category: 'aarti' | 'stotra' | 'granth' | 'siddha-stuti';
     id: number;
     title: string;
     sectionIndex: number;
@@ -1570,6 +1654,7 @@ export default function AartiStotraLibrary() {
   const currentDataset = useMemo(() => {
     if (activeCategory === 'aarti') return aartisData;
     if (activeCategory === 'stotra') return stotrasData;
+    if (activeCategory === 'siddha-stuti') return siddhaStutiData;
     return granthsData;
   }, [activeCategory]);
 
@@ -1620,10 +1705,11 @@ export default function AartiStotraLibrary() {
   }, [activeCategory, activeItem, activeSectionIndex, activeSection]);
 
   // Category switch handler
-  const handleCategoryChange = (cat: 'aarti' | 'stotra' | 'granth') => {
+  const handleCategoryChange = (cat: 'aarti' | 'stotra' | 'granth' | 'siddha-stuti') => {
     playBell();
     setActiveCategory(cat);
-    setSelectedId(1);
+    const targetDataset = cat === 'aarti' ? aartisData : cat === 'stotra' ? stotrasData : cat === 'siddha-stuti' ? siddhaStutiData : granthsData;
+    setSelectedId(targetDataset[0]?.id || 1);
     setActiveSectionIndex(0);
     setSearchQuery('');
   };
@@ -1809,6 +1895,17 @@ export default function AartiStotraLibrary() {
             >
               <BookOpen className="w-3.5 h-3.5" />
               पवित्र महाग्रंथ ({granthsData.length})
+            </button>
+            <button 
+              onClick={() => handleCategoryChange('siddha-stuti')}
+              className={`px-5 py-2.5 rounded-xl text-xs font-mono-data font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeCategory === 'siddha-stuti' 
+                  ? 'bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#060709] shadow-md' 
+                  : 'bg-white/70 dark:bg-white/5 border border-black/10 dark:border-white/10 text-[#44403C] dark:text-[#D1C9BF] hover:border-[#8E6F1D]'
+              }`}
+            >
+              <span>🎵</span>
+              सिद्ध स्तुति व भजन ({siddhaStutiData.length})
             </button>
           </div>
         </div>
@@ -2035,6 +2132,41 @@ export default function AartiStotraLibrary() {
             readingMode === 'paginated' ? 'max-h-[650px] overflow-y-auto' : 'overflow-visible'
           }`}>
             
+            {/* Embedded Curated Video Player for Siddha Stuti / Bhajans */}
+            {activeItem.videoId && (
+              <div className="bg-black/95 rounded-2xl border border-[#8E6F1D]/40 dark:border-[#D4AF37]/45 p-3.5 sm:p-5 shadow-2xl space-y-3">
+                <div className="flex items-center justify-between text-xs font-mono-data">
+                  <div className="flex items-center gap-2 text-amber-300 font-bold">
+                    <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+                    <span>सिद्ध स्तुति एवं भजन प्रसारण • {activeItem.deity}</span>
+                  </div>
+                  <span className="text-[11px] text-white/70">
+                    {activeItem.source}
+                  </span>
+                </div>
+                <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-inner bg-black border border-white/10">
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${activeItem.videoId}?autoplay=0&rel=0&playsinline=1&modestbranding=1`}
+                    className="w-full h-full border-0 absolute inset-0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    title={activeItem.title}
+                  />
+                </div>
+                <div className="flex items-center justify-between text-[11px] font-mono-data text-white/80 pt-1 border-t border-white/10">
+                  <span>श्रवण के साथ नीचे सम्पूर्ण स्तोत्र का सार्थ पाठ करें 👇</span>
+                  <a
+                    href={`https://www.youtube.com/watch?v=${activeItem.videoId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-amber-400 hover:text-amber-300 underline flex items-center gap-1 font-bold"
+                  >
+                    <span>यूट्यूब पर खोलें ↗</span>
+                  </a>
+                </div>
+              </div>
+            )}
+
             {/* 1. If Paginated Mode: Show only active section */}
             {readingMode === 'paginated' && activeSection && (
               <div className="space-y-6">
