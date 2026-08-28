@@ -1,4 +1,16 @@
-export const CITIES = [
+export interface CityCoordinate {
+  id: string;
+  name: string;
+  state: string;
+  country: string;
+  lat: number;
+  lng: number;
+  tz: number;
+  nameHi?: string;
+  isPopular?: boolean;
+}
+
+export const CITIES: CityCoordinate[] = [
   // --- ANDAMAN AND NICOBAR ISLANDS ---
   { id: 'port-blair', name: 'Port Blair', state: 'Andaman and Nicobar Islands', country: 'India', lat: 11.6234, lng: 92.7265, tz: 5.5, nameHi: 'पोर्ट ब्लेयर' },
 
@@ -591,16 +603,16 @@ export const CITIES = [
 export const DEFAULT_CITY = CITIES.find(c => c.id === 'dhanbad') || CITIES[0];
 
 // Group cities by State / Territory
-export const CITIES_BY_STATE = CITIES.reduce((acc, city) => {
+export const CITIES_BY_STATE: Record<string, CityCoordinate[]> = CITIES.reduce((acc, city) => {
   const stateKey = city.state;
   if (!acc[stateKey]) {
     acc[stateKey] = [];
   }
   acc[stateKey].push(city);
   return acc;
-}, {});
+}, {} as Record<string, CityCoordinate[]>);
 
-export function searchCities(query) {
+export function searchCities(query: string): CityCoordinate[] {
   if (!query || !query.trim()) return CITIES.slice(0, 30);
   const q = query.toLowerCase().trim();
   return CITIES.filter(c => 
@@ -611,6 +623,6 @@ export function searchCities(query) {
   );
 }
 
-export function findCityById(id) {
+export function findCityById(id: string): CityCoordinate {
   return CITIES.find(c => c.id === id) || DEFAULT_CITY;
 }
