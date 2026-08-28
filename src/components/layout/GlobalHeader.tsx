@@ -13,6 +13,7 @@ import { ShellMode } from '@/lib/routeRegistry';
 import { chitiSensory } from '@/lib/chitiAudio';
 import { SUPPORTED_LANGUAGES } from '@/lib/translations';
 import FullMegaMenuModal from '@/components/layout/FullMegaMenuModal';
+import HelpDeskCtaBanner from '@/components/helpdesk/HelpDeskCtaBanner';
 
 interface GlobalHeaderProps {
   mode?: ShellMode;
@@ -221,6 +222,9 @@ export default function GlobalHeader({
 
           {/* RIGHT COLUMN: Minimal Action & Luxury Mega Menu Trigger */}
           <div className="flex items-center justify-end gap-1.5 sm:gap-3 shrink-0">
+            {/* Free Help Desk Button */}
+            <HelpDeskCtaBanner variant="header" lang={lang === 'hi' ? 'hi' : 'en'} />
+
             {/* Quick Consultation CTA */}
             <Link
               href="/ask"

@@ -30,6 +30,7 @@ import FinalChapterCta from '@/components/FinalChapterCta';
 import Footer from '@/components/Footer';
 
 import { getPersistedLocation, LOCATION_CHANGE_EVENT, LocationAnchor } from '@/lib/location';
+import HelpDeskCtaBanner from '@/components/helpdesk/HelpDeskCtaBanner';
 
 // Dynamic Load for Heavy WebGL Canvas & Modals
 const SwargaLok = dynamic(() => import('@/components/SwargaLok'), { ssr: false });
@@ -174,6 +175,11 @@ export default function AppLandingPage() {
           lang={lang}
           theme={theme}
         />
+
+        {/* Free WhatsApp Help Desk Direct Entry Banner */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <HelpDeskCtaBanner source="HOME" lang={lang === 'hi' ? 'hi' : 'en'} />
+        </div>
 
         {/* 4. Today At A Glance (Vedic Day Arc & Stepped Ribbon) */}
         <TodayAtAGlance
@@ -341,6 +347,9 @@ export default function AppLandingPage() {
         lang={lang}
         theme={theme}
       />
+
+      {/* Floating Free WhatsApp Help Desk Direct Pill */}
+      <HelpDeskCtaBanner variant="floating" source="HOME" lang={lang === 'hi' ? 'hi' : 'en'} />
 
       {/* Floating AI Guru Concierge Avatar & Proactive Guide */}
       <FloatingAIGuruAvatar />

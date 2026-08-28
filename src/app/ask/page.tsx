@@ -22,6 +22,7 @@ import { getActiveProfile } from '@/lib/profileStore';
 import TrustBar from '@/components/visual/TrustBar';
 import CosmicTantraShell from '@/components/layout/CosmicTantraShell';
 import AIGuruChatbotModal from '@/components/consultation/AIGuruChatbotModal';
+import HelpDeskCtaBanner from '@/components/helpdesk/HelpDeskCtaBanner';
 import { chitiSensory } from '@/lib/chitiAudio';
 
 // Loads the Razorpay Checkout script once
@@ -221,6 +222,11 @@ export default function AskQuestionPage() {
             <Sparkles className="w-3.5 h-3.5 text-amber-300" />
             <span>AI गुरु वार्तालाप प्रारम्भ करें →</span>
           </button>
+        </div>
+
+        {/* Free WhatsApp Help Desk Direct CTA */}
+        <div className="max-w-xl w-full mb-6">
+          <HelpDeskCtaBanner source="ASK" topic={form.customerQuestion} />
         </div>
 
         {/* 4 SERVICE TIERS SELECTOR */}
