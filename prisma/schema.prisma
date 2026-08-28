@@ -111,6 +111,7 @@ model AstrologyConsultant {
   rating               Float              @default(5.0)
   reviewCount          Int                @default(0)
   isVerified           Boolean            @default(true)
+  isTestFixture        Boolean            @default(false)
   onboardingStatus     OnboardingStatus   @default(COMPLETED)
   isActive             Boolean            @default(true)
   aiReviewConsent      Boolean            @default(true)
@@ -125,6 +126,7 @@ model AstrologyConsultant {
   @@index([projectId])
   @@index([phone])
   @@index([onboardingStatus])
+  @@index([isTestFixture])
 }
 
 model AstrologyConsultation {
@@ -281,4 +283,20 @@ model OtpVerification {
   @@index([phone])
   @@index([purpose])
   @@index([expiresAt])
+}
+
+// Canonical Dynamic Service Catalog Model
+model AstrologyService {
+  id              String   @id @default(uuid())
+  code            String   @unique // e.g. "CONSULT_15", "CONSULT_30"
+  name            String
+  durationMinutes Int
+  priceInr        Int
+  isActive        Boolean  @default(true)
+  isFeatured      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([code])
+  @@index([isActive])
 }

@@ -104,10 +104,23 @@ export default function PanditWorkspace() {
   const [userFact, setUserFact] = useState('');
   const [tradRemedy, setTradRemedy] = useState('');
 
-  // Fetch live cases & scholars from database API
+  const [services, setServices] = useState<Array<{ id?: string; code: string; name: string; durationMinutes: number; priceInr: number }>>([
+    { code: 'CONSULT_15', name: '15-Minute Senior Vedic Consultation', durationMinutes: 15, priceInr: 501 },
+    { code: 'CONSULT_30', name: '30-Minute In-Depth Vedic Consultation', durationMinutes: 30, priceInr: 1100 }
+  ]);
+
+  // Fetch live cases, services & scholars from database API
   const fetchLiveCases = async () => {
     try {
       setIsLoading(true);
+
+      // Fetch dynamic service catalog
+      const sRes = await fetch('/api/astrology/services');
+      const sData = await sRes.json();
+      if (sData.success && Array.isArray(sData.services)) {
+        setServices(sData.services);
+      }
+
       const res = await fetch('/api/astrology/consultations');
       const data = await res.json();
       if (data.success && Array.isArray(data.consultations)) {
@@ -147,11 +160,11 @@ export default function PanditWorkspace() {
         }
       }
 
-      // Fetch active practitioners
+      // Fetch active practitioners (isolated from production fixtures)
       const pRes = await fetch('/api/astrology/practitioners');
       const pData = await pRes.json();
-      if (pData.success && Array.isArray(pData.practitioners)) {
-        setScholars(pData.practitioners.map((p: any) => ({
+      if (pData.success && Array.isArray(pData.consultants)) {
+        setScholars(pData.consultants.map((p: any) => ({
           id: p.id,
           name: p.displayName || p.fullName || 'Pandit Ji',
           specialty: p.specialty || 'Vedic Astrology'
@@ -208,7 +221,8 @@ export default function PanditWorkspace() {
 
     chitiSensory.playTick();
     const city = CITIES.find(c => c.id === selectedCityId) || CITIES[0];
-    const amount = serviceSelected === 'CONSULT_15' ? 501 : 1100;
+    const selectedSrv = services.find(s => s.code === serviceSelected) || services[0] || { priceInr: 501 };
+    const amount = selectedSrv.priceInr;
 
     try {
       const res = await fetch('/api/astrology/consultations/create', {
@@ -267,23 +281,35 @@ export default function PanditWorkspace() {
     }
   };
 
-  // Trigger Verified Webhook (DEV/TEST Suite)
+  // Trigger Verified Webhook via Real Cryptographic HMAC SHA-256 Signature
   const handleSimulatePaymentWebhook = async () => {
     if (!selectedCase) return;
     setIsVerifyingPayment(true);
     chitiSensory.playTick();
 
     try {
+      const payload = {
+        consultationId: selectedCase.id,
+        paymentId: `pay_test_${Date.now()}`
+      };
+      const rawPayload = JSON.stringify(payload);
+
+      // 1. Get real HMAC SHA-256 signature from test signing helper
+      const signRes = await fetch('/api/astrology/payments/sign-test-webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: rawPayload
+      });
+      const signData = await signRes.json();
+
+      // 2. Deliver webhook with official x-razorpay-signature header (No bypass headers)
       const res = await fetch('/api/astrology/payments/webhook', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-test-suite': 'true'
+          'x-razorpay-signature': signData.signature || ''
         },
-        body: JSON.stringify({
-          consultationId: selectedCase.id,
-          paymentId: `pay_test_${Date.now()}`
-        })
+        body: rawPayload
       });
 
       const data = await res.json();
@@ -292,10 +318,10 @@ export default function PanditWorkspace() {
         await fetchLiveCases();
         setSelectedCase(prev => prev ? { ...prev, status: 'PAYMENT_VERIFIED' } : null);
       } else {
-        alert('Webhook error: ' + data.error);
+        console.error('Webhook error:', data.error);
       }
     } catch (err: any) {
-      alert('Payment webhook verification failed: ' + err.message);
+      console.error('Payment webhook verification failed:', err.message);
     } finally {
       setIsVerifyingPayment(false);
     }
@@ -673,51 +699,42 @@ export default function PanditWorkspace() {
 
                   {/* Standardized Canonical Service Catalog */}
                   <div className="space-y-2 pt-2">
-                    <label className="text-xs font-mono-data font-bold text-[#1C1917] dark:text-white">
-                      Recommended Canonical Service *
-                    </label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div
-                        onClick={() => setServiceSelected('CONSULT_15')}
-                        className={`p-3.5 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between ${
-                          serviceSelected === 'CONSULT_15'
-                            ? 'border-amber-500 bg-amber-500/10'
-                            : 'border-black/10 dark:border-white/10'
-                        }`}
-                      >
-                        <div>
-                          <div className="text-xs font-bold text-[#1C1917] dark:text-white">
-                            CONSULT_15 (15-Minute Senior Consultation)
-                          </div>
-                          <div className="text-[11px] text-[#696256] dark:text-[#9E988D]">
-                            Focused question + verified chart handoff
-                          </div>
-                        </div>
-                        <div className="text-base font-mono-data font-bold text-amber-500">
-                          ₹501
-                        </div>
-                      </div>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-mono-data font-bold text-[#1C1917] dark:text-white">
+                        Recommended Canonical Service *
+                      </label>
+                      <span className="text-[10px] font-mono-data text-amber-500/80">
+                        Dynamic Database Catalog
+                      </span>
+                    </div>
 
-                      <div
-                        onClick={() => setServiceSelected('CONSULT_30')}
-                        className={`p-3.5 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between ${
-                          serviceSelected === 'CONSULT_30'
-                            ? 'border-amber-500 bg-amber-500/10'
-                            : 'border-black/10 dark:border-white/10'
-                        }`}
-                      >
-                        <div>
-                          <div className="text-xs font-bold text-[#1C1917] dark:text-white">
-                            CONSULT_30 (30-Minute Complete Consultation)
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {services.map(s => {
+                        const isSelected = serviceSelected === s.code;
+                        return (
+                          <div
+                            key={s.code}
+                            onClick={() => setServiceSelected(s.code as any)}
+                            className={`p-3.5 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between ${
+                              isSelected
+                                ? 'border-amber-500 bg-amber-500/10 shadow-sm'
+                                : 'border-black/10 dark:border-white/10 hover:border-amber-500/30'
+                            }`}
+                          >
+                            <div>
+                              <div className="text-xs font-bold text-[#1C1917] dark:text-white">
+                                {s.code} ({s.durationMinutes}-Minute Consultation)
+                              </div>
+                              <div className="text-[11px] text-[#696256] dark:text-[#9E988D]">
+                                {s.name}
+                              </div>
+                            </div>
+                            <div className="text-base font-mono-data font-bold text-amber-500">
+                              ₹{s.priceInr.toLocaleString('en-IN')}
+                            </div>
                           </div>
-                          <div className="text-[11px] text-[#696256] dark:text-[#9E988D]">
-                            Multi-area life review + remedial roadmap
-                          </div>
-                        </div>
-                        <div className="text-base font-mono-data font-bold text-amber-500">
-                          ₹1,100
-                        </div>
-                      </div>
+                        );
+                      })}
                     </div>
                   </div>
 
