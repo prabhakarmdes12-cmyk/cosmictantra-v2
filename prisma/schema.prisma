@@ -30,8 +30,27 @@ enum AstrologySpecialty {
 }
 
 enum ConsultationStatus {
-  DRAFT
+  NEW
+  INTAKE_IN_PROGRESS
+  INTAKE_COMPLETE
   PAYMENT_PENDING
+  PAYMENT_VERIFIED
+  SCHOLAR_ASSIGNMENT_PENDING
+  SCHOLAR_ASSIGNED
+  CALLBACK_PENDING
+  CONNECTED
+  IN_CONSULTATION
+  COMPLETED
+  // Failure / Exceptional states
+  PAYMENT_FAILED
+  CUSTOMER_UNREACHABLE
+  SCHOLAR_UNAVAILABLE
+  CANCELLED
+  REFUND_PENDING
+  REFUNDED
+  ESCALATED
+  // Legacy backward compatibility
+  DRAFT
   PAID
   CALCULATING
   AI_DRAFT_READY
@@ -44,7 +63,6 @@ enum ConsultationStatus {
   AI_FAILED
   REVIEW_REJECTED
   DELIVERY_FAILED
-  REFUNDED
 }
 
 model AstrologyPractitionerInvite {
@@ -144,6 +162,19 @@ model AstrologyConsultation {
   practitionerNotes    String?
   approvedBy           String?
   approvedAt           DateTime?
+
+  // Caller vs Subject separation
+  callerPhone          String?
+  callerName           String?
+  relationship         String?            @default("SELF")
+  birthTimeConfidence  String?            @default("EXACT") // EXACT, APPROXIMATE, UNKNOWN
+  
+  // Consultation Lifecycle Timing & Notes
+  connectedAt          DateTime?
+  completedAt          DateTime?
+  sessionDurationSec   Int?               @default(0)
+  consultationNotes    Json?              // 4 Quadrants (calculatedAstrology, scholarInterpretation, userReportedFact, traditionalRemedy)
+  cancellationReason   String?
 
   // Payment & Delivery
   paymentProvider      String?            @default("INTERNAL_TEST")

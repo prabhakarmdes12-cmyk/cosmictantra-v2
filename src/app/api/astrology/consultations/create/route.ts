@@ -109,6 +109,13 @@ export async function POST(req: NextRequest) {
       success: true,
       consultationId,
       publicId,
+      consultation: {
+        id: consultationId,
+        publicId,
+        amount: finalAmount,
+        customerName,
+        status: 'PAYMENT_PENDING'
+      },
       amount: finalAmount,
       currency: 'INR',
       checkoutEnabled: Boolean(razorpayOrderId),

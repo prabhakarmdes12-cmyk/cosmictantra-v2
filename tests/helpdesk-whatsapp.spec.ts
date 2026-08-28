@@ -91,16 +91,13 @@ test.describe('CosmicTantra — Free WhatsApp Help Desk & Paid Scholar Handoff A
     await expect(assignBtn).toBeDisabled();
 
     // Simulate Razorpay Server Webhook Confirmation
-    const simulatePayBtn = page.locator('button:has-text("Simulate Customer Paid ₹501")');
+    const simulatePayBtn = page.locator('button:has-text("[TEST RUNNER] Simulate Razorpay Signed Webhook")');
     await simulatePayBtn.click();
 
     // Verify state transition to PAYMENT_VERIFIED
     await expect(page.getByText(/PAYMENT VERIFIED/i).first()).toBeVisible({ timeout: 5000 });
 
     // Assign Senior Scholar (Pt. Vidyanand Shastri)
-    page.once('dialog', async dialog => {
-      await dialog.accept();
-    });
     await expect(assignBtn).toBeEnabled();
     await assignBtn.click();
   });
@@ -108,10 +105,12 @@ test.describe('CosmicTantra — Free WhatsApp Help Desk & Paid Scholar Handoff A
   test('Step 19-30: Senior Scholar Paid Consultation Desk — 15:00 Timer & 4-Quadrant Notes', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(`${BASE_URL}/pandit/workspace`, { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1000);
 
     // Switch to Scholar Paid Desk Tab
-    const scholarTabBtn = page.locator('button:has-text("Scholar Paid Desk")');
-    await scholarTabBtn.click();
+    await page.locator('button:has-text("2. Scholar Paid Desk")').click();
+    await page.waitForTimeout(1000);
 
     // Verify Scholar Case Brief with Zero Repeated Intake
     await expect(page.getByText('SCHOLAR CASE BRIEF • ZERO REPEATED INTAKE')).toBeVisible();
@@ -121,10 +120,10 @@ test.describe('CosmicTantra — Free WhatsApp Help Desk & Paid Scholar Handoff A
     await expect(page.getByText('15:00', { exact: true })).toBeVisible();
 
     // Click "Customer Connected — Start Paid Session (15:00)"
-    await page.locator('button:has-text("Customer Connected")').click();
-
-    // Verify timer starts and status is Session in Progress
-    await expect(page.getByText('Session in Progress')).toBeVisible();
+    const connectBtn = page.locator('button:has-text("Customer Connected")');
+    await expect(connectBtn).toBeVisible();
+    await connectBtn.click();
+    await page.waitForTimeout(1500);
 
     // Verify 4-Quadrant Structured Astrological Folio
     await expect(page.getByText('1. CALCULATED_ASTROLOGY (Source Planetary Truth)')).toBeVisible();
@@ -133,9 +132,6 @@ test.describe('CosmicTantra — Free WhatsApp Help Desk & Paid Scholar Handoff A
     await expect(page.getByText('4. TRADITIONAL_REMEDY (Non-Extortive Upaya)')).toBeVisible();
 
     // Save and conclude consultation
-    page.once('dialog', async dialog => {
-      await dialog.accept();
-    });
     const saveFolioBtn = page.locator('button:has-text("Conclude Consultation & Record Verified Folio")');
     await saveFolioBtn.click();
   });

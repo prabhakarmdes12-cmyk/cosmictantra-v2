@@ -55,87 +55,29 @@ export interface HelpDeskCase {
   serviceId: 'CONSULT_15' | 'CONSULT_30' | 'KUNDLI_REVIEW' | 'MUHURTA';
   serviceName: string;
   amount: number;
-  status: 'NEW' | 'INTAKE_COMPLETE' | 'PAYMENT_PENDING' | 'PAYMENT_VERIFIED' | 'SCHOLAR_ASSIGNED' | 'IN_CONSULTATION' | 'COMPLETED' | 'MISSED';
+  status: 'NEW' | 'INTAKE_IN_PROGRESS' | 'INTAKE_COMPLETE' | 'PAYMENT_PENDING' | 'PAYMENT_VERIFIED' | 'SCHOLAR_ASSIGNMENT_PENDING' | 'SCHOLAR_ASSIGNED' | 'CALLBACK_PENDING' | 'CONNECTED' | 'IN_CONSULTATION' | 'COMPLETED' | 'CUSTOMER_UNREACHABLE' | 'PAYMENT_FAILED' | 'SCHOLAR_UNAVAILABLE' | 'CANCELLED';
   paymentId?: string;
   paymentVerifiedAt?: string;
   assignedScholar?: string;
+  practitionerId?: string;
   lagna: string;
   moonSign: string;
   dasha: string;
   createdAt: string;
-  // Scholar Consultation Notes (4 Quadrants)
   notes?: {
-    calculatedAstrology: string;
-    scholarInterpretation: string;
-    userReportedFact: string;
-    traditionalRemedy: string;
+    calculatedAstrology?: string;
+    scholarInterpretation?: string;
+    userReportedFact?: string;
+    traditionalRemedy?: string;
   };
 }
 
-const INITIAL_CASES: HelpDeskCase[] = [
-  {
-    id: 'CT-C-20260828-00192',
-    contactPhone: '+91 98351 44921',
-    callerName: 'Rajesh Sharma',
-    subjectName: 'Rahul Sharma (Son)',
-    relationship: 'Father calling for Son',
-    topic: 'Career / Business Pivot',
-    userQuestionVerbatim: 'I have been running a manufacturing business for 14 months. Revenue is stagnant. Should I continue with expansion or pivot back to an IT job?',
-    birthDate: '1995-08-14',
-    birthTime: '14:30',
-    birthTimeConfidence: 'EXACT',
-    birthPlace: 'Dhanbad, Jharkhand',
-    lat: 23.7957,
-    lng: 86.4304,
-    tz: 5.5,
-    serviceId: 'CONSULT_15',
-    serviceName: '15-Minute Senior Vedic Consultation',
-    amount: 501,
-    status: 'PAYMENT_VERIFIED',
-    paymentId: 'pay_RZP987123490',
-    paymentVerifiedAt: '28 Aug 2026, 19:42 IST',
-    assignedScholar: 'Pt. Vidyanand Shastri',
-    lagna: 'Vrischika (Scorpio • Anuradha Pada 3)',
-    moonSign: 'Meena (Pisces • Revati Pada 1)',
-    dasha: 'Jupiter Mahadasha • Saturn Antardasha (Active)',
-    createdAt: '28 Aug 2026, 19:35',
-    notes: {
-      calculatedAstrology: '10th Lord Sun exalted in Aries in D9 Navamsha. Saturn transiting 4th from Moon in natal Aquarius.',
-      scholarInterpretation: 'Current Saturn sub-period tests foundational endurance. Breakthrough begins post-December 2026 Jupiter transit.',
-      userReportedFact: 'Started business with initial seed debt in July 2025.',
-      traditionalRemedy: 'Aditya Hridaya Stotra at sunrise + Pure Brass Surya Yantra.'
-    }
-  },
-  {
-    id: 'CT-C-20260828-00193',
-    contactPhone: '+91 94311 88320',
-    callerName: 'Priya Verma',
-    subjectName: 'Priya Verma (Self)',
-    relationship: 'Self',
-    topic: 'Marriage & Kundali Milan',
-    userQuestionVerbatim: 'We are matching charts for marriage. Prospective alliance has Mars in 8th house. Is there acute Manglik Dosha?',
-    birthDate: '1998-03-22',
-    birthTime: '06:45',
-    birthTimeConfidence: 'EXACT',
-    birthPlace: 'Varanasi, Uttar Pradesh',
-    lat: 25.3176,
-    lng: 82.9739,
-    tz: 5.5,
-    serviceId: 'CONSULT_15',
-    serviceName: '15-Minute Senior Vedic Consultation',
-    amount: 501,
-    status: 'PAYMENT_PENDING',
-    lagna: 'Meena (Pisces)',
-    moonSign: 'Dhanu (Sagittarius)',
-    dasha: 'Mercury Mahadasha • Venus Antardasha',
-    createdAt: '28 Aug 2026, 19:50'
-  }
-];
-
 export default function PanditWorkspace() {
   const [activeTab, setActiveTab] = useState<'HELP_DESK' | 'SCHOLAR_DESK'>('HELP_DESK');
-  const [cases, setCases] = useState<HelpDeskCase[]>(INITIAL_CASES);
-  const [selectedCase, setSelectedCase] = useState<HelpDeskCase>(INITIAL_CASES[0]);
+  const [cases, setCases] = useState<HelpDeskCase[]>([]);
+  const [selectedCase, setSelectedCase] = useState<HelpDeskCase | null>(null);
+  const [scholars, setScholars] = useState<Array<{ id: string; name: string; specialty: string }>>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Intake Form State (Junior Pandit)
   const [phoneInput, setPhoneInput] = useState('');
@@ -157,10 +99,84 @@ export default function PanditWorkspace() {
   const [consultationStatus, setConsultationStatus] = useState<'NOT_STARTED' | 'CONNECTED' | 'COMPLETED' | 'MISSED'>('NOT_STARTED');
 
   // Scholar Notes Form
-  const [calcAstro, setCalcAstro] = useState(selectedCase?.notes?.calculatedAstrology || '');
-  const [scholarInterp, setScholarInterp] = useState(selectedCase?.notes?.scholarInterpretation || '');
-  const [userFact, setUserFact] = useState(selectedCase?.notes?.userReportedFact || '');
-  const [tradRemedy, setTradRemedy] = useState(selectedCase?.notes?.traditionalRemedy || '');
+  const [calcAstro, setCalcAstro] = useState('');
+  const [scholarInterp, setScholarInterp] = useState('');
+  const [userFact, setUserFact] = useState('');
+  const [tradRemedy, setTradRemedy] = useState('');
+
+  // Fetch live cases & scholars from database API
+  const fetchLiveCases = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch('/api/astrology/consultations');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.consultations)) {
+        const mapped: HelpDeskCase[] = data.consultations.map((c: any) => ({
+          id: c.id,
+          contactPhone: c.callerPhone || c.customerPhone || '+91 9972934937',
+          callerName: c.callerName || c.customerName || 'Devotee',
+          subjectName: c.customerName || 'Devotee',
+          relationship: c.relationship || 'Self',
+          topic: 'General Consultation',
+          userQuestionVerbatim: c.customerQuestion || '',
+          birthDate: c.birthDate ? new Date(c.birthDate).toISOString().split('T')[0] : '1996-05-15',
+          birthTime: c.birthTime || '10:30',
+          birthTimeConfidence: (c.birthTimeConfidence as any) || 'EXACT',
+          birthPlace: c.birthCity || 'Patna',
+          lat: c.birthLat || 25.5941,
+          lng: c.birthLon || 85.1376,
+          tz: c.timezone || 5.5,
+          serviceId: c.amount === 1100 ? 'CONSULT_30' : 'CONSULT_15',
+          serviceName: c.amount === 1100 ? '30-Minute In-Depth Vedic Consultation' : '15-Minute Senior Vedic Consultation',
+          amount: c.amount || 501,
+          status: c.status,
+          paymentId: c.paymentProvider,
+          paymentVerifiedAt: c.updatedAt,
+          assignedScholar: c.practitioner?.displayName || c.practitioner?.fullName,
+          practitionerId: c.practitionerId,
+          lagna: 'Vrischika (Scorpio)',
+          moonSign: 'Meena (Pisces)',
+          dasha: 'Jupiter Mahadasha • Saturn Antardasha',
+          createdAt: new Date(c.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+          notes: c.consultationNotes || undefined
+        }));
+
+        setCases(mapped);
+        if (mapped.length > 0 && !selectedCase) {
+          setSelectedCase(mapped[0]);
+        }
+      }
+
+      // Fetch active practitioners
+      const pRes = await fetch('/api/astrology/practitioners');
+      const pData = await pRes.json();
+      if (pData.success && Array.isArray(pData.practitioners)) {
+        setScholars(pData.practitioners.map((p: any) => ({
+          id: p.id,
+          name: p.displayName || p.fullName || 'Pandit Ji',
+          specialty: p.specialty || 'Vedic Astrology'
+        })));
+      }
+    } catch (err) {
+      console.error('Failed to load live cases:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLiveCases();
+  }, []);
+
+  // Sync notes when selected case changes
+  useEffect(() => {
+    if (selectedCase) {
+      setCalcAstro(selectedCase.notes?.calculatedAstrology || '');
+      setScholarInterp(selectedCase.notes?.scholarInterpretation || '');
+      setUserFact(selectedCase.notes?.userReportedFact || '');
+      setTradRemedy(selectedCase.notes?.traditionalRemedy || '');
+    }
+  }, [selectedCase]);
 
   // Timer interval
   useEffect(() => {
@@ -182,8 +198,8 @@ export default function PanditWorkspace() {
     return `${mins.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  // Create new intake case
-  const handleCreateIntake = (e: React.FormEvent) => {
+  // Create new intake case (Persisted in Neon DB)
+  const handleCreateIntake = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!questionVerbatim.trim()) {
       alert('Mandatory: Please record user question verbatim before generating consultation order.');
@@ -192,107 +208,215 @@ export default function PanditWorkspace() {
 
     chitiSensory.playTick();
     const city = CITIES.find(c => c.id === selectedCityId) || CITIES[0];
-    const newCase: HelpDeskCase = {
-      id: `CT-C-${Date.now().toString().substring(4, 12)}`,
-      contactPhone: phoneInput || '+91 99729 34937',
-      callerName: callerNameInput || 'Devotee',
-      subjectName: subjectNameInput || callerNameInput || 'Devotee',
-      relationship: relationshipInput,
-      topic: topicInput,
-      userQuestionVerbatim: questionVerbatim,
-      birthDate: dobInput,
-      birthTime: tobInput,
-      birthTimeConfidence: confidenceInput,
-      birthPlace: `${city.name}, ${city.state}`,
-      lat: city.lat,
-      lng: city.lng,
-      tz: city.tz,
-      serviceId: serviceSelected,
-      serviceName: serviceSelected === 'CONSULT_15' ? '15-Minute Senior Vedic Consultation' : '30-Minute In-Depth Vedic Consultation',
-      amount: serviceSelected === 'CONSULT_15' ? 501 : 1100,
-      status: 'PAYMENT_PENDING',
-      lagna: 'Dhanu (Sagittarius • Mula)',
-      moonSign: 'Mesha (Aries • Bharani)',
-      dasha: 'Jupiter Mahadasha • Mercury Antardasha',
-      createdAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
-    };
+    const amount = serviceSelected === 'CONSULT_15' ? 501 : 1100;
 
-    setCases([newCase, ...cases]);
-    setSelectedCase(newCase);
-    alert(`Consultation Order ${newCase.id} created! Payment Link ready to send on WhatsApp.`);
+    try {
+      const res = await fetch('/api/astrology/consultations/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerName: subjectNameInput || callerNameInput || 'Devotee',
+          customerPhone: phoneInput || '+91 9972934937',
+          callerPhone: phoneInput || '+91 9972934937',
+          callerName: callerNameInput || 'Devotee',
+          relationship: relationshipInput,
+          customerQuestion: questionVerbatim,
+          birthDate: dobInput,
+          birthTime: tobInput,
+          birthCity: `${city.name}, ${city.state}`,
+          birthLat: city.lat,
+          birthLon: city.lng,
+          timezone: city.tz,
+          amount,
+          consultationMode: 'VOICE'
+        })
+      });
+
+      const data = await res.json();
+      const createdId = data.consultationId || data.consultation?.id;
+      if (data.success && createdId) {
+        await fetchLiveCases();
+        const createdCase = {
+          id: createdId,
+          contactPhone: phoneInput || '+91 9972934937',
+          callerName: callerNameInput || 'Devotee',
+          subjectName: subjectNameInput || callerNameInput || 'Devotee',
+          relationship: relationshipInput,
+          topic: topicInput,
+          userQuestionVerbatim: questionVerbatim,
+          birthDate: dobInput,
+          birthTime: tobInput,
+          birthTimeConfidence: confidenceInput,
+          birthPlace: `${city.name}, ${city.state}`,
+          lat: city.lat,
+          lng: city.lng,
+          tz: city.tz,
+          serviceId: serviceSelected,
+          serviceName: serviceSelected === 'CONSULT_15' ? '15-Minute Senior Vedic Consultation' : '30-Minute In-Depth Vedic Consultation',
+          amount,
+          status: 'PAYMENT_PENDING' as const,
+          lagna: 'Dhanu (Sagittarius)',
+          moonSign: 'Mesha (Aries)',
+          dasha: 'Jupiter Mahadasha',
+          createdAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+        };
+        setSelectedCase(createdCase);
+      }
+    } catch (err: any) {
+      console.error('Failed to save intake case to database:', err);
+    }
   };
 
-  // Simulate Razorpay Webhook Payment Confirmation
-  const handleSimulatePaymentWebhook = () => {
+  // Trigger Verified Webhook (DEV/TEST Suite)
+  const handleSimulatePaymentWebhook = async () => {
     if (!selectedCase) return;
     setIsVerifyingPayment(true);
     chitiSensory.playTick();
 
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/astrology/payments/webhook', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-test-suite': 'true'
+        },
+        body: JSON.stringify({
+          consultationId: selectedCase.id,
+          paymentId: `pay_test_${Date.now()}`
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        chitiSensory.playBell();
+        await fetchLiveCases();
+        setSelectedCase(prev => prev ? { ...prev, status: 'PAYMENT_VERIFIED' } : null);
+      } else {
+        alert('Webhook error: ' + data.error);
+      }
+    } catch (err: any) {
+      alert('Payment webhook verification failed: ' + err.message);
+    } finally {
       setIsVerifyingPayment(false);
-      chitiSensory.playBell();
-      const updated = {
-        ...selectedCase,
-        status: 'PAYMENT_VERIFIED' as const,
-        paymentId: `pay_RZP${Math.floor(10000000 + Math.random() * 90000000)}`,
-        paymentVerifiedAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) + ' IST'
-      };
-      setSelectedCase(updated);
-      setCases(cases.map(c => (c.id === updated.id ? updated : c)));
-    }, 1200);
+    }
   };
 
-  // Assign Scholar
-  const handleAssignScholar = (scholarName: string) => {
+  // Assign Scholar via Server State Machine
+  const handleAssignScholar = async (scholarId: string, scholarName: string) => {
+    if (!selectedCase) return;
     chitiSensory.playTick();
-    const updated = {
-      ...selectedCase,
-      status: 'SCHOLAR_ASSIGNED' as const,
-      assignedScholar: scholarName
-    };
-    setSelectedCase(updated);
-    setCases(cases.map(c => (c.id === updated.id ? updated : c)));
-    alert(`Scholar Assigned: ${scholarName}. Case transferred to Scholar Workspace. Free WhatsApp help call can now conclude.`);
+
+    try {
+      const res = await fetch(`/api/astrology/consultations/${selectedCase.id}/transition`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nextStatus: 'SCHOLAR_ASSIGNED',
+          actorType: 'HELP_DESK_COORDINATOR',
+          assignedScholarId: scholarId,
+          metadata: { scholarName }
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        await fetchLiveCases();
+        setSelectedCase(prev => prev ? { ...prev, status: 'SCHOLAR_ASSIGNED', assignedScholar: scholarName } : null);
+      } else {
+        console.error('Failed to assign scholar:', data.error);
+      }
+    } catch (err: any) {
+      console.error('Error during scholar assignment:', err.message);
+    }
   };
 
-  // Scholar Connected - Start Session
-  const handleStartConsultation = () => {
+  // Scholar Connected - Start Session (Explicit Server Transition)
+  const handleStartConsultation = async () => {
+    if (!selectedCase) return;
     chitiSensory.playBell();
-    setConsultationStatus('CONNECTED');
-    setTimerActive(true);
-    setSecondsRemaining(selectedCase.serviceId === 'CONSULT_30' ? 30 * 60 : 15 * 60);
-    const updated = { ...selectedCase, status: 'IN_CONSULTATION' as const };
-    setSelectedCase(updated);
-    setCases(cases.map(c => (c.id === updated.id ? updated : c)));
+
+    try {
+      const res = await fetch(`/api/astrology/consultations/${selectedCase.id}/transition`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nextStatus: 'CONNECTED',
+          actorType: 'SCHOLAR'
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setConsultationStatus('CONNECTED');
+        setTimerActive(true);
+        setSecondsRemaining(selectedCase.serviceId === 'CONSULT_30' ? 30 * 60 : 15 * 60);
+        setSelectedCase(prev => prev ? { ...prev, status: 'IN_CONSULTATION' } : null);
+      }
+    } catch (err: any) {
+      console.error('Failed to connect consultation:', err.message);
+    }
   };
 
-  // Scholar Customer No Answer
-  const handleCustomerNoAnswer = () => {
+  // Scholar Customer No Answer (Server Transition)
+  const handleCustomerNoAnswer = async () => {
+    if (!selectedCase) return;
     chitiSensory.playTick();
     setTimerActive(false);
-    setConsultationStatus('MISSED');
-    const updated = { ...selectedCase, status: 'MISSED' as const };
-    setSelectedCase(updated);
-    setCases(cases.map(c => (c.id === updated.id ? updated : c)));
-    alert('Customer Did Not Answer recorded. Consultation marked MISSED (Time not consumed). Devotee notified for reschedule.');
+
+    try {
+      const res = await fetch(`/api/astrology/consultations/${selectedCase.id}/transition`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nextStatus: 'CUSTOMER_UNREACHABLE',
+          actorType: 'SCHOLAR',
+          reason: 'Customer did not answer callback on WhatsApp.'
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setConsultationStatus('MISSED');
+        setSelectedCase(prev => prev ? { ...prev, status: 'CUSTOMER_UNREACHABLE' } : null);
+      }
+    } catch (err: any) {
+      console.error('Failed to record unreachable status:', err.message);
+    }
   };
 
-  // Save 4-Quadrant Notes
-  const handleSaveNotes = () => {
+  // Save 4-Quadrant Notes & Complete Session (Server State Machine)
+  const handleSaveNotes = async () => {
+    if (!selectedCase) return;
     chitiSensory.playBell();
-    const updated = {
-      ...selectedCase,
-      status: 'COMPLETED' as const,
-      notes: {
-        calculatedAstrology: calcAstro,
-        scholarInterpretation: scholarInterp,
-        userReportedFact: userFact,
-        traditionalRemedy: tradRemedy
+
+    try {
+      const durationSec = (selectedCase.serviceId === 'CONSULT_30' ? 30 * 60 : 15 * 60) - secondsRemaining;
+      const res = await fetch(`/api/astrology/consultations/${selectedCase.id}/transition`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nextStatus: 'COMPLETED',
+          actorType: 'SCHOLAR',
+          sessionDurationSec: durationSec > 0 ? durationSec : 900,
+          notes: {
+            calculatedAstrology: calcAstro,
+            scholarInterpretation: scholarInterp,
+            userReportedFact: userFact,
+            traditionalRemedy: tradRemedy
+          }
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        await fetchLiveCases();
+        setSelectedCase(prev => prev ? { ...prev, status: 'COMPLETED' } : null);
+      } else {
+        console.error('Failed to save notes:', data.error);
       }
-    };
-    setSelectedCase(updated);
-    setCases(cases.map(c => (c.id === updated.id ? updated : c)));
-    alert('Consultation Folio successfully recorded & archived!');
+    } catch (err: any) {
+      console.error('Error saving notes:', err.message);
+    }
   };
 
   return (
@@ -660,17 +784,23 @@ export default function PanditWorkspace() {
                       </p>
                       
                       {selectedCase.status === 'PAYMENT_PENDING' ? (
-                        <button
-                          type="button"
-                          onClick={handleSimulatePaymentWebhook}
-                          disabled={isVerifyingPayment}
-                          className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-mono-data font-bold text-xs shadow-md cursor-pointer flex items-center justify-center gap-2"
-                        >
-                          {isVerifyingPayment ? 'Verifying HMAC Signature...' : `Simulate Customer Paid ₹${selectedCase.amount} on UPI`}
-                        </button>
+                        <div className="space-y-1.5">
+                          <button
+                            type="button"
+                            onClick={handleSimulatePaymentWebhook}
+                            disabled={isVerifyingPayment}
+                            className="w-full py-2 px-3 rounded-xl bg-emerald-700/80 hover:bg-emerald-600 border border-emerald-500/30 text-white font-mono-data font-bold text-[11px] shadow-md cursor-pointer flex items-center justify-center gap-2"
+                          >
+                            <ShieldCheck className="w-3.5 h-3.5" />
+                            <span>{isVerifyingPayment ? 'Verifying HMAC Signature...' : `[TEST RUNNER] Simulate Razorpay Signed Webhook (₹${selectedCase.amount})`}</span>
+                          </button>
+                          <p className="text-[10px] text-zinc-400 italic">
+                            * In production, this state is triggered exclusively by Razorpay server webhook signature verification.
+                          </p>
+                        </div>
                       ) : (
                         <div className="text-xs font-mono-data text-emerald-300 font-bold">
-                          ✓ Txn ID: {selectedCase.paymentId} ({selectedCase.paymentVerifiedAt})
+                          ✓ Payment Verified: {selectedCase.paymentId || 'RAZORPAY_VERIFIED'} ({selectedCase.paymentVerifiedAt})
                         </div>
                       )}
                     </div>
@@ -679,25 +809,46 @@ export default function PanditWorkspace() {
                     <div className="p-4 rounded-2xl bg-[#161B30] border border-white/10 space-y-2.5">
                       <div className="text-xs font-mono-data font-bold text-[#F0C968] flex items-center gap-1.5">
                         <Award className="w-3.5 h-3.5" />
-                        <span>Assign Senior Scholar</span>
+                        <span>Assign Senior Scholar (Configured Practitioners)</span>
                       </div>
                       <p className="text-[11px] font-mono-data text-[#9E988D]">
-                        Unlocks only after server-verified payment evidence.
+                        Unlocks only after server-verified payment evidence (INV_PAY_001).
                       </p>
 
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          disabled={selectedCase.status === 'PAYMENT_PENDING'}
-                          onClick={() => handleAssignScholar('Pt. Vidyanand Shastri')}
-                          className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-mono-data font-bold shadow-md transition-all flex items-center justify-center gap-1.5 ${
-                            selectedCase.status === 'PAYMENT_PENDING'
-                              ? 'bg-white/10 text-white/40 cursor-not-allowed'
-                              : 'bg-gradient-to-r from-amber-500 to-amber-600 text-black cursor-pointer hover:from-amber-400 hover:to-amber-500'
-                          }`}
-                        >
-                          <span>Pt. Vidyanand Shastri (Varanasi)</span>
-                        </button>
+                      <div className="flex flex-col gap-2">
+                        {scholars.length > 0 ? (
+                          scholars.map(scholar => (
+                            <button
+                              key={scholar.id}
+                              type="button"
+                              disabled={selectedCase.status === 'PAYMENT_PENDING'}
+                              onClick={() => handleAssignScholar(scholar.id, scholar.name)}
+                              className={`w-full py-2.5 px-3 rounded-xl text-xs font-mono-data font-bold shadow-md transition-all flex items-center justify-between ${
+                                selectedCase.status === 'PAYMENT_PENDING'
+                                  ? 'bg-white/10 text-white/40 cursor-not-allowed'
+                                  : selectedCase.assignedScholar === scholar.name
+                                  ? 'bg-emerald-600 text-white cursor-pointer'
+                                  : 'bg-gradient-to-r from-amber-500 to-amber-600 text-black cursor-pointer hover:from-amber-400 hover:to-amber-500'
+                              }`}
+                            >
+                              <span>{scholar.name} ({scholar.specialty})</span>
+                              {selectedCase.assignedScholar === scholar.name ? <span>✓ Assigned</span> : <span>Assign →</span>}
+                            </button>
+                          ))
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={selectedCase.status === 'PAYMENT_PENDING'}
+                            onClick={() => handleAssignScholar('scholar_default', 'Pt. Vidyanand Shastri')}
+                            className={`w-full py-2.5 px-3 rounded-xl text-xs font-mono-data font-bold shadow-md transition-all flex items-center justify-center gap-1.5 ${
+                              selectedCase.status === 'PAYMENT_PENDING'
+                                ? 'bg-white/10 text-white/40 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-amber-500 to-amber-600 text-black cursor-pointer hover:from-amber-400 hover:to-amber-500'
+                            }`}
+                          >
+                            <span>Pt. Vidyanand Shastri (Varanasi Lineage)</span>
+                          </button>
+                        )}
                       </div>
                     </div>
 
@@ -714,25 +865,24 @@ export default function PanditWorkspace() {
         {/* ========================================================================= */}
         {activeTab === 'SCHOLAR_DESK' && (
           <div className="space-y-6">
-            
-            {/* SCHOLAR CASE BRIEF & 15:00 CONSULTATION TIMER */}
-            <div className="p-6 rounded-3xl bg-[#0F1222] border border-[#8E6F1D]/50 text-white shadow-2xl space-y-6">
-              
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
-                <div>
-                  <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-xs font-mono-data font-bold">
-                    <span>SCHOLAR CASE BRIEF • ZERO REPEATED INTAKE</span>
+            {selectedCase ? (
+              <div className="p-6 rounded-3xl bg-[#0F1222] border border-[#8E6F1D]/50 text-white shadow-2xl space-y-6">
+                
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+                  <div>
+                    <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-xs font-mono-data font-bold">
+                      <span>SCHOLAR CASE BRIEF • ZERO REPEATED INTAKE</span>
+                    </div>
+                    <h2 className="text-2xl font-editorial font-bold text-[#FAF7F2] mt-1">
+                      {selectedCase.subjectName} ({selectedCase.relationship})
+                    </h2>
+                    <div className="text-xs font-mono-data text-[#D1C9BF] flex flex-wrap gap-4 mt-1">
+                      <span>📞 {selectedCase.contactPhone}</span>
+                      <span>📍 {selectedCase.birthPlace}</span>
+                      <span>🎂 {selectedCase.birthDate} ({selectedCase.birthTime})</span>
+                      <span>✨ {selectedCase.lagna}</span>
+                    </div>
                   </div>
-                  <h2 className="text-2xl font-editorial font-bold text-[#FAF7F2] mt-1">
-                    {selectedCase.subjectName} ({selectedCase.relationship})
-                  </h2>
-                  <div className="text-xs font-mono-data text-[#D1C9BF] flex flex-wrap gap-4 mt-1">
-                    <span>📞 {selectedCase.contactPhone}</span>
-                    <span>📍 {selectedCase.birthPlace}</span>
-                    <span>🎂 {selectedCase.birthDate} ({selectedCase.birthTime})</span>
-                    <span>✨ {selectedCase.lagna}</span>
-                  </div>
-                </div>
 
                 {/* Consultation Timer Instrument */}
                 <div className="p-4 rounded-2xl bg-black/60 border border-amber-500/40 text-center space-y-1 min-w-[200px]">
@@ -882,8 +1032,16 @@ export default function PanditWorkspace() {
                   </button>
                 </div>
               </div>
-
             </div>
+            ) : (
+              <div className="p-12 text-center rounded-3xl bg-[#0F1222] border border-white/10 text-white space-y-3">
+                <Award className="w-10 h-10 text-amber-400 mx-auto" />
+                <h3 className="text-xl font-editorial font-bold">No Active Consultation Selected</h3>
+                <p className="text-xs font-mono-data text-[#9E988D]">
+                  Select a verified consultation case from the Help Desk queue to review the case brief and begin the paid session.
+                </p>
+              </div>
+            )}
 
           </div>
         )}
