@@ -25,6 +25,7 @@ import {
 import CosmicTantraShell from '@/components/layout/CosmicTantraShell';
 import VedicSkyCanvas from '@/components/visual/VedicSkyCanvas';
 import { chitiSensory } from '@/lib/chitiAudio';
+import { getCurrentGpsLocation } from '@/lib/location';
 
 interface ObservatorySite {
   id: string;
@@ -295,11 +296,39 @@ export default function ObservatoryPage() {
           </div>
 
           {/* Observatory Site Selector */}
-          <div className="bg-black/40 border border-white/10 p-4 rounded-2xl space-y-2 w-full md:w-80 shrink-0">
-            <div className="text-[10px] font-mono-data text-amber-400 font-bold uppercase tracking-wider flex items-center gap-1">
-              <MapPin className="w-3 h-3" />
-              <span>वेधशाला स्थल (Observing Station)</span>
+          <div className="bg-black/40 border border-white/10 p-4 rounded-2xl space-y-2.5 w-full md:w-80 shrink-0">
+            <div className="flex items-center justify-between">
+              <div className="text-[10px] font-mono-data text-amber-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                <MapPin className="w-3 h-3" />
+                <span>वेधशाला स्थल (Observing Station)</span>
+              </div>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  chitiSensory.playTick();
+                  try {
+                    const loc = await getCurrentGpsLocation({ enableHighAccuracy: true });
+                    const gpsSite: ObservatorySite = {
+                      id: 'my-live-gps',
+                      name: `My Live GPS (${loc.lat.toFixed(2)}°N, ${loc.lng.toFixed(2)}°E)`,
+                      nameHi: `📍 वर्तमान लाइव GPS (${loc.lat.toFixed(2)}°N, ${loc.lng.toFixed(2)}°E)`,
+                      city: loc.nearestCityName || loc.name,
+                      lat: loc.lat,
+                      lng: loc.lng,
+                      description: `Live physical satellite coordinates for observer's local celestial zenith and horizon (±${loc.accuracy}m accuracy • near ${loc.nearestCityName || 'India'}).`
+                    };
+                    setSelectedSite(gpsSite);
+                  } catch (err: any) {
+                    alert(err?.message || 'Failed to acquire GPS location.');
+                  }
+                }}
+                className="text-[10px] text-[#F0C968] hover:underline font-bold font-mono-data flex items-center gap-1 cursor-pointer bg-white/10 px-2 py-0.5 rounded-md"
+              >
+                <span>🛰️ लाइव GPS</span>
+              </button>
             </div>
+
             <select
               value={selectedSite.id}
               onChange={(e) => {
@@ -309,6 +338,9 @@ export default function ObservatoryPage() {
               }}
               className="w-full px-3 py-2 rounded-xl bg-[#121528] border border-white/15 text-xs font-mono-data text-white outline-none focus:border-[#D4AF37]"
             >
+              {selectedSite.id === 'my-live-gps' && (
+                <option value="my-live-gps">{selectedSite.nameHi}</option>
+              )}
               {OBSERVATORY_SITES.map(site => (
                 <option key={site.id} value={site.id}>{site.nameHi}</option>
               ))}

@@ -336,8 +336,13 @@ export default function CosmicNowDial({
                 {isHi ? 'वेध' : 'DIAL'}
               </span>
             </div>
-            <div className="text-[10px] font-mono-data text-[#696256] dark:text-[#9E988D] uppercase tracking-wider mt-0.5">
-              {currentCity.name} • {displayTime} {isHi ? 'भारतीय मानक समय' : 'IST'}
+            <div className="text-[10px] font-mono-data text-[#696256] dark:text-[#9E988D] uppercase tracking-wider mt-0.5 flex items-center gap-1.5">
+              <span>{currentCity.name} • {displayTime} {isHi ? 'भारतीय मानक समय' : 'IST'}</span>
+              {(currentCity as any)?.isGps && (
+                <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                  GPS
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -348,9 +353,17 @@ export default function CosmicNowDial({
             chitiSensory.playTick();
             onOpenCitySelector();
           }}
-          className="flex items-center gap-1 px-2.5 py-1 rounded-lg border border-[#8E6F1D]/25 dark:border-[#D4AF37]/35 bg-white dark:bg-[#121528] text-[10px] sm:text-[11px] font-mono-data font-bold text-[#8E6F1D] dark:text-[#F0C968] hover:border-[#D4AF37] transition-all shadow-xs cursor-pointer"
+          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border ${
+            (currentCity as any)?.isGps
+              ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+              : 'border-[#8E6F1D]/25 dark:border-[#D4AF37]/35 bg-white dark:bg-[#121528] text-[#8E6F1D] dark:text-[#F0C968]'
+          } text-[10px] sm:text-[11px] font-mono-data font-bold hover:border-[#D4AF37] transition-all shadow-xs cursor-pointer`}
         >
-          <MapPin className="w-3 h-3 text-[#A6461D] dark:text-[#E2825B]" />
+          {(currentCity as any)?.isGps ? (
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          ) : (
+            <MapPin className="w-3 h-3 text-[#A6461D] dark:text-[#E2825B]" />
+          )}
           <span>{currentCity.name}</span>
           <ChevronDown className="w-3 h-3 opacity-60" />
         </button>

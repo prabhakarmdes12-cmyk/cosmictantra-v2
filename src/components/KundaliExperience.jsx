@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { calculateKundali, RASHIS, PLANET_INFO } from '../lib/astrologyEngine';
 import { CITIES, CITIES_BY_STATE, DEFAULT_CITY, searchCities } from '../lib/cities';
+import { getCurrentGpsLocation } from '../lib/location';
 import { analytics, ANALYTICS_EVENTS } from '../lib/analytics';
 import { TRANSLATIONS } from '../lib/translations';
 import { chitiSensory } from '../lib/chitiAudio';
@@ -96,38 +97,30 @@ export default function KundaliExperience({
     }
   };
 
-  const handleUseLiveGps = () => {
+  const handleUseLiveGps = async () => {
     chitiSensory.playTick();
-    if (!navigator.geolocation) {
-      alert(isHi ? 'आपके ब्राउज़र में GPS सुविधा उपलब्ध नहीं है।' : 'Geolocation is not supported by your browser.');
-      return;
-    }
-
     setGpsStatus(isHi ? 'उपग्रह GPS निर्देशांक प्राप्त हो रहे हैं...' : 'Acquiring high-precision GPS coordinates...');
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = parseFloat(pos.coords.latitude.toFixed(4));
-        const lng = parseFloat(pos.coords.longitude.toFixed(4));
-        setFormData(prev => ({
-          ...prev,
-          cityId: 'custom-gps',
-          cityName: isHi ? 'वर्तमान GPS स्थान' : 'Current GPS Location',
-          stateName: 'Local Coordinates',
-          latitude: lat,
-          longitude: lng,
-          timezone: 5.5,
-          isCustomCoordinates: true
-        }));
-        setShowCoordinateAdvanced(true);
-        setGpsStatus(isHi ? `✓ GPS निर्देशांक लॉक: ${lat}°N, ${lng}°E` : `✓ GPS Coordinates Locked: ${lat}°N, ${lng}°E`);
-        setTimeout(() => setGpsStatus(''), 4000);
-      },
-      (err) => {
-        setGpsStatus(isHi ? 'GPS अनुमति अस्वीकृत। कृपया सूची से नगर चुनें।' : 'GPS access denied. Please select city from list.');
-        setTimeout(() => setGpsStatus(''), 4000);
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
+    try {
+      const loc = await getCurrentGpsLocation({ enableHighAccuracy: true, timeout: 12000 });
+      setFormData(prev => ({
+        ...prev,
+        cityId: loc.id,
+        cityName: loc.name,
+        stateName: loc.state,
+        latitude: loc.lat,
+        longitude: loc.lng,
+        timezone: loc.tz,
+        isCustomCoordinates: true
+      }));
+      setShowCoordinateAdvanced(true);
+      setGpsStatus(isHi 
+        ? `✓ GPS लॉक: ${loc.lat}°N, ${loc.lng}°E (${loc.nearestCityName || 'भारत'} के निकट • सटीकता ±${loc.accuracy}m)`
+        : `✓ GPS Lock: ${loc.lat}°N, ${loc.lng}°E (Near ${loc.nearestCityName || 'India'} • ±${loc.accuracy}m accuracy)`);
+      setTimeout(() => setGpsStatus(''), 5000);
+    } catch (err) {
+      setGpsStatus(err?.message || (isHi ? 'GPS अनुमति अस्वीकृत। कृपया सूची से नगर चुनें।' : 'GPS access denied. Please select city from list.'));
+      setTimeout(() => setGpsStatus(''), 5000);
+    }
   };
 
   const handleSubmit = (e) => {

@@ -190,11 +190,24 @@ export default function GlobalHeader({
             {onOpenCitySelector && (
               <button
                 onClick={onOpenCitySelector}
-                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-xs font-mono-data text-[#8E6F1D] dark:text-[#F0C968] font-bold transition-all cursor-pointer shadow-xs active:scale-95"
-                title="Select Observing Location"
+                className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border ${
+                  (currentCity as any)?.isGps
+                    ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                    : 'border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 text-[#8E6F1D] dark:text-[#F0C968]'
+                } hover:bg-black/10 dark:hover:bg-white/10 text-xs font-mono-data font-bold transition-all cursor-pointer shadow-xs active:scale-95`}
+                title="Select Observing Location / GPS"
               >
-                <MapPin className="w-3.5 h-3.5 text-[#A6461D] dark:text-[#E2825B]" />
-                <span>{currentCity.name}</span>
+                {(currentCity as any)?.isGps ? (
+                  <span className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>GPS: {currentCity.name}</span>
+                  </span>
+                ) : (
+                  <>
+                    <MapPin className="w-3.5 h-3.5 text-[#A6461D] dark:text-[#E2825B]" />
+                    <span>{currentCity.name}</span>
+                  </>
+                )}
               </button>
             )}
           </div>

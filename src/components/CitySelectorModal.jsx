@@ -1,15 +1,38 @@
 import React, { useState } from 'react';
-import { MapPin, Search, X, Check, Compass, Globe2 } from 'lucide-react';
+import { 
+  MapPin, 
+  Search, 
+  X, 
+  Check, 
+  Compass, 
+  Globe2, 
+  Navigation, 
+  Crosshair, 
+  Radio, 
+  Sparkles,
+  AlertCircle
+} from 'lucide-react';
 import { CITIES, CITIES_BY_STATE, searchCities } from '../lib/cities';
+import { getCurrentGpsLocation, persistLocation } from '../lib/location';
 import { chitiSensory } from '../lib/chitiAudio';
 
-export default function CitySelectorModal({ isOpen, onClose, currentCity, onSelectCity, lang = 'en', theme = 'dark' }) {
+export default function CitySelectorModal({ 
+  isOpen, 
+  onClose, 
+  currentCity, 
+  onSelectCity, 
+  lang = 'en', 
+  theme = 'dark' 
+}) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStateFilter, setSelectedStateFilter] = useState('ALL');
   const [customLat, setCustomLat] = useState('');
   const [customLng, setCustomLng] = useState('');
   const [customCityName, setCustomCityName] = useState('');
   const [showManualInput, setShowManualInput] = useState(false);
+  const [gpsStatus, setGpsStatus] = useState('idle'); // 'idle' | 'locating' | 'locked' | 'error'
+  const [gpsData, setGpsData] = useState(null);
+  const [gpsErrorMessage, setGpsErrorMessage] = useState('');
 
   const isHi = lang === 'hi';
   if (!isOpen) return null;
@@ -20,6 +43,29 @@ export default function CitySelectorModal({ isOpen, onClose, currentCity, onSele
     ? CITIES
     : (CITIES_BY_STATE[selectedStateFilter] || []);
 
+  const handleAcquireGps = async () => {
+    chitiSensory.playTick();
+    setGpsStatus('locating');
+    setGpsErrorMessage('');
+    
+    try {
+      const loc = await getCurrentGpsLocation({ enableHighAccuracy: true, timeout: 12000 });
+      setGpsData(loc);
+      setGpsStatus('locked');
+      chitiSensory.playSuccess?.();
+      
+      // Auto-apply after brief visual confirmation
+      setTimeout(() => {
+        onSelectCity(loc);
+        onClose();
+      }, 900);
+    } catch (err) {
+      setGpsStatus('error');
+      setGpsErrorMessage(err?.message || (isHi ? 'GPS निर्देशांक प्राप्त करने में त्रुटि।' : 'Failed to acquire GPS location.'));
+      setTimeout(() => setGpsStatus('idle'), 6000);
+    }
+  };
+
   const handleApplyCustomCoords = () => {
     chitiSensory.playTick();
     const lat = parseFloat(customLat);
@@ -28,16 +74,18 @@ export default function CitySelectorModal({ isOpen, onClose, currentCity, onSele
       alert(isHi ? 'कृपया मान्य अक्षांश (-90 से 90) और रेखांश (-180 से 180) दर्ज करें।' : 'Please enter valid Latitude (-90 to 90) and Longitude (-180 to 180).');
       return;
     }
-    const customCity = {
+    const customLocation = {
       id: 'custom-' + Date.now(),
-      name: customCityName.trim() || (isHi ? 'कस्टम स्थान' : 'Custom Location'),
+      name: customCityName.trim() || `${lat.toFixed(2)}°N, ${lng.toFixed(2)}°E`,
       state: isHi ? 'कस्टम निर्देशांक' : 'Custom Coordinates',
       country: 'India',
       lat,
       lng,
-      tz: 5.5
+      tz: 5.5,
+      isGps: false
     };
-    onSelectCity(customCity);
+    persistLocation(customLocation);
+    onSelectCity(customLocation);
     onClose();
   };
 
@@ -45,16 +93,18 @@ export default function CitySelectorModal({ isOpen, onClose, currentCity, onSele
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-150 font-mono-data">
       <div className="relative w-full max-w-xl rounded-3xl bg-[#FFFFFF] dark:bg-[#090A12] border border-black/[0.12] dark:border-[#D4AF37]/40 p-5 sm:p-6 shadow-2xl space-y-4 text-left max-h-[92vh] flex flex-col">
         
-        {/* Header */}
+        {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-black/[0.08] dark:border-white/[0.08] pb-3">
           <div className="flex items-center gap-2">
             <MapPin className="w-5 h-5 text-[#8E6F1D] dark:text-[#D4AF37]" />
             <div>
               <h3 className="font-editorial text-base sm:text-lg font-bold text-[#1C1917] dark:text-[#FAF7F2]">
-                {isHi ? 'खगोलीय गणना स्थान चयन (३५०+ नगर)' : 'Calculation Location Anchor (350+ Cities)'}
+                {isHi ? 'खगोलीय गणना स्थान चयन (GPS व ३५०+ नगर)' : 'Astrological Location Anchor (GPS & 350+ Cities)'}
               </h3>
               <p className="text-[10.5px] text-[#857E74]">
-                {isHi ? 'सटीक पञ्चाङ्ग व कुण्डली हेतु भारत के किसी भी नगर या अक्षांश-रेखांश का चयन करें' : 'Select any Indian city across all states or enter custom Lat/Lng coordinates'}
+                {isHi 
+                  ? 'प्रत्यक्ष उपग्रह GPS अथवा भारत के किसी भी नगर से वास्तविक पञ्चाङ्ग व कुण्डली गणना करें' 
+                  : 'Acquire real-time satellite GPS or select from 350+ cities across India'}
               </p>
             </div>
           </div>
@@ -69,6 +119,73 @@ export default function CitySelectorModal({ isOpen, onClose, currentCity, onSele
           </button>
         </div>
 
+        {/* Real-Time Live GPS Acquisition Banner */}
+        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-[#8E6F1D]/15 via-[#D4AF37]/15 to-transparent border border-[#8E6F1D]/30 dark:border-[#D4AF37]/40 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="relative flex items-center justify-center">
+                <Radio className={`w-4 h-4 text-[#8E6F1D] dark:text-[#F0C968] ${gpsStatus === 'locating' ? 'animate-spin' : 'animate-pulse'}`} />
+                {gpsStatus === 'locked' && (
+                  <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10B981]" />
+                )}
+              </div>
+              <div>
+                <div className="text-xs font-bold text-[#1C1917] dark:text-[#FAF7F2] flex items-center gap-1.5">
+                  <span>{isHi ? 'वर्तमान लाइव GPS स्थान (Real-Time Satellite Lock)' : 'Live Real-Time GPS Location'}</span>
+                  {currentCity?.isGps && (
+                    <span className="text-[9.5px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/30">
+                      Active
+                    </span>
+                  )}
+                </div>
+                <div className="text-[10px] text-[#857E74] dark:text-[#AAA49A]">
+                  {isHi ? 'सटीक अक्षांश-रेखांश द्वारा स्थानीय सूर्योदय, सूर्यास्त व होरा गणना' : 'Sub-arcminute sidereal precision for local sunrise, sunset and muhuratas'}
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={handleAcquireGps}
+              disabled={gpsStatus === 'locating'}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 ${
+                gpsStatus === 'locating'
+                  ? 'bg-amber-500/20 text-amber-600 border border-amber-500/40 cursor-wait'
+                  : gpsStatus === 'locked'
+                  ? 'bg-emerald-500 text-white border border-emerald-600'
+                  : 'bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-black hover:opacity-90'
+              }`}
+            >
+              <Crosshair className={`w-3.5 h-3.5 ${gpsStatus === 'locating' ? 'animate-spin' : ''}`} />
+              <span>
+                {gpsStatus === 'locating' 
+                  ? (isHi ? 'GPS खोज रहे हैं...' : 'Acquiring GPS...')
+                  : gpsStatus === 'locked'
+                  ? (isHi ? '✓ GPS लॉक' : '✓ GPS Locked')
+                  : (isHi ? 'लाइव GPS लें' : 'Use Live GPS')}
+              </span>
+            </button>
+          </div>
+
+          {/* GPS Locked Status Card */}
+          {gpsStatus === 'locked' && gpsData && (
+            <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[11px] text-emerald-800 dark:text-emerald-300 flex items-center justify-between">
+              <div>
+                <strong>{gpsData.lat.toFixed(4)}°N, {gpsData.lng.toFixed(4)}°E</strong>
+                <span className="opacity-80"> • {isHi ? `सटीकता ±${gpsData.accuracy}m` : `±${gpsData.accuracy}m accuracy`} ({gpsData.nearestCityName || 'India'})</span>
+              </div>
+              <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            </div>
+          )}
+
+          {/* GPS Error Message */}
+          {gpsStatus === 'error' && (
+            <div className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-[10.5px] text-rose-700 dark:text-rose-300 flex items-center gap-1.5">
+              <AlertCircle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+              <span>{gpsErrorMessage}</span>
+            </div>
+          )}
+        </div>
+
         {/* Search & Filter Bar */}
         <div className="space-y-2">
           <div className="relative">
@@ -79,7 +196,6 @@ export default function CitySelectorModal({ isOpen, onClose, currentCity, onSele
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-[#FAF7F2] dark:bg-[#05060A] border border-black/[0.1] dark:border-white/[0.1] text-xs text-[#1C1917] dark:text-[#EFECE6] focus:outline-none focus:border-[#D4AF37] font-bold"
-              autoFocus
             />
           </div>
 
@@ -114,14 +230,15 @@ export default function CitySelectorModal({ isOpen, onClose, currentCity, onSele
         </div>
 
         {/* Cities List */}
-        <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 text-xs max-h-72 scrollbar-thin">
+        <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 text-xs max-h-60 scrollbar-thin">
           {filteredCities.map((city) => {
-            const isSelected = city.id === currentCity.id;
+            const isSelected = !currentCity?.isGps && city.id === currentCity?.id;
             return (
               <button
                 key={city.id}
                 onClick={() => {
                   chitiSensory.playTick();
+                  persistLocation(city);
                   onSelectCity(city);
                   onClose();
                 }}

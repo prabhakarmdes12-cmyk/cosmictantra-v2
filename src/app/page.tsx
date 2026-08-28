@@ -29,6 +29,8 @@ import KnowledgeGraphSection from '@/components/KnowledgeGraphSection';
 import FinalChapterCta from '@/components/FinalChapterCta';
 import Footer from '@/components/Footer';
 
+import { getPersistedLocation, LOCATION_CHANGE_EVENT, LocationAnchor } from '@/lib/location';
+
 // Dynamic Load for Heavy WebGL Canvas & Modals
 const SwargaLok = dynamic(() => import('@/components/SwargaLok'), { ssr: false });
 const CitySelectorModal = dynamic(() => import('@/components/CitySelectorModal'), { ssr: false });
@@ -38,7 +40,7 @@ const ConsultationModal = dynamic(() => import('@/components/ConsultationModal')
 import FloatingAIGuruAvatar from '@/components/consultation/FloatingAIGuruAvatar';
 
 export default function AppLandingPage() {
-  const [currentCity, setCurrentCity] = useState(DEFAULT_CITY);
+  const [currentCity, setCurrentCity] = useState<any>(DEFAULT_CITY);
   const [panchangData, setPanchangData] = useState(() => calculatePanchang(new Date(), DEFAULT_CITY));
   const [kundaliData, setKundaliData] = useState(null);
 
@@ -55,7 +57,7 @@ export default function AppLandingPage() {
   const [isConsultationModalOpen, setIsConsultationModalOpen] = useState(false);
   const [consultationPrompt, setConsultationPrompt] = useState('');
 
-  // Sync client-persisted preferences on mount to eliminate SSR hydration mismatch
+  // Sync client-persisted preferences and real-time location on mount to eliminate SSR hydration mismatch
   useEffect(() => {
     setIsClientMounted(true);
     try {
@@ -67,7 +69,20 @@ export default function AppLandingPage() {
       if (savedLang) {
         setLang(savedLang);
       }
+      const savedLoc = getPersistedLocation();
+      if (savedLoc && savedLoc.lat && savedLoc.lng) {
+        setCurrentCity(savedLoc);
+      }
     } catch {}
+
+    const handleLocChange = (e: any) => {
+      if (e?.detail) {
+        setCurrentCity(e.detail);
+      }
+    };
+
+    window.addEventListener(LOCATION_CHANGE_EVENT, handleLocChange);
+    return () => window.removeEventListener(LOCATION_CHANGE_EVENT, handleLocChange);
   }, []);
 
   // Sync theme class to root html
