@@ -19,6 +19,7 @@ import { computeVimshottari } from './dasha/nakshatraDashas.js';
 import { computeDasha, listDashaSystems } from './dasha/index.js';
 import { buildEvidenceGraph } from './evidenceGraph.js';
 import { askKashi } from './kashi.js';
+import { buildTimeline, activeOn } from './timeline.js';
 
 export { getSnapshot, derive };
 export * from './vargas.js';
@@ -61,6 +62,10 @@ export function professionalChart(birthParams, options = {}) {
     // Evidence graph + Kashi orchestrator (grounded, cited; never invents astrology)
     get evidence() { return derive(kundali, 'evidence', () => buildEvidenceGraph(this)); },
     ask(question) { return askKashi(this, question); },
+
+    // Personal timeline (dashas + Sade Sati + Varshaphala year bands)
+    get timeline() { return derive(kundali, 'timeline', () => buildTimeline(this, options)); },
+    timelineActiveOn(date) { return activeOn(this.timeline, date); },
   };
 }
 

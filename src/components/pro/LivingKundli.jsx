@@ -22,6 +22,7 @@ import {
 } from './panels';
 import ReportBuilder from './ReportBuilder';
 import AskKashiPanel from './AskKashiPanel';
+import TimelinePanel from './TimelinePanel';
 
 function offsetLabel(tz) {
   const n = Number(tz); if (isNaN(n)) return '—';
@@ -65,7 +66,7 @@ export default function LivingKundli({ record, theme = 'dark', onUpdated }) {
       case 'Gochar': return <GocharPanel pro={pro} theme={theme} />;
       case 'Varshaphala': return <VarshaphalaPanel birthParams={birthParams} />;
       case 'Panchang': return <PanchangPanel birthParams={birthParams} />;
-      case 'Timeline': return <PlaceholderTab title="Timeline" note="Personal timeline (Maha/Antar/Pratyantar + transits + Sade Sati) arrives in TRUST-06." />;
+      case 'Timeline': return <TimelinePanel pro={pro} kundliId={rec.id} />;
       case 'Reports': return <ReportBuilder pro={pro} birthParams={birthParams} />;
       case 'Ask Kashi': return <AskKashiPanel pro={pro} />;
       default: return null;
