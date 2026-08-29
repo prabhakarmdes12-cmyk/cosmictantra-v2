@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { requireAdminAuth } from '@/lib/auth';
 import { generateShareableReport } from '@/engines/reportGenerator.js';
 import { deliverToWhatsApp, formatWhatsAppReport, getDummyOrRealPayment } from '@/lib/whatsapp';
 
@@ -8,6 +9,11 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Delivery generates and can transmit customer-verified output:
+    // operator-authenticated only (same authorization family as review).
+    const unauthorized = requireAdminAuth(req);
+    if (unauthorized) return unauthorized;
+
     const caseId = params.id;
     const body = await req.json().catch(() => ({}));
     const deliveryChannel = body?.deliveryChannel || 'WHATSAPP';

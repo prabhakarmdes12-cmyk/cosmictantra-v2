@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { createRateLimiter, clientKeyFor } from '@/lib/rateLimit';
 
 // Simple in-memory OTP store (replace with DB + real SMS in prod)
 const otpStore = new Map<string, { hash: string; expires: number; attempts: number }>();
 
+// OTP request throttling (brute-force / SMS-cost surface).
+const otpRequestLimiter = createRateLimiter({ limit: 5, windowMs: 10 * 60 * 1000 });
+
 export async function POST(req: NextRequest) {
   try {
+    const limited = otpRequestLimiter.check(clientKeyFor(req));
+    if (limited) return limited;
+
     const { phone, purpose = 'PROFILE_VERIFY' } = await req.json();
 
     if (!phone || !/^\+?[0-9]{10,15}$/.test(phone.replace(/\s/g, ''))) {

@@ -27,6 +27,7 @@ interface Consultation {
 export default function CasesAdminPage() {
   const [loading, setLoading] = useState(true);
   const [cases, setCases] = useState<Consultation[]>([]);
+  const [operatorAccess, setOperatorAccess] = useState(false);
   const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
   const [stats, setStats] = useState({ total: 0, testCases: 0, pendingReview: 0, approved: 0 });
   const [showModal, setShowModal] = useState(false);
@@ -58,6 +59,7 @@ export default function CasesAdminPage() {
       const pData = await pRes.json();
 
       if (cData.success) {
+        setOperatorAccess(Boolean(cData.authenticated));
         setCases(cData.consultations || []);
         setStats(cData.stats || { total: 0, testCases: 0, pendingReview: 0, approved: 0 });
       }
@@ -149,6 +151,13 @@ export default function CasesAdminPage() {
             <div className="text-2xl sm:text-3xl font-bold text-[#10B981]">{stats.approved}</div>
           </div>
         </div>
+
+        {!operatorAccess && (
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-600 dark:text-amber-400">
+            Case-level details require authenticated operator access. Aggregate statistics are shown; case mutation
+            (review / deliver / test-pipeline) is disabled for anonymous sessions.
+          </div>
+        )}
 
         {/* Cases List */}
         <div className="chiti-card p-6">

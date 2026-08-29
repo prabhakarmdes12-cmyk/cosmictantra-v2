@@ -132,3 +132,84 @@ export function maskCustomerPII(consultation: any, isAuthorized: boolean = false
 
   return copy;
 }
+
+/**
+ * SEC-P0-002 (CT-PJOS-01): Server-authoritative consultation list shaping.
+ *
+ * ANONYMOUS VIEWERS receive aggregate statistics ONLY. No per-case rows,
+ * no case ids, no birth data, no questions, no practitioner linkage.
+ * This closes the enumeration path (anonymous list -> case id -> case
+ * mutation) documented in docs/PJOS_ARCHAEOLOGY.md §9.
+ *
+ * AUTHORIZED OPERATORS (admin key) receive the current full list with
+ * PII visibility rules unchanged.
+ */
+export function buildConsultationListResponse(consultations: any[], isAdmin: boolean) {
+  const stats = {
+    total: consultations.length,
+    testCases: consultations.filter((c: any) => c.isTestCase).length,
+    pendingReview: consultations.filter(
+      (c: any) => c.status === 'PANDIT_REVIEW' || c.status === 'ASSIGNED'
+    ).length,
+    approved: consultations.filter(
+      (c: any) => c.status === 'APPROVED' || c.status === 'DELIVERY_READY' || c.status === 'DELIVERED'
+    ).length,
+  };
+
+  if (!isAdmin) {
+    // Aggregates only. Deliberately no row-level data of any kind.
+    return {
+      consultations: [] as any[],
+      stats,
+      authenticated: false,
+      notice:
+        'Case-level details require authorized operator access. Aggregate statistics are shown for public transparency.',
+    };
+  }
+
+  return {
+    consultations: consultations.map((c: any) => maskCustomerPII(c, true)),
+    stats,
+    authenticated: true,
+    notice: null,
+  };
+}
+
+/**
+ * SEC-P0-001 (CT-PJOS-01): Server-side authorization check for Pandit case
+ * review mutations. Requires:
+ *   1. An authenticated operator (enforced by requireAdminAuth at the route
+ *      boundary — this function does NOT re-verify the key), and
+ *   2. A case that is ASSIGNED to a practitioner (unassigned cases cannot
+ *      be interpreted/approved by anyone), and
+ *   3. When the caller names a practitionerId, it must match the case
+ *      assignment (no cross-case impersonation).
+ *
+ * Note: dedicated Pandit login (role-based auth transport) is the PJOS-01
+ * Phase-1 upgrade; the authenticated-operator channel is the replaceable
+ * transport required by decision D-1.
+ */
+export function assertCaseReviewAuthorized(
+  consultation: any,
+  bodyPractitionerId: string | null | undefined
+): { ok: true; practitionerId: string } | { ok: false; error: string; status: number } {
+  const assignedId: string | null | undefined = consultation?.practitionerId ?? null;
+
+  if (!assignedId) {
+    return {
+      ok: false,
+      error: 'This case has no assigned practitioner. Assign a practitioner before review.',
+      status: 403,
+    };
+  }
+
+  if (bodyPractitionerId && bodyPractitionerId !== assignedId) {
+    return {
+      ok: false,
+      error: 'Unauthorized: caller practitioner does not match case assignment.',
+      status: 403,
+    };
+  }
+
+  return { ok: true, practitionerId: assignedId };
+}

@@ -78,6 +78,7 @@ export default function PanditWorkspace() {
   const [selectedCase, setSelectedCase] = useState<HelpDeskCase | null>(null);
   const [scholars, setScholars] = useState<Array<{ id: string; name: string; specialty: string }>>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [operatorAccess, setOperatorAccess] = useState(false);
 
   // Intake Form State (Junior Pandit)
   const [phoneInput, setPhoneInput] = useState('');
@@ -123,6 +124,7 @@ export default function PanditWorkspace() {
 
       const res = await fetch('/api/astrology/consultations');
       const data = await res.json();
+      setOperatorAccess(Boolean(data.authenticated));
       if (data.success && Array.isArray(data.consultations)) {
         const mapped: HelpDeskCase[] = data.consultations.map((c: any) => ({
           id: c.id,
@@ -512,6 +514,12 @@ export default function PanditWorkspace() {
                     {cases.length} Total
                   </span>
                 </div>
+
+                {!operatorAccess && (
+                  <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[11px] text-amber-600 dark:text-amber-400">
+                    Case-level details require authenticated operator access. Aggregate statistics are shown.
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   {cases.map(c => {

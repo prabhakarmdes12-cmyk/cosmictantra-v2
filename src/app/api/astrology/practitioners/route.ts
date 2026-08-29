@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      consultants: consultants.map(c => ({
+      consultants: consultants.map((c: any) => ({
         ...c,
         displayName: !isProduction && (c as any).isTestFixture ? `[DEV FIXTURE] ${c.displayName}` : c.displayName
       })),
