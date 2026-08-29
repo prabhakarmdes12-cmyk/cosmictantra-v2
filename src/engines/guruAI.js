@@ -43,7 +43,17 @@ export function buildSystemPrompt(language = 'hi', kundali = null) {
   return prompt;
 }
 
+import { getSmartUpayaRecommendations } from '../lib/upayaEngine';
+
+export function generateRemedies(kundali, question = '') {
+  const lagna = kundali?.lagna?.rashiName || 'Mesha';
+  const moonNak = kundali?.birthPanchang?.nakshatra?.name || 'Ashwini';
+  const dasha = kundali?.dasha?.currentMahadasha || 'Jupiter';
+  return getSmartUpayaRecommendations(lagna, moonNak, dasha, question);
+}
+
 export default {
   buildSystemPrompt,
+  generateRemedies,
   INDIAN_LANGUAGES
 };

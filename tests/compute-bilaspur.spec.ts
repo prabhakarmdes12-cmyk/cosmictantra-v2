@@ -30,7 +30,7 @@ test('Compute Bilaspur 1989 Chart', () => {
   snap.dasha.mahadashas.slice(0, 4).forEach(m => console.log(' ', m.lord, m.startDate, '->', m.endDate));
 
   console.log('\n=== BALAS ===');
-  Object.values(snap.balas.shadbala).forEach(sb => {
+  Object.values(snap.balas!.shadbala).forEach(sb => {
     console.log(sb.planet.padEnd(8), 'Total Rupas:', sb.totalRupas.toFixed(2), 'Sthana:', sb.sthana.totalVirupas.toFixed(1), 'Dig:', sb.dig.totalVirupas.toFixed(1), 'Kala:', sb.kala.totalVirupas.toFixed(1));
   });
 

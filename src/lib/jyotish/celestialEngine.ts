@@ -173,7 +173,7 @@ export function calculateCelestialEphemeris(params: {
 
   const astroTime = Astronomy.MakeTime(dateUtc);
   const jdTT = astroTime.tt + 2451545.0;
-  const deltaT = Astronomy.DeltaT_EspenakMeeus(dateUtc) * 86400; // seconds
+  const deltaT = (Astronomy as any).DeltaT_EspenakMeeus ? (Astronomy as any).DeltaT_EspenakMeeus(astroTime.ut) * 86400 : 69.18; // seconds
 
   const ayan = getAyanamsha(jdTT, ayanamshaSystem);
   const ayanamshaDeg = ayan.degrees;
@@ -278,8 +278,8 @@ export function calculateCelestialEphemeris(params: {
     if (sunriseObj) sunriseUtc = sunriseObj.date.toISOString();
     const sunsetObj = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, -1, dateUtc, 1);
     if (sunsetObj) sunsetUtc = sunsetObj.date.toISOString();
-    const noonObj = Astronomy.HourAngle(Astronomy.Body.Sun, observer, dateUtc);
-    if (noonObj) solarNoonUtc = dateUtc.toISOString(); // approximate reference
+    const noonObj = Astronomy.HourAngle(Astronomy.Body.Sun, dateUtc, observer);
+    if (noonObj !== undefined) solarNoonUtc = dateUtc.toISOString(); // approximate reference
   } catch (e) {}
 
   return {

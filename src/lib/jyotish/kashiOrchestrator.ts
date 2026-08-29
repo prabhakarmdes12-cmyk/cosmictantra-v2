@@ -37,7 +37,7 @@ export function queryKashiEvidence(
   snapshot: CanonicalJyotishSnapshot
 ): KashiOrchestratorResponse {
   const q = query.toLowerCase();
-  const { lagna, planets, vargas, balas, dasha, yogasAndDoshas, meta } = snapshot;
+  const { lagna, planets, vargas, balas, dasha, yogasAndDoshas, birthPanchang, meta } = snapshot;
 
   // Determine Domain
   let domain: 'CAREER' | 'MARRIAGE' | 'FINANCE' | 'HEALTH' | 'SPIRITUALITY' | 'GENERAL' = 'GENERAL';

@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
       success: true,
       consultants: consultants.map(c => ({
         ...c,
-        displayName: !isProduction && c.isTestFixture ? `[DEV FIXTURE] ${c.displayName}` : c.displayName
+        displayName: !isProduction && (c as any).isTestFixture ? `[DEV FIXTURE] ${c.displayName}` : c.displayName
       })),
       pendingInvites,
       stats: {

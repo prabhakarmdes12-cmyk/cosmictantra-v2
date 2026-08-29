@@ -4,7 +4,7 @@
  * from the exact natal Moon longitude and Nakshatra fraction.
  */
 
-const DASHA_LORDS = [
+export const DASHA_LORDS = [
   { name: 'Ketu', nameHi: 'केतु', years: 7, color: '#ec4899' },
   { name: 'Venus', nameHi: 'शुक्र', years: 20, color: '#f43f5e' },
   { name: 'Sun', nameHi: 'सूर्य', years: 6, color: '#f59e0b' },

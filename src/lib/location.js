@@ -265,3 +265,30 @@ export function persistLocation(location) {
     window.dispatchEvent(new CustomEvent(LOCATION_CHANGE_EVENT, { detail: location }));
   } catch {}
 }
+
+export async function getCurrentGpsLocation(options) {
+  return new Promise((resolve, reject) => {
+    if (typeof window === 'undefined' || !navigator.geolocation) {
+      return reject(new Error('GEOLOCATION_UNAVAILABLE'));
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const tz = inferIanaTimezone(lat, lng);
+        const offset = getHistoricalUtcOffset(tz);
+        resolve({
+          name: 'Live GPS Location',
+          state: 'GPS Lock',
+          lat,
+          lng,
+          tz: offset,
+          nearestCityName: 'Live Geolocation Anchor',
+          accuracy: pos.coords.accuracy || 10
+        });
+      },
+      (err) => reject(err),
+      options
+    );
+  });
+}

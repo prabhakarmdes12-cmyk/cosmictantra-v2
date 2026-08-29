@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-export const CANONICAL_SERVICES = [
+const CANONICAL_SERVICES = [
   {
     id: 'srv_consult_15',
     code: 'CONSULT_15',

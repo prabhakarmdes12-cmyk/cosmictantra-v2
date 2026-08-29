@@ -317,6 +317,7 @@ export function getCanonicalJyotishSnapshot(context: NormalizedBirthContext): Ca
     context,
     lagna: {
       ...kundli.lagna,
+      rashiLord: kundli.lagna.lord || 'Jupiter',
       seconds: Math.floor(((kundli.lagna.degrees % 1) * 60 % 1) * 60)
     },
     planets: kundli.planets,

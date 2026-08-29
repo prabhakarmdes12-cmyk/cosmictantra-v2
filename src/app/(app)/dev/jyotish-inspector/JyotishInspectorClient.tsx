@@ -116,7 +116,7 @@ export default function JyotishInspectorClient() {
     referenceSoftware: "Parashara's Light",
     referenceVersion: '9.0',
     calculationSettings: 'Geocentric, Sidereal, Chitra Paksha Lahiri',
-    ayanamsha: 'Lahiri (23°47'32" at epoch)',
+    ayanamsha: 'Lahiri (23°47\\\'32\\" at epoch)',
     nodeMode: 'MEAN' as 'MEAN' | 'TRUE',
     reviewer: 'Pandit Ji',
     verificationDate: new Date().toISOString().slice(0, 10)

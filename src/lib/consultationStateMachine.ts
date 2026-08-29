@@ -84,7 +84,7 @@ export function getV1Status(consultation: any): ConsultationV1Status {
   if (!consultation) return 'NEW';
   
   // Direct canonical enum match
-  if (consultation.status && ALLOWED_TRANSITIONS[consultation.status]) {
+  if (consultation.status && (ALLOWED_TRANSITIONS as any)[consultation.status]) {
     return consultation.status;
   }
 
