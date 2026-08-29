@@ -90,7 +90,7 @@ export function VargasPanel({ pro, theme }) {
 }
 
 /** ── Planets table ────────────────────────────────────────────────────── */
-export function PlanetsPanel({ pro }) {
+export function PlanetsPanel({ pro, onInspect }) {
   const k = pro.kundali;
   const sb = pro.shadbala;
   const columns = ['Planet', 'Longitude', 'Rashi', 'Degree', 'Nakshatra', 'Pada', 'Lord', 'Retro', 'Combust', 'Dignity', 'House', 'Shadbala'];
@@ -98,8 +98,11 @@ export function PlanetsPanel({ pro }) {
   const rows = k.planets.map((p) => {
     let sep = Math.abs(((p.longitude - sunLon + 180) % 360) - 180);
     const combust = p.name !== 'Sun' && sep < 8;
+    const nameCell = onInspect
+      ? <button onClick={() => onInspect(p.name)} className="text-[#8E6F1D] dark:text-[#D4AF37] hover:underline font-semibold" title={`Inspect ${p.name}`}>{p.name}</button>
+      : p.name;
     return [
-      p.name, `${p.longitude.toFixed(3)}°`, p.rashiEn, p.degreeStr, p.nakshatra.name, p.pada,
+      nameCell, `${p.longitude.toFixed(3)}°`, p.rashiEn, p.degreeStr, p.nakshatra.name, p.pada,
       p.nakshatra.ruler, p.isRetrograde ? 'R' : '—', combust ? 'Yes' : '—', p.dignity, p.house,
       sb.planets[p.name] ? `${sb.planets[p.name].totalRupa} R` : '—',
     ];
