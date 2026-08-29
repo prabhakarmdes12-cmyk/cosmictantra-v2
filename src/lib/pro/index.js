@@ -26,12 +26,14 @@ export * from './vargas.js';
  * Everything is lazily memoized; accessing one section does not compute others.
  */
 export function professionalChart(birthParams, options = {}) {
-  const kundali = getSnapshot(birthParams);
+  const kundali = getSnapshot(birthParams, options.conventions);
   const targetDate = options.targetDate || new Date();
 
   return {
     kundali,
     key: kundali._key,
+    conventions: kundali._conventions,
+    versions: kundali._versions,
 
     // Vargas (memoized individually via derive for instant switching)
     varga(code) { return derive(kundali, `varga:${code}`, (k) => computeVarga(k, code)); },
