@@ -309,16 +309,32 @@ export default function CosmicNowDial({
   const monthIdx = now.getMonth();
   const dayNum = now.getDate();
   const dayOfWeek = now.getDay();
-  const vikramSamvat = year + 57;
+  const vikramSamvat = panchangData.samvat?.vikram || (year + 57);
 
   const englishFullDate = `${ENGLISH_DAYS[dayOfWeek]}, ${dayNum} ${ENGLISH_MONTHS[monthIdx]} ${year}`;
   const hindiFullDate = `${HINDI_DAYS[dayOfWeek]}, ${toHindiDigits(dayNum)} ${HINDI_MONTHS[monthIdx]} ${toHindiDigits(year)}`;
 
-  const lunarMonthObj = LUNAR_MONTHS_LIST[(monthIdx + 4) % 12] || LUNAR_MONTHS_LIST[5];
-  const rituIdx = Math.floor(monthIdx / 2) % 6;
-  const rituListHi = ['शिशिर ऋतु', 'वसन्त ऋतु', 'ग्रीष्म ऋतु', 'वर्षा ऋतु', 'शरद ऋतु', 'हेमन्त ऋतु'];
-  const rituHi = rituListHi[rituIdx];
-  const ayanaHi = monthIdx < 6 ? 'उत्तरायण' : 'दक्षिणायन';
+  // Precise Astronomical Sidereal Sun Rashi index -> Vedic Maas
+  const sunSidLon = typeof panchangData.sun?.siderealLongitude === 'number' 
+    ? panchangData.sun.siderealLongitude 
+    : parseFloat(panchangData.sun?.siderealLongitude || '133');
+  const derivedMasaIndex = (Math.floor(sunSidLon / 30) + 1) % 12;
+
+  const lunarMonthObj = panchangData.masa
+    ? { en: panchangData.masa.name || panchangData.masa.en, hi: panchangData.masa.nameHi || panchangData.masa.hi }
+    : (LUNAR_MONTHS_LIST[derivedMasaIndex] || LUNAR_MONTHS_LIST[5]);
+
+  const rituHi = panchangData.ritu?.nameHi || panchangData.ritu?.hi || (
+    derivedMasaIndex === 0 || derivedMasaIndex === 1 ? 'वसन्त ऋतु' :
+    derivedMasaIndex === 2 || derivedMasaIndex === 3 ? 'ग्रीष्म ऋतु' :
+    derivedMasaIndex === 4 || derivedMasaIndex === 5 ? 'वर्षा ऋतु' :
+    derivedMasaIndex === 6 || derivedMasaIndex === 7 ? 'शरद ऋतु' :
+    derivedMasaIndex === 8 || derivedMasaIndex === 9 ? 'हेमन्त ऋतु' : 'शिशिर ऋतु'
+  );
+
+  const ayanaHi = panchangData.ayana?.nameHi || panchangData.ayanaHi || (
+    (Math.floor(sunSidLon / 30) >= 9 || Math.floor(sunSidLon / 30) <= 2) ? 'उत्तरायण' : 'दक्षिणायन'
+  );
 
   return (
     <div className="relative rounded-3xl bg-[#FAF7F2]/95 dark:bg-[#0A0C14]/95 backdrop-blur-xl border border-[#8E6F1D]/30 dark:border-[#D4AF37]/45 p-5 sm:p-7 shadow-2xl dark:shadow-[0_0_50px_rgba(212,175,55,0.14)] select-none transition-all duration-300">

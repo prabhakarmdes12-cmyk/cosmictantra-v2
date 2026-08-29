@@ -109,6 +109,10 @@ export interface CanonicalJyotishSnapshot {
     sun: any;
     moon: any;
     timings: any;
+    masa?: any;
+    ritu?: any;
+    ayana?: any;
+    samvat?: any;
   };
   
   // 5. Vimshottari Dasha Hierarchy (3-Tier)
@@ -353,7 +357,11 @@ export function getCanonicalJyotishSnapshot(context: NormalizedBirthContext): Ca
       karana: panchang.karana,
       sun: panchang.sun,
       moon: panchang.moon,
-      timings: panchang.timings
+      timings: panchang.timings,
+      masa: panchang.masa,
+      ritu: panchang.ritu,
+      ayana: panchang.ayana,
+      samvat: panchang.samvat
     },
     dasha: {
       startingBalance: dashaResult.startingBalance,

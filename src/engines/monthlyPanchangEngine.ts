@@ -12,6 +12,8 @@ export interface PanchangDayData {
   dayNameHi: string;
   varaPlanet: string;
   varaColor: string;
+  lunarMonth?: string;
+  lunarMonthHi?: string;
   
   // 5 Limbs of Panchanga
   tithi: {
@@ -698,6 +700,9 @@ export function calculateMonthPanchang(
       };
     }
     
+    const daySunRasi = Math.floor(sunSid / 30);
+    const dayMasaIdx = (daySunRasi + 1) % 12;
+    const dayMasaObj = LUNAR_MONTHS[dayMasaIdx];
     const karanaMeta = KARANAS_MAP[karanaName] || { nameHi: karanaName, typeHi: karanaType === 'Fixed' ? 'स्थिर' : 'चर' };
 
     days.push({
@@ -708,6 +713,8 @@ export function calculateMonthPanchang(
       dayNameHi: varaData.nameHi,
       varaPlanet: varaData.planet,
       varaColor: varaData.color,
+      lunarMonth: dayMasaObj.en,
+      lunarMonthHi: dayMasaObj.hi,
       tithi: {
         index: tithiIdx + 1,
         name: tithiData.name,
@@ -763,14 +770,16 @@ export function calculateMonthPanchang(
   }
   
   // Month Meta
-  const sampleDate = new Date(year, month, 15);
-  const sampleJd = toJulianDay(sampleDate);
-  const sampleT = (sampleJd - 2451545.0) / 36525;
-  const sampleAyanamsha = getLahiriAyanamsha(sampleJd);
-  const sampleSunSid = normalizeAngle(getSunLon(sampleT) - sampleAyanamsha);
-  const sampleSunRasi = Math.floor(sampleSunSid / 30);
-  
-  const lunarMonthObj = LUNAR_MONTHS[(sampleSunRasi + 11) % 12];
+  const startJd = toJulianDay(new Date(year, month, 1));
+  const startSunSid = normalizeAngle(getSunLon((startJd - 2451545.0) / 36525) - getLahiriAyanamsha(startJd));
+  const startMasa = LUNAR_MONTHS[(Math.floor(startSunSid / 30) + 1) % 12];
+
+  const endJd = toJulianDay(new Date(year, month, daysInMonth));
+  const endSunSid = normalizeAngle(getSunLon((endJd - 2451545.0) / 36525) - getLahiriAyanamsha(endJd));
+  const endMasa = LUNAR_MONTHS[(Math.floor(endSunSid / 30) + 1) % 12];
+
+  const lunarMonth = startMasa.en === endMasa.en ? startMasa.en : `${startMasa.en} - ${endMasa.en}`;
+  const lunarMonthHi = startMasa.hi === endMasa.hi ? startMasa.hi : `${startMasa.hi} - ${endMasa.hi}`;
   const vikramSamvat = year + 57;
   const shakaSamvat = year - 78;
   
@@ -792,8 +801,8 @@ export function calculateMonthPanchang(
     month,
     monthName: monthNamesEn[month],
     monthNameHi: monthNamesHi[month],
-    lunarMonth: lunarMonthObj.en,
-    lunarMonthHi: lunarMonthObj.hi,
+    lunarMonth,
+    lunarMonthHi,
     vikramSamvat,
     shakaSamvat,
     ritu,

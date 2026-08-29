@@ -55,6 +55,30 @@ const YOGAS = [
 
 const MOVABLE_KARANAS = ['Bava', 'Balava', 'Kaulava', 'Taitila', 'Gara', 'Vanija', 'Vishti'];
 
+export const LUNAR_MASA_DATA = [
+  { en: 'Chaitra', hi: 'चैत्र', sk: 'चैत्र' },
+  { en: 'Vaishakha', hi: 'वैशाख', sk: 'वैशाख' },
+  { en: 'Jyeshtha', hi: 'ज्येष्ठ', sk: 'ज्येष्ठ' },
+  { en: 'Ashadha', hi: 'आषाढ़', sk: 'आषाढ' },
+  { en: 'Shravana', hi: 'श्रावण', sk: 'श्रावण' },
+  { en: 'Bhadrapada', hi: 'भाद्रपद', sk: 'भाद्रपद' },
+  { en: 'Ashwin', hi: 'आश्विन', sk: 'आश्विन' },
+  { en: 'Kartika', hi: 'कार्तिक', sk: 'कार्तिक' },
+  { en: 'Margashirsha', hi: 'मार्गशीर्ष', sk: 'मार्गशीर्ष' },
+  { en: 'Pausha', hi: 'पौष', sk: 'पौष' },
+  { en: 'Magha', hi: 'माघ', sk: 'माघ' },
+  { en: 'Phalguna', hi: 'फाल्गुन', sk: 'फाल्गुन' }
+];
+
+export const RITU_DATA = [
+  { en: 'Vasanta (Spring)', hi: 'वसन्त ऋतु', sk: 'वसन्त ऋतौ' },
+  { en: 'Grishma (Summer)', hi: 'ग्रीष्म ऋतु', sk: 'ग्रीष्म ऋतौ' },
+  { en: 'Varsha (Monsoon)', hi: 'वर्षा ऋतु', sk: 'वर्षा ऋतौ' },
+  { en: 'Sharad (Autumn)', hi: 'शरद ऋतु', sk: 'शरद् ऋतौ' },
+  { en: 'Hemanta (Pre-Winter)', hi: 'हेमन्त ऋतु', sk: 'हेमन्त ऋतौ' },
+  { en: 'Shishira (Winter)', hi: 'शिशिर ऋतु', sk: 'शिशिर ऋतौ' }
+];
+
 // Approximate Julian Day from Gregorian Date
 function getJulianDate(date) {
   const time = date.getTime();
@@ -202,6 +226,26 @@ export function calculatePanchang(date = new Date(), cityOrLat = { lat: 23.7957,
   } else {
     karanaName = MOVABLE_KARANAS[(karanaIndex - 1) % 7];
   }
+
+  // 4b. LUNAR MASA (MONTH) & SEASONS (RITU, AYANA)
+  // Sidereal Sun Rashi index: 0 = Mesha, 1 = Vrishabha, ..., 4 = Simha, ..., 11 = Meena
+  const sunRasiIndex = Math.floor(siderealSun / 30);
+  const masaIndex = (sunRasiIndex + 1) % 12;
+  const masaObj = LUNAR_MASA_DATA[masaIndex];
+
+  // Ritu: 6 Vedic Ritus (2 months per Ritu) starting from Vasanta (Chaitra & Vaishakha)
+  const rituIndex = Math.floor(masaIndex / 2) % 6;
+  const rituObj = RITU_DATA[rituIndex];
+
+  // Ayana: Uttarayana (Makara to Mithuna, index 9, 10, 11, 0, 1, 2) / Dakshinayana (Karka to Dhanu, index 3 to 8)
+  const isUttarayana = (sunRasiIndex >= 9 || sunRasiIndex <= 2);
+  const ayana = isUttarayana ? 'Uttarayana (Northward Sun)' : 'Dakshinayana (Southward Sun)';
+  const ayanaHi = isUttarayana ? 'उत्तरायण' : 'दक्षिणायन';
+  const ayanaSk = isUttarayana ? 'उत्तरायणे' : 'दक्षिणायने';
+
+  const calYear = date.getFullYear();
+  const vikramSamvat = calYear + 57;
+  const shakaSamvat = calYear - 78;
   
   // 5. Sun times & planetary windows
   const { sunrise, sunset, solarNoonHours } = getSunTimes(date, city.lat, city.lng, city.tz);
@@ -330,6 +374,30 @@ export function calculatePanchang(date = new Date(), cityOrLat = { lat: 23.7957,
     currentPeriod,
     isAuspicious,
     solarArcProgress: Math.round(solarArcProgress),
-    ayanamsha: ayanamsha.toFixed(4)
+    ayanamsha: ayanamsha.toFixed(4),
+    masa: {
+      name: masaObj.en,
+      nameHi: masaObj.hi,
+      nameSk: masaObj.sk,
+      index: masaIndex,
+      purnimanta: masaObj.hi,
+      amanta: masaObj.hi
+    },
+    ritu: {
+      name: rituObj.en,
+      nameHi: rituObj.hi,
+      nameSk: rituObj.sk,
+      index: rituIndex
+    },
+    ayana: {
+      name: ayana,
+      nameHi: ayanaHi,
+      nameSk: ayanaSk,
+      isUttarayana
+    },
+    samvat: {
+      vikram: vikramSamvat,
+      shaka: shakaSamvat
+    }
   };
 }

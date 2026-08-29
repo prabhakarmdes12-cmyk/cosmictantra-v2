@@ -120,8 +120,13 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
 
   const englishFullDate = `${ENGLISH_DAYS[dayOfWeek]}, ${dayNum} ${ENGLISH_MONTHS[monthIdx]} ${year}`;
   const hindiFullDate = `${HINDI_DAYS[dayOfWeek]}, ${toHindiDigits(dayNum)} ${HINDI_MONTHS[monthIdx]} ${toHindiDigits(year)}`;
-  const lunarMonthHi = LUNAR_MONTHS_HI[(monthIdx + 4) % 12];
-  const lunarMonthEn = LUNAR_MONTHS_EN[(monthIdx + 4) % 12];
+  const sunSidLon = typeof panchangData.sun?.siderealLongitude === 'number'
+    ? panchangData.sun.siderealLongitude
+    : parseFloat(panchangData.sun?.siderealLongitude || '133');
+  const derivedMasaIndex = (Math.floor(sunSidLon / 30) + 1) % 12;
+
+  const lunarMonthHi = panchangData.masa?.nameHi || panchangData.masa?.hi || LUNAR_MONTHS_HI[derivedMasaIndex] || LUNAR_MONTHS_HI[5];
+  const lunarMonthEn = panchangData.masa?.name || panchangData.masa?.en || LUNAR_MONTHS_EN[derivedMasaIndex] || LUNAR_MONTHS_EN[5];
 
   const getUsefulGuidance = () => {
     return [

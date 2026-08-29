@@ -75,20 +75,28 @@ export default function CosmicNow({ lang = 'en' }: CosmicNowProps) {
   const monthIdx = nowDate.getMonth();
   const dayNum = nowDate.getDate();
   const dayOfWeek = nowDate.getDay();
-  const vikramSamvat = year + 57;
-  const shakaSamvat = year - 78;
+  const vikramSamvat = panchang.samvat?.vikram || (year + 57);
+  const shakaSamvat = panchang.samvat?.shaka || (year - 78);
 
   const englishFullDate = `${ENGLISH_DAYS[dayOfWeek]}, ${dayNum} ${ENGLISH_MONTHS[monthIdx]} ${year}`;
   const hindiFullDate = `${HINDI_DAYS[dayOfWeek]}, ${toHindiDigits(dayNum)} ${HINDI_MONTHS[monthIdx]} ${toHindiDigits(year)}`;
 
-  const lunarMonthObj = LUNAR_MONTHS[(monthIdx + 4) % 12] || LUNAR_MONTHS[5];
-  const rituIdx = Math.floor(monthIdx / 2) % 6;
-  const rituListEn = ['Shishira (Winter)', 'Vasanta (Spring)', 'Grishma (Summer)', 'Varsha (Monsoon)', 'Sharad (Autumn)', 'Hemanta (Pre-Winter)'];
-  const rituListHi = ['शिशिर ऋतु (शीत)', 'वसन्त ऋतु (मधुमास)', 'ग्रीष्म ऋतु (उष्ण)', 'वर्षा ऋतु (मेघमाला)', 'शरद ऋतु (निर्मल)', 'हेमन्त ऋतु (शीतपूर्व)'];
-  const ritu = isHi ? rituListHi[rituIdx] : rituListEn[rituIdx];
-  const ayana = monthIdx < 6 
-    ? (isHi ? 'उत्तरायण' : 'Uttarayana (Northward Sun)') 
-    : (isHi ? 'दक्षिणायन' : 'Dakshinayana (Southward Sun)');
+  const sunSidLon = typeof panchang.sun?.siderealLongitude === 'number'
+    ? panchang.sun.siderealLongitude
+    : parseFloat(panchang.sun?.siderealLongitude || '133');
+  const derivedMasaIndex = (Math.floor(sunSidLon / 30) + 1) % 12;
+
+  const lunarMonthObj = panchang.masa
+    ? { en: panchang.masa.name || panchang.masa.en, hi: panchang.masa.nameHi || panchang.masa.hi }
+    : (LUNAR_MONTHS[derivedMasaIndex] || LUNAR_MONTHS[5]);
+
+  const ritu = isHi 
+    ? (panchang.ritu?.nameHi || panchang.ritu?.hi || (derivedMasaIndex === 4 || derivedMasaIndex === 5 ? 'वर्षा ऋतु (मेघमाला)' : 'शरद ऋतु (निर्मल)'))
+    : (panchang.ritu?.name || panchang.ritu?.en || (derivedMasaIndex === 4 || derivedMasaIndex === 5 ? 'Varsha (Monsoon)' : 'Sharad (Autumn)'));
+
+  const ayana = isHi
+    ? (panchang.ayana?.nameHi || (Math.floor(sunSidLon / 30) >= 9 || Math.floor(sunSidLon / 30) <= 2 ? 'उत्तरायण' : 'दक्षिणायन'))
+    : (panchang.ayana?.name || (Math.floor(sunSidLon / 30) >= 9 || Math.floor(sunSidLon / 30) <= 2 ? 'Uttarayana (Northward Sun)' : 'Dakshinayana (Southward Sun)'));
 
   const tithiNumber = panchang.tithi?.number || 1;
   const tithiData = TITHIS_DATA[(tithiNumber - 1) % 30] || { name: panchang.tithi?.name, nameHi: panchang.tithi?.name, meaning: 'Auspicious Lunar Phase' };

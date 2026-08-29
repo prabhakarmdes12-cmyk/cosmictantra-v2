@@ -78,12 +78,17 @@ export default function VedicSankalpaCard916({
   const brahmaMuhurta = panchangData?.timings?.brahmaMuhurta || '04:08 AM – 04:56 AM';
   const amritKalam = panchangData?.timings?.amritKalam || '08:20 AM – 09:55 AM';
 
-  const ayana = monthIdx >= 0 && monthIdx < 6 ? 'उत्तरायण (Uttarayana)' : 'दक्षिणायन (Dakshinayana)';
-  const ayanaSk = monthIdx >= 0 && monthIdx < 6 ? 'उत्तरायणे' : 'दक्षिणायने';
-  const ritu = monthIdx >= 6 && monthIdx <= 7 ? 'वर्षा ऋतु' : monthIdx >= 8 && monthIdx <= 9 ? 'शरद् ऋतु' : 'हेमन्त ऋतु';
-  const rituSk = monthIdx >= 6 && monthIdx <= 7 ? 'वर्षा ऋतौ' : monthIdx >= 8 && monthIdx <= 9 ? 'शरद् ऋतौ' : 'हेमन्त ऋतौ';
-  const currentLunarMasa = LUNAR_MONTHS_HI[(monthIdx + 4) % 12];
-  const currentLunarMasaSk = LUNAR_MONTHS_SK[(monthIdx + 4) % 12];
+  const sunSidLon = typeof panchangData?.sun?.siderealLongitude === 'number'
+    ? panchangData.sun.siderealLongitude
+    : parseFloat(panchangData?.sun?.siderealLongitude || '133');
+  const derivedMasaIndex = (Math.floor(sunSidLon / 30) + 1) % 12;
+
+  const ayana = (Math.floor(sunSidLon / 30) >= 9 || Math.floor(sunSidLon / 30) <= 2) ? 'उत्तरायण (Uttarayana)' : 'दक्षिणायन (Dakshinayana)';
+  const ayanaSk = (Math.floor(sunSidLon / 30) >= 9 || Math.floor(sunSidLon / 30) <= 2) ? 'उत्तरायणे' : 'दक्षिणायने';
+  const ritu = panchangData?.ritu?.nameHi || (derivedMasaIndex === 4 || derivedMasaIndex === 5 ? 'वर्षा ऋतु' : 'शरद् ऋतु');
+  const rituSk = panchangData?.ritu?.nameSk || (derivedMasaIndex === 4 || derivedMasaIndex === 5 ? 'वर्षा ऋतौ' : 'शरद् ऋतौ');
+  const currentLunarMasa = panchangData?.masa?.nameHi || panchangData?.masa?.hi || LUNAR_MONTHS_HI[derivedMasaIndex] || LUNAR_MONTHS_HI[5];
+  const currentLunarMasaSk = panchangData?.masa?.nameSk || panchangData?.masa?.sk || LUNAR_MONTHS_SK[derivedMasaIndex] || LUNAR_MONTHS_SK[5];
 
   const cityName = currentCity.nameHi || currentCity.name || 'वाराणसी';
   const dateHeading = `${dayNum} ${LUNAR_MONTHS_HI[monthIdx]} ${year}`;
