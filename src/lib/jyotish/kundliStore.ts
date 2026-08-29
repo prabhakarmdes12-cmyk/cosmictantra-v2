@@ -24,6 +24,34 @@ export interface StoredKundliRecord {
 // Built-in verified benchmark presets
 const PRESET_KUNDLIS: StoredKundliRecord[] = [
   {
+    id: 'master-prabhakar-1989',
+    personName: 'Prabhakar Sharma',
+    gender: 'MALE',
+    birthContext: {
+      birthDate: '1989-05-26',
+      birthTime: '02:20:30',
+      latitude: 22.0797,
+      longitude: 82.1391,
+      timezone: 5.5,
+      locationName: 'Bilaspur, Chhattisgarh, India'
+    },
+    timeConfidence: 'EXACT',
+    notes: 'Reference Specimen — Master Kundli V1 (Pisces Ascendant, Capricorn Moon, Shravana Nakshatra, Jupiter MD / Saturn AD in 2026).',
+    tags: ['Master Reference', 'AstroSage Qualified', 'JPL Qualified', 'Benchmark Specimen'],
+    createdAt: '2026-08-30T00:00:00.000Z',
+    updatedAt: '2026-08-30T00:00:00.000Z',
+    engineVersion: 'CosmicTantra Professional Kernel V36.0 (Deterministic)',
+    ayanamshaName: 'Chitra Paksha (Lahiri Standard)',
+    snapshot: getCanonicalJyotishSnapshot({
+      birthDate: '1989-05-26',
+      birthTime: '02:20:30',
+      latitude: 22.0797,
+      longitude: 82.1391,
+      timezone: 5.5,
+      locationName: 'Bilaspur, Chhattisgarh, India'
+    })
+  },
+  {
     id: 'gandhi-1869',
     personName: 'Mahatma Gandhi',
     gender: 'MALE',

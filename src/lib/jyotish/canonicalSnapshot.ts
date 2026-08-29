@@ -32,6 +32,11 @@ import {
   BhavaBalaResult,
   VimshopakaBalaResult
 } from './balaEngine';
+import { calculateAshtakavarga, AshtakavargaResult } from './ashtakavargaEngine';
+import { calculateJaimini, JaiminiResult } from './jaiminiEngine';
+import { calculateKpSystem, KpSystemResult } from './kpEngine';
+import { calculateVarshaphala, VarshaphalaResult } from './varshaphalaEngine';
+import { calculateAvakhada, AvakhadaResult } from './avakhadaEngine';
 
 export interface NormalizedBirthContext {
   birthDate: string; // YYYY-MM-DD
@@ -167,6 +172,13 @@ export interface CanonicalJyotishSnapshot {
   
   // 11. Gochar / Transits (if targetDate provided)
   transits?: any;
+
+  // 12. Master Jyotish Systems
+  ashtakavarga?: AshtakavargaResult;
+  jaimini?: JaiminiResult;
+  kp?: KpSystemResult;
+  varshaphala?: VarshaphalaResult;
+  avakhada?: AvakhadaResult;
 }
 
 /**
@@ -389,7 +401,24 @@ export function getCanonicalJyotishSnapshot(context: NormalizedBirthContext): Ca
       },
       rajYogas: ['Dharma-Karmadhipati Yoga (9th/10th Lord Resonance)', 'Gaja-Kesari Yoga (Jupiter in Kendra from Moon)'],
       specialCombinations: ['Budhaditya Yoga (Sun-Mercury Intellect Conjunction)']
-    }
+    },
+    ashtakavarga: calculateAshtakavarga(kundli.planets as any, kundli.lagna.rashiId || 1),
+    jaimini: calculateJaimini(kundli.planets as any[], {
+      rashiId: kundli.lagna.rashiId || 1,
+      degrees: kundli.lagna.degrees,
+      longitude: kundli.lagna.longitude
+    }, d9Placements),
+    kp: calculateKpSystem(kundli.planets as any[], kundli.lagna.longitude, kundli.ayanamsha),
+    varshaphala: calculateVarshaphala(
+      context.birthDate,
+      ((kundli.planets as any[]).find(p => p.name === 'Sun')?.degrees) || 40,
+      kundli.lagna.rashiId || 1,
+      2026
+    ),
+    avakhada: calculateAvakhada(
+      ((kundli.planets as any[]).find(p => p.name === 'Moon')?.rashiName) || 'Makara',
+      panchang.nakshatra?.name || 'Shravana'
+    )
   };
 }
 
