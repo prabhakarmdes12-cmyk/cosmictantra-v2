@@ -24,6 +24,7 @@ import ReportBuilder from './ReportBuilder';
 import AskKashiPanel from './AskKashiPanel';
 import TimelinePanel from './TimelinePanel';
 import MobileKundliView from './MobileKundliView';
+import ConventionCenter from './ConventionCenter';
 
 function offsetLabel(tz) {
   const n = Number(tz); if (isNaN(n)) return '—';
@@ -48,6 +49,11 @@ export default function LivingKundli({ record, theme = 'dark', onUpdated }) {
     if (res.ok) { setRec(res.kundli); setEditing(false); onUpdated && onUpdated(res.kundli); }
   };
 
+  const handleConventions = (conventions) => {
+    const res = saveKundli({ ...rec, conventions });
+    if (res.ok) { setRec(res.kundli); onUpdated && onUpdated(res.kundli); }
+  };
+
   const renderSection = () => {
     switch (section) {
       case 'Overview': return (
@@ -59,7 +65,7 @@ export default function LivingKundli({ record, theme = 'dark', onUpdated }) {
           <div className="hidden lg:block"><OverviewPanel pro={pro} theme={theme} /></div>
         </>
       );
-      case 'Birth': return <BirthTab rec={rec} onEdit={() => setEditing(true)} />;
+      case 'Birth': return <BirthTab rec={rec} onEdit={() => setEditing(true)} onConventions={handleConventions} />;
       case 'Charts': return <ChartPanel pro={pro} theme={theme} />;
       case 'Planets': return <PlanetsPanel pro={pro} />;
       case 'Bhavas': return <BhavasPanel pro={pro} />;
@@ -147,7 +153,7 @@ export default function LivingKundli({ record, theme = 'dark', onUpdated }) {
   );
 }
 
-function BirthTab({ rec, onEdit }) {
+function BirthTab({ rec, onEdit, onConventions }) {
   const rows = [
     ['Name', rec.name || '—'],
     ['Birth date', rec.birthDate],
@@ -178,8 +184,11 @@ function BirthTab({ rec, onEdit }) {
           ))}
         </tbody>
       </table>
+      <div className="rounded-lg border border-black/10 dark:border-white/10 p-3">
+        <ConventionCenter conventions={rec.conventions} onChange={onConventions} />
+      </div>
       <div>
-        <h4 className="font-semibold text-xs mb-1">Calculation conventions</h4>
+        <h4 className="font-semibold text-xs mb-1">Applied conventions</h4>
         <table className="w-full text-xs">
           <tbody>
             {conv.map((c) => (
