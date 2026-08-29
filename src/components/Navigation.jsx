@@ -15,6 +15,7 @@ const TOOL_LINKS = [
   { href: '/family', label: 'Family Profiles' },
   { href: '/darshan', label: 'Live Darshan' },
   { href: '/library', label: 'Vedic Library' },
+  { href: '/workbench', label: 'Jyotish Workbench · Pandit View' },
 ];
 
 export default function Navigation({

@@ -31,19 +31,24 @@ export const CAPABILITY_REGISTRY = {
     description: 'Guides users to formulate clear, specific, decision-oriented questions for human Jyotishi review without fabricating astrology results.'
   },
   GOCHARA: {
-    status: 'NOT_AVAILABLE',
-    tier: 'In Development',
-    description: 'Deterministic Gochara transit engine is currently undergoing astronomical verification and is not exposed as raw automation.'
+    status: 'LIVE',
+    tier: 'Deterministic Engine (IMPLEMENTED — external comparison pending)',
+    description: 'Deterministic Gochara transit workstation: transit-to-natal aspects, house transits, retrograde/ingress events, and Ashtakavarga/Dasha overlays. Available in Pandit View (/workbench).'
   },
   ASHTAKOOT: {
-    status: 'NOT_AVAILABLE',
-    tier: 'Practitioner Guided',
-    description: 'Kundali Milan (Guna matching) is handled directly by practicing Jyotishis rather than an oversimplified algorithmic score.'
+    status: 'LIVE',
+    tier: 'Deterministic Engine (IMPLEMENTED — external comparison pending)',
+    description: 'Full Ashtakoota (36-guna) matching with per-koota evidence and cancellation/exception rules. Total guna is treated as necessary but not sufficient.'
   },
   SHADBALA: {
-    status: 'NOT_AVAILABLE',
-    tier: 'In Audit',
-    description: 'Six-fold planetary strength calculation is under mathematical peer audit.'
+    status: 'LIVE',
+    tier: 'Deterministic Engine (IMPLEMENTED — queued for external numerical comparison, NOT QUALIFIED)',
+    description: 'Six-fold planetary strength (Sthana/Dig/Kaala/Cheshta/Naisargika/Drik), plus Bhava Bala, Vimshopaka and Ishta/Kashta. Queued for comparison against Parashara\u2019s Light / Jagannatha Hora before any parity claim.'
+  },
+  PROFESSIONAL_SUITE: {
+    status: 'LIVE',
+    tier: 'Deterministic Engine (IMPLEMENTED)',
+    description: 'Professional offline surface: Shodashavarga, Ashtakavarga, Avasthas, 8 Dasha systems, Jaimini, KP, Varshaphala, special points, professional Panchang, Prashna and a composable report system \u2014 in the Jyotish Workbench (Pandit View). See /dev/jyotish-capabilities for the truthful capability & qualification matrix.'
   },
   PERSONALISED_MUHURAT: {
     status: 'PRACTITIONER_ASSISTED',
