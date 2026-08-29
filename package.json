@@ -11,6 +11,7 @@
     "start": "next start",
     "test": "playwright test",
     "test:engines": "playwright test tests/astrology.spec.ts tests/features.spec.ts",
+    "qualify": "node scripts/qualify.mjs",
     "typecheck": "tsc --noEmit",
     "postinstall": "prisma generate"
   },

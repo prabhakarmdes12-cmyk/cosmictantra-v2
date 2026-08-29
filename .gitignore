@@ -35,3 +35,8 @@ Thumbs.db
 
 .vercel
 .env*
+
+# Local Jyotish qualification reference data (may contain third-party report
+# screenshots/URLs + real birth data). Template + README are committed.
+data/qualification/references.json
+data/qualification/last-run.json

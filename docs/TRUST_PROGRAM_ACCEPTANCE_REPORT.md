@@ -71,6 +71,15 @@ Char dasha completion. Every computed section is honestly marked
   golden anchors; target 100. **External reference values recorded: 0.**
 - Honest status surfaced everywhere (Trust Center, book provenance): capabilities
   are IMPLEMENTED / internally verified, **not** externally QUALIFIED.
+- **Intake tooling is ready** for when external data arrives: a validated
+  reference loader (`src/lib/pro/referenceLoader.js`), a runner
+  (`npm run qualify data/qualification/references.json` →
+  `scripts/qualify.mjs`), a documented template + workflow
+  (`data/qualification/`), and a CI-gating exit code (non-zero on
+  `COSMICTANTRA_DEFECT`/`UNRESOLVED`). Verified by `tests/trust01_intake.spec.ts`:
+  a correct external value scores MATCH, a wrong one UNRESOLVED, empty values stay
+  PENDING. This is the concrete path off `CONTROLLED_PILOT` — it needs only
+  owner/Pandit-supplied reference values, which the program forbids fabricating.
 - Registry: 87 capabilities, 87 IMPLEMENTED, 17 internally verified, **0
   QUALIFIED**, 0 integrity violations. No `PARITY_WITH_*` labels anywhere.
 

@@ -1,0 +1,40 @@
+{
+  "datasetName": "EXAMPLE — replace with your dataset name",
+  "recordedBy": "Your name / Pandit name",
+  "note": "Fill `expected` ONLY with a genuine value you read from a named external product (with its version + settings) or that a practising Pandit computed. Do NOT copy CosmicTantra's own output back in — that proves nothing. Leave `expected` empty to keep a subject honestly PENDING.",
+  "subjects": [
+    {
+      "subjectId": "REF-001",
+      "birthInput": {
+        "birthDate": "1995-06-15",
+        "birthTime": "10:30",
+        "latitude": 25.5941,
+        "longitude": 85.1376,
+        "timezone": 5.5,
+        "place": "Patna, Bihar, India"
+      },
+      "references": [
+        {
+          "capabilityId": "lagna.sign",
+          "product": "AstroSage",
+          "productVersion": "web-2026-08",
+          "settings": { "ayanamsha": "LAHIRI", "nodeMode": "MEAN" },
+          "expected": "",
+          "source": "URL or screenshot reference",
+          "recordedBy": "Your name",
+          "recordedDate": "2026-08-30"
+        },
+        {
+          "capabilityId": "moon.nakshatra",
+          "product": "AstroSage",
+          "productVersion": "web-2026-08",
+          "settings": { "ayanamsha": "LAHIRI" },
+          "expected": "",
+          "source": "URL or screenshot reference",
+          "recordedBy": "Your name",
+          "recordedDate": "2026-08-30"
+        }
+      ]
+    }
+  ]
+}
