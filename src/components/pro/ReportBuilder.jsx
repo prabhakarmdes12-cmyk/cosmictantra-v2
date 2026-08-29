@@ -2,6 +2,8 @@
 
 import React, { useMemo, useState } from 'react';
 import { REPORT_SECTIONS, DEFAULT_TEMPLATES, buildReport, reportToHTML } from '@/lib/pro/reports';
+import { buildBook, BOOK_VARIANTS, RENDER_TARGET } from '@/lib/pro/bookModel';
+import { bookToHTML } from '@/lib/pro/renderers';
 
 const SECTION_LABELS = {
   cover: 'Cover', birthDetails: 'Birth details', d1: 'D1 chart', planetTable: 'Planet table',
@@ -38,8 +40,27 @@ export default function ReportBuilder({ pro, birthParams }) {
   };
   const loadTemplate = (t) => setSelected(templates[t]);
 
+  const generateBook = (variantId) => {
+    const book = buildBook(variantId, { pro, meta: { name }, notes });
+    const html = bookToHTML(book, RENDER_TARGET.PRINT);
+    const w = window.open('', '_blank');
+    if (w) { w.document.write(html); w.document.close(); w.focus(); }
+  };
+
   return (
     <div className="space-y-3 text-xs">
+      {/* Book variants — renderer-independent KundliBookModel with provenance + evidence→rule→synthesis */}
+      <div className="rounded-lg border border-[#8E6F1D]/30 p-2.5 space-y-1.5">
+        <div className="font-semibold text-[#8E6F1D] dark:text-[#D4AF37]">Kundli Books</div>
+        <div className="opacity-60">One book model → WEB / PRINT / PDF. Every book carries full calculation identity; interpretations are evidence → rule → synthesis (no generic filler).</div>
+        <div className="flex flex-wrap gap-1.5">
+          {Object.values(BOOK_VARIANTS).filter((v) => v.id !== 'CUSTOM').map((v) => (
+            <button key={v.id} onClick={() => generateBook(v.id)} title={`Audience: ${v.audience}`}
+              className="px-2 py-1 rounded border border-[#8E6F1D]/40 hover:bg-[#8E6F1D]/[0.08]">{v.name}</button>
+          ))}
+        </div>
+      </div>
+
       <div className="flex flex-wrap gap-2 items-center">
         <span className="opacity-60">Preset:</span>
         {Object.values(DEFAULT_TEMPLATES).map((t) => (

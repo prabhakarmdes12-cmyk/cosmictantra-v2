@@ -87,7 +87,7 @@ export function buildReport(template, ctx) {
     template: tpl.id,
     name: tpl.name,
     generatedAt: new Date().toISOString(),
-    sections: tpl.sections.map((s) => renderSection(s, ctx)),
+    sections: tpl.sections.map((s) => ({ __id: s, ...renderSection(s, ctx) })),
     provenance: {
       engine: 'CosmicTantra canonical (Lahiri Chitrapaksha)',
       deterministic: true,
