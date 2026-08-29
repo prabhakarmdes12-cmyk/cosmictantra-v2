@@ -96,11 +96,12 @@ Char dasha completion. Every computed section is honestly marked
 
 - **P0 (resolved during build):** planet inspector cross-calc showed blank D9/D10
   and Shadbala (wrong field names) → fixed to read `signName`/`totalRupa`.
-- **P1 (flagged, follow-up):** existing `analytics.ts` posts event payloads
-  (potentially containing birth data / free-text questions) to
-  `/api/astrology/analytics`. A privacy-first `proAnalytics.js` (no-PII field
-  whitelist) is provided as the sanctioned layer; migrating call-sites and
-  server-side field filtering is a documented follow-up (see security audit).
+- **P1 (RESOLVED):** `analytics.ts` previously posted raw event payloads
+  (potentially birth data / free-text questions) to `/api/astrology/analytics`.
+  Both the client boundary and the server route now scrub every event through the
+  no-PII field whitelist (`proAnalytics.sanitizeEvent`); PII/free-text can no
+  longer reach the local session, the network, or the audit log. Verified by
+  `tests/trust09.spec.ts`.
 - **P1 (environmental, not a product defect):** Playwright Chromium cannot be
   installed in this sandbox (network-blocked), so the browser responsive suite
   and browser screenshots cannot run here. Mobile professionalism is verified via
@@ -146,8 +147,9 @@ clean; golden invariants locked.
 
 **Why not higher (PUBLIC_BETA / PRODUCTION_READY):** the engine is **not yet
 externally qualified** — the golden corpus has 0 recorded external reference
-values, so no capability is QUALIFIED. Two P1 follow-ups remain (analytics PII
-migration; server-side ownership for the future DB). Browser-level responsive/a11y
+values, so no capability is QUALIFIED. One P1 follow-up remains (server-side
+ownership enforcement for the future DB-backed model); the analytics PII P1 has
+been resolved (client + server scrubbing). Browser-level responsive/a11y
 verification could not be executed in this environment.
 
 **Recommendation:** run a **controlled pilot** with practising Pandits who supply

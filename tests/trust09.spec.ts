@@ -45,6 +45,31 @@ test.describe('TRUST-09 — Analytics (no PII)', () => {
     expect(e.ok).toBe(true);
     expect(e.name).toBeUndefined();
   });
+
+  test('legitimate journey fields survive; birth PII + free text never do', () => {
+    // journey/attribution fields the app actually emits are allowed
+    const clean: any = sanitizeEvent('kundali_generated', {
+      intent: 'CAREER_BUSINESS', source: 'HERO_TEXT', category: 'career',
+      festival: 'Diwali', theme: 'dark', lang: 'hi', city: 'Patna',
+      lagna: 'Leo', moonNak: 'Uttara Ashadha', amount: 199,
+    });
+    expect(clean.intent).toBe('CAREER_BUSINESS');
+    expect(clean.source).toBe('HERO_TEXT');
+    expect(clean.lagna).toBe('Leo');
+    expect(clean.moonNak).toBe('Uttara Ashadha');
+    expect(clean.amount).toBe(199);
+
+    // the exact fields the consultation/kundali forms hold must be dropped
+    const scrubbed: any = sanitizeEvent('checkout_started', {
+      customerName: 'Ravi', customerPhone: '9999999999', customerEmail: 'a@b.c',
+      birthCity: 'Patna', birthLat: 25.5, birthLon: 85.1, birthDate: '1995-06-15',
+      customerQuestion: 'when will I marry?', category: 'marriage',
+    });
+    expect(scrubbed.category).toBe('marriage'); // non-PII kept
+    for (const k of ['customerName', 'customerPhone', 'customerEmail', 'birthCity', 'birthLat', 'birthLon', 'birthDate', 'customerQuestion']) {
+      expect(scrubbed[k]).toBeUndefined();
+    }
+  });
 });
 
 test.describe('TRUST-09 — i18n (en/hi, Sanskrit canonical)', () => {

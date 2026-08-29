@@ -1,7 +1,15 @@
 /**
  * INTENT-DRIVEN ANALYTICS & ATTRIBUTION PIPELINE
  * Records visitor journey across discovery, calculations, and human consultation.
+ *
+ * PRIVACY (TRUST-09 / PROGRAM 15): every event payload is scrubbed at this
+ * boundary via sanitizeEvent() before it is stored in the local session OR sent
+ * to the network. Birth PII (date/time/coordinates/place) and free-text
+ * (questions, names, phone, email) are NEVER recorded. See proAnalytics.js for
+ * the field whitelist and docs/SECURITY_IDOR_AUDIT.md.
  */
+
+import { sanitizeEvent } from './proAnalytics.js';
 
 const STORAGE_KEY = 'cosmictantra_intent_session';
 
@@ -61,18 +69,23 @@ class IntentTracker {
   }
 
   public track(eventName: string, payload: Record<string, any> = {}) {
+    // Scrub PII / free-text at the boundary. `clean` never contains birth data,
+    // names, questions, phone or email — regardless of what the caller passed.
+    const clean = sanitizeEvent(eventName, payload) as Record<string, any>;
+    const { event: _evt, ...safePayload } = clean;
+
     const eventRecord = {
       event: eventName,
-      payload,
+      payload: safePayload,
       time: new Date().toISOString()
     };
 
-    if (this.session.events.length === 0 && payload.intent) {
-      this.session.firstIntent = payload.intent;
+    if (this.session.events.length === 0 && safePayload.intent) {
+      this.session.firstIntent = safePayload.intent;
     }
 
-    if (payload.product && !this.session.productsUsed.includes(payload.product)) {
-      this.session.productsUsed.push(payload.product);
+    if (safePayload.product && !this.session.productsUsed.includes(safePayload.product)) {
+      this.session.productsUsed.push(safePayload.product);
     }
 
     this.session.events.push(eventRecord);
@@ -82,7 +95,7 @@ class IntentTracker {
       fetch('/api/astrology/analytics', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventType: eventName, payload }),
+        body: JSON.stringify({ eventType: eventName, payload: safePayload }),
       }).catch(() => {});
     }
   }

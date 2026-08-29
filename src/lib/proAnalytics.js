@@ -11,15 +11,26 @@
  */
 
 // Whitelist of allowed event field keys. Anything else is dropped.
-const ALLOWED_FIELDS = new Set([
+// Covers the deterministic-core telemetry fields AND the legitimate,
+// non-identifying marketing/journey fields the app already emits.
+export const ALLOWED_FIELDS = new Set([
+  // deterministic-core telemetry
   'event', 'section', 'variant', 'mode', 'zoom', 'target', 'count',
   'durationMs', 'ok', 'code', 'degraded', 'confidence', 'status', 'topic',
+  // journey / attribution (non-PII)
+  'intent', 'source', 'category', 'festival', 'practitioner', 'video',
+  'theme', 'lang', 'city', 'amount', 'product',
+  // derived astrological *labels* (a sign/nakshatra name is not identifying)
+  'lagna', 'moonNak', 'rashi',
 ]);
 
-// Explicitly forbidden keys (defensive — also dropped by the whitelist).
-const FORBIDDEN_FIELDS = new Set([
-  'name', 'birthDate', 'birthTime', 'latitude', 'longitude', 'timezone',
-  'place', 'question', 'phone', 'email', 'text', 'lat', 'lng', 'ownerKey',
+// Explicitly forbidden keys — birth PII and free text. Dropped even if a future
+// edit accidentally adds one to the whitelist (checked first).
+export const FORBIDDEN_FIELDS = new Set([
+  'name', 'customerName', 'birthDate', 'birthTime', 'latitude', 'longitude',
+  'timezone', 'place', 'birthCity', 'birthLat', 'birthLon', 'question',
+  'customerQuestion', 'phone', 'customerPhone', 'email', 'customerEmail',
+  'text', 'lat', 'lng', 'ownerKey', 'orderId', 'paymentId',
 ]);
 
 const RING_MAX = 200;

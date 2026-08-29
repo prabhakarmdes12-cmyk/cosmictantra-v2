@@ -58,11 +58,19 @@ Analytics events (TRUST-09) carry only non-PII identifiers (event name, section,
 anonymised counts). The deterministic core needs no network, so birth data never
 leaves the device on the free tier.
 
-**Action items.**
-- Analytics implementation (TRUST-09) must whitelist event fields — no birth
-  fields, no free-text questions.
-- Server consultation APIs (`/api/astrology/*`) already exist; confirm they log
-  only order ids and status, not raw birth details. (Follow-up for the API owner.)
+**Status — RESOLVED (analytics PII).** The client analytics boundary
+(`src/lib/analytics.ts`) now scrubs every event through `sanitizeEvent()`
+(`src/lib/proAnalytics.js`) before it is stored in the local session OR POSTed to
+`/api/astrology/analytics`. The server route applies the SAME whitelist as
+defense-in-depth, so no birth PII or free-text (name, phone, email, birth
+date/time/coordinates, question) is ever persisted to the audit log — even from a
+crafted request. Verified by `tests/trust09.spec.ts` ("legitimate journey fields
+survive; birth PII + free text never do").
+
+**Remaining action items.**
+- Server consultation APIs (`/api/astrology/*` other than analytics) still handle
+  legitimate order PII; confirm their own logs record only order ids and status.
+  (Follow-up for the API owner.)
 
 ## Threat: auth/authorization on admin & practitioner surfaces
 
