@@ -1,0 +1,182 @@
+[
+  {
+    "id": "PAN-001",
+    "dateStr": "2026-08-29T00:15:00.000Z",
+    "lat": 25.3176,
+    "lng": 82.9739,
+    "tz": 5.5,
+    "city": "Varanasi",
+    "label": "Bhadrapada Krishna Dwitiya Sunrise"
+  },
+  {
+    "id": "PAN-002",
+    "dateStr": "2026-08-28T00:15:00.000Z",
+    "lat": 25.3176,
+    "lng": 82.9739,
+    "tz": 5.5,
+    "city": "Varanasi",
+    "label": "Shravana Purnima / Raksha Bandhan"
+  },
+  {
+    "id": "PAN-003",
+    "dateStr": "2026-09-11T00:15:00.000Z",
+    "lat": 25.3176,
+    "lng": 82.9739,
+    "tz": 5.5,
+    "city": "Varanasi",
+    "label": "Bhadrapada Amavasya"
+  },
+  {
+    "id": "PAN-004",
+    "dateStr": "2026-09-22T00:15:00.000Z",
+    "lat": 25.3176,
+    "lng": 82.9739,
+    "tz": 5.5,
+    "city": "Varanasi",
+    "label": "Parivartini Ekadashi (Shukla)"
+  },
+  {
+    "id": "PAN-005",
+    "dateStr": "2026-10-10T00:15:00.000Z",
+    "lat": 25.3176,
+    "lng": 82.9739,
+    "tz": 5.5,
+    "city": "Varanasi",
+    "label": "Sharad Navaratri Ghatasthapana"
+  },
+  {
+    "id": "PAN-006",
+    "dateStr": "2026-10-18T00:15:00.000Z",
+    "lat": 25.3176,
+    "lng": 82.9739,
+    "tz": 5.5,
+    "city": "Varanasi",
+    "label": "Maha Ashtami / Durga Puja"
+  },
+  {
+    "id": "PAN-007",
+    "dateStr": "2026-10-20T00:15:00.000Z",
+    "lat": 25.3176,
+    "lng": 82.9739,
+    "tz": 5.5,
+    "city": "Varanasi",
+    "label": "Vijayadashami / Dussehra"
+  },
+  {
+    "id": "PAN-008",
+    "dateStr": "2026-11-08T00:15:00.000Z",
+    "lat": 25.3176,
+    "lng": 82.9739,
+    "tz": 5.5,
+    "city": "Varanasi",
+    "label": "Diwali / Lakshmi Puja (Kartika Amavasya)"
+  },
+  {
+    "id": "PAN-009",
+    "dateStr": "2026-01-14T00:15:00.000Z",
+    "lat": 25.5941,
+    "lng": 85.1376,
+    "tz": 5.5,
+    "city": "Patna",
+    "label": "Makara Sankranti (Sun Ingress Capricorn)"
+  },
+  {
+    "id": "PAN-010",
+    "dateStr": "2026-04-14T00:15:00.000Z",
+    "lat": 25.5941,
+    "lng": 85.1376,
+    "tz": 5.5,
+    "city": "Patna",
+    "label": "Mesha Sankranti (Vaisakhi / Sun Ingress Aries)"
+  },
+  {
+    "id": "PAN-011",
+    "dateStr": "2026-03-03T00:15:00.000Z",
+    "lat": 23.7957,
+    "lng": 86.4304,
+    "tz": 5.5,
+    "city": "Dhanbad",
+    "label": "Holi / Phalguna Purnima"
+  },
+  {
+    "id": "PAN-012",
+    "dateStr": "2026-02-15T00:15:00.000Z",
+    "lat": 23.7957,
+    "lng": 86.4304,
+    "tz": 5.5,
+    "city": "Dhanbad",
+    "label": "Maha Shivaratri (Magha Krishna Chaturdashi)"
+  },
+  {
+    "id": "PAN-013",
+    "dateStr": "2026-07-29T00:15:00.000Z",
+    "lat": 28.6139,
+    "lng": 77.209,
+    "tz": 5.5,
+    "city": "New Delhi",
+    "label": "Shravana Somwar (First Monday)"
+  },
+  {
+    "id": "PAN-014",
+    "dateStr": "2026-09-04T00:15:00.000Z",
+    "lat": 28.6139,
+    "lng": 77.209,
+    "tz": 5.5,
+    "city": "New Delhi",
+    "label": "Krishna Janmashtami (Ashtami Rohini)"
+  },
+  {
+    "id": "PAN-015",
+    "dateStr": "2026-09-15T00:15:00.000Z",
+    "lat": 19.076,
+    "lng": 72.8777,
+    "tz": 5.5,
+    "city": "Mumbai",
+    "label": "Ganesh Chaturthi (Ganeshotsav)"
+  },
+  {
+    "id": "PAN-016",
+    "dateStr": "2026-11-20T00:15:00.000Z",
+    "lat": 12.9716,
+    "lng": 77.5946,
+    "tz": 5.5,
+    "city": "Bengaluru",
+    "label": "Kartika Purnima / Dev Deepawali"
+  },
+  {
+    "id": "PAN-017",
+    "dateStr": "2026-06-21T00:15:00.000Z",
+    "lat": 23.1765,
+    "lng": 75.7885,
+    "tz": 5.5,
+    "city": "Ujjain",
+    "label": "Summer Solstice / Dakshinayana Transition"
+  },
+  {
+    "id": "PAN-018",
+    "dateStr": "2026-12-22T00:15:00.000Z",
+    "lat": 29.9457,
+    "lng": 78.1642,
+    "tz": 5.5,
+    "city": "Haridwar",
+    "label": "Winter Solstice / Uttarayana Transition"
+  },
+  {
+    "id": "PAN-019",
+    "dateStr": "2026-08-29T18:30:00.000Z",
+    "lat": 51.5074,
+    "lng": -0.1278,
+    "tz": 1,
+    "city": "London",
+    "label": "International London Midnight Panchang"
+  },
+  {
+    "id": "PAN-020",
+    "dateStr": "2026-08-29T00:00:00.000Z",
+    "lat": 37.7749,
+    "lng": -122.4194,
+    "tz": -7,
+    "city": "San Francisco",
+    "label": "USA West Coast Panchang"
+  }
+]

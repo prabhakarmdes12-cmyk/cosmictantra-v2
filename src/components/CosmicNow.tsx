@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { MapPin, Sun, Moon, Clock, Compass, ChevronDown, Sparkles, AlertTriangle, ShieldCheck, Calendar as CalendarIcon } from 'lucide-react';
-import { calculatePanchang } from '@/engines/panchang.js';
+import { calculatePanchang } from '@/lib/panchang.js';
 import { trackEvent } from '@/lib/analytics';
-import { NAKSHATRAS_DATA, TITHIS_DATA, YOGAS_DATA, KARANAS_MAP, VARAS_DATA, LUNAR_MONTHS } from '@/engines/monthlyPanchangEngine';
+import { NAKSHATRAS_DATA, TITHIS_DATA, YOGAS_DATA, KARANAS_MAP, LUNAR_MONTHS } from '@/engines/monthlyPanchangEngine';
 
 const HINDI_DIGITS = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९'];
 function toHindiDigits(str: string | number | undefined): string {
@@ -36,7 +36,7 @@ interface CosmicNowProps {
 
 export default function CosmicNow({ lang = 'en' }: CosmicNowProps) {
   const [isHi, setIsHi] = useState(lang === 'hi');
-  const [selectedCity, setSelectedCity] = useState(CITIES[0]); // Default Varanasi (Kashi)
+  const [selectedCity, setSelectedCity] = useState(CITIES[0]);
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const [panchang, setPanchang] = useState<any>(null);
   const [currentTime, setCurrentTime] = useState<string>('');
@@ -45,7 +45,12 @@ export default function CosmicNow({ lang = 'en' }: CosmicNowProps) {
   useEffect(() => {
     const now = new Date();
     setNowDate(now);
-    const p = calculatePanchang(now, selectedCity.lat, selectedCity.lon, selectedCity.tz);
+    const p = calculatePanchang(now, {
+      lat: selectedCity.lat,
+      lng: selectedCity.lon,
+      tz: selectedCity.tz,
+      name: selectedCity.name
+    });
     setPanchang(p);
 
     const updateClock = () => {
@@ -66,7 +71,6 @@ export default function CosmicNow({ lang = 'en' }: CosmicNowProps) {
 
   if (!panchang) return null;
 
-  // Date breakdown
   const year = nowDate.getFullYear();
   const monthIdx = nowDate.getMonth();
   const dayNum = nowDate.getDate();
@@ -74,13 +78,10 @@ export default function CosmicNow({ lang = 'en' }: CosmicNowProps) {
   const vikramSamvat = year + 57;
   const shakaSamvat = year - 78;
 
-  // English Date string
   const englishFullDate = `${ENGLISH_DAYS[dayOfWeek]}, ${dayNum} ${ENGLISH_MONTHS[monthIdx]} ${year}`;
-  // Hindi Date string
   const hindiFullDate = `${HINDI_DAYS[dayOfWeek]}, ${toHindiDigits(dayNum)} ${HINDI_MONTHS[monthIdx]} ${toHindiDigits(year)}`;
 
-  // Sidereal Lunar Month (approx)
-  const lunarMonthObj = LUNAR_MONTHS[(monthIdx + 4) % 12] || LUNAR_MONTHS[5]; // August = Bhadrapada
+  const lunarMonthObj = LUNAR_MONTHS[(monthIdx + 4) % 12] || LUNAR_MONTHS[5];
   const rituIdx = Math.floor(monthIdx / 2) % 6;
   const rituListEn = ['Shishira (Winter)', 'Vasanta (Spring)', 'Grishma (Summer)', 'Varsha (Monsoon)', 'Sharad (Autumn)', 'Hemanta (Pre-Winter)'];
   const rituListHi = ['शिशिर ऋतु (शीत)', 'वसन्त ऋतु (मधुमास)', 'ग्रीष्म ऋतु (उष्ण)', 'वर्षा ऋतु (मेघमाला)', 'शरद ऋतु (निर्मल)', 'हेमन्त ऋतु (शीतपूर्व)'];
@@ -89,36 +90,31 @@ export default function CosmicNow({ lang = 'en' }: CosmicNowProps) {
     ? (isHi ? 'उत्तरायण' : 'Uttarayana (Northward Sun)') 
     : (isHi ? 'दक्षिणायन' : 'Dakshinayana (Southward Sun)');
 
-  // Lookups for richer Panchang data
-  const tithiIdx = (panchang.tithi?.index || 1) - 1;
-  const tithiData = TITHIS_DATA[tithiIdx % 30] || { name: panchang.tithi?.name, nameHi: panchang.tithi?.name, meaning: panchang.tithi?.meaning };
+  const tithiNumber = panchang.tithi?.number || 1;
+  const tithiData = TITHIS_DATA[(tithiNumber - 1) % 30] || { name: panchang.tithi?.name, nameHi: panchang.tithi?.name, meaning: 'Auspicious Lunar Phase' };
   
-  const nakIdx = panchang.nakshatra?.index ?? 0;
-  const nakData = NAKSHATRAS_DATA[nakIdx % 27] || { name: panchang.nakshatra?.name, nameHi: panchang.nakshatra?.name, lord: 'Rahu', deity: 'Varuna' };
+  const nakName = panchang.nakshatra?.name || 'Ashwini';
+  const nakData = NAKSHATRAS_DATA.find(n => n.name === nakName) || { name: nakName, nameHi: nakName, lord: panchang.nakshatra?.lord || 'Ketu', deity: panchang.nakshatra?.deity || 'Devas' };
   
-  const yogaIdx = panchang.yoga?.index ?? 0;
-  const yogaData = YOGAS_DATA[yogaIdx % 27] || { name: panchang.yoga?.name, nameHi: panchang.yoga?.name, quality: 'Auspicious', qualityHi: 'शुभ' };
+  const yogaName = panchang.yoga?.name || 'Vishkambha';
+  const yogaData = YOGAS_DATA.find(y => y.name === yogaName) || { name: yogaName, nameHi: yogaName, quality: 'Auspicious', qualityHi: 'शुभ' };
   
-  const karanaName = panchang.karana?.name || '';
+  const karanaName = panchang.karana?.name || 'Bava';
   const karanaMeta = KARANAS_MAP[karanaName] || { nameHi: karanaName, typeHi: 'चर' };
 
-  // Calculate sun arc position (6:00 AM to 18:00 PM)
   const currentHours = nowDate.getHours() + nowDate.getMinutes() / 60 + nowDate.getSeconds() / 3600;
-  const sunProgress = Math.max(0, Math.min(100, ((currentHours - 6) / 12) * 100));
+  const sunProgress = panchang.solarArcProgress ?? Math.max(0, Math.min(100, ((currentHours - 6) / 12) * 100));
 
   const displayTime = isHi ? toHindiDigits(currentTime) : currentTime;
-  const displaySunrise = isHi ? toHindiDigits(panchang.sunrise) : panchang.sunrise;
-  const displaySunset = isHi ? toHindiDigits(panchang.sunset) : panchang.sunset;
-  const displayRahu = isHi ? `${toHindiDigits(panchang.rahuKala?.start)} – ${toHindiDigits(panchang.rahuKala?.end)}` : `${panchang.rahuKala?.start} – ${panchang.rahuKala?.end}`;
+  const displaySunrise = isHi ? toHindiDigits(panchang.sun?.sunrise) : panchang.sun?.sunrise;
+  const displaySunset = isHi ? toHindiDigits(panchang.sun?.sunset) : panchang.sun?.sunset;
+  const displayRahu = isHi ? toHindiDigits(panchang.timings?.rahuKalam) : panchang.timings?.rahuKalam;
   const pada = isHi ? toHindiDigits(panchang.nakshatra?.pada) : panchang.nakshatra?.pada;
 
   return (
     <div className="chiti-card p-5 sm:p-7 border-2 border-purple-500/30 bg-black/85 font-body relative overflow-hidden space-y-5 shadow-2xl">
-      
       {/* Top Header: Instrument Badge + City Selector + Language Switch */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-purple-500/20 pb-4">
-        
-        {/* Instrument Title & Live Pulse */}
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-[#F59E0B]">
             <Compass className="w-4 h-4" />
@@ -139,10 +135,7 @@ export default function CosmicNow({ lang = 'en' }: CosmicNowProps) {
           </div>
         </div>
 
-        {/* Right Controls: City Selector & Language Toggle */}
         <div className="flex items-center gap-2">
-          
-          {/* Language Toggle Button */}
           <button
             onClick={() => setIsHi(!isHi)}
             className="px-2.5 py-1 rounded-full bg-purple-950/60 border border-purple-500/30 text-[11px] font-mono font-bold text-[#A78BFA] hover:text-white transition-colors cursor-pointer"
@@ -151,7 +144,6 @@ export default function CosmicNow({ lang = 'en' }: CosmicNowProps) {
             {isHi ? 'English' : 'हिन्दी'}
           </button>
 
-          {/* Location Dropdown */}
           <div className="relative">
             <button
               onClick={() => setShowCityDropdown(!showCityDropdown)}
@@ -168,9 +160,7 @@ export default function CosmicNow({ lang = 'en' }: CosmicNowProps) {
                   <button
                     key={i}
                     onClick={() => handleCitySelect(c)}
-                    className={`w-full text-left px-3 py-2 hover:bg-purple-950/60 transition-colors flex items-center justify-between cursor-pointer ${
-                      c.name === selectedCity.name ? 'text-[#F59E0B] font-bold' : 'text-white'
-                    }`}
+                    className={`w-full text-left px-3 py-2 hover:bg-purple-950/60 transition-colors flex items-center justify-between cursor-pointer ${c.name === selectedCity.name ? 'text-[#F59E0B] font-bold' : 'text-white'}`}
                   >
                     <span>{isHi ? c.nameHi : c.name}</span>
                     {c.name === selectedCity.name && <span className="text-[#F59E0B]">✓</span>}
@@ -182,10 +172,8 @@ export default function CosmicNow({ lang = 'en' }: CosmicNowProps) {
         </div>
       </div>
 
-      {/* Prominent Bilingual Dual Date & Samvat Banner with High Typography Hierarchy */}
+      {/* Prominent Bilingual Dual Date & Samvat Banner */}
       <div className="bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-transparent p-4 sm:p-5 rounded-2xl border border-[#D4AF37]/30 space-y-2">
-        
-        {/* Tier 1: English Gregorian Date & Live Time */}
         <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1 border-b border-white/10 pb-2">
           <div className="flex items-center gap-2">
             <CalendarIcon className="w-4 h-4 text-[#F59E0B]" />
@@ -199,16 +187,16 @@ export default function CosmicNow({ lang = 'en' }: CosmicNowProps) {
           </div>
         </div>
 
-        {/* Tier 2: Vedic Hindu Lunar Date & Maas */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm sm:text-base font-bold text-[#F59E0B]">
           <span>🕉️ {lunarMonthObj.hi} मास ({lunarMonthObj.en} Maas)</span>
           <span className="text-white/40">•</span>
-          <span className="text-white">{panchang.tithi?.paksha === 'Shukla Paksha' ? 'शुक्ल पक्ष' : 'कृष्ण पक्ष'} {tithiData.nameHi}</span>
+          <span className="text-white">
+            {isHi ? (panchang.tithi?.paksha === 'Shukla Paksha' ? 'शुक्ल पक्ष' : 'कृष्ण पक्ष') : panchang.tithi?.paksha} {isHi ? tithiData.nameHi : panchang.tithi?.name}
+          </span>
           <span className="text-white/40">•</span>
           <span className="text-amber-200 font-mono">विक्रम संवत् {toHindiDigits(vikramSamvat)}</span>
         </div>
 
-        {/* Tier 3: Vedic Sub-Ephemeris Info */}
         <div className="text-[11px] sm:text-xs font-mono text-[#D1C9BF] flex flex-wrap items-center gap-x-3 gap-y-1">
           <span>🌿 {ritu}</span>
           <span>•</span>
@@ -225,18 +213,17 @@ export default function CosmicNow({ lang = 'en' }: CosmicNowProps) {
         <div className="flex justify-between items-center text-xs text-[#9CA3AF] mb-2 font-mono">
           <span className="flex items-center gap-1">
             <Sun className="w-3.5 h-3.5 text-amber-400" />
-            <span>{isHi ? `सूर्योदय: ${displaySunrise}` : `Sunrise: ${panchang.sunrise}`}</span>
+            <span>{isHi ? `सूर्योदय: ${displaySunrise}` : `Sunrise: ${panchang.sun?.sunrise}`}</span>
           </span>
           <span className="text-white font-bold text-xs bg-black/60 px-2.5 py-0.5 rounded-full border border-white/10">
             {isHi ? 'दिवामान चक्र' : 'Solar Day Arc'}
           </span>
           <span className="flex items-center gap-1">
             <Moon className="w-3.5 h-3.5 text-blue-300" />
-            <span>{isHi ? `सूर्यास्त: ${displaySunset}` : `Sunset: ${panchang.sunset}`}</span>
+            <span>{isHi ? `सूर्यास्त: ${displaySunset}` : `Sunset: ${panchang.sun?.sunset}`}</span>
           </span>
         </div>
 
-        {/* Arc Progress Bar with Indicator */}
         <div className="relative w-full pt-3 pb-1 my-1">
           <div className="w-full bg-black/70 h-3 rounded-full overflow-hidden relative border border-white/15">
             <div
@@ -244,7 +231,6 @@ export default function CosmicNow({ lang = 'en' }: CosmicNowProps) {
               style={{ width: `${sunProgress}%` }}
             />
           </div>
-          {/* Needle Pin Marker */}
           <div 
             className="absolute top-0 -translate-x-1/2 flex flex-col items-center pointer-events-none transition-all duration-700 z-20"
             style={{ left: `${Math.max(4, Math.min(96, sunProgress))}%` }}
@@ -257,20 +243,19 @@ export default function CosmicNow({ lang = 'en' }: CosmicNowProps) {
         </div>
 
         <div className="text-[11px] text-[#A78BFA] mt-2 font-mono flex items-center justify-center gap-2">
-          <span>{isHi ? 'वर्तमान वेला:' : 'Current Vedic Period:'}</span>
+          <span>{isHi ? 'वर्तमान वेला (Instant Phase):' : 'Current Vedic Period:'}</span>
           <strong className="text-white bg-purple-900/40 px-2 py-0.5 rounded-md border border-purple-500/30">
-            {isHi ? (panchang.tithi?.paksha === 'Shukla Paksha' ? 'शुक्ल पक्ष' : 'कृष्ण पक्ष') : panchang.tithi?.paksha} • {isHi ? HINDI_DAYS[dayOfWeek] : panchang.vara?.day}
+            {isHi ? (panchang.tithi?.paksha === 'Shukla Paksha' ? 'शुक्ल पक्ष' : 'कृष्ण पक्ष') : panchang.tithi?.paksha} {isHi ? tithiData.nameHi : panchang.tithi?.name} ({panchang.tithi?.progressPercent}% पूर्ण) • {isHi ? HINDI_DAYS[dayOfWeek] : ENGLISH_DAYS[dayOfWeek]}
           </strong>
         </div>
       </div>
 
-      {/* 4 Core Deterministic Panchang Metrics with Clear Hierarchy */}
+      {/* 4 Core Deterministic Panchang Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-        
         {/* 1. Tithi */}
         <div className="p-3.5 rounded-xl bg-black/50 border border-white/15 hover:border-amber-400/50 transition-all space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] text-[#9CA3AF] font-bold uppercase tracking-wider">{isHi ? '१. तिथि' : '1. TITHI'}</span>
+            <span className="text-[10px] text-[#9CA3AF] font-bold uppercase tracking-wider">{isHi ? '१. उदया तिथि (Day Tithi)' : '1. UDAYA TITHI'}</span>
             <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)]" />
           </div>
           <div className="font-editorial text-base font-bold text-white truncate">
@@ -314,7 +299,7 @@ export default function CosmicNow({ lang = 'en' }: CosmicNowProps) {
             {isHi ? `करण: ${karanaMeta.nameHi} (${karanaMeta.typeHi})` : `Karana: ${panchang.karana?.name}`}
           </div>
           <div className="text-[9px] text-[#9CA3AF] line-clamp-1 border-t border-white/5 pt-1">
-            {isHi ? `वार: ${HINDI_DAYS[dayOfWeek]}` : `Vara: ${panchang.vara?.day}`}
+            {isHi ? `वार: ${HINDI_DAYS[dayOfWeek]}` : `Vara: ${ENGLISH_DAYS[dayOfWeek]}`}
           </div>
         </div>
 
@@ -332,12 +317,10 @@ export default function CosmicNow({ lang = 'en' }: CosmicNowProps) {
           </div>
           <div className="text-[9px] text-emerald-400 font-mono line-clamp-1 border-t border-white/5 pt-1 flex items-center gap-1">
             <ShieldCheck className="w-2.5 h-2.5" />
-            <span>{isHi ? 'अभिजित: 11:45 AM – 12:35 PM' : 'Abhijit: 11:45 AM – 12:35 PM'}</span>
+            <span>{isHi ? `अभिजित: ${toHindiDigits(panchang.timings?.abhijitMuhurat || '11:45 AM – 12:35 PM')}` : `Abhijit: ${panchang.timings?.abhijitMuhurat || '11:45 AM – 12:35 PM'}`}</span>
           </div>
         </div>
-
       </div>
     </div>
   );
 }
-

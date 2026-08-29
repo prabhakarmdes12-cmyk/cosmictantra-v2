@@ -131,3 +131,48 @@ export function calculateVimshottariDasha(moonLongitude, birthDateStr, targetDat
     mahadashas
   };
 }
+
+
+/**
+ * Backward compatibility: Finds active Dasha period for a reference date
+ */
+export function getCurrentDasha(dashasOrSchedule, referenceDate = new Date()) {
+  const schedule = Array.isArray(dashasOrSchedule) 
+    ? dashasOrSchedule 
+    : dashasOrSchedule?.mahadashas || [];
+
+  const refMs = referenceDate instanceof Date ? referenceDate.getTime() : new Date(referenceDate).getTime();
+  const refStr = new Date(refMs).toISOString().slice(0, 10);
+
+  for (const d of schedule) {
+    const startMs = d.startDate instanceof Date ? d.startDate.getTime() : new Date(d.startDate || d.startFormatted).getTime();
+    const endMs = d.endDate instanceof Date ? d.endDate.getTime() : new Date(d.endDate || d.endFormatted).getTime();
+
+    if (refMs >= startMs && refMs <= endMs) {
+      let currentAntar = null;
+      if (Array.isArray(d.antardashas)) {
+        for (const ad of d.antardashas) {
+          const adStartMs = ad.startDate instanceof Date ? ad.startDate.getTime() : new Date(ad.startDate || ad.startFormatted).getTime();
+          const adEndMs = ad.endDate instanceof Date ? ad.endDate.getTime() : new Date(ad.endDate || ad.endFormatted).getTime();
+          if (refMs >= adStartMs && refMs <= adEndMs) {
+            currentAntar = ad;
+            break;
+          }
+        }
+      }
+
+      const percentDone = Math.min(100, Math.max(0, Math.round(((refMs - startMs) / (endMs - startMs)) * 100)));
+
+      return {
+        planet: d.lord || d.planet,
+        startDate: d.startDate || d.startFormatted,
+        endDate: d.endDate || d.endFormatted,
+        percentDone,
+        antardasha: currentAntar,
+        currentPeriodString: `${d.lord || d.planet} - ${currentAntar?.lord || currentAntar?.planet || 'Period'}`
+      };
+    }
+  }
+
+  return schedule[0] || null;
+}

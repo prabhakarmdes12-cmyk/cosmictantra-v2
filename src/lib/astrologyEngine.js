@@ -1,3 +1,4 @@
+import { calculateCelestialEphemeris } from './jyotish/celestialEngine';
 /**
  * PROTECTED CANONICAL DOMAIN LOGIC: Kundali / Vedic Sidereal Chart Engine
  * Generates Lagna (Ascendant), 12 House Cusps (Bhavas), 9 Vedic Grahas,
@@ -284,57 +285,55 @@ export function calculateKundali(arg1, arg2, arg3, arg4, arg5, arg6) {
   const utcHours = hour + minute / 60 - timezone;
   const birthDateTime = new Date(Date.UTC(year, month - 1, day, Math.floor(utcHours), Math.floor(((utcHours % 1 + 1) % 1) * 60)));
 
-  // Julian Day & centuries
-  const jd = toJulianDay(birthDateTime);
-  const d = jd - 2451545.0;
-  const T = d / 36525.0;
-  const ayanamsha = getLahiriAyanamsha(jd);
+  // High-Precision Celestial Ephemeris Adapter Subsystem
+  const ephemeris = calculateCelestialEphemeris({
+    dateUtc: birthDateTime,
+    latitude,
+    longitude,
+    nodeMode: 'MEAN_NODE'
+  });
 
-  // Ascendant / Lagna
-  const tropLagna = calculateLagna(jd, latitude, longitude);
-  const siderealLagna = toSidereal(tropLagna, ayanamsha);
+  const jd = ephemeris.julianDayTT;
+  const ayanamsha = ephemeris.ayanamsha.degrees;
+  const siderealLagna = ephemeris.lagna.siderealLongitude;
   const lagnaRashiId = Math.floor(siderealLagna / 30) + 1;
   const lagnaDegInSign = siderealLagna % 30;
   const lagnaNak = getNakshatra(siderealLagna);
   const lagnaRashi = RASHIS[lagnaRashiId - 1];
 
-  // Planetary positions (deterministic sidereal ephemeris approximations)
-  const calcPlanetLong = (base, dailyRate, perturb = 0) => {
-    const trop = normalizeAngle(base + dailyRate * d + perturb);
-    return toSidereal(trop, ayanamsha);
-  };
-
-  const sunLong = calcPlanetLong(280.46, 0.9856474, 1.915 * Math.sin((357.529 + 0.9856 * d) * Math.PI / 180));
-  const moonLong = calcPlanetLong(218.32, 13.176396, 6.289 * Math.sin((134.96 + 13.065 * d) * Math.PI / 180));
-  const marsLong = calcPlanetLong(355.43, 0.524033, 10.69 * Math.sin((19.37 + 0.524 * d) * Math.PI / 180));
-  const mercuryLong = calcPlanetLong(252.25, 4.092334, 4.0 * Math.sin((168.65 + 4.092 * d) * Math.PI / 180));
-  const jupiterLong = calcPlanetLong(34.35, 0.083085, 2.5 * Math.sin((20.4 + 0.083 * d) * Math.PI / 180));
-  const venusLong = calcPlanetLong(181.98, 1.602130, 1.5 * Math.sin((212.6 + 1.602 * d) * Math.PI / 180));
-  const saturnLong = calcPlanetLong(50.08, 0.033444, 2.0 * Math.sin((317.0 + 0.033 * d) * Math.PI / 180));
-  const rahuLong = normalizeAngle(290.0 - 0.05295 * d - ayanamsha);
-  const ketuLong = normalizeAngle(rahuLong + 180);
+  // Use authoritative sidereal longitudes from celestial engine
+  const sunLong = ephemeris.bodies.Sun.siderealLongitude;
+  const moonLong = ephemeris.bodies.Moon.siderealLongitude;
+  const marsLong = ephemeris.bodies.Mars.siderealLongitude;
+  const mercuryLong = ephemeris.bodies.Mercury.siderealLongitude;
+  const jupiterLong = ephemeris.bodies.Jupiter.siderealLongitude;
+  const venusLong = ephemeris.bodies.Venus.siderealLongitude;
+  const saturnLong = ephemeris.bodies.Saturn.siderealLongitude;
+  const rahuLong = ephemeris.bodies.Rahu.siderealLongitude;
+  const ketuLong = ephemeris.bodies.Ketu.siderealLongitude;
 
   const rawPlanets = [
-    { name: 'Sun', long: sunLong, isRetrograde: false },
-    { name: 'Moon', long: moonLong, isRetrograde: false },
-    { name: 'Mars', long: marsLong, isRetrograde: false },
-    { name: 'Mercury', long: mercuryLong, isRetrograde: false },
-    { name: 'Jupiter', long: jupiterLong, isRetrograde: false },
-    { name: 'Venus', long: venusLong, isRetrograde: false },
-    { name: 'Saturn', long: saturnLong, isRetrograde: false },
+    { name: 'Sun', long: sunLong, isRetrograde: ephemeris.bodies.Sun.isRetrograde },
+    { name: 'Moon', long: moonLong, isRetrograde: ephemeris.bodies.Moon.isRetrograde },
+    { name: 'Mars', long: marsLong, isRetrograde: ephemeris.bodies.Mars.isRetrograde },
+    { name: 'Mercury', long: mercuryLong, isRetrograde: ephemeris.bodies.Mercury.isRetrograde },
+    { name: 'Jupiter', long: jupiterLong, isRetrograde: ephemeris.bodies.Jupiter.isRetrograde },
+    { name: 'Venus', long: venusLong, isRetrograde: ephemeris.bodies.Venus.isRetrograde },
+    { name: 'Saturn', long: saturnLong, isRetrograde: ephemeris.bodies.Saturn.isRetrograde },
     { name: 'Rahu', long: rahuLong, isRetrograde: true },
     { name: 'Ketu', long: ketuLong, isRetrograde: true }
   ];
 
   // Map planets array
   const planetsArray = rawPlanets.map(p => {
-    const rashiId = Math.floor(p.long / 30) + 1;
-    const degInSign = p.long % 30;
-    const nak = getNakshatra(p.long);
+    const normLong = normalizeAngle(p.long);
+    const rashiId = (Math.floor(normLong / 30) % 12) + 1;
+    const degInSign = normLong % 30;
+    const nak = getNakshatra(normLong);
     const house = ((rashiId - lagnaRashiId + 12) % 12) + 1;
     const dignity = getDignity(p.name, rashiId, degInSign);
     const info = PLANET_INFO[p.name] || {};
-    const rashi = RASHIS[rashiId - 1];
+    const rashi = RASHIS[rashiId - 1] || RASHIS[0];
 
     return {
       name: p.name,

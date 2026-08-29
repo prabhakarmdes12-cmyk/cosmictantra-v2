@@ -1,3 +1,4 @@
+import { calculateCelestialEphemeris } from './jyotish/celestialEngine';
 /**
  * PROTECTED DOMAIN LOGIC: Panchang Deterministic Astronomical Engine
  * Calculates Tithi, Nakshatra, Yoga, Karana, Sunrise, Sunset, Rahu Kaal,
@@ -135,15 +136,41 @@ const RAHU_FACTORS = [
   { rahu: 3, yama: 6, gulika: 1 }, // Sat
 ];
 
-export function calculatePanchang(date = new Date(), city = { lat: 23.7957, lng: 86.4304, tz: 5.5, name: 'Dhanbad' }) {
-  const jd = getJulianDate(date);
-  const ayanamsha = getLahiriAyanamsha(jd);
+export function calculatePanchang(date = new Date(), cityOrLat = { lat: 23.7957, lng: 86.4304, tz: 5.5, name: 'Dhanbad' }, maybeLng, maybeTz) {
+  let city;
+  if (typeof cityOrLat === 'number') {
+    city = {
+      lat: cityOrLat,
+      lng: typeof maybeLng === 'number' ? maybeLng : 86.4304,
+      tz: typeof maybeTz === 'number' ? maybeTz : 5.5,
+      name: 'Location'
+    };
+  } else if (cityOrLat && typeof cityOrLat === 'object') {
+    city = {
+      lat: cityOrLat.lat ?? 23.7957,
+      lng: cityOrLat.lng ?? cityOrLat.lon ?? 86.4304,
+      tz: cityOrLat.tz ?? 5.5,
+      name: cityOrLat.name ?? 'Location'
+    };
+  } else {
+    city = { lat: 23.7957, lng: 86.4304, tz: 5.5, name: 'Dhanbad' };
+  }
+  // High-Precision Ephemeris Subsystem
+  const ephem = calculateCelestialEphemeris({
+    dateUtc: date,
+    latitude: city.lat,
+    longitude: city.lng,
+    nodeMode: 'MEAN_NODE'
+  });
   
-  const tropSun = getSunLongitude(jd);
-  const tropMoon = getMoonLongitude(jd);
+  const jd = ephem.julianDayTT;
+  const ayanamsha = ephem.ayanamsha.degrees;
   
-  const siderealSun = (tropSun - ayanamsha + 360) % 360;
-  const siderealMoon = (tropMoon - ayanamsha + 360) % 360;
+  const tropSun = ephem.bodies.Sun.tropicalLongitude;
+  const tropMoon = ephem.bodies.Moon.tropicalLongitude;
+  
+  const siderealSun = ephem.bodies.Sun.siderealLongitude;
+  const siderealMoon = ephem.bodies.Moon.siderealLongitude;
   
   // 1. TITHI: (Moon - Sun) in steps of 12°
   const diff = (siderealMoon - siderealSun + 360) % 360;
