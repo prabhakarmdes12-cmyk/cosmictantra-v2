@@ -10,6 +10,7 @@ const TOOL_LINKS = [
   { href: '/numerology/business-name', label: 'Business Name' },
   { href: '/numerology/mobile-number', label: 'Mobile Number' },
   { href: '/numerology/baby-names', label: 'Baby Names' },
+  { href: '/kundli', label: 'My Kundlis · Living Kundli' },
   { href: '/kundali-milan', label: 'Kundali Milan' },
   { href: '/my-calendar', label: 'My Vedic Calendar' },
   { href: '/family', label: 'Family Profiles' },
