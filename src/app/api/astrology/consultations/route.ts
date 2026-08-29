@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { verifyAdminAuth, maskCustomerPII } from '@/lib/auth';
+import { verifyAdminAuth, buildConsultationListResponse } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,21 +22,16 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    // Mask PII if not authenticated as Admin
-    const safeConsultations = consultations.map((c: any) => maskCustomerPII(c, isAdmin));
-
-    const stats = {
-      total: consultations.length,
-      testCases: consultations.filter((c: any) => c.isTestCase).length,
-      pendingReview: consultations.filter((c: any) => c.status === 'PANDIT_REVIEW' || c.status === 'ASSIGNED').length,
-      approved: consultations.filter((c: any) => c.status === 'APPROVED' || c.status === 'DELIVERY_READY' || c.status === 'DELIVERED').length,
-    };
+    // SEC-P0-002: server-authoritative list shaping — anonymous callers
+    // receive aggregate statistics only (no rows, no ids, no birth data).
+    const shaped = buildConsultationListResponse(consultations, isAdmin);
 
     return NextResponse.json({
       success: true,
-      consultations: safeConsultations,
-      stats,
-      authenticated: isAdmin,
+      consultations: shaped.consultations,
+      stats: shaped.stats,
+      authenticated: shaped.authenticated,
+      notice: shaped.notice,
     });
   } catch (error: any) {
     console.error('Fetch consultations error:', error);

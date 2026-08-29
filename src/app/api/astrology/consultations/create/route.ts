@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { createRazorpayOrder, getRazorpayClientKey } from '@/lib/razorpay';
+import { createRateLimiter, clientKeyFor } from '@/lib/rateLimit';
+
+const createOrderLimiter = createRateLimiter({ limit: 10, windowMs: 10 * 60 * 1000 });
 
 export async function POST(req: NextRequest) {
   try {
+    const limited = createOrderLimiter.check(clientKeyFor(req));
+    if (limited) return limited;
+
     const body = await req.json();
     const {
       customerName,

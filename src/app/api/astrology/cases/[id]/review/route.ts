@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { requireAdminAuth, assertCaseReviewAuthorized } from '@/lib/auth';
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    // SEC-P0-001: this endpoint mutates practitioner-verified output on
+    // paid cases. It requires an authenticated operator AND case
+    // assignment. Never trust the UI.
+    const unauthorized = requireAdminAuth(req);
+    if (unauthorized) return unauthorized;
+
     const caseId = params.id;
     const body = await req.json();
     const { practitionerId, practitionerFinal, practitionerNotes, action } = body;
@@ -28,6 +35,12 @@ export async function PATCH(
       );
     }
 
+    // SEC-P0-001: server-side assignment/permission check.
+    const authz = assertCaseReviewAuthorized(consultation, practitionerId);
+    if (!authz.ok) {
+      return NextResponse.json({ success: false, error: authz.error }, { status: authz.status });
+    }
+
     const isApprove = action === 'APPROVE';
     const newStatus = isApprove ? 'APPROVED' : consultation.status;
 
@@ -37,7 +50,7 @@ export async function PATCH(
         practitionerFinal,
         practitionerNotes: practitionerNotes || null,
         status: newStatus,
-        approvedBy: isApprove ? (practitionerId || consultation.practitionerId) : consultation.approvedBy,
+        approvedBy: isApprove ? authz.practitionerId : consultation.approvedBy,
         approvedAt: isApprove ? new Date() : consultation.approvedAt,
       },
     });
@@ -46,7 +59,7 @@ export async function PATCH(
     await db.astrologyAuditLog.create({
       data: {
         consultationId: updated.id,
-        practitionerId: practitionerId || updated.practitionerId,
+        practitionerId: authz.practitionerId,
         eventType: isApprove ? 'INTERPRETATION_APPROVED' : 'INTERPRETATION_SAVED',
         actorType: 'PANDIT',
         payload: {

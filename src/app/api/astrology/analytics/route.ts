@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { createRateLimiter, clientKeyFor } from '@/lib/rateLimit';
+
+const analyticsLimiter = createRateLimiter({ limit: 120, windowMs: 60 * 1000 });
 
 export async function POST(req: NextRequest) {
   try {
+    const limited = analyticsLimiter.check(clientKeyFor(req));
+    if (limited) return limited;
+
     const body = await req.json();
     const { eventType, payload } = body;
 

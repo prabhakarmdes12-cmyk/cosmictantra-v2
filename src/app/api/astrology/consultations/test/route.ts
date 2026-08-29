@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { requireAdminAuth } from '@/lib/auth';
 import { calculateKundali } from '@/engines/astrologyEngine.js';
 import { calculateVimshottariDasha, getCurrentDasha } from '@/engines/dashaEngine.js';
 import { calculatePanchang } from '@/engines/panchang.js';
@@ -7,6 +8,11 @@ import { buildSystemPrompt, generateRemedies } from '@/engines/guruAI.js';
 
 export async function POST(req: NextRequest) {
   try {
+    // Internal pipeline-runner: executes the full calculation + AI pipeline
+    // and writes DB rows. Operator-authenticated only.
+    const unauthorized = requireAdminAuth(req);
+    if (unauthorized) return unauthorized;
+
     const body = await req.json();
     const {
       customerName,
