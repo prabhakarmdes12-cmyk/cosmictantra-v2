@@ -23,6 +23,7 @@ import {
 import ReportBuilder from './ReportBuilder';
 import AskKashiPanel from './AskKashiPanel';
 import TimelinePanel from './TimelinePanel';
+import MobileKundliView from './MobileKundliView';
 
 function offsetLabel(tz) {
   const n = Number(tz); if (isNaN(n)) return '—';
@@ -49,7 +50,15 @@ export default function LivingKundli({ record, theme = 'dark', onUpdated }) {
 
   const renderSection = () => {
     switch (section) {
-      case 'Overview': return <OverviewPanel pro={pro} theme={theme} />;
+      case 'Overview': return (
+        <>
+          {/* Mobile-first card experience (not a shrunk desktop) */}
+          <div className="lg:hidden mb-3">
+            <MobileKundliView pro={pro} onDrill={(target) => setSection(target)} />
+          </div>
+          <div className="hidden lg:block"><OverviewPanel pro={pro} theme={theme} /></div>
+        </>
+      );
       case 'Birth': return <BirthTab rec={rec} onEdit={() => setEditing(true)} />;
       case 'Charts': return <ChartPanel pro={pro} theme={theme} />;
       case 'Planets': return <PlanetsPanel pro={pro} />;
