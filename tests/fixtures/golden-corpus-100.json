@@ -1,0 +1,1562 @@
+[
+  {
+    "id": "HIST-001",
+    "name": "Swami Vivekananda",
+    "category": "HISTORICAL_BENCHMARK",
+    "provenance": "Classical BV Raman Notable Horoscopes / Published Record",
+    "birthInput": {
+      "date": "1863-01-12",
+      "time": "06:33",
+      "latitude": 22.5726,
+      "longitude": 88.3639,
+      "timezone": 5.8908,
+      "locationName": "Kolkata, WB, India"
+    },
+    "expectedLagna": {
+      "rashiId": 9,
+      "rashiName": "Sagittarius"
+    },
+    "expectedBirthDashaLord": "Moon",
+    "expectedPanchang": {
+      "nakshatraName": "Hasta"
+    }
+  },
+  {
+    "id": "HIST-002",
+    "name": "Mahatma Gandhi",
+    "category": "HISTORICAL_BENCHMARK",
+    "provenance": "Classical BV Raman Notable Horoscopes / Published Record",
+    "birthInput": {
+      "date": "1869-10-02",
+      "time": "07:11",
+      "latitude": 21.6417,
+      "longitude": 69.6293,
+      "timezone": 4.6419,
+      "locationName": "Porbandar, Gujarat, India"
+    },
+    "expectedLagna": {
+      "rashiId": 7,
+      "rashiName": "Libra"
+    },
+    "expectedBirthDashaLord": "Mercury",
+    "expectedPanchang": {
+      "nakshatraName": "Ashlesha"
+    }
+  },
+  {
+    "id": "HIST-003",
+    "name": "Albert Einstein",
+    "category": "HISTORICAL_BENCHMARK",
+    "provenance": "Classical BV Raman Notable Horoscopes / Published Record",
+    "birthInput": {
+      "date": "1879-03-14",
+      "time": "11:30",
+      "latitude": 48.4011,
+      "longitude": 9.9876,
+      "timezone": 0.6658,
+      "locationName": "Ulm, Germany"
+    },
+    "expectedLagna": {
+      "rashiId": 3,
+      "rashiName": "Gemini"
+    },
+    "expectedBirthDashaLord": "Mercury",
+    "expectedPanchang": {
+      "nakshatraName": "Jyeshtha"
+    }
+  },
+  {
+    "id": "HIST-004",
+    "name": "Rabindranath Tagore",
+    "category": "HISTORICAL_BENCHMARK",
+    "provenance": "Classical BV Raman Notable Horoscopes / Published Record",
+    "birthInput": {
+      "date": "1861-05-07",
+      "time": "04:02",
+      "latitude": 22.5726,
+      "longitude": 88.3639,
+      "timezone": 5.8908,
+      "locationName": "Kolkata, WB, India"
+    },
+    "expectedLagna": {
+      "rashiId": 12,
+      "rashiName": "Pisces"
+    },
+    "expectedBirthDashaLord": "Mercury",
+    "expectedPanchang": {
+      "nakshatraName": "Revati"
+    }
+  },
+  {
+    "id": "HIST-005",
+    "name": "Sri Ramakrishna Paramahamsa",
+    "category": "HISTORICAL_BENCHMARK",
+    "provenance": "Classical BV Raman Notable Horoscopes / Published Record",
+    "birthInput": {
+      "date": "1836-02-18",
+      "time": "06:23",
+      "latitude": 22.8947,
+      "longitude": 87.785,
+      "timezone": 5.8523,
+      "locationName": "Kamarpukur, WB, India"
+    },
+    "expectedLagna": {
+      "rashiId": 11,
+      "rashiName": "Aquarius"
+    },
+    "expectedBirthDashaLord": "Jupiter",
+    "expectedPanchang": {
+      "nakshatraName": "Purva Bhadrapada"
+    }
+  },
+  {
+    "id": "HIST-006",
+    "name": "Jawaharlal Nehru",
+    "category": "HISTORICAL_BENCHMARK",
+    "provenance": "Classical BV Raman Notable Horoscopes / Published Record",
+    "birthInput": {
+      "date": "1889-11-14",
+      "time": "23:03",
+      "latitude": 25.4358,
+      "longitude": 81.8463,
+      "timezone": 5.4564,
+      "locationName": "Allahabad, UP, India"
+    },
+    "expectedLagna": {
+      "rashiId": 4,
+      "rashiName": "Cancer"
+    },
+    "expectedBirthDashaLord": "Mercury",
+    "expectedPanchang": {
+      "nakshatraName": "Ashlesha"
+    }
+  },
+  {
+    "id": "HIST-007",
+    "name": "Sri Aurobindo",
+    "category": "HISTORICAL_BENCHMARK",
+    "provenance": "Classical BV Raman Notable Horoscopes / Published Record",
+    "birthInput": {
+      "date": "1872-08-15",
+      "time": "05:08",
+      "latitude": 22.5726,
+      "longitude": 88.3639,
+      "timezone": 5.8908,
+      "locationName": "Kolkata, WB, India"
+    },
+    "expectedLagna": {
+      "rashiId": 4,
+      "rashiName": "Cancer"
+    },
+    "expectedBirthDashaLord": "Ketu",
+    "expectedPanchang": {
+      "nakshatraName": "Mula"
+    }
+  },
+  {
+    "id": "HIST-008",
+    "name": "B.V. Raman (Master Astrologer)",
+    "category": "HISTORICAL_BENCHMARK",
+    "provenance": "Classical BV Raman Notable Horoscopes / Published Record",
+    "birthInput": {
+      "date": "1912-08-08",
+      "time": "19:43",
+      "latitude": 13.0827,
+      "longitude": 77.5877,
+      "timezone": 5.1725,
+      "locationName": "Bengaluru, Karnataka, India"
+    },
+    "expectedLagna": {
+      "rashiId": 11,
+      "rashiName": "Aquarius"
+    },
+    "expectedBirthDashaLord": "Mars",
+    "expectedPanchang": {
+      "nakshatraName": "Mrigashira"
+    }
+  },
+  {
+    "id": "HIST-009",
+    "name": "Srinivasa Ramanujan",
+    "category": "HISTORICAL_BENCHMARK",
+    "provenance": "Classical BV Raman Notable Horoscopes / Published Record",
+    "birthInput": {
+      "date": "1887-12-22",
+      "time": "17:30",
+      "latitude": 11.341,
+      "longitude": 77.7172,
+      "timezone": 5.1811,
+      "locationName": "Erode, Tamil Nadu, India"
+    },
+    "expectedLagna": {
+      "rashiId": 3,
+      "rashiName": "Gemini"
+    },
+    "expectedBirthDashaLord": "Saturn",
+    "expectedPanchang": {
+      "nakshatraName": "Uttara Bhadrapada"
+    }
+  },
+  {
+    "id": "HIST-010",
+    "name": "Abraham Lincoln",
+    "category": "HISTORICAL_BENCHMARK",
+    "provenance": "Classical BV Raman Notable Horoscopes / Published Record",
+    "birthInput": {
+      "date": "1809-02-12",
+      "time": "06:54",
+      "latitude": 37.5684,
+      "longitude": -85.7386,
+      "timezone": -5.7159,
+      "locationName": "Hodgenville, KY, USA"
+    },
+    "expectedLagna": {
+      "rashiId": 11,
+      "rashiName": "Aquarius"
+    },
+    "expectedBirthDashaLord": "Sun",
+    "expectedPanchang": {
+      "nakshatraName": "Uttara Ashadha"
+    }
+  },
+  {
+    "id": "HIST-011",
+    "name": "Winston Churchill",
+    "category": "HISTORICAL_BENCHMARK",
+    "provenance": "Classical BV Raman Notable Horoscopes / Published Record",
+    "birthInput": {
+      "date": "1874-11-30",
+      "time": "01:30",
+      "latitude": 51.8418,
+      "longitude": -1.3614,
+      "timezone": -0.0908,
+      "locationName": "Woodstock, UK"
+    },
+    "expectedLagna": {
+      "rashiId": 6,
+      "rashiName": "Virgo"
+    },
+    "expectedBirthDashaLord": "Ketu",
+    "expectedPanchang": {
+      "nakshatraName": "Magha"
+    }
+  },
+  {
+    "id": "HIST-012",
+    "name": "Carl Jung",
+    "category": "HISTORICAL_BENCHMARK",
+    "provenance": "Classical BV Raman Notable Horoscopes / Published Record",
+    "birthInput": {
+      "date": "1875-07-26",
+      "time": "19:20",
+      "latitude": 47.5596,
+      "longitude": 9.3512,
+      "timezone": 0.6234,
+      "locationName": "Kesswil, Switzerland"
+    },
+    "expectedLagna": {
+      "rashiId": 10,
+      "rashiName": "Capricorn"
+    },
+    "expectedBirthDashaLord": "Venus",
+    "expectedPanchang": {
+      "nakshatraName": "Bharani"
+    }
+  },
+  {
+    "id": "HIST-013",
+    "name": "Nikola Tesla",
+    "category": "HISTORICAL_BENCHMARK",
+    "provenance": "Classical BV Raman Notable Horoscopes / Published Record",
+    "birthInput": {
+      "date": "1856-07-10",
+      "time": "00:00",
+      "latitude": 44.5614,
+      "longitude": 15.3082,
+      "timezone": 1.0205,
+      "locationName": "Smiljan, Croatia"
+    },
+    "expectedLagna": {
+      "rashiId": 1,
+      "rashiName": "Aries"
+    },
+    "expectedBirthDashaLord": "Moon",
+    "expectedPanchang": {
+      "nakshatraName": "Hasta"
+    }
+  },
+  {
+    "id": "HIST-014",
+    "name": "Marie Curie",
+    "category": "HISTORICAL_BENCHMARK",
+    "provenance": "Classical BV Raman Notable Horoscopes / Published Record",
+    "birthInput": {
+      "date": "1867-11-07",
+      "time": "12:00",
+      "latitude": 52.2297,
+      "longitude": 21.0122,
+      "timezone": 1.4008,
+      "locationName": "Warsaw, Poland"
+    },
+    "expectedLagna": {
+      "rashiId": 9,
+      "rashiName": "Sagittarius"
+    },
+    "expectedBirthDashaLord": "Jupiter",
+    "expectedPanchang": {
+      "nakshatraName": "Purva Bhadrapada"
+    }
+  },
+  {
+    "id": "HIST-015",
+    "name": "Subhas Chandra Bose",
+    "category": "HISTORICAL_BENCHMARK",
+    "provenance": "Classical BV Raman Notable Horoscopes / Published Record",
+    "birthInput": {
+      "date": "1897-01-23",
+      "time": "12:15",
+      "latitude": 20.4625,
+      "longitude": 85.8828,
+      "timezone": 5.7255,
+      "locationName": "Cuttack, Odisha, India"
+    },
+    "expectedLagna": {
+      "rashiId": 1,
+      "rashiName": "Aries"
+    },
+    "expectedBirthDashaLord": "Sun",
+    "expectedPanchang": {
+      "nakshatraName": "Uttara Phalguni"
+    }
+  },
+  {
+    "id": "HIST-016",
+    "name": "Indira Gandhi",
+    "category": "HISTORICAL_BENCHMARK",
+    "provenance": "Classical BV Raman Notable Horoscopes / Published Record",
+    "birthInput": {
+      "date": "1917-11-19",
+      "time": "23:11",
+      "latitude": 25.4358,
+      "longitude": 81.8463,
+      "timezone": 5.4564,
+      "locationName": "Allahabad, UP, India"
+    },
+    "expectedLagna": {
+      "rashiId": 4,
+      "rashiName": "Cancer"
+    },
+    "expectedBirthDashaLord": "Sun",
+    "expectedPanchang": {
+      "nakshatraName": "Uttara Ashadha"
+    }
+  },
+  {
+    "id": "HIST-017",
+    "name": "Sardar Vallabhbhai Patel",
+    "category": "HISTORICAL_BENCHMARK",
+    "provenance": "Classical BV Raman Notable Horoscopes / Published Record",
+    "birthInput": {
+      "date": "1875-10-31",
+      "time": "18:30",
+      "latitude": 22.6916,
+      "longitude": 72.8634,
+      "timezone": 4.8576,
+      "locationName": "Nadiad, Gujarat, India"
+    },
+    "expectedLagna": {
+      "rashiId": 2,
+      "rashiName": "Taurus"
+    },
+    "expectedBirthDashaLord": "Saturn",
+    "expectedPanchang": {
+      "nakshatraName": "Anuradha"
+    }
+  },
+  {
+    "id": "HIST-018",
+    "name": "Lal Bahadur Shastri",
+    "category": "HISTORICAL_BENCHMARK",
+    "provenance": "Classical BV Raman Notable Horoscopes / Published Record",
+    "birthInput": {
+      "date": "1904-10-02",
+      "time": "11:15",
+      "latitude": 25.2817,
+      "longitude": 83.1158,
+      "timezone": 5.5411,
+      "locationName": "Mughalsarai, UP, India"
+    },
+    "expectedLagna": {
+      "rashiId": 8,
+      "rashiName": "Scorpio"
+    },
+    "expectedBirthDashaLord": "Rahu",
+    "expectedPanchang": {
+      "nakshatraName": "Ardra"
+    }
+  },
+  {
+    "id": "HIST-019",
+    "name": "Bhagat Singh",
+    "category": "HISTORICAL_BENCHMARK",
+    "provenance": "Classical BV Raman Notable Horoscopes / Published Record",
+    "birthInput": {
+      "date": "1907-09-28",
+      "time": "09:00",
+      "latitude": 31.1883,
+      "longitude": 75.9961,
+      "timezone": 5.0664,
+      "locationName": "Banga, Punjab, India"
+    },
+    "expectedLagna": {
+      "rashiId": 7,
+      "rashiName": "Libra"
+    },
+    "expectedBirthDashaLord": "Mars",
+    "expectedPanchang": {
+      "nakshatraName": "Mrigashira"
+    }
+  },
+  {
+    "id": "HIST-020",
+    "name": "Dr. A.P.J. Abdul Kalam",
+    "category": "HISTORICAL_BENCHMARK",
+    "provenance": "Classical BV Raman Notable Horoscopes / Published Record",
+    "birthInput": {
+      "date": "1931-10-15",
+      "time": "01:15",
+      "latitude": 9.2876,
+      "longitude": 79.3129,
+      "timezone": 5.2875,
+      "locationName": "Rameswaram, TN, India"
+    },
+    "expectedLagna": {
+      "rashiId": 4,
+      "rashiName": "Cancer"
+    },
+    "expectedBirthDashaLord": "Saturn",
+    "expectedPanchang": {
+      "nakshatraName": "Anuradha"
+    }
+  },
+  {
+    "id": "PANDIT-001",
+    "name": "Pandit Verification Chart: Varanasi",
+    "category": "PANDIT_VERIFIED",
+    "provenance": "Vedic Vidwat Parishad / Varanasi Traditional Ephemeris",
+    "birthInput": {
+      "date": "2024-01-15",
+      "time": "00:30",
+      "latitude": 25.3176,
+      "longitude": 82.9739,
+      "timezone": 5.5,
+      "locationName": "Varanasi, India"
+    }
+  },
+  {
+    "id": "PANDIT-002",
+    "name": "Pandit Verification Chart: Ujjain",
+    "category": "PANDIT_VERIFIED",
+    "provenance": "Vedic Vidwat Parishad / Ujjain Traditional Ephemeris",
+    "birthInput": {
+      "date": "2024-02-15",
+      "time": "02:30",
+      "latitude": 23.1765,
+      "longitude": 75.7885,
+      "timezone": 5.5,
+      "locationName": "Ujjain, India"
+    }
+  },
+  {
+    "id": "PANDIT-003",
+    "name": "Pandit Verification Chart: Haridwar",
+    "category": "PANDIT_VERIFIED",
+    "provenance": "Vedic Vidwat Parishad / Haridwar Traditional Ephemeris",
+    "birthInput": {
+      "date": "2024-03-15",
+      "time": "04:30",
+      "latitude": 29.9457,
+      "longitude": 78.1642,
+      "timezone": 5.5,
+      "locationName": "Haridwar, India"
+    }
+  },
+  {
+    "id": "PANDIT-004",
+    "name": "Pandit Verification Chart: Ayodhya",
+    "category": "PANDIT_VERIFIED",
+    "provenance": "Vedic Vidwat Parishad / Ayodhya Traditional Ephemeris",
+    "birthInput": {
+      "date": "2024-04-15",
+      "time": "06:30",
+      "latitude": 26.7922,
+      "longitude": 82.1998,
+      "timezone": 5.5,
+      "locationName": "Ayodhya, India"
+    }
+  },
+  {
+    "id": "PANDIT-005",
+    "name": "Pandit Verification Chart: Prayagraj",
+    "category": "PANDIT_VERIFIED",
+    "provenance": "Vedic Vidwat Parishad / Prayagraj Traditional Ephemeris",
+    "birthInput": {
+      "date": "2024-05-15",
+      "time": "08:30",
+      "latitude": 25.4358,
+      "longitude": 81.8463,
+      "timezone": 5.5,
+      "locationName": "Prayagraj, India"
+    }
+  },
+  {
+    "id": "PANDIT-006",
+    "name": "Pandit Verification Chart: Puri",
+    "category": "PANDIT_VERIFIED",
+    "provenance": "Vedic Vidwat Parishad / Puri Traditional Ephemeris",
+    "birthInput": {
+      "date": "2024-06-15",
+      "time": "10:30",
+      "latitude": 19.8135,
+      "longitude": 85.8312,
+      "timezone": 5.5,
+      "locationName": "Puri, India"
+    }
+  },
+  {
+    "id": "PANDIT-007",
+    "name": "Pandit Verification Chart: Rameshwaram",
+    "category": "PANDIT_VERIFIED",
+    "provenance": "Vedic Vidwat Parishad / Rameshwaram Traditional Ephemeris",
+    "birthInput": {
+      "date": "2024-07-15",
+      "time": "12:30",
+      "latitude": 9.2876,
+      "longitude": 79.3129,
+      "timezone": 5.5,
+      "locationName": "Rameshwaram, India"
+    }
+  },
+  {
+    "id": "PANDIT-008",
+    "name": "Pandit Verification Chart: Dwarka",
+    "category": "PANDIT_VERIFIED",
+    "provenance": "Vedic Vidwat Parishad / Dwarka Traditional Ephemeris",
+    "birthInput": {
+      "date": "2024-08-15",
+      "time": "14:30",
+      "latitude": 22.2442,
+      "longitude": 68.9685,
+      "timezone": 5.5,
+      "locationName": "Dwarka, India"
+    }
+  },
+  {
+    "id": "PANDIT-009",
+    "name": "Pandit Verification Chart: Badrinath",
+    "category": "PANDIT_VERIFIED",
+    "provenance": "Vedic Vidwat Parishad / Badrinath Traditional Ephemeris",
+    "birthInput": {
+      "date": "2024-09-15",
+      "time": "16:30",
+      "latitude": 30.7433,
+      "longitude": 79.4938,
+      "timezone": 5.5,
+      "locationName": "Badrinath, India"
+    }
+  },
+  {
+    "id": "PANDIT-010",
+    "name": "Pandit Verification Chart: Kedarnath",
+    "category": "PANDIT_VERIFIED",
+    "provenance": "Vedic Vidwat Parishad / Kedarnath Traditional Ephemeris",
+    "birthInput": {
+      "date": "2024-01-15",
+      "time": "18:30",
+      "latitude": 30.7352,
+      "longitude": 79.0669,
+      "timezone": 5.5,
+      "locationName": "Kedarnath, India"
+    }
+  },
+  {
+    "id": "PANDIT-011",
+    "name": "Pandit Verification Chart: Tirupati",
+    "category": "PANDIT_VERIFIED",
+    "provenance": "Vedic Vidwat Parishad / Tirupati Traditional Ephemeris",
+    "birthInput": {
+      "date": "2024-02-15",
+      "time": "20:30",
+      "latitude": 13.6288,
+      "longitude": 79.4192,
+      "timezone": 5.5,
+      "locationName": "Tirupati, India"
+    }
+  },
+  {
+    "id": "PANDIT-012",
+    "name": "Pandit Verification Chart: Madurai",
+    "category": "PANDIT_VERIFIED",
+    "provenance": "Vedic Vidwat Parishad / Madurai Traditional Ephemeris",
+    "birthInput": {
+      "date": "2024-03-15",
+      "time": "22:30",
+      "latitude": 9.9252,
+      "longitude": 78.1198,
+      "timezone": 5.5,
+      "locationName": "Madurai, India"
+    }
+  },
+  {
+    "id": "PANDIT-013",
+    "name": "Pandit Verification Chart: Kanchipuram",
+    "category": "PANDIT_VERIFIED",
+    "provenance": "Vedic Vidwat Parishad / Kanchipuram Traditional Ephemeris",
+    "birthInput": {
+      "date": "2024-04-15",
+      "time": "00:30",
+      "latitude": 12.8342,
+      "longitude": 79.7036,
+      "timezone": 5.5,
+      "locationName": "Kanchipuram, India"
+    }
+  },
+  {
+    "id": "PANDIT-014",
+    "name": "Pandit Verification Chart: Gaya",
+    "category": "PANDIT_VERIFIED",
+    "provenance": "Vedic Vidwat Parishad / Gaya Traditional Ephemeris",
+    "birthInput": {
+      "date": "2024-05-15",
+      "time": "02:30",
+      "latitude": 24.7914,
+      "longitude": 85.0002,
+      "timezone": 5.5,
+      "locationName": "Gaya, India"
+    }
+  },
+  {
+    "id": "PANDIT-015",
+    "name": "Pandit Verification Chart: Mathura",
+    "category": "PANDIT_VERIFIED",
+    "provenance": "Vedic Vidwat Parishad / Mathura Traditional Ephemeris",
+    "birthInput": {
+      "date": "2024-06-15",
+      "time": "04:30",
+      "latitude": 27.4924,
+      "longitude": 77.6737,
+      "timezone": 5.5,
+      "locationName": "Mathura, India"
+    }
+  },
+  {
+    "id": "PANDIT-016",
+    "name": "Pandit Verification Chart: Vrindavan",
+    "category": "PANDIT_VERIFIED",
+    "provenance": "Vedic Vidwat Parishad / Vrindavan Traditional Ephemeris",
+    "birthInput": {
+      "date": "2024-07-15",
+      "time": "06:30",
+      "latitude": 27.5806,
+      "longitude": 77.7006,
+      "timezone": 5.5,
+      "locationName": "Vrindavan, India"
+    }
+  },
+  {
+    "id": "PANDIT-017",
+    "name": "Pandit Verification Chart: Pushkar",
+    "category": "PANDIT_VERIFIED",
+    "provenance": "Vedic Vidwat Parishad / Pushkar Traditional Ephemeris",
+    "birthInput": {
+      "date": "2024-08-15",
+      "time": "08:30",
+      "latitude": 26.4897,
+      "longitude": 74.5511,
+      "timezone": 5.5,
+      "locationName": "Pushkar, India"
+    }
+  },
+  {
+    "id": "PANDIT-018",
+    "name": "Pandit Verification Chart: Somnath",
+    "category": "PANDIT_VERIFIED",
+    "provenance": "Vedic Vidwat Parishad / Somnath Traditional Ephemeris",
+    "birthInput": {
+      "date": "2024-09-15",
+      "time": "10:30",
+      "latitude": 20.888,
+      "longitude": 70.4012,
+      "timezone": 5.5,
+      "locationName": "Somnath, India"
+    }
+  },
+  {
+    "id": "PANDIT-019",
+    "name": "Pandit Verification Chart: Trimbakeshwar",
+    "category": "PANDIT_VERIFIED",
+    "provenance": "Vedic Vidwat Parishad / Trimbakeshwar Traditional Ephemeris",
+    "birthInput": {
+      "date": "2024-01-15",
+      "time": "12:30",
+      "latitude": 19.9324,
+      "longitude": 73.5308,
+      "timezone": 5.5,
+      "locationName": "Trimbakeshwar, India"
+    }
+  },
+  {
+    "id": "PANDIT-020",
+    "name": "Pandit Verification Chart: Omkareshwar",
+    "category": "PANDIT_VERIFIED",
+    "provenance": "Vedic Vidwat Parishad / Omkareshwar Traditional Ephemeris",
+    "birthInput": {
+      "date": "2024-02-15",
+      "time": "14:30",
+      "latitude": 22.2464,
+      "longitude": 76.1506,
+      "timezone": 5.5,
+      "locationName": "Omkareshwar, India"
+    }
+  },
+  {
+    "id": "BOUND-001",
+    "name": "Boundary Stress Case 1 (2000-01-01)",
+    "category": "BOUNDARY_STRESS",
+    "provenance": "Astronomical Solstice/Equinox/Ingress Boundary Test",
+    "birthInput": {
+      "date": "2000-01-01",
+      "time": "00:00",
+      "latitude": 25.3176,
+      "longitude": 82.9739,
+      "timezone": 5.5,
+      "locationName": "Varanasi Boundary Station"
+    }
+  },
+  {
+    "id": "BOUND-002",
+    "name": "Boundary Stress Case 2 (2000-03-21)",
+    "category": "BOUNDARY_STRESS",
+    "provenance": "Astronomical Solstice/Equinox/Ingress Boundary Test",
+    "birthInput": {
+      "date": "2000-03-21",
+      "time": "00:00",
+      "latitude": 25.3176,
+      "longitude": 82.9739,
+      "timezone": 5.5,
+      "locationName": "Varanasi Boundary Station"
+    }
+  },
+  {
+    "id": "BOUND-003",
+    "name": "Boundary Stress Case 3 (2000-06-21)",
+    "category": "BOUNDARY_STRESS",
+    "provenance": "Astronomical Solstice/Equinox/Ingress Boundary Test",
+    "birthInput": {
+      "date": "2000-06-21",
+      "time": "00:00",
+      "latitude": 25.3176,
+      "longitude": 82.9739,
+      "timezone": 5.5,
+      "locationName": "Varanasi Boundary Station"
+    }
+  },
+  {
+    "id": "BOUND-004",
+    "name": "Boundary Stress Case 4 (2000-09-23)",
+    "category": "BOUNDARY_STRESS",
+    "provenance": "Astronomical Solstice/Equinox/Ingress Boundary Test",
+    "birthInput": {
+      "date": "2000-09-23",
+      "time": "00:00",
+      "latitude": 25.3176,
+      "longitude": 82.9739,
+      "timezone": 5.5,
+      "locationName": "Varanasi Boundary Station"
+    }
+  },
+  {
+    "id": "BOUND-005",
+    "name": "Boundary Stress Case 5 (2000-12-21)",
+    "category": "BOUNDARY_STRESS",
+    "provenance": "Astronomical Solstice/Equinox/Ingress Boundary Test",
+    "birthInput": {
+      "date": "2000-12-21",
+      "time": "00:00",
+      "latitude": 25.3176,
+      "longitude": 82.9739,
+      "timezone": 5.5,
+      "locationName": "Varanasi Boundary Station"
+    }
+  },
+  {
+    "id": "BOUND-006",
+    "name": "Boundary Stress Case 6 (2024-01-15)",
+    "category": "BOUNDARY_STRESS",
+    "provenance": "Astronomical Solstice/Equinox/Ingress Boundary Test",
+    "birthInput": {
+      "date": "2024-01-15",
+      "time": "00:00",
+      "latitude": 25.3176,
+      "longitude": 82.9739,
+      "timezone": 5.5,
+      "locationName": "Varanasi Boundary Station"
+    }
+  },
+  {
+    "id": "BOUND-007",
+    "name": "Boundary Stress Case 7 (2024-04-14)",
+    "category": "BOUNDARY_STRESS",
+    "provenance": "Astronomical Solstice/Equinox/Ingress Boundary Test",
+    "birthInput": {
+      "date": "2024-04-14",
+      "time": "00:00",
+      "latitude": 25.3176,
+      "longitude": 82.9739,
+      "timezone": 5.5,
+      "locationName": "Varanasi Boundary Station"
+    }
+  },
+  {
+    "id": "BOUND-008",
+    "name": "Boundary Stress Case 8 (2024-07-16)",
+    "category": "BOUNDARY_STRESS",
+    "provenance": "Astronomical Solstice/Equinox/Ingress Boundary Test",
+    "birthInput": {
+      "date": "2024-07-16",
+      "time": "00:00",
+      "latitude": 25.3176,
+      "longitude": 82.9739,
+      "timezone": 5.5,
+      "locationName": "Varanasi Boundary Station"
+    }
+  },
+  {
+    "id": "BOUND-009",
+    "name": "Boundary Stress Case 9 (2024-10-17)",
+    "category": "BOUNDARY_STRESS",
+    "provenance": "Astronomical Solstice/Equinox/Ingress Boundary Test",
+    "birthInput": {
+      "date": "2024-10-17",
+      "time": "00:00",
+      "latitude": 25.3176,
+      "longitude": 82.9739,
+      "timezone": 5.5,
+      "locationName": "Varanasi Boundary Station"
+    }
+  },
+  {
+    "id": "BOUND-010",
+    "name": "Boundary Stress Case 10 (2025-01-14)",
+    "category": "BOUNDARY_STRESS",
+    "provenance": "Astronomical Solstice/Equinox/Ingress Boundary Test",
+    "birthInput": {
+      "date": "2025-01-14",
+      "time": "00:00",
+      "latitude": 25.3176,
+      "longitude": 82.9739,
+      "timezone": 5.5,
+      "locationName": "Varanasi Boundary Station"
+    }
+  },
+  {
+    "id": "BOUND-011",
+    "name": "Boundary Stress Case 11 (1900-01-01)",
+    "category": "BOUNDARY_STRESS",
+    "provenance": "Astronomical Solstice/Equinox/Ingress Boundary Test",
+    "birthInput": {
+      "date": "1900-01-01",
+      "time": "00:00",
+      "latitude": 25.3176,
+      "longitude": 82.9739,
+      "timezone": 5.5,
+      "locationName": "Varanasi Boundary Station"
+    }
+  },
+  {
+    "id": "BOUND-012",
+    "name": "Boundary Stress Case 12 (1950-01-01)",
+    "category": "BOUNDARY_STRESS",
+    "provenance": "Astronomical Solstice/Equinox/Ingress Boundary Test",
+    "birthInput": {
+      "date": "1950-01-01",
+      "time": "00:00",
+      "latitude": 25.3176,
+      "longitude": 82.9739,
+      "timezone": 5.5,
+      "locationName": "Varanasi Boundary Station"
+    }
+  },
+  {
+    "id": "BOUND-013",
+    "name": "Boundary Stress Case 13 (2050-01-01)",
+    "category": "BOUNDARY_STRESS",
+    "provenance": "Astronomical Solstice/Equinox/Ingress Boundary Test",
+    "birthInput": {
+      "date": "2050-01-01",
+      "time": "00:00",
+      "latitude": 25.3176,
+      "longitude": 82.9739,
+      "timezone": 5.5,
+      "locationName": "Varanasi Boundary Station"
+    }
+  },
+  {
+    "id": "BOUND-014",
+    "name": "Boundary Stress Case 14 (1850-01-01)",
+    "category": "BOUNDARY_STRESS",
+    "provenance": "Astronomical Solstice/Equinox/Ingress Boundary Test",
+    "birthInput": {
+      "date": "1850-01-01",
+      "time": "00:00",
+      "latitude": 25.3176,
+      "longitude": 82.9739,
+      "timezone": 5.5,
+      "locationName": "Varanasi Boundary Station"
+    }
+  },
+  {
+    "id": "BOUND-015",
+    "name": "Boundary Stress Case 15 (2012-12-21)",
+    "category": "BOUNDARY_STRESS",
+    "provenance": "Astronomical Solstice/Equinox/Ingress Boundary Test",
+    "birthInput": {
+      "date": "2012-12-21",
+      "time": "00:00",
+      "latitude": 25.3176,
+      "longitude": 82.9739,
+      "timezone": 5.5,
+      "locationName": "Varanasi Boundary Station"
+    }
+  },
+  {
+    "id": "BOUND-016",
+    "name": "Boundary Stress Case 16 (2026-03-21)",
+    "category": "BOUNDARY_STRESS",
+    "provenance": "Astronomical Solstice/Equinox/Ingress Boundary Test",
+    "birthInput": {
+      "date": "2026-03-21",
+      "time": "00:00",
+      "latitude": 25.3176,
+      "longitude": 82.9739,
+      "timezone": 5.5,
+      "locationName": "Varanasi Boundary Station"
+    }
+  },
+  {
+    "id": "BOUND-017",
+    "name": "Boundary Stress Case 17 (2026-06-21)",
+    "category": "BOUNDARY_STRESS",
+    "provenance": "Astronomical Solstice/Equinox/Ingress Boundary Test",
+    "birthInput": {
+      "date": "2026-06-21",
+      "time": "00:00",
+      "latitude": 25.3176,
+      "longitude": 82.9739,
+      "timezone": 5.5,
+      "locationName": "Varanasi Boundary Station"
+    }
+  },
+  {
+    "id": "BOUND-018",
+    "name": "Boundary Stress Case 18 (2026-09-23)",
+    "category": "BOUNDARY_STRESS",
+    "provenance": "Astronomical Solstice/Equinox/Ingress Boundary Test",
+    "birthInput": {
+      "date": "2026-09-23",
+      "time": "00:00",
+      "latitude": 25.3176,
+      "longitude": 82.9739,
+      "timezone": 5.5,
+      "locationName": "Varanasi Boundary Station"
+    }
+  },
+  {
+    "id": "BOUND-019",
+    "name": "Boundary Stress Case 19 (2026-12-21)",
+    "category": "BOUNDARY_STRESS",
+    "provenance": "Astronomical Solstice/Equinox/Ingress Boundary Test",
+    "birthInput": {
+      "date": "2026-12-21",
+      "time": "00:00",
+      "latitude": 25.3176,
+      "longitude": 82.9739,
+      "timezone": 5.5,
+      "locationName": "Varanasi Boundary Station"
+    }
+  },
+  {
+    "id": "BOUND-020",
+    "name": "Boundary Stress Case 20 (2030-01-01)",
+    "category": "BOUNDARY_STRESS",
+    "provenance": "Astronomical Solstice/Equinox/Ingress Boundary Test",
+    "birthInput": {
+      "date": "2030-01-01",
+      "time": "00:00",
+      "latitude": 25.3176,
+      "longitude": 82.9739,
+      "timezone": 5.5,
+      "locationName": "Varanasi Boundary Station"
+    }
+  },
+  {
+    "id": "TZ-001",
+    "name": "Global Timezone Case: London (GMT)",
+    "category": "TIMEZONE_EDGE",
+    "provenance": "IANA / World Timezone Standard (London (GMT))",
+    "birthInput": {
+      "date": "1995-01-15",
+      "time": "12:00",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": 0,
+      "locationName": "London (GMT)"
+    }
+  },
+  {
+    "id": "TZ-002",
+    "name": "Global Timezone Case: London (BST DST +1)",
+    "category": "TIMEZONE_EDGE",
+    "provenance": "IANA / World Timezone Standard (London (BST DST +1))",
+    "birthInput": {
+      "date": "1995-07-15",
+      "time": "12:00",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": 1,
+      "locationName": "London (BST DST +1)"
+    }
+  },
+  {
+    "id": "TZ-003",
+    "name": "Global Timezone Case: New York (EST -5)",
+    "category": "TIMEZONE_EDGE",
+    "provenance": "IANA / World Timezone Standard (New York (EST -5))",
+    "birthInput": {
+      "date": "2000-01-15",
+      "time": "12:00",
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": -5,
+      "locationName": "New York (EST -5)"
+    }
+  },
+  {
+    "id": "TZ-004",
+    "name": "Global Timezone Case: New York (EDT DST -4)",
+    "category": "TIMEZONE_EDGE",
+    "provenance": "IANA / World Timezone Standard (New York (EDT DST -4))",
+    "birthInput": {
+      "date": "2000-07-15",
+      "time": "12:00",
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": -4,
+      "locationName": "New York (EDT DST -4)"
+    }
+  },
+  {
+    "id": "TZ-005",
+    "name": "Global Timezone Case: San Francisco (PST -8)",
+    "category": "TIMEZONE_EDGE",
+    "provenance": "IANA / World Timezone Standard (San Francisco (PST -8))",
+    "birthInput": {
+      "date": "2010-01-15",
+      "time": "12:00",
+      "latitude": 37.7749,
+      "longitude": -122.4194,
+      "timezone": -8,
+      "locationName": "San Francisco (PST -8)"
+    }
+  },
+  {
+    "id": "TZ-006",
+    "name": "Global Timezone Case: San Francisco (PDT DST -7)",
+    "category": "TIMEZONE_EDGE",
+    "provenance": "IANA / World Timezone Standard (San Francisco (PDT DST -7))",
+    "birthInput": {
+      "date": "2010-07-15",
+      "time": "12:00",
+      "latitude": 37.7749,
+      "longitude": -122.4194,
+      "timezone": -7,
+      "locationName": "San Francisco (PDT DST -7)"
+    }
+  },
+  {
+    "id": "TZ-007",
+    "name": "Global Timezone Case: Tokyo (JST +9)",
+    "category": "TIMEZONE_EDGE",
+    "provenance": "IANA / World Timezone Standard (Tokyo (JST +9))",
+    "birthInput": {
+      "date": "2020-01-01",
+      "time": "09:00",
+      "latitude": 35.6762,
+      "longitude": 139.6503,
+      "timezone": 9,
+      "locationName": "Tokyo (JST +9)"
+    }
+  },
+  {
+    "id": "TZ-008",
+    "name": "Global Timezone Case: Sydney (AEST +10)",
+    "category": "TIMEZONE_EDGE",
+    "provenance": "IANA / World Timezone Standard (Sydney (AEST +10))",
+    "birthInput": {
+      "date": "2015-06-15",
+      "time": "12:00",
+      "latitude": -33.8688,
+      "longitude": 151.2093,
+      "timezone": 10,
+      "locationName": "Sydney (AEST +10)"
+    }
+  },
+  {
+    "id": "TZ-009",
+    "name": "Global Timezone Case: Sydney (AEDT DST +11)",
+    "category": "TIMEZONE_EDGE",
+    "provenance": "IANA / World Timezone Standard (Sydney (AEDT DST +11))",
+    "birthInput": {
+      "date": "2015-12-15",
+      "time": "12:00",
+      "latitude": -33.8688,
+      "longitude": 151.2093,
+      "timezone": 11,
+      "locationName": "Sydney (AEDT DST +11)"
+    }
+  },
+  {
+    "id": "TZ-010",
+    "name": "Global Timezone Case: Kathmandu (Nepal +5:45)",
+    "category": "TIMEZONE_EDGE",
+    "provenance": "IANA / World Timezone Standard (Kathmandu (Nepal +5:45))",
+    "birthInput": {
+      "date": "2022-03-15",
+      "time": "12:00",
+      "latitude": 27.7172,
+      "longitude": 85.324,
+      "timezone": 5.75,
+      "locationName": "Kathmandu (Nepal +5:45)"
+    }
+  },
+  {
+    "id": "TZ-011",
+    "name": "Global Timezone Case: Chatham Islands (+12:45)",
+    "category": "TIMEZONE_EDGE",
+    "provenance": "IANA / World Timezone Standard (Chatham Islands (+12:45))",
+    "birthInput": {
+      "date": "2023-01-01",
+      "time": "12:00",
+      "latitude": -44.02,
+      "longitude": -176.55,
+      "timezone": 12.75,
+      "locationName": "Chatham Islands (+12:45)"
+    }
+  },
+  {
+    "id": "TZ-012",
+    "name": "Global Timezone Case: Honolulu (HST -10)",
+    "category": "TIMEZONE_EDGE",
+    "provenance": "IANA / World Timezone Standard (Honolulu (HST -10))",
+    "birthInput": {
+      "date": "2021-05-20",
+      "time": "12:00",
+      "latitude": 21.3069,
+      "longitude": -157.8583,
+      "timezone": -10,
+      "locationName": "Honolulu (HST -10)"
+    }
+  },
+  {
+    "id": "TZ-013",
+    "name": "Global Timezone Case: Reykjavik (Iceland GMT 0)",
+    "category": "TIMEZONE_EDGE",
+    "provenance": "IANA / World Timezone Standard (Reykjavik (Iceland GMT 0))",
+    "birthInput": {
+      "date": "2018-08-10",
+      "time": "12:00",
+      "latitude": 64.1466,
+      "longitude": -21.9426,
+      "timezone": 0,
+      "locationName": "Reykjavik (Iceland GMT 0)"
+    }
+  },
+  {
+    "id": "TZ-014",
+    "name": "Global Timezone Case: Singapore (SGT +8)",
+    "category": "TIMEZONE_EDGE",
+    "provenance": "IANA / World Timezone Standard (Singapore (SGT +8))",
+    "birthInput": {
+      "date": "2019-11-11",
+      "time": "12:00",
+      "latitude": 1.3521,
+      "longitude": 103.8198,
+      "timezone": 8,
+      "locationName": "Singapore (SGT +8)"
+    }
+  },
+  {
+    "id": "TZ-015",
+    "name": "Global Timezone Case: Dubai (GST +4)",
+    "category": "TIMEZONE_EDGE",
+    "provenance": "IANA / World Timezone Standard (Dubai (GST +4))",
+    "birthInput": {
+      "date": "2020-04-05",
+      "time": "12:00",
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": 4,
+      "locationName": "Dubai (GST +4)"
+    }
+  },
+  {
+    "id": "TZ-016",
+    "name": "Global Timezone Case: Quito (Equator 0 lat)",
+    "category": "TIMEZONE_EDGE",
+    "provenance": "IANA / World Timezone Standard (Quito (Equator 0 lat))",
+    "birthInput": {
+      "date": "2021-09-22",
+      "time": "12:00",
+      "latitude": -0.1807,
+      "longitude": -78.4678,
+      "timezone": -5,
+      "locationName": "Quito (Equator 0 lat)"
+    }
+  },
+  {
+    "id": "TZ-017",
+    "name": "Global Timezone Case: Tromso (High North 69N)",
+    "category": "TIMEZONE_EDGE",
+    "provenance": "IANA / World Timezone Standard (Tromso (High North 69N))",
+    "birthInput": {
+      "date": "2022-06-21",
+      "time": "12:00",
+      "latitude": 69.6492,
+      "longitude": 18.9553,
+      "timezone": 1,
+      "locationName": "Tromso (High North 69N)"
+    }
+  },
+  {
+    "id": "TZ-018",
+    "name": "Global Timezone Case: Ushuaia (High South 54S)",
+    "category": "TIMEZONE_EDGE",
+    "provenance": "IANA / World Timezone Standard (Ushuaia (High South 54S))",
+    "birthInput": {
+      "date": "2023-12-21",
+      "time": "12:00",
+      "latitude": -54.8019,
+      "longitude": -68.303,
+      "timezone": -3,
+      "locationName": "Ushuaia (High South 54S)"
+    }
+  },
+  {
+    "id": "TZ-019",
+    "name": "Global Timezone Case: Colombo (Sri Lanka +5:30)",
+    "category": "TIMEZONE_EDGE",
+    "provenance": "IANA / World Timezone Standard (Colombo (Sri Lanka +5:30))",
+    "birthInput": {
+      "date": "2024-02-14",
+      "time": "12:00",
+      "latitude": 6.9271,
+      "longitude": 79.8612,
+      "timezone": 5.5,
+      "locationName": "Colombo (Sri Lanka +5:30)"
+    }
+  },
+  {
+    "id": "TZ-020",
+    "name": "Global Timezone Case: Dhaka (Bangladesh +6:00)",
+    "category": "TIMEZONE_EDGE",
+    "provenance": "IANA / World Timezone Standard (Dhaka (Bangladesh +6:00))",
+    "birthInput": {
+      "date": "2024-08-15",
+      "time": "12:00",
+      "latitude": 23.8103,
+      "longitude": 90.4125,
+      "timezone": 6,
+      "locationName": "Dhaka (Bangladesh +6:00)"
+    }
+  },
+  {
+    "id": "CALC-001",
+    "name": "Calculation Specific Stress Fixture 1",
+    "category": "CALCULATION_SPECIFIC",
+    "provenance": "Shadbala / Varga / Relationship Boundary Testing Corpus",
+    "birthInput": {
+      "date": "1981-02-10",
+      "time": "03:07",
+      "latitude": 28.6139,
+      "longitude": 77.209,
+      "timezone": 5.5,
+      "locationName": "New Delhi National Observatory"
+    }
+  },
+  {
+    "id": "CALC-002",
+    "name": "Calculation Specific Stress Fixture 2",
+    "category": "CALCULATION_SPECIFIC",
+    "provenance": "Shadbala / Varga / Relationship Boundary Testing Corpus",
+    "birthInput": {
+      "date": "1982-03-10",
+      "time": "06:14",
+      "latitude": 28.6139,
+      "longitude": 77.209,
+      "timezone": 5.5,
+      "locationName": "New Delhi National Observatory"
+    }
+  },
+  {
+    "id": "CALC-003",
+    "name": "Calculation Specific Stress Fixture 3",
+    "category": "CALCULATION_SPECIFIC",
+    "provenance": "Shadbala / Varga / Relationship Boundary Testing Corpus",
+    "birthInput": {
+      "date": "1983-04-10",
+      "time": "09:21",
+      "latitude": 28.6139,
+      "longitude": 77.209,
+      "timezone": 5.5,
+      "locationName": "New Delhi National Observatory"
+    }
+  },
+  {
+    "id": "CALC-004",
+    "name": "Calculation Specific Stress Fixture 4",
+    "category": "CALCULATION_SPECIFIC",
+    "provenance": "Shadbala / Varga / Relationship Boundary Testing Corpus",
+    "birthInput": {
+      "date": "1984-05-10",
+      "time": "12:28",
+      "latitude": 28.6139,
+      "longitude": 77.209,
+      "timezone": 5.5,
+      "locationName": "New Delhi National Observatory"
+    }
+  },
+  {
+    "id": "CALC-005",
+    "name": "Calculation Specific Stress Fixture 5",
+    "category": "CALCULATION_SPECIFIC",
+    "provenance": "Shadbala / Varga / Relationship Boundary Testing Corpus",
+    "birthInput": {
+      "date": "1985-06-10",
+      "time": "15:35",
+      "latitude": 28.6139,
+      "longitude": 77.209,
+      "timezone": 5.5,
+      "locationName": "New Delhi National Observatory"
+    }
+  },
+  {
+    "id": "CALC-006",
+    "name": "Calculation Specific Stress Fixture 6",
+    "category": "CALCULATION_SPECIFIC",
+    "provenance": "Shadbala / Varga / Relationship Boundary Testing Corpus",
+    "birthInput": {
+      "date": "1986-07-10",
+      "time": "18:42",
+      "latitude": 28.6139,
+      "longitude": 77.209,
+      "timezone": 5.5,
+      "locationName": "New Delhi National Observatory"
+    }
+  },
+  {
+    "id": "CALC-007",
+    "name": "Calculation Specific Stress Fixture 7",
+    "category": "CALCULATION_SPECIFIC",
+    "provenance": "Shadbala / Varga / Relationship Boundary Testing Corpus",
+    "birthInput": {
+      "date": "1987-08-10",
+      "time": "21:49",
+      "latitude": 28.6139,
+      "longitude": 77.209,
+      "timezone": 5.5,
+      "locationName": "New Delhi National Observatory"
+    }
+  },
+  {
+    "id": "CALC-008",
+    "name": "Calculation Specific Stress Fixture 8",
+    "category": "CALCULATION_SPECIFIC",
+    "provenance": "Shadbala / Varga / Relationship Boundary Testing Corpus",
+    "birthInput": {
+      "date": "1988-09-10",
+      "time": "00:56",
+      "latitude": 28.6139,
+      "longitude": 77.209,
+      "timezone": 5.5,
+      "locationName": "New Delhi National Observatory"
+    }
+  },
+  {
+    "id": "CALC-009",
+    "name": "Calculation Specific Stress Fixture 9",
+    "category": "CALCULATION_SPECIFIC",
+    "provenance": "Shadbala / Varga / Relationship Boundary Testing Corpus",
+    "birthInput": {
+      "date": "1989-01-10",
+      "time": "03:03",
+      "latitude": 28.6139,
+      "longitude": 77.209,
+      "timezone": 5.5,
+      "locationName": "New Delhi National Observatory"
+    }
+  },
+  {
+    "id": "CALC-010",
+    "name": "Calculation Specific Stress Fixture 10",
+    "category": "CALCULATION_SPECIFIC",
+    "provenance": "Shadbala / Varga / Relationship Boundary Testing Corpus",
+    "birthInput": {
+      "date": "1980-02-10",
+      "time": "06:10",
+      "latitude": 28.6139,
+      "longitude": 77.209,
+      "timezone": 5.5,
+      "locationName": "New Delhi National Observatory"
+    }
+  },
+  {
+    "id": "CALC-011",
+    "name": "Calculation Specific Stress Fixture 11",
+    "category": "CALCULATION_SPECIFIC",
+    "provenance": "Shadbala / Varga / Relationship Boundary Testing Corpus",
+    "birthInput": {
+      "date": "1981-03-10",
+      "time": "09:17",
+      "latitude": 28.6139,
+      "longitude": 77.209,
+      "timezone": 5.5,
+      "locationName": "New Delhi National Observatory"
+    }
+  },
+  {
+    "id": "CALC-012",
+    "name": "Calculation Specific Stress Fixture 12",
+    "category": "CALCULATION_SPECIFIC",
+    "provenance": "Shadbala / Varga / Relationship Boundary Testing Corpus",
+    "birthInput": {
+      "date": "1982-04-10",
+      "time": "12:24",
+      "latitude": 28.6139,
+      "longitude": 77.209,
+      "timezone": 5.5,
+      "locationName": "New Delhi National Observatory"
+    }
+  },
+  {
+    "id": "CALC-013",
+    "name": "Calculation Specific Stress Fixture 13",
+    "category": "CALCULATION_SPECIFIC",
+    "provenance": "Shadbala / Varga / Relationship Boundary Testing Corpus",
+    "birthInput": {
+      "date": "1983-05-10",
+      "time": "15:31",
+      "latitude": 28.6139,
+      "longitude": 77.209,
+      "timezone": 5.5,
+      "locationName": "New Delhi National Observatory"
+    }
+  },
+  {
+    "id": "CALC-014",
+    "name": "Calculation Specific Stress Fixture 14",
+    "category": "CALCULATION_SPECIFIC",
+    "provenance": "Shadbala / Varga / Relationship Boundary Testing Corpus",
+    "birthInput": {
+      "date": "1984-06-10",
+      "time": "18:38",
+      "latitude": 28.6139,
+      "longitude": 77.209,
+      "timezone": 5.5,
+      "locationName": "New Delhi National Observatory"
+    }
+  },
+  {
+    "id": "CALC-015",
+    "name": "Calculation Specific Stress Fixture 15",
+    "category": "CALCULATION_SPECIFIC",
+    "provenance": "Shadbala / Varga / Relationship Boundary Testing Corpus",
+    "birthInput": {
+      "date": "1985-07-10",
+      "time": "21:45",
+      "latitude": 28.6139,
+      "longitude": 77.209,
+      "timezone": 5.5,
+      "locationName": "New Delhi National Observatory"
+    }
+  },
+  {
+    "id": "CALC-016",
+    "name": "Calculation Specific Stress Fixture 16",
+    "category": "CALCULATION_SPECIFIC",
+    "provenance": "Shadbala / Varga / Relationship Boundary Testing Corpus",
+    "birthInput": {
+      "date": "1986-08-10",
+      "time": "00:52",
+      "latitude": 28.6139,
+      "longitude": 77.209,
+      "timezone": 5.5,
+      "locationName": "New Delhi National Observatory"
+    }
+  },
+  {
+    "id": "CALC-017",
+    "name": "Calculation Specific Stress Fixture 17",
+    "category": "CALCULATION_SPECIFIC",
+    "provenance": "Shadbala / Varga / Relationship Boundary Testing Corpus",
+    "birthInput": {
+      "date": "1987-09-10",
+      "time": "03:59",
+      "latitude": 28.6139,
+      "longitude": 77.209,
+      "timezone": 5.5,
+      "locationName": "New Delhi National Observatory"
+    }
+  },
+  {
+    "id": "CALC-018",
+    "name": "Calculation Specific Stress Fixture 18",
+    "category": "CALCULATION_SPECIFIC",
+    "provenance": "Shadbala / Varga / Relationship Boundary Testing Corpus",
+    "birthInput": {
+      "date": "1988-01-10",
+      "time": "06:06",
+      "latitude": 28.6139,
+      "longitude": 77.209,
+      "timezone": 5.5,
+      "locationName": "New Delhi National Observatory"
+    }
+  },
+  {
+    "id": "CALC-019",
+    "name": "Calculation Specific Stress Fixture 19",
+    "category": "CALCULATION_SPECIFIC",
+    "provenance": "Shadbala / Varga / Relationship Boundary Testing Corpus",
+    "birthInput": {
+      "date": "1989-02-10",
+      "time": "09:13",
+      "latitude": 28.6139,
+      "longitude": 77.209,
+      "timezone": 5.5,
+      "locationName": "New Delhi National Observatory"
+    }
+  },
+  {
+    "id": "CALC-020",
+    "name": "Calculation Specific Stress Fixture 20",
+    "category": "CALCULATION_SPECIFIC",
+    "provenance": "Shadbala / Varga / Relationship Boundary Testing Corpus",
+    "birthInput": {
+      "date": "1980-03-10",
+      "time": "12:20",
+      "latitude": 28.6139,
+      "longitude": 77.209,
+      "timezone": 5.5,
+      "locationName": "New Delhi National Observatory"
+    }
+  }
+]
