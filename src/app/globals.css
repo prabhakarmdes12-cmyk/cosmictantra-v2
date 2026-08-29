@@ -5,27 +5,91 @@
 @tailwind utilities;
 
 :root {
-  --bg-deep: #FAF7F2;
-  --bg-mid: #F2ECDE;
-  --bg-card: rgba(255, 255, 255, 0.92);
-  --border-subtle: rgba(130, 99, 21, 0.25);
-  --accent-purple: #4F46E5;
-  --accent-gold: #826315;
-  --accent-green: #0D5A37;
-  --text-main: #181512;
-  --text-muted: #4A443B;
+  /* ==========================================================================
+     COSMICTANTRA SEMANTIC DESIGN TOKENS (Chiti UDS v3 — Daylight Default)
+     ========================================================================== */
+  /* Surfaces */
+  --ct-surface-canvas: #FAF7F2;          /* Sacred Temple Parchment */
+  --ct-surface-raised: #FFFFFF;          /* Pure White Card Surface */
+  --ct-surface-subtle: #F4EFE6;          /* Sandalwood / Ivory Tint */
+  --ct-surface-overlay: rgba(250, 247, 242, 0.95);
+
+  /* Functional Typography (WCAG AAA > 14:1) */
+  --ct-text-primary: #1C1917;            /* Deep Stone Charcoal */
+  --ct-text-secondary: #44403C;          /* Warm Dark Slate */
+  --ct-text-muted: #665E55;              /* Earth Ochre Muted */
+  --ct-text-subtle: #857E74;             /* Supporting Metadata */
+  --ct-text-inverse: #FAF7F2;            /* Light on Dark Surface */
+  --ct-text-gold: #8E6F1D;               /* Deep Banaras Antique Gold */
+
+  /* Borders & Dividers */
+  --ct-border-subtle: rgba(142, 111, 29, 0.22); /* Temple Brass Gold Hairline */
+  --ct-border-default: rgba(28, 25, 23, 0.12);  /* Crisp Neutral Divider */
+  --ct-border-strong: rgba(142, 111, 29, 0.45);  /* Emphasized Gold Border */
+
+  /* Actions & Accents */
+  --ct-action-primary: #8E6F1D;          /* Gold Filled CTA */
+  --ct-action-primary-hover: #A35C15;    /* Saffron Gold Hover */
+  --ct-action-secondary: #FAF7F2;        /* Outlined Action */
+  
+  /* Status & Semantic Signals */
+  --ct-status-success: #065F46;          /* Shubh / Auspicious Green */
+  --ct-status-warning: #C26E22;          /* Sandhya / Caution Amber */
+  --ct-status-danger: #991B1B;           /* Rahu Kaal Avoidance Red */
+
+  /* Backward Compatibility Aliases */
+  --bg-deep: var(--ct-surface-canvas);
+  --bg-mid: var(--ct-surface-subtle);
+  --bg-card: var(--ct-surface-raised);
+  --border-subtle: var(--ct-border-subtle);
+  --text-main: var(--ct-text-primary);
+  --text-body: var(--ct-text-secondary);
+  --text-muted: var(--ct-text-muted);
+  --accent-gold: var(--ct-text-gold);
 }
 
 .dark {
-  --bg-deep: #030108;
-  --bg-mid: #0D0A1E;
-  --bg-card: rgba(13, 15, 26, 0.92);
-  --border-subtle: rgba(212, 175, 55, 0.35);
-  --accent-purple: #7C3AED;
-  --accent-gold: #F59E0B;
-  --accent-green: #10B981;
-  --text-main: #F5F2EB;
-  --text-muted: #D1C9BF;
+  /* ==========================================================================
+     COSMICTANTRA SEMANTIC DESIGN TOKENS (Kashi Sandhya / Night Mode)
+     ========================================================================== */
+  /* Surfaces */
+  --ct-surface-canvas: #06070B;          /* Ganga Midnight Obsidian */
+  --ct-surface-raised: #0E101D;          /* Deep Sidereal Slate */
+  --ct-surface-subtle: #121422;          /* Celestial Midnight Tint */
+  --ct-surface-overlay: rgba(6, 7, 11, 0.95);
+
+  /* Functional Typography */
+  --ct-text-primary: #FFFFFF;            /* Pure Crisp Light */
+  --ct-text-secondary: #E7E5E4;          /* Soft Off-White */
+  --ct-text-muted: #B3ADA3;              /* Muted Starlight Grey */
+  --ct-text-subtle: #8E877B;             /* Supporting Metadata */
+  --ct-text-inverse: #1C1917;            /* Dark on Light Surface */
+  --ct-text-gold: #F0C968;               /* Radiant Celestial Gold */
+
+  /* Borders & Dividers */
+  --ct-border-subtle: rgba(212, 175, 55, 0.28); /* Radiant Gold Hairline */
+  --ct-border-default: rgba(255, 255, 255, 0.12); /* Crisp Celestial Divider */
+  --ct-border-strong: rgba(212, 175, 55, 0.55);  /* Emphasized Gold Border */
+
+  /* Actions & Accents */
+  --ct-action-primary: #D4AF37;          /* Gold Filled CTA */
+  --ct-action-primary-hover: #E5C378;    /* Bright Gold Hover */
+  --ct-action-secondary: #0E101D;        /* Outlined Action */
+
+  /* Status & Semantic Signals */
+  --ct-status-success: #10B981;          /* Auspicious Emerald */
+  --ct-status-warning: #F59E0B;          /* Solar Amber */
+  --ct-status-danger: #F87171;           /* Rahu Kaal Crimson */
+
+  /* Backward Compatibility Aliases */
+  --bg-deep: var(--ct-surface-canvas);
+  --bg-mid: var(--ct-surface-subtle);
+  --bg-card: var(--ct-surface-raised);
+  --border-subtle: var(--ct-border-subtle);
+  --text-main: var(--ct-text-primary);
+  --text-body: var(--ct-text-secondary);
+  --text-muted: var(--ct-text-muted);
+  --accent-gold: var(--ct-text-gold);
 }
 
 *, ::before, ::after {
@@ -36,10 +100,16 @@ html, body {
   min-height: 100vh;
   width: 100%;
   max-width: 100%;
+  overflow-x: hidden;
   margin: 0;
   padding: 0;
   font-family: 'Inter', 'Noto Sans Devanagari', sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+img, video, canvas, svg {
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* Global Responsive Container System */
@@ -72,11 +142,23 @@ html, body {
 
 /* Devanagari & Editorial Serif Typography Fallback */
 .font-editorial {
-  font-family: 'Cinzel', 'Noto Sans Devanagari', serif;
+  font-family: 'Cinzel', 'Playfair Display', 'Noto Serif Devanagari', serif;
+  font-feature-settings: "kern" 1, "liga" 1;
 }
 
 .font-mono-data {
   font-family: 'JetBrains Mono', 'Noto Sans Devanagari', monospace;
+}
+
+/* Enhanced Scholarly Typography System */
+.text-display {
+  font-family: 'Cinzel', 'Playfair Display', serif;
+  letter-spacing: -0.025em;
+}
+
+.text-body {
+  font-family: 'Noto Serif', 'Noto Serif Devanagari', Georgia, serif;
+  line-height: 1.7;
 }
 
 /* Atmospheric Kashi Varanasi Background Images & Video Fallbacks */

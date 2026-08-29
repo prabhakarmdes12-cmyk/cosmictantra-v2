@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { generateShareableReport } from '@/engines/reportGenerator.js';
+import { deliverToWhatsApp, formatWhatsAppReport, getDummyOrRealPayment } from '@/lib/whatsapp';
 
 export async function POST(
   req: NextRequest,
@@ -39,28 +40,29 @@ export async function POST(
       consultation.customerName
     );
 
-    const fullDeliveryText = `🕉️ COSMICTANTRA VERIFIED JYOTISH CONSULTATION
+    const fullDeliveryText = formatWhatsAppReport({
+      customerName: consultation.customerName,
+      question: consultation.customerQuestion,
+      practitionerName: consultation.practitioner?.displayName,
+      finalText: consultation.practitionerFinal || consultation.aiDraft || '',
+      reportText,
+      consultationId: caseId,
+    });
 
-Hello ${consultation.customerName},
-
-Here is your verified astrological consultation reviewed and approved by ${consultation.practitioner?.displayName || 'Pandit Ramesh Sharma'}:
-
-═════════════════════════════════════════════
-YOUR QUESTION:
-"${consultation.customerQuestion}"
-
-VERIFIED INTERPRETATION & GUIDANCE:
-${consultation.practitionerFinal || consultation.aiDraft}
-═════════════════════════════════════════════
-
-${reportText}`;
+    // Phase 1: Real WhatsApp delivery wiring
+    const deliveryResult = await deliverToWhatsApp({
+      toPhone: consultation.customerPhone || '+919999999999',
+      text: fullDeliveryText,
+      consultationId: caseId,
+      isTest: consultation.isTestCase || !!getDummyOrRealPayment(consultation.paymentStatus === 'PAID' ? 'pay_demo_001' : ''),
+    });
 
     const updated = await db.astrologyConsultation.update({
       where: { id: caseId },
       data: {
-        status: 'DELIVERED',
-        deliveryChannel,
-        deliveredAt: new Date(),
+        status: deliveryResult.success ? 'DELIVERED' : 'DELIVERY_FAILED',
+        deliveryChannel: deliveryResult.channel || deliveryChannel,
+        deliveredAt: deliveryResult.deliveredAt || new Date(),
       },
     });
 
@@ -68,23 +70,29 @@ ${reportText}`;
       data: {
         consultationId: updated.id,
         practitionerId: updated.practitionerId,
-        eventType: 'DELIVERY_MARKED',
+        eventType: deliveryResult.success ? 'DELIVERY_MARKED' : 'DELIVERY_FAILED',
         actorType: 'ADMIN',
         payload: {
-          deliveryChannel,
+          deliveryChannel: deliveryResult.channel,
           deliveredAt: updated.deliveredAt,
           customerName: updated.customerName,
+          whatsappLink: deliveryResult.link,
+          success: deliveryResult.success,
+          error: deliveryResult.error,
         },
       },
     });
 
     return NextResponse.json({
-      success: true,
+      success: deliveryResult.success,
       consultationId: updated.id,
       status: updated.status,
       deliveredAt: updated.deliveredAt,
       deliveryChannel: updated.deliveryChannel,
       deliveryText: fullDeliveryText,
+      whatsappLink: deliveryResult.link,
+      messageId: deliveryResult.messageId,
+      error: deliveryResult.error,
     });
   } catch (error: any) {
     console.error('Delivery API error:', error);

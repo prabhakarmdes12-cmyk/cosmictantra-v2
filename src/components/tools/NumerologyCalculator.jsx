@@ -179,7 +179,7 @@ function ResultPanel({ result, hi, mode, onOpenConsultation }) {
         onClick={() => onOpenConsultation && onOpenConsultation(hi ? 'नाम / अंक परामर्श' : `Name/Business numerology deep dive (${result.name || r.digits || ''})`)}
         className="w-full py-3 rounded-xl border border-[#D4AF37] text-[#8E6F1D] dark:text-[#D4AF37] font-bold text-xs hover:bg-[#D4AF37]/10 transition-all flex items-center justify-center gap-2"
       >
-        {hi ? 'विद्वान से गहन परामर्श — ₹199' : 'Deep-dive with a scholar — ₹199'}
+        {hi ? 'विद्वान से गहन लिखित परामर्श — ₹501' : 'Deep-dive with a scholar — ₹501'}
         <ArrowRight className="w-3.5 h-3.5" />
       </button>
     </div>

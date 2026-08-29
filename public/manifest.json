@@ -1,0 +1,51 @@
+{
+  "name": "CosmicTantra — Vedic Astrology & Celestial Observatory",
+  "short_name": "CosmicTantra",
+  "description": "Deterministic sidereal Vedic astrology, astronomical observatory, panchang, 72h horoscopes, live darshan, and sacred pooja store.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#06070B",
+  "theme_color": "#06070B",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/cosmictantra_logo_master.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "72h Forecast",
+      "url": "/daily",
+      "description": "Daily, weekly and multi-horizon Vedic horoscope"
+    },
+    {
+      "name": "Celestial Observatory",
+      "url": "/observatory",
+      "description": "Stellarium-grade Vedic sky dome & Graha Sphuta"
+    },
+    {
+      "name": "Monthly Calendar",
+      "url": "/calendar",
+      "description": "Full monthly Panchang & festival calendar"
+    },
+    {
+      "name": "Live Temple Darshan",
+      "url": "/darshan",
+      "description": "24x7 live sacred temple darshan & e-puja"
+    },
+    {
+      "name": "Pooja Store",
+      "url": "/store",
+      "description": "Certified authentic brassware, dhoop & pooja kits"
+    }
+  ]
+}

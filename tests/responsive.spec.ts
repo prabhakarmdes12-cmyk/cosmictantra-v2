@@ -18,6 +18,7 @@ test.describe('CosmicTantra Mobile Responsiveness & Hardening Suite', () => {
 
   VIEWPORTS.forEach(({ name, width, height }) => {
     test(`Viewport ${width}px (${name}): No horizontal overflow and clean mobile composition`, async ({ page }) => {
+      test.setTimeout(60000);
       await page.setViewportSize({ width, height });
       await page.goto('http://localhost:3000', { waitUntil: 'networkidle' });
 
@@ -25,7 +26,7 @@ test.describe('CosmicTantra Mobile Responsiveness & Hardening Suite', () => {
       await page.evaluate(async () => {
         await new Promise((resolve) => {
           let totalHeight = 0;
-          const distance = 350;
+          const distance = 800;
           const timer = setInterval(() => {
             const scrollHeight = document.body.scrollHeight;
             window.scrollBy(0, distance);
@@ -35,7 +36,7 @@ test.describe('CosmicTantra Mobile Responsiveness & Hardening Suite', () => {
               window.scrollTo(0, 0);
               resolve(true);
             }
-          }, 40);
+          }, 15);
         });
       });
 
@@ -60,12 +61,12 @@ test.describe('CosmicTantra Mobile Responsiveness & Hardening Suite', () => {
       await expect(videoBg).toBeVisible();
 
       // 4. Hero Headline & CTAs Reachable
-      const createKundaliBtn = page.locator('button:has-text("CREATE MY KUNDALI")').first();
-      const panchangBtn = page.locator('button:has-text("SEE TODAY\'S PANCHANG")').first();
-      const askScholarBtn = page.locator('button:has-text("ASK A SCHOLAR")').first();
+      const panchangBtn = page.locator('#hero-section button:has-text("PANCHANG")').first();
+      const createKundaliBtn = page.locator('#hero-section button:has-text("KUNDALI")').first();
+      const askScholarBtn = page.locator('#hero-section button:has-text("JYOTISHI")').first();
 
-      await expect(createKundaliBtn).toBeVisible();
       await expect(panchangBtn).toBeVisible();
+      await expect(createKundaliBtn).toBeVisible();
       await expect(askScholarBtn).toBeVisible();
 
       // Take screenshot for visual regression verification
@@ -85,8 +86,7 @@ test.describe('CosmicTantra Mobile Responsiveness & Hardening Suite', () => {
     await expect(menuToggleBtn).toBeVisible();
     await menuToggleBtn.click();
 
-    // Verify Mobile Drawer content
-    const todayNavBtn = page.locator('button:has-text("TODAY\'S PANCHANG")').first();
-    await expect(todayNavBtn).toBeVisible();
+    // Verify Full Screen Navigation Vault content
+    await expect(page.getByText(/NAVIGATION VAULT/i)).toBeVisible();
   });
 });

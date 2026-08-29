@@ -1,0 +1,5016 @@
+{
+  "meta": {
+    "corpusName": "COSMIC_TANTRA_1000_TIMESTAMP_SYNTHETIC_CORPUS_V1",
+    "provenanceClassification": "SYNTHETIC_REFERENCE — NOT JPL VALIDATED",
+    "source": "Locally generated deterministic timestamp grid (1850-2050)",
+    "jplStatus": "NO_EXTERNAL_JPL_DATA_RETRIEVED — Internal Aberration Differential Grid Only",
+    "coordinateFrame": "Geocentric Ecliptic Grid",
+    "timescale": "UTC",
+    "dateRange": "1850-01-01 to 2050-12-31",
+    "pointCount": 1000,
+    "auditedDate": "2026-08-30T00:14:00Z",
+    "auditNotice": "FORENSIC AUDIT: Reclassified from NASA/JPL to SYNTHETIC_REFERENCE. External qualification remains pending."
+  },
+  "points": [
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1850-01-01T00:00:00.000Z",
+      "name": "Uniform Sample #1 (1850)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1850-09-02T17:07:11.997Z",
+      "name": "Uniform Sample #2 (1850)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1851-05-05T10:14:23.994Z",
+      "name": "Uniform Sample #3 (1851)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1852-01-05T03:21:35.990Z",
+      "name": "Uniform Sample #4 (1852)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1852-09-05T20:28:47.987Z",
+      "name": "Uniform Sample #5 (1852)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1853-05-08T13:35:59.984Z",
+      "name": "Uniform Sample #6 (1853)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1854-01-08T06:43:11.980Z",
+      "name": "Uniform Sample #7 (1854)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1854-09-09T23:50:23.977Z",
+      "name": "Uniform Sample #8 (1854)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1855-05-12T16:57:35.974Z",
+      "name": "Uniform Sample #9 (1855)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1856-01-12T10:04:47.970Z",
+      "name": "Uniform Sample #10 (1856)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1856-09-13T03:11:59.967Z",
+      "name": "Uniform Sample #11 (1856)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1857-05-15T20:19:11.964Z",
+      "name": "Uniform Sample #12 (1857)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1858-01-15T13:26:23.960Z",
+      "name": "Uniform Sample #13 (1858)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1858-09-17T06:33:35.957Z",
+      "name": "Uniform Sample #14 (1858)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1859-05-19T23:40:47.954Z",
+      "name": "Uniform Sample #15 (1859)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1860-01-19T16:47:59.950Z",
+      "name": "Uniform Sample #16 (1860)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1860-09-20T09:55:11.947Z",
+      "name": "Uniform Sample #17 (1860)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1861-05-23T03:02:23.944Z",
+      "name": "Uniform Sample #18 (1861)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1862-01-22T20:09:35.940Z",
+      "name": "Uniform Sample #19 (1862)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1862-09-24T13:16:47.937Z",
+      "name": "Uniform Sample #20 (1862)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1863-05-27T06:23:59.934Z",
+      "name": "Uniform Sample #21 (1863)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1864-01-26T23:31:11.930Z",
+      "name": "Uniform Sample #22 (1864)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1864-09-27T16:38:23.927Z",
+      "name": "Uniform Sample #23 (1864)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1865-05-30T09:45:35.924Z",
+      "name": "Uniform Sample #24 (1865)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1866-01-30T02:52:47.920Z",
+      "name": "Uniform Sample #25 (1866)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1866-10-01T19:59:59.917Z",
+      "name": "Uniform Sample #26 (1866)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1867-06-03T13:07:11.914Z",
+      "name": "Uniform Sample #27 (1867)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1868-02-03T06:14:23.910Z",
+      "name": "Uniform Sample #28 (1868)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1868-10-04T23:21:35.907Z",
+      "name": "Uniform Sample #29 (1868)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1869-06-06T16:28:47.904Z",
+      "name": "Uniform Sample #30 (1869)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1870-02-06T09:35:59.900Z",
+      "name": "Uniform Sample #31 (1870)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1870-10-09T02:43:11.897Z",
+      "name": "Uniform Sample #32 (1870)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1871-06-10T19:50:23.894Z",
+      "name": "Uniform Sample #33 (1871)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1872-02-10T12:57:35.890Z",
+      "name": "Uniform Sample #34 (1872)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1872-10-12T06:04:47.887Z",
+      "name": "Uniform Sample #35 (1872)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1873-06-13T23:11:59.884Z",
+      "name": "Uniform Sample #36 (1873)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1874-02-13T16:19:11.880Z",
+      "name": "Uniform Sample #37 (1874)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1874-10-16T09:26:23.877Z",
+      "name": "Uniform Sample #38 (1874)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1875-06-18T02:33:35.874Z",
+      "name": "Uniform Sample #39 (1875)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1876-02-17T19:40:47.870Z",
+      "name": "Uniform Sample #40 (1876)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1876-10-19T12:47:59.867Z",
+      "name": "Uniform Sample #41 (1876)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1877-06-21T05:55:11.864Z",
+      "name": "Uniform Sample #42 (1877)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1878-02-20T23:02:23.860Z",
+      "name": "Uniform Sample #43 (1878)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1878-10-23T16:09:35.857Z",
+      "name": "Uniform Sample #44 (1878)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1879-06-25T09:16:47.854Z",
+      "name": "Uniform Sample #45 (1879)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1880-02-25T02:23:59.850Z",
+      "name": "Uniform Sample #46 (1880)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1880-10-26T19:31:11.847Z",
+      "name": "Uniform Sample #47 (1880)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1881-06-28T12:38:23.844Z",
+      "name": "Uniform Sample #48 (1881)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1882-02-28T05:45:35.840Z",
+      "name": "Uniform Sample #49 (1882)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1882-10-30T22:52:47.837Z",
+      "name": "Uniform Sample #50 (1882)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1883-07-02T15:59:59.834Z",
+      "name": "Uniform Sample #51 (1883)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1884-03-03T09:07:11.830Z",
+      "name": "Uniform Sample #52 (1884)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1884-11-03T02:14:23.827Z",
+      "name": "Uniform Sample #53 (1884)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1885-07-05T19:21:35.824Z",
+      "name": "Uniform Sample #54 (1885)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1886-03-07T12:28:47.820Z",
+      "name": "Uniform Sample #55 (1886)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1886-11-07T05:35:59.817Z",
+      "name": "Uniform Sample #56 (1886)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1887-07-09T22:43:11.814Z",
+      "name": "Uniform Sample #57 (1887)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1888-03-10T15:50:23.810Z",
+      "name": "Uniform Sample #58 (1888)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1888-11-10T08:57:35.807Z",
+      "name": "Uniform Sample #59 (1888)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1889-07-13T02:04:47.804Z",
+      "name": "Uniform Sample #60 (1889)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1890-03-14T19:11:59.800Z",
+      "name": "Uniform Sample #61 (1890)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1890-11-14T12:19:11.797Z",
+      "name": "Uniform Sample #62 (1890)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1891-07-17T05:26:23.794Z",
+      "name": "Uniform Sample #63 (1891)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1892-03-17T22:33:35.790Z",
+      "name": "Uniform Sample #64 (1892)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1892-11-17T15:40:47.787Z",
+      "name": "Uniform Sample #65 (1892)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1893-07-20T08:47:59.784Z",
+      "name": "Uniform Sample #66 (1893)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1894-03-22T01:55:11.780Z",
+      "name": "Uniform Sample #67 (1894)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1894-11-21T19:02:23.777Z",
+      "name": "Uniform Sample #68 (1894)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1895-07-24T12:09:35.774Z",
+      "name": "Uniform Sample #69 (1895)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1896-03-25T05:16:47.770Z",
+      "name": "Uniform Sample #70 (1896)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1896-11-24T22:23:59.767Z",
+      "name": "Uniform Sample #71 (1896)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1897-07-27T15:31:11.764Z",
+      "name": "Uniform Sample #72 (1897)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1898-03-29T08:38:23.760Z",
+      "name": "Uniform Sample #73 (1898)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1898-11-29T01:45:35.757Z",
+      "name": "Uniform Sample #74 (1898)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1899-07-31T18:52:47.754Z",
+      "name": "Uniform Sample #75 (1899)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1900-04-02T11:59:59.750Z",
+      "name": "Uniform Sample #76 (1900)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1900-12-03T05:07:11.747Z",
+      "name": "Uniform Sample #77 (1900)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1901-08-04T22:14:23.744Z",
+      "name": "Uniform Sample #78 (1901)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1902-04-06T15:21:35.740Z",
+      "name": "Uniform Sample #79 (1902)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1902-12-07T08:28:47.737Z",
+      "name": "Uniform Sample #80 (1902)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1903-08-09T01:35:59.734Z",
+      "name": "Uniform Sample #81 (1903)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1904-04-09T18:43:11.730Z",
+      "name": "Uniform Sample #82 (1904)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1904-12-10T11:50:23.727Z",
+      "name": "Uniform Sample #83 (1904)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1905-08-12T04:57:35.724Z",
+      "name": "Uniform Sample #84 (1905)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1906-04-13T22:04:47.720Z",
+      "name": "Uniform Sample #85 (1906)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1906-12-14T15:11:59.717Z",
+      "name": "Uniform Sample #86 (1906)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1907-08-16T08:19:11.714Z",
+      "name": "Uniform Sample #87 (1907)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1908-04-17T01:26:23.710Z",
+      "name": "Uniform Sample #88 (1908)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1908-12-17T18:33:35.707Z",
+      "name": "Uniform Sample #89 (1908)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1909-08-19T11:40:47.704Z",
+      "name": "Uniform Sample #90 (1909)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1910-04-21T04:47:59.700Z",
+      "name": "Uniform Sample #91 (1910)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1910-12-21T21:55:11.697Z",
+      "name": "Uniform Sample #92 (1910)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1911-08-23T15:02:23.694Z",
+      "name": "Uniform Sample #93 (1911)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1912-04-24T08:09:35.690Z",
+      "name": "Uniform Sample #94 (1912)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1912-12-25T01:16:47.687Z",
+      "name": "Uniform Sample #95 (1912)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1913-08-26T18:23:59.684Z",
+      "name": "Uniform Sample #96 (1913)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1914-04-28T11:31:11.680Z",
+      "name": "Uniform Sample #97 (1914)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1914-12-29T04:38:23.677Z",
+      "name": "Uniform Sample #98 (1914)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1915-08-30T21:45:35.674Z",
+      "name": "Uniform Sample #99 (1915)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1916-05-01T14:52:47.671Z",
+      "name": "Uniform Sample #100 (1916)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1917-01-01T07:59:59.667Z",
+      "name": "Uniform Sample #101 (1917)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1917-09-03T01:07:11.664Z",
+      "name": "Uniform Sample #102 (1917)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1918-05-05T18:14:23.661Z",
+      "name": "Uniform Sample #103 (1918)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1919-01-05T11:21:35.657Z",
+      "name": "Uniform Sample #104 (1919)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1919-09-07T04:28:47.654Z",
+      "name": "Uniform Sample #105 (1919)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1920-05-08T21:35:59.650Z",
+      "name": "Uniform Sample #106 (1920)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1921-01-08T14:43:11.647Z",
+      "name": "Uniform Sample #107 (1921)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1921-09-10T07:50:23.644Z",
+      "name": "Uniform Sample #108 (1921)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1922-05-13T00:57:35.640Z",
+      "name": "Uniform Sample #109 (1922)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1923-01-12T18:04:47.637Z",
+      "name": "Uniform Sample #110 (1923)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1923-09-14T11:11:59.634Z",
+      "name": "Uniform Sample #111 (1923)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1924-05-16T04:19:11.630Z",
+      "name": "Uniform Sample #112 (1924)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1925-01-15T21:26:23.627Z",
+      "name": "Uniform Sample #113 (1925)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1925-09-17T14:33:35.624Z",
+      "name": "Uniform Sample #114 (1925)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1926-05-20T07:40:47.620Z",
+      "name": "Uniform Sample #115 (1926)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1927-01-20T00:47:59.617Z",
+      "name": "Uniform Sample #116 (1927)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1927-09-21T17:55:11.614Z",
+      "name": "Uniform Sample #117 (1927)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1928-05-23T11:02:23.610Z",
+      "name": "Uniform Sample #118 (1928)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1929-01-23T04:09:35.607Z",
+      "name": "Uniform Sample #119 (1929)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1929-09-24T21:16:47.604Z",
+      "name": "Uniform Sample #120 (1929)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1930-05-27T14:23:59.600Z",
+      "name": "Uniform Sample #121 (1930)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1931-01-27T07:31:11.597Z",
+      "name": "Uniform Sample #122 (1931)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1931-09-29T00:38:23.594Z",
+      "name": "Uniform Sample #123 (1931)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1932-05-30T17:45:35.590Z",
+      "name": "Uniform Sample #124 (1932)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1933-01-30T10:52:47.587Z",
+      "name": "Uniform Sample #125 (1933)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1933-10-02T03:59:59.584Z",
+      "name": "Uniform Sample #126 (1933)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1934-06-03T21:07:11.580Z",
+      "name": "Uniform Sample #127 (1934)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1935-02-03T14:14:23.577Z",
+      "name": "Uniform Sample #128 (1935)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1935-10-06T07:21:35.574Z",
+      "name": "Uniform Sample #129 (1935)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1936-06-07T00:28:47.570Z",
+      "name": "Uniform Sample #130 (1936)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1937-02-06T17:35:59.567Z",
+      "name": "Uniform Sample #131 (1937)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1937-10-09T10:43:11.564Z",
+      "name": "Uniform Sample #132 (1937)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1938-06-11T03:50:23.560Z",
+      "name": "Uniform Sample #133 (1938)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1939-02-10T20:57:35.557Z",
+      "name": "Uniform Sample #134 (1939)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1939-10-13T14:04:47.554Z",
+      "name": "Uniform Sample #135 (1939)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1940-06-14T07:11:59.550Z",
+      "name": "Uniform Sample #136 (1940)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1941-02-14T00:19:11.547Z",
+      "name": "Uniform Sample #137 (1941)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1941-10-16T17:26:23.544Z",
+      "name": "Uniform Sample #138 (1941)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1942-06-18T10:33:35.540Z",
+      "name": "Uniform Sample #139 (1942)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1943-02-18T03:40:47.537Z",
+      "name": "Uniform Sample #140 (1943)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1943-10-20T20:47:59.534Z",
+      "name": "Uniform Sample #141 (1943)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1944-06-21T13:55:11.530Z",
+      "name": "Uniform Sample #142 (1944)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1945-02-21T07:02:23.527Z",
+      "name": "Uniform Sample #143 (1945)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1945-10-24T00:09:35.524Z",
+      "name": "Uniform Sample #144 (1945)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1946-06-25T17:16:47.520Z",
+      "name": "Uniform Sample #145 (1946)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1947-02-25T10:23:59.517Z",
+      "name": "Uniform Sample #146 (1947)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1947-10-28T03:31:11.514Z",
+      "name": "Uniform Sample #147 (1947)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1948-06-28T20:38:23.510Z",
+      "name": "Uniform Sample #148 (1948)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1949-02-28T13:45:35.507Z",
+      "name": "Uniform Sample #149 (1949)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1949-10-31T06:52:47.504Z",
+      "name": "Uniform Sample #150 (1949)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1950-07-02T23:59:59.500Z",
+      "name": "Uniform Sample #151 (1950)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1951-03-04T17:07:11.497Z",
+      "name": "Uniform Sample #152 (1951)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1951-11-04T10:14:23.494Z",
+      "name": "Uniform Sample #153 (1951)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1952-07-06T03:21:35.490Z",
+      "name": "Uniform Sample #154 (1952)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1953-03-07T20:28:47.487Z",
+      "name": "Uniform Sample #155 (1953)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1953-11-07T13:35:59.484Z",
+      "name": "Uniform Sample #156 (1953)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1954-07-10T06:43:11.480Z",
+      "name": "Uniform Sample #157 (1954)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1955-03-11T23:50:23.477Z",
+      "name": "Uniform Sample #158 (1955)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1955-11-11T16:57:35.474Z",
+      "name": "Uniform Sample #159 (1955)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1956-07-13T10:04:47.470Z",
+      "name": "Uniform Sample #160 (1956)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1957-03-15T03:11:59.467Z",
+      "name": "Uniform Sample #161 (1957)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1957-11-14T20:19:11.464Z",
+      "name": "Uniform Sample #162 (1957)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1958-07-17T13:26:23.460Z",
+      "name": "Uniform Sample #163 (1958)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1959-03-19T06:33:35.457Z",
+      "name": "Uniform Sample #164 (1959)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1959-11-18T23:40:47.454Z",
+      "name": "Uniform Sample #165 (1959)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1960-07-20T16:47:59.450Z",
+      "name": "Uniform Sample #166 (1960)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1961-03-22T09:55:11.447Z",
+      "name": "Uniform Sample #167 (1961)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1961-11-22T03:02:23.444Z",
+      "name": "Uniform Sample #168 (1961)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1962-07-24T20:09:35.440Z",
+      "name": "Uniform Sample #169 (1962)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1963-03-26T13:16:47.437Z",
+      "name": "Uniform Sample #170 (1963)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1963-11-26T06:23:59.434Z",
+      "name": "Uniform Sample #171 (1963)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1964-07-27T23:31:11.430Z",
+      "name": "Uniform Sample #172 (1964)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1965-03-29T16:38:23.427Z",
+      "name": "Uniform Sample #173 (1965)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1965-11-29T09:45:35.424Z",
+      "name": "Uniform Sample #174 (1965)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1966-08-01T02:52:47.420Z",
+      "name": "Uniform Sample #175 (1966)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1967-04-02T19:59:59.417Z",
+      "name": "Uniform Sample #176 (1967)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1967-12-03T13:07:11.414Z",
+      "name": "Uniform Sample #177 (1967)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1968-08-04T06:14:23.410Z",
+      "name": "Uniform Sample #178 (1968)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1969-04-05T23:21:35.407Z",
+      "name": "Uniform Sample #179 (1969)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1969-12-06T16:28:47.404Z",
+      "name": "Uniform Sample #180 (1969)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1970-08-08T09:35:59.400Z",
+      "name": "Uniform Sample #181 (1970)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1971-04-10T02:43:11.396Z",
+      "name": "Uniform Sample #182 (1971)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1971-12-10T19:50:23.393Z",
+      "name": "Uniform Sample #183 (1971)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1972-08-11T12:57:35.390Z",
+      "name": "Uniform Sample #184 (1972)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1973-04-13T06:04:47.386Z",
+      "name": "Uniform Sample #185 (1973)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1973-12-13T23:11:59.383Z",
+      "name": "Uniform Sample #186 (1973)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1974-08-15T16:19:11.380Z",
+      "name": "Uniform Sample #187 (1974)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1975-04-17T09:26:23.376Z",
+      "name": "Uniform Sample #188 (1975)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1975-12-18T02:33:35.373Z",
+      "name": "Uniform Sample #189 (1975)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1976-08-18T19:40:47.370Z",
+      "name": "Uniform Sample #190 (1976)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1977-04-20T12:47:59.366Z",
+      "name": "Uniform Sample #191 (1977)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1977-12-21T05:55:11.363Z",
+      "name": "Uniform Sample #192 (1977)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1978-08-22T23:02:23.360Z",
+      "name": "Uniform Sample #193 (1978)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1979-04-24T16:09:35.356Z",
+      "name": "Uniform Sample #194 (1979)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1979-12-25T09:16:47.353Z",
+      "name": "Uniform Sample #195 (1979)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1980-08-26T02:23:59.350Z",
+      "name": "Uniform Sample #196 (1980)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1981-04-27T19:31:11.346Z",
+      "name": "Uniform Sample #197 (1981)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1981-12-28T12:38:23.343Z",
+      "name": "Uniform Sample #198 (1981)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1982-08-30T05:45:35.340Z",
+      "name": "Uniform Sample #199 (1982)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1983-05-01T22:52:47.336Z",
+      "name": "Uniform Sample #200 (1983)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1984-01-01T15:59:59.333Z",
+      "name": "Uniform Sample #201 (1984)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1984-09-02T09:07:11.330Z",
+      "name": "Uniform Sample #202 (1984)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1985-05-05T02:14:23.326Z",
+      "name": "Uniform Sample #203 (1985)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1986-01-04T19:21:35.323Z",
+      "name": "Uniform Sample #204 (1986)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1986-09-06T12:28:47.320Z",
+      "name": "Uniform Sample #205 (1986)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1987-05-09T05:35:59.316Z",
+      "name": "Uniform Sample #206 (1987)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1988-01-08T22:43:11.313Z",
+      "name": "Uniform Sample #207 (1988)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1988-09-09T15:50:23.310Z",
+      "name": "Uniform Sample #208 (1988)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1989-05-12T08:57:35.306Z",
+      "name": "Uniform Sample #209 (1989)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1990-01-12T02:04:47.303Z",
+      "name": "Uniform Sample #210 (1990)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1990-09-13T19:11:59.300Z",
+      "name": "Uniform Sample #211 (1990)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1991-05-16T12:19:11.296Z",
+      "name": "Uniform Sample #212 (1991)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1992-01-16T05:26:23.293Z",
+      "name": "Uniform Sample #213 (1992)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1992-09-16T22:33:35.290Z",
+      "name": "Uniform Sample #214 (1992)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1993-05-19T15:40:47.286Z",
+      "name": "Uniform Sample #215 (1993)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1994-01-19T08:47:59.283Z",
+      "name": "Uniform Sample #216 (1994)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1994-09-21T01:55:11.280Z",
+      "name": "Uniform Sample #217 (1994)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1995-05-23T19:02:23.276Z",
+      "name": "Uniform Sample #218 (1995)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1996-01-23T12:09:35.273Z",
+      "name": "Uniform Sample #219 (1996)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1996-09-24T05:16:47.270Z",
+      "name": "Uniform Sample #220 (1996)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1997-05-26T22:23:59.266Z",
+      "name": "Uniform Sample #221 (1997)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1998-01-26T15:31:11.263Z",
+      "name": "Uniform Sample #222 (1998)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1998-09-28T08:38:23.260Z",
+      "name": "Uniform Sample #223 (1998)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1999-05-31T01:45:35.256Z",
+      "name": "Uniform Sample #224 (1999)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2000-01-30T18:52:47.253Z",
+      "name": "Uniform Sample #225 (2000)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2000-10-01T11:59:59.250Z",
+      "name": "Uniform Sample #226 (2000)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2001-06-03T05:07:11.246Z",
+      "name": "Uniform Sample #227 (2001)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2002-02-02T22:14:23.243Z",
+      "name": "Uniform Sample #228 (2002)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2002-10-05T15:21:35.240Z",
+      "name": "Uniform Sample #229 (2002)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2003-06-07T08:28:47.236Z",
+      "name": "Uniform Sample #230 (2003)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2004-02-07T01:35:59.233Z",
+      "name": "Uniform Sample #231 (2004)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2004-10-08T18:43:11.230Z",
+      "name": "Uniform Sample #232 (2004)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2005-06-10T11:50:23.226Z",
+      "name": "Uniform Sample #233 (2005)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2006-02-10T04:57:35.223Z",
+      "name": "Uniform Sample #234 (2006)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2006-10-12T22:04:47.220Z",
+      "name": "Uniform Sample #235 (2006)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2007-06-14T15:11:59.216Z",
+      "name": "Uniform Sample #236 (2007)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2008-02-14T08:19:11.213Z",
+      "name": "Uniform Sample #237 (2008)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2008-10-16T01:26:23.210Z",
+      "name": "Uniform Sample #238 (2008)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2009-06-17T18:33:35.206Z",
+      "name": "Uniform Sample #239 (2009)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2010-02-17T11:40:47.203Z",
+      "name": "Uniform Sample #240 (2010)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2010-10-20T04:47:59.200Z",
+      "name": "Uniform Sample #241 (2010)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2011-06-21T21:55:11.196Z",
+      "name": "Uniform Sample #242 (2011)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2012-02-21T15:02:23.193Z",
+      "name": "Uniform Sample #243 (2012)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2012-10-23T08:09:35.190Z",
+      "name": "Uniform Sample #244 (2012)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2013-06-25T01:16:47.186Z",
+      "name": "Uniform Sample #245 (2013)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2014-02-24T18:23:59.183Z",
+      "name": "Uniform Sample #246 (2014)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2014-10-27T11:31:11.180Z",
+      "name": "Uniform Sample #247 (2014)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2015-06-29T04:38:23.176Z",
+      "name": "Uniform Sample #248 (2015)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2016-02-28T21:45:35.173Z",
+      "name": "Uniform Sample #249 (2016)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2016-10-30T14:52:47.170Z",
+      "name": "Uniform Sample #250 (2016)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2017-07-02T07:59:59.166Z",
+      "name": "Uniform Sample #251 (2017)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2018-03-04T01:07:11.163Z",
+      "name": "Uniform Sample #252 (2018)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2018-11-03T18:14:23.160Z",
+      "name": "Uniform Sample #253 (2018)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2019-07-06T11:21:35.156Z",
+      "name": "Uniform Sample #254 (2019)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2020-03-07T04:28:47.153Z",
+      "name": "Uniform Sample #255 (2020)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2020-11-06T21:35:59.150Z",
+      "name": "Uniform Sample #256 (2020)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2021-07-09T14:43:11.146Z",
+      "name": "Uniform Sample #257 (2021)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2022-03-11T07:50:23.143Z",
+      "name": "Uniform Sample #258 (2022)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2022-11-11T00:57:35.140Z",
+      "name": "Uniform Sample #259 (2022)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2023-07-13T18:04:47.136Z",
+      "name": "Uniform Sample #260 (2023)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2024-03-14T11:11:59.133Z",
+      "name": "Uniform Sample #261 (2024)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2024-11-14T04:19:11.130Z",
+      "name": "Uniform Sample #262 (2024)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2025-07-16T21:26:23.126Z",
+      "name": "Uniform Sample #263 (2025)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2026-03-18T14:33:35.123Z",
+      "name": "Uniform Sample #264 (2026)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2026-11-18T07:40:47.120Z",
+      "name": "Uniform Sample #265 (2026)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2027-07-21T00:47:59.116Z",
+      "name": "Uniform Sample #266 (2027)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2028-03-21T17:55:11.113Z",
+      "name": "Uniform Sample #267 (2028)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2028-11-21T11:02:23.110Z",
+      "name": "Uniform Sample #268 (2028)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2029-07-24T04:09:35.106Z",
+      "name": "Uniform Sample #269 (2029)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2030-03-25T21:16:47.103Z",
+      "name": "Uniform Sample #270 (2030)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2030-11-25T14:23:59.100Z",
+      "name": "Uniform Sample #271 (2030)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2031-07-28T07:31:11.096Z",
+      "name": "Uniform Sample #272 (2031)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2032-03-29T00:38:23.093Z",
+      "name": "Uniform Sample #273 (2032)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2032-11-28T17:45:35.090Z",
+      "name": "Uniform Sample #274 (2032)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2033-07-31T10:52:47.086Z",
+      "name": "Uniform Sample #275 (2033)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2034-04-02T03:59:59.083Z",
+      "name": "Uniform Sample #276 (2034)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2034-12-02T21:07:11.080Z",
+      "name": "Uniform Sample #277 (2034)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2035-08-04T14:14:23.076Z",
+      "name": "Uniform Sample #278 (2035)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2036-04-05T07:21:35.073Z",
+      "name": "Uniform Sample #279 (2036)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2036-12-06T00:28:47.070Z",
+      "name": "Uniform Sample #280 (2036)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2037-08-07T17:35:59.066Z",
+      "name": "Uniform Sample #281 (2037)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2038-04-09T10:43:11.063Z",
+      "name": "Uniform Sample #282 (2038)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2038-12-10T03:50:23.060Z",
+      "name": "Uniform Sample #283 (2038)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2039-08-11T20:57:35.056Z",
+      "name": "Uniform Sample #284 (2039)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2040-04-12T14:04:47.053Z",
+      "name": "Uniform Sample #285 (2040)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2040-12-13T07:11:59.050Z",
+      "name": "Uniform Sample #286 (2040)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2041-08-15T00:19:11.046Z",
+      "name": "Uniform Sample #287 (2041)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2042-04-16T17:26:23.043Z",
+      "name": "Uniform Sample #288 (2042)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2042-12-17T10:33:35.040Z",
+      "name": "Uniform Sample #289 (2042)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2043-08-19T03:40:47.036Z",
+      "name": "Uniform Sample #290 (2043)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2044-04-19T20:47:59.033Z",
+      "name": "Uniform Sample #291 (2044)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2044-12-20T13:55:11.030Z",
+      "name": "Uniform Sample #292 (2044)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2045-08-22T07:02:23.026Z",
+      "name": "Uniform Sample #293 (2045)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2046-04-24T00:09:35.023Z",
+      "name": "Uniform Sample #294 (2046)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2046-12-24T17:16:47.020Z",
+      "name": "Uniform Sample #295 (2046)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2047-08-26T10:23:59.016Z",
+      "name": "Uniform Sample #296 (2047)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2048-04-27T03:31:11.013Z",
+      "name": "Uniform Sample #297 (2048)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2048-12-27T20:38:23.010Z",
+      "name": "Uniform Sample #298 (2048)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2049-08-29T13:45:35.006Z",
+      "name": "Uniform Sample #299 (2049)"
+    },
+    {
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "2050-05-01T06:52:47.003Z",
+      "name": "Uniform Sample #300 (2050)"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1850-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1850"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1851-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1851"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1852-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1852"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1854-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1854"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1855-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1855"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1856-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1856"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1858-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1858"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1859-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1859"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1860-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1860"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1862-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1862"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1863-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1863"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1864-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1864"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1866-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1866"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1867-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1867"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1868-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1868"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1870-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1870"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1871-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1871"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1872-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1872"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1874-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1874"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1875-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1875"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1876-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1876"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1878-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1878"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1879-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1879"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1880-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1880"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1882-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1882"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1883-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1883"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1884-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1884"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1886-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1886"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1887-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1887"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1888-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1888"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1890-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1890"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1891-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1891"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1892-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1892"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1894-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1894"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1895-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1895"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1896-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1896"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1898-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1898"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1899-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1899"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1900-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1900"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1902-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1902"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1903-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1903"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1904-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1904"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1906-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1906"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1907-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1907"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1908-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1908"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1910-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1910"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1911-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1911"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1912-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1912"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1914-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1914"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1915-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1915"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1916-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1916"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1918-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1918"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1919-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1919"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1921-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1921"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1922-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1922"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1923-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1923"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1925-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1925"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1926-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1926"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1927-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1927"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1929-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1929"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1930-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1930"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1931-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1931"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1933-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1933"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1934-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1934"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1935-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1935"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1937-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1937"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1938-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1938"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1939-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1939"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1941-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1941"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1942-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1942"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1943-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1943"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1945-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1945"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1946-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1946"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1947-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1947"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1949-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1949"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1950-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1950"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1951-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1951"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1953-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1953"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1954-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1954"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1955-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1955"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1957-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1957"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1958-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1958"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1959-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1959"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1961-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1961"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1962-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1962"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1963-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1963"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1965-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1965"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1966-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1966"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1967-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1967"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1969-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1969"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1970-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1970"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1971-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1971"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1973-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1973"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1974-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1974"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1975-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1975"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1977-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1977"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1978-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1978"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1979-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1979"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1981-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1981"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1982-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1982"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1983-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1983"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1985-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1985"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1986-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1986"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1988-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1988"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1989-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1989"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1990-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1990"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1992-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1992"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1993-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1993"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1994-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1994"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1996-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1996"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1997-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1997"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "1998-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 1998"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2000-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2000"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2001-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2001"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2002-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2002"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2004-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2004"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2005-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2005"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2006-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2006"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2008-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2008"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2009-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2009"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2010-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2010"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2012-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2012"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2013-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2013"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2014-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2014"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2016-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2016"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2017-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2017"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2018-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2018"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2020-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2020"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2021-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2021"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2022-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2022"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2024-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2024"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2025-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2025"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2026-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2026"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2028-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2028"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2029-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2029"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2030-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2030"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2032-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2032"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2033-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2033"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2034-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2034"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2036-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2036"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2037-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2037"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2038-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2038"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2040-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2040"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2041-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2041"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2042-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2042"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2044-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2044"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2045-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2045"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2046-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2046"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2048-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2048"
+    },
+    {
+      "category": "STATIONARY_POINT",
+      "timestampUtc": "2049-04-10T12:00:00.000Z",
+      "name": "Mercury Station Retrograde 2049"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1850-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1850"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1851-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1851"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1852-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1852"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1854-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1854"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1855-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1855"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1856-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1856"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1858-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1858"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1859-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1859"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1860-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1860"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1862-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1862"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1863-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1863"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1864-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1864"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1866-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1866"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1867-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1867"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1868-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1868"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1870-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1870"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1871-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1871"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1872-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1872"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1874-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1874"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1875-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1875"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1876-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1876"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1878-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1878"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1879-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1879"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1880-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1880"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1882-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1882"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1883-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1883"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1884-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1884"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1886-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1886"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1887-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1887"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1888-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1888"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1890-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1890"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1891-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1891"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1892-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1892"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1894-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1894"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1895-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1895"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1896-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1896"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1898-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1898"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1899-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1899"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1900-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1900"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1902-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1902"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1903-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1903"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1904-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1904"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1906-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1906"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1907-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1907"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1908-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1908"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1910-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1910"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1911-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1911"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1912-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1912"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1914-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1914"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1915-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1915"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1916-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1916"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1918-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1918"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1919-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1919"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1921-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1921"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1922-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1922"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1923-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1923"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1925-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1925"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1926-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1926"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1927-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1927"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1929-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1929"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1930-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1930"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1931-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1931"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1933-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1933"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1934-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1934"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1935-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1935"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1937-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1937"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1938-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1938"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1939-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1939"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1941-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1941"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1942-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1942"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1943-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1943"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1945-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1945"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1946-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1946"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1947-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1947"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1949-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1949"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1950-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1950"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1951-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1951"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1953-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1953"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1954-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1954"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1955-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1955"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1957-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1957"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1958-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1958"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1959-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1959"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1961-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1961"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1962-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1962"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1963-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1963"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1965-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1965"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1966-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1966"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1967-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1967"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1969-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1969"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1970-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1970"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1971-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1971"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1973-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1973"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1974-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1974"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1975-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1975"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1977-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1977"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1978-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1978"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1979-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1979"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1981-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1981"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1982-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1982"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1983-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1983"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1985-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1985"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1986-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1986"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1988-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1988"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1989-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1989"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1990-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1990"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1992-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1992"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1993-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1993"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1994-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1994"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1996-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1996"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1997-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1997"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "1998-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 1998"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2000-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2000"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2001-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2001"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2002-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2002"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2004-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2004"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2005-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2005"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2006-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2006"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2008-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2008"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2009-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2009"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2010-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2010"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2012-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2012"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2013-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2013"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2014-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2014"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2016-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2016"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2017-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2017"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2018-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2018"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2020-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2020"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2021-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2021"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2022-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2022"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2024-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2024"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2025-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2025"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2026-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2026"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2028-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2028"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2029-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2029"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2030-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2030"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2032-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2032"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2033-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2033"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2034-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2034"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2036-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2036"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2037-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2037"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2038-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2038"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2040-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2040"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2041-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2041"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2042-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2042"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2044-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2044"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2045-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2045"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2046-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2046"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2048-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2048"
+    },
+    {
+      "category": "CONJUNCTION_OPPOSITION",
+      "timestampUtc": "2049-08-15T18:30:00.000Z",
+      "name": "Planetary Alignment Epoch 2049"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1850-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1850"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1852-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1852"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1854-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1854"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1856-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1856"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1858-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1858"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1860-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1860"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1862-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1862"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1864-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1864"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1866-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1866"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1868-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1868"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1870-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1870"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1872-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1872"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1874-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1874"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1876-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1876"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1878-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1878"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1880-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1880"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1882-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1882"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1884-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1884"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1886-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1886"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1888-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1888"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1890-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1890"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1892-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1892"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1894-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1894"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1896-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1896"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1898-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1898"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1900-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1900"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1902-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1902"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1904-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1904"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1906-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1906"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1908-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1908"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1910-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1910"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1912-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1912"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1914-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1914"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1916-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1916"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1918-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1918"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1920-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1920"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1922-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1922"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1924-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1924"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1926-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1926"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1928-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1928"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1930-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1930"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1932-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1932"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1934-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1934"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1936-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1936"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1938-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1938"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1940-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1940"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1942-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1942"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1944-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1944"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1946-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1946"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1948-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1948"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1950-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1950"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1952-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1952"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1954-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1954"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1956-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1956"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1958-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1958"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1960-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1960"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1962-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1962"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1964-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1964"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1966-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1966"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1968-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1968"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1970-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1970"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1972-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1972"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1974-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1974"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1976-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1976"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1978-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1978"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1980-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1980"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1982-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1982"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1984-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1984"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1986-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1986"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1988-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1988"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1990-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1990"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1992-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1992"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1994-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1994"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1996-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1996"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1998-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 1998"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2000-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 2000"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2002-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 2002"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2004-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 2004"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2006-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 2006"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2008-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 2008"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2010-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 2010"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2012-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 2012"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2014-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 2014"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2016-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 2016"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2018-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 2018"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2020-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 2020"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2022-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 2022"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2024-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 2024"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2026-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 2026"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2028-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 2028"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2030-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 2030"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2032-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 2032"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2034-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 2034"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2036-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 2036"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2038-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 2038"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2040-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 2040"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2042-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 2042"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2044-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 2044"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2046-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 2046"
+    },
+    {
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2048-01-03T12:00:00.000Z",
+      "name": "Earth Perihelion Extreme 2048"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1850-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1850"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1852-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1852"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1854-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1854"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1856-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1856"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1858-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1858"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1860-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1860"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1862-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1862"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1864-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1864"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1866-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1866"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1868-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1868"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1870-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1870"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1872-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1872"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1874-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1874"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1876-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1876"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1878-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1878"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1880-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1880"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1882-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1882"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1884-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1884"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1886-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1886"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1888-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1888"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1890-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1890"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1892-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1892"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1894-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1894"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1896-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1896"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1898-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1898"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1900-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1900"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1902-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1902"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1904-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1904"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1906-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1906"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1908-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1908"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1910-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1910"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1912-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1912"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1914-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1914"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1916-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1916"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1918-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1918"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1920-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1920"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1922-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1922"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1924-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1924"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1926-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1926"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1928-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1928"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1930-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1930"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1932-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1932"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1934-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1934"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1936-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1936"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1938-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1938"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1940-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1940"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1942-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1942"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1944-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1944"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1946-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1946"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1948-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1948"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1950-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1950"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1952-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1952"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1954-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1954"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1956-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1956"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1958-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1958"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1960-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1960"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1962-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1962"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1964-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1964"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1966-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1966"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1968-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1968"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1970-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1970"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1972-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1972"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1974-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1974"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1976-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1976"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1978-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1978"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1980-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1980"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1982-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1982"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1984-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1984"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1986-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1986"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1988-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1988"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1990-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1990"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1992-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1992"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1994-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1994"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1996-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1996"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "1998-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 1998"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "2000-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 2000"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "2002-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 2002"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "2004-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 2004"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "2006-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 2006"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "2008-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 2008"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "2010-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 2010"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "2012-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 2012"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "2014-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 2014"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "2016-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 2016"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "2018-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 2018"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "2020-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 2020"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "2022-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 2022"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "2024-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 2024"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "2026-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 2026"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "2028-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 2028"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "2030-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 2030"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "2032-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 2032"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "2034-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 2034"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "2036-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 2036"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "2038-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 2038"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "2040-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 2040"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "2042-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 2042"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "2044-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 2044"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "2046-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 2046"
+    },
+    {
+      "category": "MAX_ELONGATION",
+      "timestampUtc": "2048-05-25T06:00:00.000Z",
+      "name": "Venus/Mercury Elongation Extreme 2048"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1850-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1850"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1852-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1852"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1854-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1854"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1856-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1856"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1858-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1858"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1860-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1860"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1862-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1862"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1864-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1864"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1866-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1866"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1868-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1868"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1870-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1870"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1872-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1872"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1874-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1874"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1876-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1876"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1878-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1878"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1880-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1880"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1882-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1882"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1884-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1884"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1886-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1886"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1888-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1888"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1890-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1890"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1892-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1892"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1894-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1894"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1896-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1896"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1898-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1898"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1900-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1900"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1902-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1902"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1904-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1904"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1906-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1906"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1908-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1908"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1910-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1910"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1912-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1912"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1914-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1914"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1916-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1916"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1918-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1918"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1920-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1920"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1922-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1922"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1924-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1924"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1926-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1926"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1928-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1928"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1930-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1930"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1932-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1932"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1934-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1934"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1936-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1936"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1938-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1938"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1940-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1940"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1942-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1942"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1944-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1944"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1946-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1946"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1948-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1948"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1950-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1950"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1952-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1952"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1954-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1954"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1956-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1956"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1958-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1958"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1960-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1960"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1962-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1962"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1964-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1964"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1966-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1966"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1968-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1968"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1970-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1970"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1972-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1972"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1974-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1974"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1976-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1976"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1978-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1978"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1980-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1980"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1982-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1982"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1984-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1984"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1986-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1986"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1988-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1988"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1990-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1990"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1992-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1992"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1994-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1994"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1996-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1996"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "1998-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 1998"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "2000-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 2000"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "2002-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 2002"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "2004-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 2004"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "2006-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 2006"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "2008-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 2008"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "2010-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 2010"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "2012-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 2012"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "2014-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 2014"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "2016-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 2016"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "2018-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 2018"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "2020-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 2020"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "2022-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 2022"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "2024-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 2024"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "2026-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 2026"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "2028-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 2028"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "2030-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 2030"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "2032-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 2032"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "2034-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 2034"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "2036-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 2036"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "2038-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 2038"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "2040-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 2040"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "2042-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 2042"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "2044-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 2044"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "2046-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 2046"
+    },
+    {
+      "category": "LUNAR_EXTREME",
+      "timestampUtc": "2048-09-18T00:00:00.000Z",
+      "name": "Lunar Perigee Extreme 2048"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1850-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1850"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1852-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1852"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1854-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1854"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1856-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1856"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1858-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1858"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1860-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1860"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1862-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1862"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1864-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1864"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1866-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1866"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1868-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1868"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1870-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1870"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1872-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1872"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1874-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1874"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1876-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1876"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1878-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1878"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1880-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1880"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1882-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1882"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1884-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1884"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1886-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1886"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1888-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1888"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1890-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1890"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1892-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1892"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1894-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1894"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1896-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1896"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1898-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1898"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1900-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1900"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1902-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1902"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1904-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1904"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1906-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1906"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1908-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1908"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1910-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1910"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1912-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1912"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1914-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1914"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1916-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1916"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1918-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1918"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1920-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1920"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1922-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1922"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1924-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1924"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1926-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1926"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1928-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1928"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1930-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1930"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1932-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1932"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1934-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1934"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1936-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1936"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1938-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1938"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1940-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1940"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1942-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1942"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1944-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1944"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1946-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1946"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1948-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1948"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1950-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1950"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1952-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1952"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1954-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1954"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1956-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1956"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1958-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1958"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1960-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1960"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1962-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1962"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1964-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1964"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1966-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1966"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1968-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1968"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1970-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1970"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1972-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1972"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1974-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1974"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1976-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1976"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1978-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1978"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1980-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1980"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1982-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1982"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1984-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1984"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1986-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1986"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1988-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1988"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1990-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1990"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1992-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1992"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1994-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1994"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1996-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1996"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "1998-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 1998"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "2000-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 2000"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "2002-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 2002"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "2004-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 2004"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "2006-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 2006"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "2008-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 2008"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "2010-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 2010"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "2012-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 2012"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "2014-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 2014"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "2016-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 2016"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "2018-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 2018"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "2020-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 2020"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "2022-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 2022"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "2024-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 2024"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "2026-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 2026"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "2028-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 2028"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "2030-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 2030"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "2032-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 2032"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "2034-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 2034"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "2036-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 2036"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "2038-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 2038"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "2040-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 2040"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "2042-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 2042"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "2044-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 2044"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "2046-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 2046"
+    },
+    {
+      "category": "INGRESS_GANDANTA_BOUNDARY",
+      "timestampUtc": "2048-04-14T15:00:00.000Z",
+      "name": "Mesha Ingress Boundary 2048"
+    }
+  ]
+}

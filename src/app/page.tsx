@@ -9,7 +9,8 @@ import { analytics, ANALYTICS_EVENTS } from '@/lib/analytics';
 import dynamic from 'next/dynamic';
 
 // Primary Above-the-Fold Components (Eager)
-import Navigation from '@/components/Navigation';
+import GlobalHeader from '@/components/layout/GlobalHeader';
+import LanguageSelectorModal from '@/components/layout/LanguageSelectorModal';
 import PersonalisationBridge from '@/components/PersonalisationBridge';
 import HeroSection from '@/components/HeroSection';
 import TodayAtAGlance from '@/components/TodayAtAGlance';
@@ -28,46 +29,66 @@ import KnowledgeGraphSection from '@/components/KnowledgeGraphSection';
 import FinalChapterCta from '@/components/FinalChapterCta';
 import Footer from '@/components/Footer';
 
+import { getPersistedLocation, LOCATION_CHANGE_EVENT, LocationAnchor } from '@/lib/location';
+import HelpDeskCtaBanner from '@/components/helpdesk/HelpDeskCtaBanner';
+
 // Dynamic Load for Heavy WebGL Canvas & Modals
 const SwargaLok = dynamic(() => import('@/components/SwargaLok'), { ssr: false });
 const CitySelectorModal = dynamic(() => import('@/components/CitySelectorModal'), { ssr: false });
 const CosmicSearchModal = dynamic(() => import('@/components/CosmicSearchModal'), { ssr: false });
 const CapabilityRegistryModal = dynamic(() => import('@/components/CapabilityRegistryModal'), { ssr: false });
 const ConsultationModal = dynamic(() => import('@/components/ConsultationModal'), { ssr: false });
+import FloatingAIGuruAvatar from '@/components/consultation/FloatingAIGuruAvatar';
 
 export default function AppLandingPage() {
-  const [currentCity, setCurrentCity] = useState(DEFAULT_CITY);
+  const [currentCity, setCurrentCity] = useState<any>(DEFAULT_CITY);
   const [panchangData, setPanchangData] = useState(() => calculatePanchang(new Date(), DEFAULT_CITY));
   const [kundaliData, setKundaliData] = useState(null);
 
-  // Day/Night & Language State (Chiti UDS v3 compliant)
-  const [theme, setTheme] = useState(() => {
-    if (typeof window === 'undefined') return 'dark';
-    try {
-      return localStorage.getItem('cosmictantra_theme') || 'dark';
-    } catch {
-      return 'dark';
-    }
-  });
-
-  const [lang, setLang] = useState(() => {
-    if (typeof window === 'undefined') return 'en';
-    try {
-      return localStorage.getItem('cosmictantra_lang') || 'en';
-    } catch {
-      return 'en';
-    }
-  });
+  // Day/Night & Language State (Chiti UDS v3 compliant — Light/Day mode default, SSR-safe)
+  const [theme, setTheme] = useState('light');
+  const [lang, setLang] = useState('en');
+  const [isClientMounted, setIsClientMounted] = useState(false);
 
   // Modals state
   const [isCityModalOpen, setIsCityModalOpen] = useState(false);
+  const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isCapabilityModalOpen, setIsCapabilityModalOpen] = useState(false);
   const [isConsultationModalOpen, setIsConsultationModalOpen] = useState(false);
   const [consultationPrompt, setConsultationPrompt] = useState('');
 
+  // Sync client-persisted preferences and real-time location on mount to eliminate SSR hydration mismatch
+  useEffect(() => {
+    setIsClientMounted(true);
+    try {
+      const savedTheme = localStorage.getItem('cosmictantra_theme');
+      if (savedTheme === 'light' || savedTheme === 'dark') {
+        setTheme(savedTheme);
+      }
+      const savedLang = localStorage.getItem('cosmictantra_lang');
+      if (savedLang) {
+        setLang(savedLang);
+      }
+      const savedLoc = getPersistedLocation();
+      if (savedLoc && savedLoc.lat && savedLoc.lng) {
+        setCurrentCity(savedLoc);
+      }
+    } catch {}
+
+    const handleLocChange = (e: any) => {
+      if (e?.detail) {
+        setCurrentCity(e.detail);
+      }
+    };
+
+    window.addEventListener(LOCATION_CHANGE_EVENT, handleLocChange);
+    return () => window.removeEventListener(LOCATION_CHANGE_EVENT, handleLocChange);
+  }, []);
+
   // Sync theme class to root html
   useEffect(() => {
+    if (!isClientMounted) return;
     const root = document.documentElement;
     if (theme === 'light') {
       root.classList.remove('dark');
@@ -79,14 +100,15 @@ export default function AppLandingPage() {
     try {
       localStorage.setItem('cosmictantra_theme', theme);
     } catch {}
-  }, [theme]);
+  }, [theme, isClientMounted]);
 
-  // Sync language
+  // Sync language to localStorage
   useEffect(() => {
+    if (!isClientMounted) return;
     try {
       localStorage.setItem('cosmictantra_lang', lang);
     } catch {}
-  }, [lang]);
+  }, [lang, isClientMounted]);
 
   // Update panchang when city changes
   useEffect(() => {
@@ -123,17 +145,14 @@ export default function AppLandingPage() {
     <div className="min-h-screen flex flex-col bg-[#FAF7F2] dark:bg-[#07080C] text-[#1C1917] dark:text-[#EFECE6] selection:bg-[#D4AF37]/30 selection:text-black dark:selection:text-white transition-colors duration-300">
       
       {/* 1. Global Consumer Navigation with Theme & Language Toggles */}
-      <Navigation
+      <GlobalHeader
         currentCity={currentCity}
         onOpenCitySelector={() => setIsCityModalOpen(true)}
-        onOpenSearch={() => setIsSearchModalOpen(true)}
         onOpenConsultation={() => handleOpenConsultation()}
-        onOpenCapabilityModal={() => setIsCapabilityModalOpen(true)}
-        activeProfile={kundaliData}
         theme={theme}
-        onToggleTheme={handleToggleTheme}
+        onThemeToggle={handleToggleTheme}
         lang={lang}
-        onToggleLang={handleToggleLang}
+        onLangToggle={() => setIsLanguageModalOpen(true)}
       />
 
       {/* 2. Personalisation Bridge */}
@@ -156,6 +175,11 @@ export default function AppLandingPage() {
           lang={lang}
           theme={theme}
         />
+
+        {/* Free WhatsApp Help Desk Direct Entry Banner */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <HelpDeskCtaBanner source="HOME" lang={lang === 'hi' ? 'hi' : 'en'} />
+        </div>
 
         {/* 4. Today At A Glance (Vedic Day Arc & Stepped Ribbon) */}
         <TodayAtAGlance
@@ -237,7 +261,7 @@ export default function AppLandingPage() {
           theme={theme}
         />
 
-        {/* 14. ₹199 Consultation Offer & 5-Stage Transparent Pipeline */}
+        {/* 14. ₹501 Consultation Offer & 5-Stage Transparent Pipeline */}
         <ConsultationOffer
           onOpenConsultation={handleOpenConsultation}
           lang={lang}
@@ -283,6 +307,13 @@ export default function AppLandingPage() {
       />
 
       {/* Modals & Dialogs */}
+      <LanguageSelectorModal
+        isOpen={isLanguageModalOpen}
+        currentLang={lang}
+        onClose={() => setIsLanguageModalOpen(false)}
+        onSelectLang={(newLang) => setLang(newLang)}
+      />
+
       <CitySelectorModal
         isOpen={isCityModalOpen}
         onClose={() => setIsCityModalOpen(false)}
@@ -316,6 +347,12 @@ export default function AppLandingPage() {
         lang={lang}
         theme={theme}
       />
+
+      {/* Floating Free WhatsApp Help Desk Direct Pill */}
+      <HelpDeskCtaBanner variant="floating" source="HOME" lang={lang === 'hi' ? 'hi' : 'en'} />
+
+      {/* Floating AI Guru Concierge Avatar & Proactive Guide */}
+      <FloatingAIGuruAvatar />
 
     </div>
   );

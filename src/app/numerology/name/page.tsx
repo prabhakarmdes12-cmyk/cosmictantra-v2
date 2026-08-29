@@ -1,42 +1,46 @@
-import type { Metadata } from 'next';
-import NumerologyCalculator from '@/components/tools/NumerologyCalculator';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'Name Numerology Calculator — Namank, Mulank & Bhagyank (Free)',
-  description: 'Free Vedic name numerology calculator. Compute your Namank (name number), Mulank, Bhagyank and name-destiny harmony using the Chaldean system. Ruling planet, lucky numbers and traits included.',
-  alternates: { canonical: '/numerology/name' },
-};
+import React from 'react';
+import NumerologyCalculator from '@/components/tools/NumerologyCalculator';
+import CosmicTantraShell from '@/components/layout/CosmicTantraShell';
 
 export default function NameNumerologyPage() {
   return (
-    <main className="min-h-screen bg-[#FAF7F2] dark:bg-[#07080C] text-[#1C1917] dark:text-[#EFECE6] py-14 px-4 sm:px-6">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <CosmicTantraShell>
+      <div className="py-10 sm:py-14 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto space-y-8">
         <header className="max-w-3xl">
-          <div className="text-[10px] font-mono-data text-[#4848A8] dark:text-[#8B8BF5] uppercase tracking-[0.24em] font-bold">अंक ज्योतिष • Ank Jyotish</div>
-          <h1 className="font-editorial text-4xl sm:text-5xl font-bold mt-2">Name Numerology Calculator</h1>
-          <p className="text-sm text-[#57524A] dark:text-[#AAA49A] mt-3 leading-relaxed">
-            Vedic numerology (Ank Jyotish) reads the vibration of your name. Enter your name to find your
-            <strong> Namank</strong> (name number) and its ruling planet — then add your birth date for the
-            Mulank (root number), Bhagyank (destiny number) and name-destiny harmony score. Chaldean
-            (sound-based) and Pythagorean systems both supported.
+          <div className="text-xs font-mono-data text-[#8E6F1D] dark:text-[#F0C968] uppercase tracking-[0.24em] font-bold">
+            अंक ज्योतिष • ANK JYOTISH INSTRUMENT
+          </div>
+          <h1 className="font-editorial text-3xl sm:text-5xl font-bold text-[#1C1917] dark:text-[#FFFFFF] mt-2 tracking-tight">
+            Chaldean Name Numerology
+          </h1>
+          <p className="text-xs sm:text-sm font-mono-data text-[#57524A] dark:text-[#D1C9BF] mt-3 leading-relaxed">
+            Vedic sound vibration analysis based on the ancient Chaldean system. Compute your 
+            <strong className="text-[#8E6F1D] dark:text-[#F0C968]"> Namank</strong> (name number), 
+            <strong className="text-[#8E6F1D] dark:text-[#F0C968]"> Mulank</strong> (psychic root), 
+            and <strong className="text-[#8E6F1D] dark:text-[#F0C968]"> Bhagyank</strong> (destiny path).
           </p>
         </header>
+
         <NumerologyCalculator mode="name" />
-        <div className="grid md:grid-cols-3 gap-4 text-xs text-[#57524A] dark:text-[#AAA49A]">
-          <div className="p-4 rounded-2xl border border-black/[0.06] dark:border-white/[0.06]">
+
+        <div className="grid md:grid-cols-3 gap-4 text-xs font-mono-data text-[#57524A] dark:text-[#AAA49A]">
+          <div className="p-5 rounded-2xl border border-black/10 dark:border-white/10 bg-white/70 dark:bg-white/5">
             <div className="font-bold text-[#8E6F1D] dark:text-[#D4AF37] mb-1">Mulank (मूलांक)</div>
-            Reduced birth-day number — your core nature and instinct.
+            Reduced birth-day number — reflects your intrinsic nature, psychological drive, and inner instinct.
           </div>
-          <div className="p-4 rounded-2xl border border-black/[0.06] dark:border-white/[0.06]">
+          <div className="p-5 rounded-2xl border border-black/10 dark:border-white/10 bg-white/70 dark:bg-white/5">
             <div className="font-bold text-[#8E6F1D] dark:text-[#D4AF37] mb-1">Bhagyank (भाग्यांक)</div>
-            Reduced full birth-date number — your life purpose and destiny path.
+            Reduced full birth-date number — reveals your life purpose, karmic trajectory, and destiny window.
           </div>
-          <div className="p-4 rounded-2xl border border-black/[0.06] dark:border-white/[0.06]">
+          <div className="p-5 rounded-2xl border border-black/10 dark:border-white/10 bg-white/70 dark:bg-white/5">
             <div className="font-bold text-[#8E6F1D] dark:text-[#D4AF37] mb-1">Namank (नामांक)</div>
-            Chaldean value of your name — how the world perceives you. Harmony with Bhagyank matters.
+            Chaldean sound vibration value — how your public expression resonates with your destiny numbers.
           </div>
         </div>
       </div>
-    </main>
+    </CosmicTantraShell>
   );
 }
+

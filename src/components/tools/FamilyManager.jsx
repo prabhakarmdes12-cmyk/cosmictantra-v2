@@ -6,7 +6,8 @@ import {
   getProfiles, upsertProfile, removeProfile, getActiveProfileId, setActiveProfileId,
   profileFromForm, kundaliForProfile, RELATIONS,
 } from '../../lib/profileStore';
-import { CITIES } from '../../lib/cities';
+import { CITIES, CITIES_BY_STATE } from '../../lib/cities';
+import { getCurrentGpsLocation } from '../../lib/location';
 import { chitiSensory } from '../../lib/chitiAudio';
 
 const EMPTY = {
@@ -116,11 +117,42 @@ export default function FamilyManager({ lang = 'en', onOpenConsultation = () => 
         </select>
         <input type="date" value={form.birthDate} onChange={e => setForm({ ...form, birthDate: e.target.value })} required className={inputCls} />
         <input type="time" value={form.birthTime} onChange={e => setForm({ ...form, birthTime: e.target.value })} className={inputCls} />
-        <select value={form.cityId} onChange={e => pickCity(e.target.value)} className={inputCls}>
-          {CITIES.map(c => <option key={c.id} value={c.id}>{c.name}, {c.state}</option>)}
-        </select>
+        <div className="flex items-center gap-1.5">
+          <select value={form.cityId} onChange={e => pickCity(e.target.value)} className={inputCls}>
+            {Object.entries(CITIES_BY_STATE).map(([stName, citiesInState]) => (
+              <optgroup key={stName} label={stName}>
+                {citiesInState.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} {c.nameHi ? `(${c.nameHi})` : ''} • {c.lat.toFixed(2)}°N, {c.lng.toFixed(2)}°E
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={async () => {
+              chitiSensory.playTick();
+              try {
+                const loc = await getCurrentGpsLocation({ enableHighAccuracy: true });
+                setForm(f => ({
+                  ...f,
+                  cityId: loc.id,
+                  birthCity: loc.name,
+                  birthLat: loc.lat,
+                  birthLon: loc.lng,
+                  timezone: loc.tz
+                }));
+              } catch {}
+            }}
+            className="p-2.5 rounded-xl border border-[#8E6F1D]/30 dark:border-[#D4AF37]/40 bg-[#8E6F1D]/10 dark:bg-[#D4AF37]/10 text-[#8E6F1D] dark:text-[#F0C968] font-bold hover:bg-[#8E6F1D]/20 cursor-pointer shrink-0"
+            title="Use Live GPS Coordinates"
+          >
+            GPS
+          </button>
+        </div>
         <button type="submit"
-          className="py-3 rounded-xl bg-gradient-to-r from-[#8E6F1D] to-[#D4AF37] text-[#060709] font-bold text-xs flex items-center justify-center gap-2">
+          className="py-3 rounded-xl bg-gradient-to-r from-[#8E6F1D] to-[#D4AF37] text-[#060709] font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-sm">
           {saved ? <><Check className="w-4 h-4" /> {hi ? 'सहेजा गया' : 'Saved'}</> : <><Sparkles className="w-4 h-4" /> {hi ? 'प्रोफाइल सहेजें' : 'Save Profile'}</>}
         </button>
         <p className="sm:col-span-2 text-[9px] text-[#857E74] dark:text-[#8E8A82]">

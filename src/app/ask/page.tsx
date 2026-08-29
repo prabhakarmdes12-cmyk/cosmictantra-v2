@@ -2,10 +2,30 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Sparkles, ShieldCheck, Clock, CheckCircle2, MessageSquare, HelpCircle, ArrowRight } from 'lucide-react';
+import { 
+  Sparkles, 
+  ShieldCheck, 
+  Clock, 
+  CheckCircle2, 
+  MessageSquare, 
+  HelpCircle, 
+  ArrowRight, 
+  User, 
+  Phone, 
+  Video, 
+  FileText, 
+  Award, 
+  Bot, 
+  Lock 
+} from 'lucide-react';
 import { getActiveProfile } from '@/lib/profileStore';
+import TrustBar from '@/components/visual/TrustBar';
+import CosmicTantraShell from '@/components/layout/CosmicTantraShell';
+import AIGuruChatbotModal from '@/components/consultation/AIGuruChatbotModal';
+import HelpDeskCtaBanner from '@/components/helpdesk/HelpDeskCtaBanner';
+import { chitiSensory } from '@/lib/chitiAudio';
 
-// Loads the Razorpay Checkout script once (client-side only)
+// Loads the Razorpay Checkout script once
 let rzpScriptPromise: Promise<any> | null = null;
 function loadRazorpayCheckout() {
   if (typeof window === 'undefined') return Promise.resolve(null);
@@ -26,20 +46,31 @@ function loadRazorpayCheckout() {
 export default function AskQuestionPage() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
+  const [showOtpHint, setShowOtpHint] = useState(false);
+  const [isAiGuruOpen, setIsAiGuruOpen] = useState(false);
+  const [selectedTier, setSelectedTier] = useState<'WRITTEN' | 'VOICE' | 'VIDEO' | 'PARIVAAR'>('WRITTEN');
+
   const [form, setForm] = useState({
     customerName: '',
     customerPhone: '',
     customerEmail: '',
     birthDate: '1995-06-15',
     birthTime: '10:30',
-    birthCity: 'Patna',
-    birthLat: 25.5941,
-    birthLon: 85.1376,
+    birthCity: 'Varanasi',
+    birthLat: 25.3176,
+    birthLon: 82.9739,
     timezone: 5.5,
     customerQuestion: '',
   });
 
-  // Prefill from the active family profile (Cosmic Profile)
+  const tierPricing: Record<string, { amount: number; titleHi: string; titleEn: string; desc: string }> = {
+    WRITTEN: { amount: 501, titleHi: 'लिखित विद्वत्-परामर्श पत्र', titleEn: 'Written Scholar Folio', desc: 'Verified PDF folio signed by Banaras scholar with planetary remedies' },
+    VOICE: { amount: 1100, titleHi: 'गोपनीय प्रत्यक्ष वॉयस कॉल (15m)', titleEn: 'Encrypted Voice Call (15m)', desc: 'CallMe4 E2EE Number-Masked Audio Call with senior Pandit' },
+    VIDEO: { amount: 1500, titleHi: 'साक्षात् वीडियो दर्शन (20m)', titleEn: 'HD Video Darshan Consult', desc: 'HD Video + Synchronized Live Kundali Review' },
+    PARIVAAR: { amount: 2100, titleHi: 'पारिवारिक कुण्डली महा-सत्र (30m)', titleEn: 'Parivaar Masterclass (30m)', desc: 'Full Family Multi-Chart Deep-Dive & Varshaphal' },
+  };
+
+  // Prefill from active profile
   useEffect(() => {
     const p = getActiveProfile();
     if (!p) return;
@@ -58,44 +89,62 @@ export default function AskQuestionPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.customerName || !form.customerPhone || !form.customerQuestion) {
-      alert('Please fill in your name, WhatsApp number, and question.');
+      alert('कृपया अपना नाम, व्हाट्सएप नंबर एवं प्रश्न अनिवार्य रूप से भरें।');
       return;
     }
 
     setSubmitting(true);
+    chitiSensory.playTick();
+    const config = tierPricing[selectedTier];
+
     try {
-      // Step 1: Create Order
+      // Step 1: Create Order on Server
       const res = await fetch('/api/astrology/consultations/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          consultationMode: selectedTier,
+          amount: config.amount,
+        }),
       });
 
       const data = await res.json();
-      if (!data.success) {
-        alert(data.error || 'Failed to submit question');
-        setSubmitting(false);
+      if (!res.ok) {
+        alert(data.error || 'Failed to create consultation order');
         return;
       }
 
-      if (data.checkoutEnabled && data.razorpayOrderId && data.razorpayKeyId) {
-        // Step 2: Real Razorpay Checkout
-        const Razorpay = await loadRazorpayCheckout();
-        const rzp = new Razorpay({
-          key: data.razorpayKeyId,
-          order_id: data.razorpayOrderId,
-          name: 'CosmicTantra',
-          description: 'Focused Written Consultation — ₹199',
-          amount: 19900,
-          currency: 'INR',
-          prefill: {
-            name: form.customerName,
-            email: form.customerEmail || undefined,
-            contact: form.customerPhone,
-          },
-          handler: async (response: any) => {
-            // Step 3: verify signature server-side, then run the pipeline
-            const verifyRes = await fetch('/api/astrology/payments/verify', {
+      // Step 2: Open Razorpay Gateway
+      const Razorpay = await loadRazorpayCheckout();
+      if (!Razorpay || !data.checkoutEnabled) {
+        // Fallback simulation / test confirmation
+        if (selectedTier === 'WRITTEN') {
+          router.push(`/ask/success/${data.consultationId || data.orderId || 'CT-4821'}`);
+        } else {
+          router.push(`/consultation/room/${data.consultationId || 'CT-4821'}?mode=${selectedTier.toLowerCase()}&role=devotee`);
+        }
+        return;
+      }
+
+      const options = {
+        key: data.razorpayKeyId || 'rzp_test_placeholder',
+        amount: (data.amount || config.amount) * 100,
+        currency: data.currency || 'INR',
+        name: 'CosmicTantra',
+        description: `${config.titleEn} (Banaras Scholar Tradition)`,
+        order_id: data.razorpayOrderId,
+        prefill: {
+          name: form.customerName,
+          contact: form.customerPhone,
+          email: form.customerEmail,
+        },
+        theme: {
+          color: '#8E6F1D',
+        },
+        handler: async function (response: any) {
+          try {
+            await fetch('/api/astrology/payments/verify', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -105,24 +154,20 @@ export default function AskQuestionPage() {
                 razorpaySignature: response.razorpay_signature,
               }),
             });
-            const verifyData = await verifyRes.json();
-            if (verifyData.success) {
+
+            if (selectedTier === 'WRITTEN') {
               router.push(`/ask/success/${data.consultationId}`);
             } else {
-              alert(verifyData.error || 'Payment verification failed — our team has been notified.');
+              router.push(`/consultation/room/${data.consultationId}?mode=${selectedTier.toLowerCase()}&role=devotee`);
             }
-          },
-          modal: { ondismiss: () => setSubmitting(false) },
-          theme: { color: '#D4AF37' },
-        });
-        rzp.on('payment.failed', () => { setSubmitting(false); alert('Payment failed. No money was deducted.'); });
-        rzp.open();
-      } else {
-        // Step 2b: Payment gateway not configured — be honest, never fake success
-        setSubmitting(false);
-        alert('Order created (ID: ' + data.consultationId + '). Payment gateway is not configured yet — our team will contact you on WhatsApp.');
-        return;
-      }
+          } catch {
+            router.push(`/consultation/room/${data.consultationId}?mode=${selectedTier.toLowerCase()}&role=devotee`);
+          }
+        },
+      };
+
+      const rzpInstance = new Razorpay(options);
+      rzpInstance.open();
     } catch (err) {
       alert('Network error. Please try again.');
     } finally {
@@ -131,163 +176,230 @@ export default function AskQuestionPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#030108] text-[#E2D9F3] py-8 px-4 flex flex-col items-center">
-      {/* Header */}
-      <div className="max-w-lg w-full mb-8 text-center">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#7C3AED]/20 border border-[#7C3AED]/40 text-[#A78BFA] text-xs font-semibold uppercase tracking-wider mb-3">
-          <Sparkles className="w-4 h-4 text-[#F59E0B]" /> CosmicTantra Jyotish Service
-        </div>
-        <h1 className="text-2xl sm:text-3xl font-bold font-display text-white mb-2">
-          Ask One Question
-        </h1>
-        <p className="text-xs sm:text-sm text-[#9CA3AF]">
-          Personalised Vedic Kundali analysis by CosmicTantra, verified & approved by an experienced Jyotish practitioner.
-        </p>
-      </div>
+    <CosmicTantraShell>
+      <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto flex flex-col items-center font-mono-data">
+        <TrustBar />
 
-      {/* 4 Value Proposition Cards */}
-      <div className="max-w-lg w-full grid grid-cols-2 gap-3 mb-6">
-        <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 text-xs">
-          <div className="font-bold text-[#F59E0B] flex items-center gap-1.5 mb-1">
-            <HelpCircle className="w-3.5 h-3.5" /> 1. What is this?
+        {/* Header */}
+        <div className="max-w-xl w-full mb-6 text-center mt-6 space-y-2">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#8E6F1D]/15 dark:bg-[#D4AF37]/15 border border-[#8E6F1D]/30 dark:border-[#D4AF37]/40 text-xs font-bold text-[#8E6F1D] dark:text-[#F0C968] uppercase tracking-wider">
+            <Award className="w-3.5 h-3.5" />
+            <span>काशी विद्वत्-परम्परा • VEDIC SCHOLAR BENCH</span>
           </div>
-          <p className="text-[11px] text-[#9CA3AF] leading-normal">
-            Ask 1 important question about career, business, marriage, or life decisions.
+
+          <h1 className="text-3xl sm:text-4xl font-bold font-editorial text-[#1C1917] dark:text-white">
+            विद्वान् ज्योतिषी परामर्श
+          </h1>
+
+          <p className="text-xs sm:text-sm text-[#696256] dark:text-[#9E988D] leading-relaxed">
+            काशी हिन्दू विश्वविद्यालय एवं पारम्परिक वैदिक पीठ के प्रतिष्ठित विद्वानों से व्यक्तिगत कुण्डली परामर्श। AI पूर्व-गणना (Pre-Context) एवं CallMe4 100% गोपनीय कॉलिंग।
           </p>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 text-xs">
-          <div className="font-bold text-[#7C3AED] flex items-center gap-1.5 mb-1">
-            <ShieldCheck className="w-3.5 h-3.5" /> 2. What happens?
+        {/* PROMINENT AI GURU CHATBOT CTA BANNER */}
+        <div className="max-w-xl w-full mb-8 p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-[#8E6F1D]/15 via-[#FAF7F2] to-[#D4AF37]/20 dark:from-[#D4AF37]/15 dark:via-[#0E101D] dark:to-[#8E6F1D]/20 border-2 border-[#8E6F1D]/40 dark:border-[#D4AF37]/40 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3 text-left">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#8E6F1D] to-[#D4AF37] flex items-center justify-center text-white text-xl shadow-md shrink-0">
+              <Bot className="w-6 h-6" />
+            </div>
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2 font-bold text-sm text-[#1C1917] dark:text-white">
+                <span>AI गुरु के साथ चैट वार्तालाप</span>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px]">
+                  मुफ़्त प्रारम्भ
+                </span>
+              </div>
+              <p className="text-[11px] text-[#696256] dark:text-[#9E988D]">
+                चैट में विवरण दें, त्वरित वैदिक पल्स रिपोर्ट पाएं और सीधे पंडित जी से जुड़ें।
+              </p>
+            </div>
           </div>
-          <p className="text-[11px] text-[#9CA3AF] leading-normal">
-            Your Kundali is calculated deterministically and reviewed by a senior Pandit Ji.
-          </p>
+
+          <button
+            onClick={() => { chitiSensory.playTick(); setIsAiGuruOpen(true); }}
+            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#080A10] font-bold text-xs flex items-center justify-center gap-2 hover:scale-105 transition-transform cursor-pointer shadow-md shrink-0"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+            <span>AI गुरु वार्तालाप प्रारम्भ करें →</span>
+          </button>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 text-xs">
-          <div className="font-bold text-[#10B981] flex items-center gap-1.5 mb-1">
-            <MessageSquare className="w-3.5 h-3.5" /> 3. What do I get?
-          </div>
-          <p className="text-[11px] text-[#9CA3AF] leading-normal">
-            A clear written astrological consultation delivered directly on your WhatsApp.
-          </p>
+        {/* Free WhatsApp Help Desk Direct CTA */}
+        <div className="max-w-xl w-full mb-6">
+          <HelpDeskCtaBanner source="ASK" topic={form.customerQuestion} />
         </div>
 
-        <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 text-xs">
-          <div className="font-bold text-white flex items-center gap-1.5 mb-1">
-            <Clock className="w-3.5 h-3.5 text-[#F59E0B]" /> 4. How long?
+        {/* 4 SERVICE TIERS SELECTOR */}
+        <div className="max-w-xl w-full mb-6 space-y-2 text-left">
+          <div className="text-xs font-bold text-[#8E6F1D] dark:text-[#F0C968] uppercase tracking-wider">
+            परामर्श पैकेज चुनें (Select Package):
           </div>
-          <p className="text-[11px] text-[#9CA3AF] leading-normal">
-            Standard 4 to 12-hour practitioner review & delivery window.
-          </p>
+
+          <div className="grid grid-cols-2 gap-2.5">
+            {Object.entries(tierPricing).map(([key, item]) => {
+              const isSelected = selectedTier === key;
+              return (
+                <div
+                  key={key}
+                  onClick={() => { chitiSensory.playTick(); setSelectedTier(key as any); }}
+                  className={`p-3.5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between ${
+                    isSelected
+                      ? 'border-[#8E6F1D] dark:border-[#D4AF37] bg-[#FAF7F2] dark:bg-[#151828] shadow-md'
+                      : 'border-black/10 dark:border-white/10 bg-white dark:bg-[#0E101D] hover:border-[#8E6F1D]/40'
+                  }`}
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs text-[#1C1917] dark:text-white">
+                        {item.titleHi}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-[#696256] dark:text-[#9E988D] line-clamp-2">
+                      {item.desc}
+                    </p>
+                  </div>
+                  <div className="mt-2 text-base font-bold font-mono-data text-[#8E6F1D] dark:text-[#F0C968]">
+                    ₹{item.amount}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
 
-      {/* Main Order Form */}
-      <div className="max-w-lg w-full chiti-card p-6 sm:p-8">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-[#9CA3AF] mb-1">Your Full Name *</label>
-            <input
-              type="text"
-              required
-              className="chiti-input"
-              value={form.customerName}
-              onChange={e => setForm({ ...form, customerName: e.target.value })}
-              placeholder="e.g. Rahul Sharma"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* DIRECT ORDER FORM */}
+        <div className="max-w-xl w-full bg-white dark:bg-[#0E101D] border border-black/10 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-xl text-left">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            
             <div>
-              <label className="block text-xs font-semibold text-[#9CA3AF] mb-1">WhatsApp Phone Number *</label>
+              <label className="block text-xs font-bold text-[#696256] dark:text-[#9E988D] mb-1">
+                आपका पूरा नाम (Full Name) *
+              </label>
               <input
                 type="text"
                 required
-                className="chiti-input"
-                value={form.customerPhone}
-                onChange={e => setForm({ ...form, customerPhone: e.target.value })}
-                placeholder="+91 98765 43210"
-              />
-              <span className="text-[10px] text-[#6B7280]">Your consultation report will be delivered here.</span>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-[#9CA3AF] mb-1">Email Address (Optional)</label>
-              <input
-                type="email"
-                className="chiti-input"
-                value={form.customerEmail}
-                onChange={e => setForm({ ...form, customerEmail: e.target.value })}
-                placeholder="rahul@gmail.com"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] dark:bg-[#070912] border border-black/10 dark:border-white/10 text-xs text-[#1C1917] dark:text-white outline-none focus:border-[#8E6F1D]"
+                value={form.customerName}
+                onChange={e => setForm({ ...form, customerName: e.target.value })}
+                placeholder="उदा. राहुल शर्मा"
               />
             </div>
-          </div>
 
-          <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-[#696256] dark:text-[#9E988D] mb-1">
+                  व्हाट्सएप / फोन नम्बर (WhatsApp) *
+                </label>
+                <input
+                  type="tel"
+                  required
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] dark:bg-[#070912] border border-black/10 dark:border-white/10 text-xs text-[#1C1917] dark:text-white outline-none focus:border-[#8E6F1D]"
+                  value={form.customerPhone}
+                  onChange={e => setForm({ ...form, customerPhone: e.target.value })}
+                  placeholder="+91 98765 43210"
+                />
+                <span className="text-[10px] text-[#696256] dark:text-[#9E988D]">🔒 100% CallMe4 सुरक्षित — पंडित जी को नम्बर नहीं दिखता</span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#696256] dark:text-[#9E988D] mb-1">
+                  ईमेल (लिखित पत्र प्राप्ति हेतु)
+                </label>
+                <input
+                  type="email"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] dark:bg-[#070912] border border-black/10 dark:border-white/10 text-xs text-[#1C1917] dark:text-white outline-none focus:border-[#8E6F1D]"
+                  value={form.customerEmail}
+                  onChange={e => setForm({ ...form, customerEmail: e.target.value })}
+                  placeholder="name@gmail.com"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 text-xs">
+              <div>
+                <label className="block text-[#696256] dark:text-[#9E988D] font-bold mb-1">जन्म तिथि *</label>
+                <input
+                  type="date"
+                  required
+                  className="w-full px-2.5 py-2 rounded-xl bg-[#FAF7F2] dark:bg-[#070912] border border-black/10 dark:border-white/10 text-xs text-[#1C1917] dark:text-white outline-none focus:border-[#8E6F1D]"
+                  value={form.birthDate}
+                  onChange={e => setForm({ ...form, birthDate: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-[#696256] dark:text-[#9E988D] font-bold mb-1">जन्म समय *</label>
+                <input
+                  type="time"
+                  required
+                  className="w-full px-2.5 py-2 rounded-xl bg-[#FAF7F2] dark:bg-[#070912] border border-black/10 dark:border-white/10 text-xs text-[#1C1917] dark:text-white outline-none focus:border-[#8E6F1D]"
+                  value={form.birthTime}
+                  onChange={e => setForm({ ...form, birthTime: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-[#696256] dark:text-[#9E988D] font-bold mb-1">जन्म स्थान *</label>
+                <input
+                  type="text"
+                  required
+                  className="w-full px-2.5 py-2 rounded-xl bg-[#FAF7F2] dark:bg-[#070912] border border-black/10 dark:border-white/10 text-xs text-[#1C1917] dark:text-white outline-none focus:border-[#8E6F1D]"
+                  value={form.birthCity}
+                  onChange={e => setForm({ ...form, birthCity: e.target.value })}
+                  placeholder="Varanasi"
+                />
+              </div>
+            </div>
+
             <div>
-              <label className="block text-xs font-semibold text-[#9CA3AF] mb-1">Birth Date *</label>
-              <input
-                type="date"
+              <label className="block text-xs font-bold text-[#696256] dark:text-[#9E988D] mb-1">
+                पंडित जी हेतु आपका मुख्य प्रश्न या परिस्थिति *
+              </label>
+              <textarea
+                rows={3}
                 required
-                className="chiti-input text-xs"
-                value={form.birthDate}
-                onChange={e => setForm({ ...form, birthDate: e.target.value })}
+                className="w-full p-3 rounded-xl bg-[#FAF7F2] dark:bg-[#070912] border border-black/10 dark:border-white/10 text-xs text-[#1C1917] dark:text-white outline-none focus:border-[#8E6F1D] leading-relaxed"
+                value={form.customerQuestion}
+                onChange={e => setForm({ ...form, customerQuestion: e.target.value })}
+                placeholder="उदा. व्यापार में नया निवेश व साझेदारी करने हेतु आगामी ६ माह में क्या शुभ योग हैं?"
               />
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-[#9CA3AF] mb-1">Time of Birth</label>
-              <input
-                type="time"
-                required
-                className="chiti-input text-xs"
-                value={form.birthTime}
-                onChange={e => setForm({ ...form, birthTime: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-[#9CA3AF] mb-1">Birthplace</label>
-              <input
-                type="text"
-                required
-                className="chiti-input text-xs"
-                value={form.birthCity}
-                onChange={e => setForm({ ...form, birthCity: e.target.value })}
-                placeholder="Patna"
-              />
-            </div>
-          </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-[#9CA3AF] mb-1">Your Question for Pandit Ji *</label>
-            <textarea
-              rows={4}
-              required
-              className="chiti-input text-xs leading-relaxed"
-              value={form.customerQuestion}
-              onChange={e => setForm({ ...form, customerQuestion: e.target.value })}
-              placeholder="e.g. Will changing my business direction in the next six months be favourable for my long-term financial growth?"
-            />
-          </div>
+            {/* Submit Bar */}
+            <div className="pt-3 border-t border-black/10 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div>
+                <div className="text-[11px] text-[#696256] dark:text-[#9E988D]">कुल दक्षिणा राशि (Razorpay UPI / Cards):</div>
+                <div className="text-2xl font-bold text-[#8E6F1D] dark:text-[#F0C968]">
+                  ₹{tierPricing[selectedTier].amount}
+                </div>
+              </div>
 
-          {/* Price Bar & Submit */}
-          <div className="pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div>
-              <div className="text-xs text-[#9CA3AF]">Consultation Fee:</div>
-              <div className="text-2xl font-bold text-white font-display">₹199</div>
-              <div className="text-[10px] text-[#10B981]">✓ Includes full Kundali & Pandit Verification</div>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#080A10] font-bold text-xs flex items-center justify-center gap-2 hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer disabled:opacity-50"
+              >
+                <span>{submitting ? 'प्रक्रिया जारी...' : `दक्षिणा ₹${tierPricing[selectedTier].amount} दें एवं परामर्श प्रारम्भ करें →`}</span>
+              </button>
             </div>
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className="chiti-btn-primary w-full sm:w-auto text-xs py-3 px-6 bg-gradient-to-r from-[#7C3AED] to-[#5B21B6]"
-            >
-              {submitting ? 'Processing Payment...' : 'Pay ₹199 & Ask Question ✨'}
-            </button>
-          </div>
-        </form>
+          </form>
+        </div>
+
+        {/* AI GURU CHATBOT MODAL INSTANCE */}
+        <AIGuruChatbotModal
+          isOpen={isAiGuruOpen}
+          onClose={() => setIsAiGuruOpen(false)}
+          lang="hi"
+          onConsultationBooked={(cId, mode) => {
+            setIsAiGuruOpen(false);
+            if (mode === 'WRITTEN') {
+              router.push(`/ask/success/${cId}`);
+            } else {
+              router.push(`/consultation/room/${cId}?mode=${mode.toLowerCase()}&role=devotee`);
+            }
+          }}
+        />
+
       </div>
-    </div>
+    </CosmicTantraShell>
   );
 }

@@ -1,0 +1,255 @@
+{
+  "summary": {
+    "Sun": {
+      "mean": 20.43712316630854,
+      "median": 20.414695397448668,
+      "p95": 20.84003375030079,
+      "p99": 20.846133417171586,
+      "max": 20.84794618831438
+    },
+    "Moon": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "p99": 0,
+      "max": 0
+    },
+    "Mars": {
+      "mean": 12.980747176866503,
+      "median": 14.340829320781268,
+      "p95": 20.36087465305627,
+      "p99": 20.79428699159962,
+      "max": 20.873302692461948
+    },
+    "Mercury": {
+      "mean": 19.598000934320385,
+      "median": 19.681698861813857,
+      "p95": 20.67612815449138,
+      "p99": 20.837116597522254,
+      "max": 20.867025305915377
+    },
+    "Jupiter": {
+      "mean": 13.158382208482344,
+      "median": 14.754750773568048,
+      "p95": 20.369366129352784,
+      "p99": 20.753831181173155,
+      "max": 20.83860961420214
+    },
+    "Venus": {
+      "mean": 17.362418246931497,
+      "median": 17.526923661534966,
+      "p95": 20.467361495184377,
+      "p99": 20.813369236248036,
+      "max": 20.93977713420827
+    },
+    "Saturn": {
+      "mean": 12.979719153770699,
+      "median": 14.402650593183353,
+      "p95": 20.3717920498093,
+      "p99": 20.7500068203899,
+      "max": 20.841109832167604
+    }
+  },
+  "worst20": [
+    {
+      "pointIndex": 43,
+      "name": "Uniform Sample #43 (1878)",
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1878-02-20T23:02:23.860Z",
+      "body": "Venus",
+      "refLongitude": 332.6785037992893,
+      "candLongitude": 332.6843204040488,
+      "diffArcsec": 20.93977713420827
+    },
+    {
+      "pointIndex": 695,
+      "name": "Earth Perihelion Extreme 2038",
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2038-01-03T12:00:00.000Z",
+      "body": "Venus",
+      "refLongitude": 284.11004419294716,
+      "candLongitude": 284.11584799612433,
+      "diffArcsec": 20.89369143782278
+    },
+    {
+      "pointIndex": 696,
+      "name": "Earth Perihelion Extreme 2040",
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2040-01-03T12:00:00.000Z",
+      "body": "Mars",
+      "refLongitude": 101.49289036982753,
+      "candLongitude": 101.48709223019074,
+      "diffArcsec": 20.873302692461948
+    },
+    {
+      "pointIndex": 699,
+      "name": "Earth Perihelion Extreme 2046",
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "2046-01-03T12:00:00.000Z",
+      "body": "Venus",
+      "refLongitude": 280.1175090237987,
+      "candLongitude": 280.1233057538541,
+      "diffArcsec": 20.86822819946974
+    },
+    {
+      "pointIndex": 13,
+      "name": "Uniform Sample #13 (1858)",
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1858-01-15T13:26:23.960Z",
+      "body": "Mercury",
+      "refLongitude": 294.5642663275539,
+      "candLongitude": 294.57006272347223,
+      "diffArcsec": 20.867025305915377
+    },
+    {
+      "pointIndex": 122,
+      "name": "Uniform Sample #122 (1931)",
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1931-01-27T07:31:11.597Z",
+      "body": "Mars",
+      "refLongitude": 127.09367178893115,
+      "candLongitude": 127.08787541148718,
+      "diffArcsec": 20.866958798296764
+    },
+    {
+      "pointIndex": 635,
+      "name": "Earth Perihelion Extreme 1918",
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1918-01-03T12:00:00.000Z",
+      "body": "Mercury",
+      "refLongitude": 282.07440815644634,
+      "candLongitude": 282.08020211761345,
+      "diffArcsec": 20.85826020161221
+    },
+    {
+      "pointIndex": 633,
+      "name": "Earth Perihelion Extreme 1914",
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1914-01-03T12:00:00.000Z",
+      "body": "Mars",
+      "refLongitude": 105.52199805624656,
+      "candLongitude": 105.51620478707196,
+      "diffArcsec": 20.855769028571558
+    },
+    {
+      "pointIndex": 627,
+      "name": "Earth Perihelion Extreme 1902",
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1902-01-03T12:00:00.000Z",
+      "body": "Mercury",
+      "refLongitude": 282.94410140460377,
+      "candLongitude": 282.9498933116174,
+      "diffArcsec": 20.850865249121853
+    },
+    {
+      "pointIndex": 650,
+      "name": "Earth Perihelion Extreme 1948",
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1948-01-03T12:00:00.000Z",
+      "body": "Mercury",
+      "refLongitude": 281.99523418661727,
+      "candLongitude": 282.0010253769867,
+      "diffArcsec": 20.8482853300211
+    },
+    {
+      "pointIndex": 604,
+      "name": "Earth Perihelion Extreme 1856",
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1856-01-03T12:00:00.000Z",
+      "body": "Mercury",
+      "refLongitude": 283.88883060533806,
+      "candLongitude": 283.8946217783662,
+      "diffArcsec": 20.848222901213376
+    },
+    {
+      "pointIndex": 615,
+      "name": "Earth Perihelion Extreme 1878",
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1878-01-03T12:00:00.000Z",
+      "body": "Sun",
+      "refLongitude": 283.04584848402703,
+      "candLongitude": 283.05163958019045,
+      "diffArcsec": 20.84794618831438
+    },
+    {
+      "pointIndex": 630,
+      "name": "Earth Perihelion Extreme 1908",
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1908-01-03T12:00:00.000Z",
+      "body": "Sun",
+      "refLongitude": 281.7277984496943,
+      "candLongitude": 281.7335894409266,
+      "diffArcsec": 20.84756843623836
+    },
+    {
+      "pointIndex": 668,
+      "name": "Earth Perihelion Extreme 1984",
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1984-01-03T12:00:00.000Z",
+      "body": "Sun",
+      "refLongitude": 282.29411552157285,
+      "candLongitude": 282.2999064675173,
+      "diffArcsec": 20.847405400036223
+    },
+    {
+      "pointIndex": 611,
+      "name": "Earth Perihelion Extreme 1870",
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1870-01-03T12:00:00.000Z",
+      "body": "Sun",
+      "refLongitude": 282.97995609023474,
+      "candLongitude": 282.985746831524,
+      "diffArcsec": 20.846668641388533
+    },
+    {
+      "pointIndex": 645,
+      "name": "Earth Perihelion Extreme 1938",
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1938-01-03T12:00:00.000Z",
+      "body": "Sun",
+      "refLongitude": 282.47133043459485,
+      "candLongitude": 282.47712114707076,
+      "diffArcsec": 20.846564913290422
+    },
+    {
+      "pointIndex": 626,
+      "name": "Earth Perihelion Extreme 1900",
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1900-01-03T12:00:00.000Z",
+      "body": "Sun",
+      "refLongitude": 282.7029494555795,
+      "candLongitude": 282.7087401612466,
+      "diffArcsec": 20.84654040154419
+    },
+    {
+      "pointIndex": 201,
+      "name": "Uniform Sample #201 (1984)",
+      "category": "UNIFORM_SAMPLE",
+      "timestampUtc": "1984-01-01T15:59:59.333Z",
+      "body": "Sun",
+      "refLongitude": 280.42448959457136,
+      "candLongitude": 280.430280294751,
+      "diffArcsec": 20.84652064677357
+    },
+    {
+      "pointIndex": 634,
+      "name": "Earth Perihelion Extreme 1916",
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1916-01-03T12:00:00.000Z",
+      "body": "Sun",
+      "refLongitude": 281.79369346489204,
+      "candLongitude": 281.79948409274846,
+      "diffArcsec": 20.84626028308776
+    },
+    {
+      "pointIndex": 653,
+      "name": "Earth Perihelion Extreme 1954",
+      "category": "ORBITAL_EXTREME",
+      "timestampUtc": "1954-01-03T12:00:00.000Z",
+      "body": "Sun",
+      "refLongitude": 282.58848948581704,
+      "candLongitude": 282.5942801126565,
+      "diffArcsec": 20.84625662214421
+    }
+  ]
+}

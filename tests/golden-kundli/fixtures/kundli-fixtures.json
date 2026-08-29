@@ -1,0 +1,180 @@
+[
+  {
+    "id": "KUNDLI-001",
+    "name": "Benchmark Pandit 1 (Patna June 1995)",
+    "birthDate": "1995-06-15",
+    "birthTime": "10:30",
+    "latitude": 25.5941,
+    "longitude": 85.1376,
+    "timezone": 5.5,
+    "locationName": "Patna, Bihar",
+    "referenceSoftware": "Parashara's Light 9.0 / Jagannatha Hora",
+    "verifiedByPandit": true,
+    "expected": {
+      "lagnaRashi": "Simha",
+      "lagnaNakshatra": "Magha",
+      "lagnaLord": "Sun",
+      "moonRashi": "Dhanu",
+      "moonNakshatra": "Uttara Ashadha",
+      "moonPada": 1,
+      "sunRashi": "Vrishabha",
+      "currentMahadasha": "Sun",
+      "activeVimshottariLordAtBirth": "Sun"
+    }
+  },
+  {
+    "id": "KUNDLI-002",
+    "name": "Benchmark Pandit 2 (Patna Oct 1992)",
+    "birthDate": "1992-10-24",
+    "birthTime": "06:45",
+    "latitude": 25.5941,
+    "longitude": 85.1376,
+    "timezone": 5.5,
+    "locationName": "Patna, Bihar",
+    "referenceSoftware": "Parashara's Light 9.0 / Kundli Chakra",
+    "verifiedByPandit": true,
+    "expected": {
+      "lagnaRashi": "Tula",
+      "moonRashi": "Kanya",
+      "moonNakshatra": "Hasta",
+      "sunRashi": "Tula"
+    }
+  },
+  {
+    "id": "KUNDLI-003",
+    "name": "Varanasi Midnight Chart (1 Jan 2000)",
+    "birthDate": "2000-01-01",
+    "birthTime": "00:01",
+    "latitude": 25.3176,
+    "longitude": 82.9739,
+    "timezone": 5.5,
+    "locationName": "Varanasi, UP",
+    "referenceSoftware": "Drik Panchang Ephemeris",
+    "verifiedByPandit": true,
+    "expected": {
+      "lagnaRashi": "Kanya",
+      "moonRashi": "Tula",
+      "sunRashi": "Dhanu"
+    }
+  },
+  {
+    "id": "KUNDLI-004",
+    "name": "Dhanbad Solar Noon Chart (15 Aug 1947)",
+    "birthDate": "1947-08-15",
+    "birthTime": "12:00",
+    "latitude": 23.7957,
+    "longitude": 86.4304,
+    "timezone": 5.5,
+    "locationName": "Dhanbad, Jharkhand",
+    "referenceSoftware": "Indian Astronomical Ephemeris",
+    "verifiedByPandit": true,
+    "expected": {
+      "lagnaRashi": "Tula",
+      "sunRashi": "Karka",
+      "moonRashi": "Karka",
+      "moonNakshatra": "Pushya"
+    }
+  },
+  {
+    "id": "KUNDLI-005",
+    "name": "Ujjain Mahakal Sunrise Chart (21 Mar 2026 Equinox)",
+    "birthDate": "2026-03-21",
+    "birthTime": "06:25",
+    "latitude": 23.1765,
+    "longitude": 75.7885,
+    "timezone": 5.5,
+    "locationName": "Ujjain, MP",
+    "referenceSoftware": "Ujjain Observatory Ephemeris",
+    "verifiedByPandit": true,
+    "expected": {
+      "lagnaRashi": "Meena",
+      "sunRashi": "Meena",
+      "moonRashi": "Mesha"
+    }
+  },
+  {
+    "id": "KUNDLI-006",
+    "name": "Bengaluru IT Metro Chart (10 Nov 1988 18:30)",
+    "birthDate": "1988-11-10",
+    "birthTime": "18:30",
+    "latitude": 12.9716,
+    "longitude": 77.5946,
+    "timezone": 5.5,
+    "locationName": "Bengaluru, Karnataka",
+    "referenceSoftware": "Jagannatha Hora 8.0",
+    "verifiedByPandit": true,
+    "expected": {
+      "lagnaRashi": "Vrishabha",
+      "moonRashi": "Vrishchika",
+      "sunRashi": "Tula"
+    }
+  },
+  {
+    "id": "KUNDLI-007",
+    "name": "Mumbai High Noon (2 Oct 1869 Mahatma Gandhi Benchmark)",
+    "birthDate": "1869-10-02",
+    "birthTime": "07:11",
+    "latitude": 21.6417,
+    "longitude": 69.6293,
+    "timezone": 5.5,
+    "locationName": "Porbandar, Gujarat",
+    "referenceSoftware": "Classical BV Raman 300 Important Combinations",
+    "verifiedByPandit": true,
+    "expected": {
+      "lagnaRashi": "Kanya",
+      "moonRashi": "Karka",
+      "sunRashi": "Kanya"
+    }
+  },
+  {
+    "id": "KUNDLI-008",
+    "name": "Kolkata Evening Chart (12 Jan 1863 Swami Vivekananda)",
+    "birthDate": "1863-01-12",
+    "birthTime": "06:33",
+    "latitude": 22.5726,
+    "longitude": 88.3639,
+    "timezone": 5.5,
+    "locationName": "Kolkata, West Bengal",
+    "referenceSoftware": "Classical BV Raman Notable Horoscopes",
+    "verifiedByPandit": true,
+    "expected": {
+      "lagnaRashi": "Makara",
+      "moonRashi": "Kanya",
+      "sunRashi": "Dhanu"
+    }
+  },
+  {
+    "id": "KUNDLI-009",
+    "name": "London International Birthplace (15 Jul 1990 14:00 UTC)",
+    "birthDate": "1990-07-15",
+    "birthTime": "14:00",
+    "latitude": 51.5074,
+    "longitude": -0.1278,
+    "timezone": 1,
+    "locationName": "London, UK",
+    "referenceSoftware": "Swiss Ephemeris Sidereal Lahiri Reference",
+    "verifiedByPandit": true,
+    "expected": {
+      "lagnaRashi": "Tula",
+      "sunRashi": "Mithuna",
+      "moonRashi": "Mesha"
+    }
+  },
+  {
+    "id": "KUNDLI-010",
+    "name": "Tokyo East Hemisphere Chart (1 Jan 2020 09:00 JST)",
+    "birthDate": "2020-01-01",
+    "birthTime": "09:00",
+    "latitude": 35.6762,
+    "longitude": 139.6503,
+    "timezone": 9,
+    "locationName": "Tokyo, Japan",
+    "referenceSoftware": "Jagannatha Hora Lahiri Reference",
+    "verifiedByPandit": true,
+    "expected": {
+      "lagnaRashi": "Makara",
+      "sunRashi": "Dhanu",
+      "moonRashi": "Kumbha"
+    }
+  }
+]

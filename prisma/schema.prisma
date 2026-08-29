@@ -30,8 +30,27 @@ enum AstrologySpecialty {
 }
 
 enum ConsultationStatus {
-  DRAFT
+  NEW
+  INTAKE_IN_PROGRESS
+  INTAKE_COMPLETE
   PAYMENT_PENDING
+  PAYMENT_VERIFIED
+  SCHOLAR_ASSIGNMENT_PENDING
+  SCHOLAR_ASSIGNED
+  CALLBACK_PENDING
+  CONNECTED
+  IN_CONSULTATION
+  COMPLETED
+  // Failure / Exceptional states
+  PAYMENT_FAILED
+  CUSTOMER_UNREACHABLE
+  SCHOLAR_UNAVAILABLE
+  CANCELLED
+  REFUND_PENDING
+  REFUNDED
+  ESCALATED
+  // Legacy backward compatibility
+  DRAFT
   PAID
   CALCULATING
   AI_DRAFT_READY
@@ -44,7 +63,6 @@ enum ConsultationStatus {
   AI_FAILED
   REVIEW_REJECTED
   DELIVERY_FAILED
-  REFUNDED
 }
 
 model AstrologyPractitionerInvite {
@@ -87,12 +105,13 @@ model AstrologyConsultant {
   qualifications       String?
   profilePhoto         String?            @default("🧙")
   specialty            AstrologySpecialty @default(KUNDALI)
-  pricePerSession      Int                @default(199)
+  pricePerSession      Int                @default(501)
   durationMinutes      Int                @default(30)
   badges               String[]           @default(["Verified Practitioner"])
   rating               Float              @default(5.0)
   reviewCount          Int                @default(0)
   isVerified           Boolean            @default(true)
+  isTestFixture        Boolean            @default(false)
   onboardingStatus     OnboardingStatus   @default(COMPLETED)
   isActive             Boolean            @default(true)
   aiReviewConsent      Boolean            @default(true)
@@ -107,6 +126,7 @@ model AstrologyConsultant {
   @@index([projectId])
   @@index([phone])
   @@index([onboardingStatus])
+  @@index([isTestFixture])
 }
 
 model AstrologyConsultation {
@@ -145,21 +165,37 @@ model AstrologyConsultation {
   approvedBy           String?
   approvedAt           DateTime?
 
+  // Caller vs Subject separation
+  callerPhone          String?
+  callerName           String?
+  relationship         String?            @default("SELF")
+  birthTimeConfidence  String?            @default("EXACT") // EXACT, APPROXIMATE, UNKNOWN
+  
+  // Consultation Lifecycle Timing & Notes
+  connectedAt          DateTime?
+  completedAt          DateTime?
+  sessionDurationSec   Int?               @default(0)
+  consultationNotes    Json?              // 4 Quadrants (calculatedAstrology, scholarInterpretation, userReportedFact, traditionalRemedy)
+  cancellationReason   String?
+
   // Payment & Delivery
   paymentProvider      String?            @default("INTERNAL_TEST")
   paymentStatus        String             @default("PENDING")
-  amount               Int                @default(199)
+  amount               Int                @default(501)
   deliveryChannel      String?            @default("WHATSAPP")
   deliveredAt          DateTime?
 
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
 
-  practitioner AstrologyConsultant?  @relation(fields: [practitionerId], references: [id], onDelete: SetNull)
-  auditLogs    AstrologyAuditLog[]
+  customerProfileId    String?
+  customerProfile      AstrologyCustomerProfile? @relation(fields: [customerProfileId], references: [id], onDelete: SetNull)
+  practitioner         AstrologyConsultant?      @relation(fields: [practitionerId], references: [id], onDelete: SetNull)
+  auditLogs            AstrologyAuditLog[]
 
   @@index([projectId, status])
   @@index([practitionerId])
+  @@index([customerProfileId])
   @@index([isTestCase])
 }
 
@@ -178,4 +214,89 @@ model AstrologyAuditLog {
   @@index([practitionerId])
   @@index([consultationId])
   @@index([eventType])
+}
+
+// Phase 2: Customer Profile + Family + OTP + DPDP (WhatsApp primary identity)
+model AstrologyCustomerProfile {
+  id                String    @id @default(uuid())
+  projectId         String    @default("cosmic-tantra")
+  // Primary identity (WhatsApp number is canonical for India audience)
+  whatsappPhone     String    @unique
+  email             String?
+  fullName          String?
+  // DPDP compliance fields
+  consentGiven      Boolean   @default(false)
+  consentAt         DateTime?
+  consentVersion    String?   @default("v1-dpdp-2023")
+  dataRetentionDays Int?      @default(365) // configurable per user
+  isDeleted         Boolean   @default(false)
+  deletedAt         DateTime?
+  // OTP sync / verification
+  lastOtpVerifiedAt DateTime?
+  otpVerified       Boolean   @default(false)
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  familyMembers     AstrologyFamilyMember[]
+  consultations     AstrologyConsultation[] // link via phone if needed
+
+  @@index([projectId])
+  @@index([whatsappPhone])
+  @@index([isDeleted])
+}
+
+model AstrologyFamilyMember {
+  id             String    @id @default(uuid())
+  profileId      String
+  name           String
+  birthDate      DateTime?
+  birthTime      String?   @default("10:30")
+  birthCity      String?   @default("Patna")
+  birthLat       Float?
+  birthLon       Float?
+  relation       String    @default("SELF") // SELF, SPOUSE, CHILD, PARENT, SIBLING, OTHER
+  gender         String?   // MALE, FEMALE, OTHER
+  // DPDP minor flag
+  isMinor        Boolean   @default(false)
+  guardianConsent Boolean  @default(false)
+
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  profile        AstrologyCustomerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@index([relation])
+}
+
+model OtpVerification {
+  id          String   @id @default(uuid())
+  phone       String
+  otpHash     String   // never store plain OTP
+  purpose     String   @default("PROFILE_VERIFY") // PROFILE_VERIFY, CONSULTATION, DELIVERY_CONFIRM
+  expiresAt   DateTime
+  verifiedAt  DateTime?
+  attempts    Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([phone])
+  @@index([purpose])
+  @@index([expiresAt])
+}
+
+// Canonical Dynamic Service Catalog Model
+model AstrologyService {
+  id              String   @id @default(uuid())
+  code            String   @unique // e.g. "CONSULT_15", "CONSULT_30"
+  name            String
+  durationMinutes Int
+  priceInr        Int
+  isActive        Boolean  @default(true)
+  isFeatured      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([code])
+  @@index([isActive])
 }

@@ -1,0 +1,77 @@
+{
+  "meta": {
+    "dataset": "COSMIC_TANTRA_HISTORICAL_PERSON_PROVENANCE_V1",
+    "description": "Immutable historical birth records with explicit local time standard provenance and UTC derivation analysis.",
+    "createdDate": "2026-08-30T00:10:00Z"
+  },
+  "figures": [
+    {
+      "id": "FIG-001",
+      "name": "Swami Vivekananda",
+      "birthDate": "1863-01-12",
+      "reportedTime": "06:33",
+      "location": "Kolkata, Bengal Presidency, British India",
+      "latitude": 22.5726,
+      "longitude": 88.3639,
+      "sourceReportedLocalTime": "1863-01-12 06:33 LMT (Sunrise Chart)",
+      "sourceLocation": "Kolkata, India (22°34'N, 88°22'E)",
+      "sourceTimeStandard": "LOCAL_MEAN_TIME",
+      "interpretedUtc": "1863-01-12T00:39:33.000Z",
+      "interpretedTimezoneOffset": 5.8908,
+      "interpretationReason": "Kolkata observed Local Mean Time (UTC+5:53:27) in 1863 prior to Indian Railway Time (1870) and prior to nationwide IST (+5:30) adoption in 1906.",
+      "confidence": "MEDIUM_HIGH (HISTORICAL_LMT_CONFIRMED)",
+      "historicalUncertaintyNotes": "Some classical Bengali astrologers use Sunrise instant as 06:31:30 vs 06:33:00. This produces a ~0°20' shift in Lagna but preserves Sagittarius (Dhanu) Ascendant."
+    },
+    {
+      "id": "FIG-002",
+      "name": "Mahatma Gandhi",
+      "birthDate": "1869-10-02",
+      "reportedTime": "07:11",
+      "location": "Porbandar, Kathiawar Agency, British India",
+      "latitude": 21.6417,
+      "longitude": 69.6293,
+      "sourceReportedLocalTime": "1869-10-02 07:11 LMT",
+      "sourceLocation": "Porbandar, India (21°38'N, 69°38'E)",
+      "sourceTimeStandard": "LOCAL_MEAN_TIME",
+      "interpretedUtc": "1869-10-02T02:32:29.000Z",
+      "interpretedTimezoneOffset": 4.6419,
+      "interpretationReason": "Porbandar observed Local Mean Time (UTC+4:38:31) in 1869. B.V. Raman (Notable Horoscopes) and BV Raman 300 Combinations establish 07:11 LMT yielding Libra (Tula 17°) Lagna.",
+      "confidence": "HIGH (PUBLISHED_VEDIC_BENCHMARK)",
+      "historicalUncertaintyNotes": "If erroneously calculated with standard IST (+5:30), birth instant shifts by 51 minutes to 01:41 UTC, corrupting the Ascendant into Virgo. LMT is mandatory."
+    },
+    {
+      "id": "FIG-003",
+      "name": "Albert Einstein",
+      "birthDate": "1879-03-14",
+      "reportedTime": "11:30",
+      "location": "Ulm, Kingdom of Württemberg, German Empire",
+      "latitude": 48.4011,
+      "longitude": 9.9876,
+      "sourceReportedLocalTime": "1879-03-14 11:30 LMT",
+      "sourceLocation": "Ulm, Germany (48°24'N, 09°59'E)",
+      "sourceTimeStandard": "LOCAL_MEAN_TIME",
+      "interpretedUtc": "1879-03-14T10:50:03.000Z",
+      "interpretedTimezoneOffset": 0.6658,
+      "interpretationReason": "Germany standardized on Central European Time (CET UTC+1) on April 1, 1893. Birth on 14 March 1879 strictly followed Ulm Local Mean Time (UTC+0:39:57).",
+      "confidence": "HIGH (OFFICIAL_BIRTH_RECORD_STANDARDIZED)",
+      "historicalUncertaintyNotes": "Applying CET (+1.0) shifts the birth instant by 20 minutes to 10:30 UTC, which alters the Lagna by ~5°."
+    },
+    {
+      "id": "FIG-004",
+      "name": "Narendra Modi",
+      "birthDate": "1950-09-17",
+      "reportedTime": "11:00",
+      "location": "Vadnagar, Mehsana District, Gujarat / Bombay State, India",
+      "latitude": 23.7844,
+      "longitude": 72.6322,
+      "sourceReportedLocalTime": "1950-09-17 11:00 IST",
+      "sourceLocation": "Vadnagar, Gujarat, India (23°47'N, 72°38'E)",
+      "sourceTimeStandard": "INDIAN_STANDARD_TIME",
+      "interpretedUtc": "1950-09-17T05:30:00.000Z",
+      "interpretedTimezoneOffset": 5.5,
+      "interpretationReason": "Post-independence India officially established Indian Standard Time (UTC+5:30) as the sole legal civil time standard across all states and provinces.",
+      "confidence": "HIGH (STANDARD_POST_INDEPENDENCE_IST)",
+      "historicalUncertaintyNotes": "Civil time standard is 100% certain (IST +5:30). Reported birth times in biographical public media vary between 09:34, 11:00, and 12:09."
+    }
+  ]
+}

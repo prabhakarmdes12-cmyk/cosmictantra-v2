@@ -30,7 +30,7 @@ export default function BusinessNameNumerologyPage() {
           </div>
           <div className="p-4 rounded-2xl border border-black/[0.06] dark:border-white/[0.06]">
             <div className="font-bold text-[#8E6F1D] dark:text-[#D4AF37] mb-1">Name + Muhurat = complete launch</div>
-            Our ₹199 consultation combines business-name analysis with a chart-aligned Muhurat for opening,
+            Our ₹501 written consultation combines business-name analysis with a chart-aligned Muhurat for opening,
             registry or launch — one decision, one scholar, one folio.
           </div>
         </div>

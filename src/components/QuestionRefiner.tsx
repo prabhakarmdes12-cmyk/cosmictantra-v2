@@ -92,7 +92,7 @@ export default function QuestionRefiner() {
           onClick={handleRefineClick}
           className="chiti-btn-primary py-3 px-6 text-xs font-bold shrink-0"
         >
-          Formulate My Question — ₹199 <ArrowRight className="w-4 h-4" />
+          Formulate My Question — ₹501 <ArrowRight className="w-4 h-4" />
         </Link>
       </div>
     </section>

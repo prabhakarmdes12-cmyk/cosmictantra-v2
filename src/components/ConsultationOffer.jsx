@@ -15,7 +15,7 @@ export default function ConsultationOffer({ onOpenConsultation, lang = 'en', the
     },
     {
       step: '०२',
-      title: 'निश्चित दक्षिणा — ₹१९९',
+      title: 'निश्चित दक्षिणा — ₹५०१',
       desc: 'प्रति मिनट मीटर का कोई तनाव नहीं। शान्ति से विचार कर प्रश्न पूछने की पूर्ण स्वतन्त्रता।'
     },
     {
@@ -41,7 +41,7 @@ export default function ConsultationOffer({ onOpenConsultation, lang = 'en', the
     },
     {
       step: '02',
-      title: 'Fixed Price — ₹199',
+      title: 'Fixed Price — ₹501',
       desc: 'No ticking per-minute timers. No anxiety of rushing conversation. Flat transparent honorarium.'
     },
     {
@@ -85,7 +85,7 @@ export default function ConsultationOffer({ onOpenConsultation, lang = 'en', the
           {PILLARS.map((pillar) => (
             <div
               key={pillar.step}
-              className="p-4 rounded-2xl bg-[#FFFFFF] dark:bg-[#0B0C11] border border-black/[0.08] dark:border-white/[0.07] flex flex-col justify-between shadow-xs hover:shadow-md transition-shadow"
+              className="p-4 rounded-3xl border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 dark:border-white/[0.07] flex flex-col justify-between shadow-xs hover:shadow-md transition-shadow"
             >
               <div>
                 <div className="text-[11px] text-[#8E6F1D] dark:text-[#D4AF37] font-bold mb-2">

@@ -97,7 +97,7 @@ export const LIBRARY = [
     sections: [
       { heading: 'Universal vs personal', body: 'A calendar\'s green tick is universal (good weekday, strong nakshatra, no Rikta tithi). A personal Muhurat adds your chart: Lagna of the moment, your Moon sign, house lords, and dasha-appropriate remedies.' },
       { heading: 'The classical checks', body: 'Lagna Shuddhi (a strong, unafflicted ascendant), avoidance of Vedha (planetary opposition to the Lagna lord), tithi/nakshatra quality and, for weddings, compatibility of both charts — the full package is what a jyotishi weighs.' },
-      { heading: 'Built into our product', body: 'The Muhurat Discovery workspace shows universal windows; the ₹199 folio adds the personal chart alignment with a scholar\'s verification record.' },
+      { heading: 'Built into our product', body: 'The Muhurat Discovery workspace shows universal windows; the ₹501 folio adds the personal chart alignment with a scholar\'s verification record.' },
     ],
     toolLinks: [{ label: 'Explore Muhurat Discovery', href: '/#muhurat-section' }],
   },

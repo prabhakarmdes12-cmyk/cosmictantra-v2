@@ -1,20 +1,43 @@
 /**
- * BILINGUAL TRANSLATION DICTIONARY (ENGLISH & SHUDDHA HINDI)
- * Complete localization across all CosmicTantra modules & Chiti UDS v3 tokens.
+ * MULTI-LINGUAL TRANSLATION DICTIONARY FOR COSMIC TANTRA
+ * Complete localization across English, Shuddha Hindi, Sanskrit, Tamil, Telugu, Kannada, Malayalam, Bengali, Marathi, Gujarati, Odia, Punjabi.
  */
 
-export const TRANSLATIONS = {
+import { REGIONAL_JYOTISH_TERMS } from './regionalTranslations';
+
+export const SUPPORTED_LANGUAGES = [
+  { code: 'hi', label: 'हिन्दी', name: 'Hindi', script: 'Devanagari' },
+  { code: 'en', label: 'English', name: 'English', script: 'Latin' },
+  { code: 'sa', label: 'संस्कृतम्', name: 'Sanskrit', script: 'Devanagari' },
+  { code: 'ta', label: 'தமிழ்', name: 'Tamil', script: 'Tamil' },
+  { code: 'te', label: 'తెలుగు', name: 'Telugu', script: 'Telugu' },
+  { code: 'kn', label: 'ಕನ್ನಡ', name: 'Kannada', script: 'Kannada' },
+  { code: 'ml', label: 'മലയാളം', name: 'Malayalam', script: 'Malayalam' },
+  { code: 'bn', label: 'বাংলা', name: 'Bengali', script: 'Bengali' },
+  { code: 'mr', label: 'मराठी', name: 'Marathi', script: 'Devanagari' },
+  { code: 'gu', label: 'ગુજરાતી', name: 'Gujarati', script: 'Gujarati' },
+  { code: 'od', label: 'ଓଡ଼ିଆ', name: 'Odia', script: 'Odia' },
+  { code: 'pa', label: 'ਪੰਜਾਬੀ', name: 'Punjabi', script: 'Gurmukhi' },
+];
+
+const BASE_TRANSLATIONS = {
   en: {
-    brandSubtitle: 'Vedic Precision • 2026',
+    brandSubtitle: 'VEDIC PRECISION',
     nav: {
       today: 'Panchang',
       muhurat: 'Muhurat',
       kundali: 'Kundali',
+      jyotishi: 'Jyotishi',
+      explore: 'Explore',
       dasha: 'Dasha',
       festivals: 'Calendar',
       scholars: 'Scholars',
       observatory: 'Observatory',
-      askJyotishi: 'Ask a Jyotishi',
+      milan: 'Kundali Milan',
+      numerology: 'Numerology',
+      tools: 'Tools',
+      methodology: 'Methodology',
+      askJyotishi: 'Ask a Jyotishi →',
       changeLocation: 'Change Location',
       search: 'Search',
       capability: 'Capability Registry',
@@ -24,7 +47,7 @@ export const TRANSLATIONS = {
       dashaChapters: 'Dasha Chapters',
       vedicCalendar: 'Vedic Calendar',
       practicingScholars: 'Practicing Scholars',
-      askWritten: 'Ask a Jyotishi (₹199 Written)'
+      askWritten: 'Request Scholarly Written Folio'
     },
     hero: {
       kashiBadge: 'Kashi Vedic Timekeeper',
@@ -32,11 +55,13 @@ export const TRANSLATIONS = {
       headline1: 'Vedic Precision.',
       headline2: 'Human Wisdom.',
       subtitle: 'Understand the day. Understand your chart. Ask when it matters.',
-      description: 'Rooted in the unbroken astronomical scholarship of Varanasi. Location-aware Vedic time, deterministic sidereal chart ephemeris, and focused written guidance reviewed by practicing Jyotish scholars.',
-      createKundali: 'Create My Kundali',
-      seePanchang: "See Today's Panchang",
-      askScholar: 'Ask a Scholar →',
-      footerNote: 'Chitra Paksha (Lahiri) Sidereal Mathematics. Banaras Hindu University scholarly tradition.',
+      description: 'Built on classical Jyotish calculation methods, location-aware Vedic time, Lahiri sidereal calculations, and interpretation reviewed by practicing Jyotish professionals.',
+      seePanchang: "SEE TODAY'S PANCHANG →",
+      createKundali: 'CREATE MY KUNDALI →',
+      askScholar: 'Ask a Jyotishi →',
+      yourVedicDay: 'YOUR VEDIC DAY',
+      personaliseMyDay: 'PERSONALISE MY DAY →',
+      footerNote: 'Chitra Paksha (Lahiri) Sidereal Mathematics • Classical astronomical calculation methods',
       cosmicNow: 'Cosmic Now',
       cosmicNowSub: 'Kashi Astronomical Dial',
       diurnalArc: 'Diurnal Solar Arc',
@@ -50,7 +75,8 @@ export const TRANSLATIONS = {
       rahuKaal: 'Rahu Kaal',
       abhijit: 'Abhijit',
       viewAllTimes: 'Panchang →',
-      ephemerisStamp: 'Banaras Ephemeris 2026'
+      ephemerisStamp: 'Sidereal Ephemeris',
+      viewMethodology: 'View methodology →'
     },
     panchang: {
       tag: 'Kashi Panchang • Diurnal Ephemeris',
@@ -103,9 +129,9 @@ export const TRANSLATIONS = {
       careerTitle: 'Career & Enterprise',
       careerSub: 'Decision-Oriented Timing',
       careerDesc: 'Evaluate 10th House karmic tendencies, Amatyakaraka, and Dasha transition windows.',
-      askTitle: 'Scholarly Consultation',
-      askSub: 'One Focused Written Question — ₹199',
-      askDesc: 'Bypass noisy per-minute call marketplaces. Receive permanent, written counsel from a Vedic scholar.'
+      askTitle: 'विद्वत्-विवेचना (Scholarly Written Folio)',
+      askSub: 'One Focused Written Question — शुभ दक्षिणा ₹५०१',
+      askDesc: 'Receive Permanent Written Counsel (अक्षुण्ण लिखित परामर्श) from a practicing Jyotish scholar.'
     },
     muhurat: {
       tag: 'Elective Astrology (Muhurat Shastra)',
@@ -134,7 +160,7 @@ export const TRANSLATIONS = {
       dob: 'Date of Birth',
       tob: 'Exact Time (24h)',
       pob: 'Birth Place',
-      sampleFill: 'Fill Sample (Patna, 1992)',
+      sampleFill: 'Fill Sample (Patna, 5012)',
       submitBtn: 'Construct Janma Kundali',
       lagna: 'Lagna (Ascendant)',
       moonSign: 'Chandra Rashi (Moon Sign)',
@@ -200,7 +226,7 @@ export const TRANSLATIONS = {
       interp4: 'Complex Personal Context',
       interp4Desc: 'Listening to your real decision or life inflection point and mapping where human initiative meets cosmic timing.',
       quote: '"That is where a practicing Jyotishi enters."',
-      cta: 'Ask One Focused Question — ₹199'
+      cta: 'Ask One Focused Question — ₹501'
     },
     scholars: {
       tag: 'Real Scholars • Authentic Lineage',
@@ -222,7 +248,7 @@ export const TRANSLATIONS = {
       pipelineHeading: 'How your question becomes wisdom.',
       readyHeading: 'Ready to bring your decision to an authentic scholar?',
       readySub: 'Includes full natal ephemeris calculation + detailed human synthesis.',
-      askCta: 'Ask One Question — ₹199'
+      askCta: 'Offer शुभ दक्षिणा ₹५०१ & Submit Inquiry'
     },
     sampleConsultation: {
       tag: 'Sample Deliverable Format',
@@ -242,7 +268,7 @@ export const TRANSLATIONS = {
       vagueTag: 'VAGUE / FATALISTIC QUESTION',
       vagueNote: 'Produces broad, generalized statements with little actionable strategy.',
       sharpTag: 'SHARP / DECISION-ORIENTED QUESTION',
-      formulateBtn: 'Formulate this inquiry for ₹199 consultation →'
+      formulateBtn: 'Formulate this inquiry for ₹501 consultation →'
     },
     knowledge: {
       tag: 'Knowledge Architecture',
@@ -254,14 +280,14 @@ export const TRANSLATIONS = {
     finalCta: {
       heading: 'One question still on your mind?',
       subtitle: 'When calculation alone is not enough, bring your decision to an experienced Jyotish scholar.',
-      cta: 'Ask One Question — ₹199',
+      cta: 'Offer शुभ दक्षिणा ₹५०१ & Submit Inquiry',
       meetBtn: 'Meet the Scholars',
       trustNote: 'No automated bots. No ticking timers. Full human written review.'
     },
     footer: {
       tagline: 'Vedic Intelligence Interface 2026. Deterministic Panchang & Kundali computation with focused written human Jyotish consultations.',
       capabilityBtn: 'Capability Registry',
-      askBtn: 'Ask a Jyotishi — ₹199',
+      askBtn: 'Ask a Jyotishi — ₹501',
       col1: 'Today',
       col2: 'Muhurat',
       col3: 'Jyotish',
@@ -276,16 +302,22 @@ export const TRANSLATIONS = {
   },
 
   hi: {
-    brandSubtitle: 'वैदिक खगोल • २०२६',
+    brandSubtitle: 'वैदिक खगोल शुद्धता',
     nav: {
       today: 'पञ्चाङ्ग',
       muhurat: 'मुहूर्त',
       kundali: 'जन्मकुण्डली',
+      jyotishi: 'ज्योतिर्विद्',
+      explore: 'अन्वेषण',
       dasha: 'विंशोत्तरी दशा',
       festivals: 'पर्व तालिका',
       scholars: 'विद्वत्-परिषद्',
       observatory: 'वेधशाला',
-      askJyotishi: 'विद्वान् से परामर्श',
+      milan: 'कुण्डली मिलान',
+      numerology: 'अंक ज्योतिष',
+      tools: 'उपकरण',
+      methodology: 'गणना पद्धति',
+      askJyotishi: 'विद्वान् से परामर्श →',
       changeLocation: 'स्थान बदलें',
       search: 'खोजें',
       capability: 'गणना क्षमता सूची',
@@ -294,8 +326,8 @@ export const TRANSLATIONS = {
       janmaKundali: 'जन्मकुण्डली निर्माण',
       dashaChapters: 'जीवन दशा चक्र',
       vedicCalendar: 'वैदिक पर्व कालदर्शक',
-      practicingScholars: 'काशीय विद्वत्-परिषद्',
-      askWritten: 'लिखित प्रश्न विमर्श (₹१९९)'
+      practicingScholars: 'अभ्यासरत विद्वत्-परिषद्',
+      askWritten: 'लिखित विद्वत्-परामर्श'
     },
     hero: {
       kashiBadge: 'काशी वैदिक काल-गणना',
@@ -303,11 +335,13 @@ export const TRANSLATIONS = {
       headline1: 'वैदिक शुद्धता।',
       headline2: 'मानवीय प्रज्ञा।',
       subtitle: 'दिन को समझें। अपनी कुण्डली को जानें। जब जीवन का निर्णय हो, तब पूछें।',
-      description: 'वाराणसी की अक्षुण्ण खगोलीय परम्परा पर आधारित। अक्षांश-संवेदनशील वैदिक समय, निरयण ग्रह स्पष्टीकरण एवं अनुभवी ज्योतिर्विदों द्वारा हस्ताक्षरित प्रामाणिक लिखित मार्गदर्शन।',
-      createKundali: 'मेरी कुण्डली बनाएं',
-      seePanchang: 'आज का पञ्चाङ्ग देखें',
-      askScholar: 'विद्वान् से पूछें →',
-      footerNote: 'चित्रा पक्ष (लाहिड़ी) निरयण गणित। काशी हिन्दू विश्वविद्यालय एवं सम्पूर्णानन्द विद्वत्-परम्परा।',
+      description: 'शास्त्रीय ज्योतिषीय गणना पद्धतियों, स्थान-संवेदनशील वैदिक समय, लाहिड़ी निरयण ग्रह स्पष्टीकरण एवं अनुभवी ज्योतिर्विदों द्वारा सत्यापित लिखित मार्गदर्शन पर आधारित।',
+      seePanchang: 'आज का पञ्चाङ्ग देखें →',
+      createKundali: 'मेरी कुण्डली बनाएं →',
+      askScholar: 'विद्वान् से परामर्श →',
+      yourVedicDay: 'आपका वैदिक दिन',
+      personaliseMyDay: 'मेरी कुण्डली अनुसार देखें →',
+      footerNote: 'चित्रा पक्ष (लाहिड़ी) निरयण गणित • प्रामाणिक खगोलीय गणना पद्धति',
       cosmicNow: 'प्रत्यक्ष खगोल वेध',
       cosmicNowSub: 'काशीय सौर घटी',
       diurnalArc: 'अहोरात्र सौर चाप',
@@ -321,7 +355,8 @@ export const TRANSLATIONS = {
       rahuKaal: 'राहुकाल',
       abhijit: 'अभिजित',
       viewAllTimes: 'सम्पूर्ण पञ्चाङ्ग →',
-      ephemerisStamp: 'काशी पञ्चाङ्ग २०२६'
+      ephemerisStamp: 'निरयण पञ्चाङ्ग',
+      viewMethodology: 'गणना पद्धति देखें →'
     },
     panchang: {
       tag: 'काशीय पञ्चाङ्ग • अहोरात्र खगोल',
@@ -375,7 +410,7 @@ export const TRANSLATIONS = {
       careerSub: 'निर्णय-केन्द्रित दिशा निर्देश',
       careerDesc: 'दशमेश, अमात्यकारक एवं सक्रिय दशा काल के आधार पर आजीविका सम्बन्धी परामर्श।',
       askTitle: 'विद्वत्-विमर्श (परामर्श)',
-      askSub: 'एक स्पष्ट लिखित प्रश्न — ₹१९९',
+      askSub: 'एक स्पष्ट लिखित प्रश्न — ₹५०१',
       askDesc: 'प्रति-मिनट मीटर के तनाव से मुक्त। लिखित प्रामाणिक परामर्श पत्र प्राप्त करें जिसे सदैव सुरक्षित रख सकें।'
     },
     muhurat: {
@@ -471,7 +506,7 @@ export const TRANSLATIONS = {
       interp4: 'व्यक्तिगत परिस्थिति का सन्दर्भ',
       interp4Desc: 'आपकी वास्तविक दुविधा को सुनकर यह मार्गदर्शन देना कि पुरुषार्थ और प्रारब्ध का तालमेल कैसे बैठाएं।',
       quote: '"यहीं पर एक अभ्यासी ज्योतिर्विद् का प्रवेश होता है। "',
-      cta: 'एक स्पष्ट प्रश्न पूछें — ₹१९९'
+      cta: 'एक स्पष्ट प्रश्न पूछें — ₹५०१'
     },
     scholars: {
       tag: 'काशीय विद्वत्-परम्परा • प्रामाणिक शास्त्रज्ञ',
@@ -493,7 +528,7 @@ export const TRANSLATIONS = {
       pipelineHeading: 'आपका प्रश्न कैसे विद्वत्-मार्गदर्शन बनता है।',
       readyHeading: 'क्या आप अपने महत्वपूर्ण निर्णय पर काशी के विद्वान् से विमर्श हेतु तत्पर हैं?',
       readySub: 'सम्पूर्ण जन्मकुण्डली गणित एवं विस्तृत हस्तलिखित विश्लेषण सम्मिलित।',
-      askCta: 'एक प्रश्न पूछें — ₹१९९'
+      askCta: 'एक प्रश्न पूछें — ₹५०१'
     },
     sampleConsultation: {
       tag: 'परामर्श पत्र का प्रारूप',
@@ -513,7 +548,7 @@ export const TRANSLATIONS = {
       vagueTag: 'अस्पष्ट / भाग्यवादी प्रश्न',
       vagueNote: 'ऐसे प्रश्नों से केवल सामान्य बातें निकलती हैं, कोई व्यावहारिक रणनीति नहीं।',
       sharpTag: 'स्पष्ट / निर्णय-केन्द्रित प्रश्न',
-      formulateBtn: 'इस प्रश्न प्रारूप को ₹१९९ परामर्श हेतु उपयोग करें →'
+      formulateBtn: 'इस प्रश्न प्रारूप को ₹५०१ परामर्श हेतु उपयोग करें →'
     },
     knowledge: {
       tag: 'वैदिक ज्ञानकोष',
@@ -525,14 +560,14 @@ export const TRANSLATIONS = {
     finalCta: {
       heading: 'क्या मन में अभी भी कोई महत्वपूर्ण प्रश्न शेष है?',
       subtitle: 'जब केवल गणित पर्याप्त न हो, तब अपने निर्णय को काशी के अनुभवी विद्वान् के समक्ष रखें।',
-      cta: 'एक प्रश्न पूछें — ₹१९९',
+      cta: 'एक प्रश्न पूछें — ₹५०१',
       meetBtn: 'विद्वानों का परिचय देखें',
       trustNote: 'कोई स्वचालित रोबोट नहीं। कोई मीटर का तनाव नहीं। सम्पूर्ण मानवीय लिखित समीक्षा।'
     },
     footer: {
       tagline: 'वैदिक काल-गणना पटल २०२६। निरयण पञ्चाङ्ग एवं कुण्डली गणित के साथ काशी के विद्वानों द्वारा लिखित परामर्श।',
       capabilityBtn: 'गणना क्षमता सूची',
-      askBtn: 'विद्वान् से परामर्श — ₹१९९',
+      askBtn: 'विद्वान् से परामर्श — ₹५०१',
       col1: 'पञ्चाङ्ग',
       col2: 'मुहूर्त',
       col3: 'ज्योतिष',
@@ -546,3 +581,46 @@ export const TRANSLATIONS = {
     }
   }
 };
+;
+
+// Create a robust Proxy-fallback handler for all regional languages
+const handler = {
+  get(target, prop) {
+    if (prop in target) {
+      return target[prop];
+    }
+    // Fallback to Hindi or English if specific dialect key is missing
+    const regKey = String(prop).toLowerCase();
+    if (regKey in REGIONAL_JYOTISH_TERMS) {
+      const rt = REGIONAL_JYOTISH_TERMS[regKey];
+      const fallback = target.hi || target.en;
+      return {
+        ...fallback,
+        nav: {
+          ...fallback.nav,
+          today: rt.panchang || fallback.nav.today,
+          muhurat: rt.muhurat || fallback.nav.muhurat,
+          kundali: rt.kundali || fallback.nav.kundali,
+          festivals: rt.panchang || fallback.nav.festivals,
+        },
+        hero: {
+          ...fallback.hero,
+          rise: rt.sunrise || fallback.hero.rise,
+          set: rt.sunset || fallback.hero.set,
+          tithi: rt.tithi || fallback.hero.tithi,
+          nakshatra: rt.nakshatra || fallback.hero.nakshatra,
+          yogaKarana: `${rt.yoga} & ${rt.karana}`,
+          rahuKaal: rt.rahuKaal || fallback.hero.rahuKaal,
+          abhijit: rt.abhijit || fallback.hero.abhijit,
+        },
+        panchang: {
+          ...fallback.panchang,
+          tag: `${rt.nativeName} ${rt.panchang} • ${rt.traditionNote}`,
+        }
+      };
+    }
+    return target.hi || target.en;
+  }
+};
+
+export const TRANSLATIONS = new Proxy(BASE_TRANSLATIONS, handler);
