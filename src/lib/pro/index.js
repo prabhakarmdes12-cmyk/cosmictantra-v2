@@ -17,6 +17,8 @@ import { computeSpecialPoints } from './special.js';
 import { evaluateYogas } from './yogaRegistry.js';
 import { computeVimshottari } from './dasha/nakshatraDashas.js';
 import { computeDasha, listDashaSystems } from './dasha/index.js';
+import { buildEvidenceGraph } from './evidenceGraph.js';
+import { askKashi } from './kashi.js';
 
 export { getSnapshot, derive };
 export * from './vargas.js';
@@ -55,6 +57,10 @@ export function professionalChart(birthParams, options = {}) {
     dasha(systemId, opts) { return computeDasha(systemId, kundali, { targetDate, ...(opts || {}) }); },
     get vimshottari() { return derive(kundali, 'vimshottari', (k) => computeVimshottari(k, { targetDate, maxLevel: 3 })); },
     get dashaSystems() { return listDashaSystems(); },
+
+    // Evidence graph + Kashi orchestrator (grounded, cited; never invents astrology)
+    get evidence() { return derive(kundali, 'evidence', () => buildEvidenceGraph(this)); },
+    ask(question) { return askKashi(this, question); },
   };
 }
 

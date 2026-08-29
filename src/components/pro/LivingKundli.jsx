@@ -21,6 +21,7 @@ import {
   KPPanel, GocharPanel, VarshaphalaPanel, PanchangPanel,
 } from './panels';
 import ReportBuilder from './ReportBuilder';
+import AskKashiPanel from './AskKashiPanel';
 
 function offsetLabel(tz) {
   const n = Number(tz); if (isNaN(n)) return '—';
@@ -66,7 +67,7 @@ export default function LivingKundli({ record, theme = 'dark', onUpdated }) {
       case 'Panchang': return <PanchangPanel birthParams={birthParams} />;
       case 'Timeline': return <PlaceholderTab title="Timeline" note="Personal timeline (Maha/Antar/Pratyantar + transits + Sade Sati) arrives in TRUST-06." />;
       case 'Reports': return <ReportBuilder pro={pro} birthParams={birthParams} />;
-      case 'Ask Kashi': return <PlaceholderTab title="Ask Kashi" note="Evidence-grounded Kashi orchestrator arrives in TRUST-05. It will cite this Kundli's calculated evidence — never invent astrology." />;
+      case 'Ask Kashi': return <AskKashiPanel pro={pro} />;
       default: return null;
     }
   };
