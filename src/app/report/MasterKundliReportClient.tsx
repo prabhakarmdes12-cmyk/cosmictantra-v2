@@ -258,9 +258,9 @@ export default function MasterKundliReportClient() {
           </button>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-serif font-bold text-base lg:text-lg tracking-tight text-[#1C1917]">COSMICTANTRA</span>
+              <span className="font-serif font-bold text-base lg:text-lg tracking-tight text-[#1C1917]">COSMICTANTRA MASTER KUNDLI</span>
               <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[#8E6F1D]/15 text-[#8E6F1D] border border-[#8E6F1D]/20 uppercase tracking-wider">
-                MASTER KUNDLI
+                V1 FOLIO
               </span>
             </div>
             <p className="text-[11px] text-[#78716C] font-mono-data">
