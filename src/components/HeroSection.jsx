@@ -109,6 +109,7 @@ export default function HeroSection({
       latitude: lat,
       longitude: lng,
       timezone: tz,
+      language: lang,
       source: 'HERO_MICRO_DRAWER'
     };
 

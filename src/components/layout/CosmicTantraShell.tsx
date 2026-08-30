@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import GlobalHeader from './GlobalHeader';
 import Breadcrumbs from './Breadcrumbs';
 import GlobalFooter from './GlobalFooter';
+import LanguageSelectorModal from './LanguageSelectorModal';
 import FloatingAIGuruAvatar from '@/components/consultation/FloatingAIGuruAvatar';
 import { getRouteConfig, ShellMode, FooterMode, BreadcrumbItem } from '@/lib/routeRegistry';
 
@@ -37,7 +38,8 @@ export default function CosmicTantraShell({
 
   // Day/Night & Language state synced from client storage
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [lang, setLang] = useState<'en' | 'hi'>('hi');
+  const [lang, setLang] = useState<string>('en');
+  const [languageOpen, setLanguageOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -58,10 +60,8 @@ export default function CosmicTantraShell({
         }
       }
 
-      const savedLang = localStorage.getItem('cosmictantra_lang') as 'en' | 'hi';
-      if (savedLang) {
-        setLang(savedLang);
-      }
+      const savedLang = localStorage.getItem('cosmictantra_lang');
+      if (savedLang) setLang(savedLang);
     } catch {}
   }, []);
 
@@ -78,12 +78,12 @@ export default function CosmicTantraShell({
     } catch {}
   };
 
-  const handleLangToggle = () => {
-    const nextLang = lang === 'en' ? 'hi' : 'en';
+  const handleLangToggle = () => setLanguageOpen(true);
+
+  const handleLanguageSelect = (nextLang: string) => {
     setLang(nextLang);
-    try {
-      localStorage.setItem('cosmictantra_lang', nextLang);
-    } catch {}
+    try { localStorage.setItem('cosmictantra_lang', nextLang); } catch {}
+    window.dispatchEvent(new CustomEvent('cosmictantra:language-change', { detail: nextLang }));
   };
 
   return (
@@ -113,6 +113,13 @@ export default function CosmicTantraShell({
       <main className="flex-1 w-full">
         {children}
       </main>
+
+      <LanguageSelectorModal
+        isOpen={languageOpen}
+        currentLang={lang}
+        onClose={() => setLanguageOpen(false)}
+        onSelectLang={handleLanguageSelect}
+      />
 
       {/* FLOATING AI GURU CONCIERGE AVATAR */}
       {!hideAIGuru && activeShellMode !== 'presentation' && (

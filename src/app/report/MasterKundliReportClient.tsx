@@ -43,6 +43,7 @@ export default function MasterKundliReportClient() {
   const [activeVolumeIndex, setActiveVolumeIndex] = useState<number>(0);
   const [activeDivision, setActiveDivision] = useState<number>(1); // 1 = D1, 9 = D9, 10 = D10, 60 = D60
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [lang, setLang] = useState('en');
 
   // Dynamic Birth Input State (URL params > localStorage > Default Bilaspur 1989)
   const [birthState, setBirthState] = useState({
@@ -56,6 +57,12 @@ export default function MasterKundliReportClient() {
   });
 
   useEffect(() => {
+    const savedLanguage = localStorage.getItem('cosmictantra_lang');
+    if (savedLanguage) {
+      setLang(savedLanguage);
+      document.documentElement.lang = savedLanguage;
+    }
+
     // 1. Check URL parameters
     const paramName = searchParams.get('name');
     const paramDob = searchParams.get('dob');
@@ -182,63 +189,72 @@ export default function MasterKundliReportClient() {
   const handleDownloadPDF = () => {
     chitiSensory.playTick();
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const isHindi = lang === 'hi';
+    const text = (en: string, hi: string) => isHindi ? hi : en;
     const gold = '#8E6F1D';
-    const dark = '#1C1917';
+    const ink = '#1C1917';
+    const margin = 18;
     let y = 20;
+    let page = 1;
 
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(16);
-    doc.setTextColor(gold);
-    doc.text('COSMICTANTRA MASTER KUNDLI', 105, y, { align: 'center' });
-    y += 8;
+    const header = () => {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8); doc.setTextColor('#78716C');
+      doc.text(`CosmicTantra • ${birthState.name}`, margin, 10);
+      doc.text(`${page}`, 192, 10, { align: 'right' });
+      doc.setDrawColor('#E5D7BC'); doc.line(margin, 13, 192, 13);
+    };
+    const newPage = () => { doc.addPage(); page += 1; y = 22; header(); };
+    const ensure = (h = 8) => { if (y + h > 278) newPage(); };
+    const line = (value: string, size = 9, bold = false) => {
+      const clean = String(value).replace(/[\u0000-\u001f]/g, '');
+      const lines = doc.splitTextToSize(clean, 174);
+      ensure(lines.length * (size * .48) + 3);
+      doc.setFont('helvetica', bold ? 'bold' : 'normal'); doc.setFontSize(size); doc.setTextColor(ink);
+      doc.text(lines, margin, y); y += lines.length * (size * .48) + 3;
+    };
+    const title = (value: string) => { ensure(13); doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(gold); doc.text(value, margin, y); y += 8; doc.setDrawColor('#D8C89F'); doc.line(margin,y,192,y); y += 5; };
+    const section = (value: string) => { ensure(12); doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(gold); doc.text(value, margin, y); y += 6; };
+    const valueLabel = (label: string, value: unknown) => line(`${label}: ${value ?? '—'}`);
 
-    doc.setFontSize(10);
-    doc.setTextColor(dark);
-    doc.text(`Subject: ${birthState.name} | ${birthState.birthDate} ${birthState.birthTime} | ${birthState.locationName}`, 105, y, { align: 'center' });
-    y += 10;
+    header();
+    doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(gold);
+    doc.text(text('COSMICTANTRA MASTER KUNDLI', 'COSMICTANTRA जन्म कुण्डली'), 105, 34, { align: 'center' });
+    doc.setFontSize(11); doc.setTextColor(ink); doc.text(text('Detailed Vedic astrology report', 'विस्तृत वैदिक ज्योतिष रिपोर्ट'), 105, 42, { align: 'center' });
+    y = 58;
+    section(text('Birth details', 'जन्म विवरण'));
+    valueLabel(text('Name', 'नाम'), birthState.name); valueLabel(text('Date and time', 'दिनांक और समय'), `${birthState.birthDate} ${birthState.birthTime}`); valueLabel(text('Birth place', 'जन्म स्थान'), birthState.locationName);
+    valueLabel(text('Coordinates', 'निर्देशांक'), `${birthState.latitude.toFixed(4)}°, ${birthState.longitude.toFixed(4)}°`); valueLabel('UTC', `+${birthState.timezone}`);
+    section(text('Calculation standard', 'गणना मानक'));
+    valueLabel('Ayanamsha', `Lahiri / Chitra Paksha (${snapshot.meta.ayanamshaValue.toFixed(4)}°)`); valueLabel('Engine', snapshot.meta.engineVersion); valueLabel('Julian Day', snapshot.meta.julianDay.toFixed(5));
 
-    doc.setDrawColor(gold);
-    doc.line(20, y, 190, y);
-    y += 10;
+    newPage(); title(text('I. Janma Panchang and essentials', 'I. जन्म पंचांग और मूल विवरण'));
+    valueLabel(text('Ascendant', 'लग्न'), `${snapshot.lagna.rashiName} (${snapshot.lagna.degreeStr})`);
+    valueLabel(text('Birth Nakshatra', 'जन्म नक्षत्र'), `${snapshot.birthPanchang.nakshatra.name} • Pada ${snapshot.birthPanchang.nakshatra.pada}`);
+    valueLabel(text('Tithi', 'तिथि'), snapshot.birthPanchang.udayaTithi.fullName); valueLabel('Masa', snapshot.birthPanchang.masa?.name || 'Vedic'); valueLabel('Yoga', snapshot.birthPanchang.yoga.name); valueLabel('Karana', snapshot.birthPanchang.karana.name);
+    section(text('Rashi chart placements', 'राशि कुण्डली ग्रह स्थिति'));
+    snapshot.planetsArray.forEach((p: any) => valueLabel(`${p.name}${p.isRetrograde ? ' (R)' : ''}`, `${p.rashiName} • ${p.degreeStr} • House ${p.house} • ${p.dignity || ''}`));
 
-    doc.setFontSize(11);
-    doc.text('VOLUME I: JANMA & PANCHANG', 20, y);
-    y += 6;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.text(`Lagna: ${snapshot.lagna.rashiName} (${snapshot.lagna.degreeStr}) | Nakshatra: ${snapshot.birthPanchang.nakshatra.name} (Pada ${snapshot.birthPanchang.nakshatra.pada})`, 20, y);
-    y += 6;
-    doc.text(`Tithi: ${snapshot.birthPanchang.udayaTithi.fullName} | Masa: ${snapshot.birthPanchang.masa?.name || 'Vedic'} | Yoga: ${snapshot.birthPanchang.yoga.name} | Karana: ${snapshot.birthPanchang.karana.name}`, 20, y);
-    y += 10;
+    newPage(); title(text('II. Vimshottari dasha timeline', 'II. विंशोत्तरी दशा क्रम'));
+    valueLabel(text('Current period', 'वर्तमान दशा'), snapshot.dasha.currentPeriodString); valueLabel(text('Date range', 'अवधि'), snapshot.dasha.currentDateRange);
+    const dasha = snapshot.dasha as any;
+    Object.entries(dasha).forEach(([key, val]) => { if (typeof val === 'string' || typeof val === 'number') valueLabel(key.replace(/([A-Z])/g,' $1'), val); });
+    section(text('Interpretive book volumes', 'व्याख्यात्मक खंड'));
+    book.volumes.forEach((vol: any) => { ensure(10); line(`${vol.volumeNumber}. ${vol.title} — ${vol.sanskritTitle}`, 9, true); line(vol.description || ''); });
 
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
-    doc.text('VOLUME II: 9 SIDEREAL GRAHAS', 20, y);
-    y += 6;
-    doc.setFont('helvetica', 'normal');
-    snapshot.planetsArray.forEach(p => {
-      doc.text(`${p.name.padEnd(9)}: ${p.rashiName.padEnd(10)} ${p.degreeStr.padEnd(10)} House ${p.house}`, 20, y);
-      y += 5;
+    newPage(); title(text('III. Divisional charts and strengths', 'III. वर्ग कुण्डलियाँ और बल'));
+    ['shodashavarga','balas','ashtakavarga','yogas','doshas'].forEach((key) => {
+      const data = (snapshot as any)[key]; if (!data) return; section(key.replace(/([A-Z])/g,' $1').toUpperCase());
+      const dump = (obj: any, prefix = '') => { if (obj === null || obj === undefined) return; if (typeof obj !== 'object') { line(`${prefix}: ${obj}`); return; } Object.entries(obj).slice(0, 80).forEach(([k,v]) => dump(v, prefix ? `${prefix}.${k}` : k)); };
+      dump(data);
     });
 
-    y += 5;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
-    doc.text('VOLUME VIII: ACTIVE DASHA PERIOD', 20, y);
-    y += 6;
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Current: ${snapshot.dasha.currentPeriodString} (${snapshot.dasha.currentDateRange})`, 20, y);
-    y += 10;
-
-    doc.setFont('helvetica', 'bold');
-    doc.text('VOLUME XVII: TECHNICAL PROVENANCE SIGNATURE', 20, y);
-    y += 6;
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Engine: ${snapshot.meta.engineVersion} | Ayanamsha: Lahiri (${snapshot.meta.ayanamshaValue.toFixed(4)}°)`, 20, y);
-    y += 5;
-    doc.text(`Provenance: CT-MASTER-LAHIRI-${snapshot.meta.julianDay.toFixed(2)} | Qualified`, 20, y);
-
-    doc.save(`CosmicTantra_Master_Kundli_${birthState.name.replace(/\s+/g, '_')}.pdf`);
+    newPage(); title(text('IV. Complete technical appendix', 'IV. सम्पूर्ण तकनीकी परिशिष्ट'));
+    const dump = (obj: any, prefix = '') => { if (obj === null || obj === undefined) return; if (typeof obj !== 'object') { line(`${prefix}: ${obj}`); return; } Object.entries(obj).forEach(([k,v]) => dump(v, prefix ? `${prefix}.${k}` : k)); };
+    dump(snapshot);
+    section(text('Important note', 'महत्वपूर्ण सूचना'));
+    line(text('This report presents calculated sidereal positions and traditional interpretive material. It is not a substitute for professional medical, legal, financial, or mental-health advice.', 'यह रिपोर्ट साइडीरियल गणनाओं और पारंपरिक व्याख्या पर आधारित है। यह चिकित्सकीय, कानूनी, वित्तीय या मानसिक स्वास्थ्य सलाह का विकल्प नहीं है।'));
+    doc.save(`CosmicTantra_Master_Kundli_${birthState.name.replace(/[^a-z0-9]+/gi, '_')}.pdf`);
   };
 
   return (

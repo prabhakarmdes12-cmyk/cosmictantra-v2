@@ -108,12 +108,12 @@ export default function AppLandingPage() {
     } catch {}
   }, [theme, isClientMounted]);
 
-  // Sync language to localStorage
+  // Keep the preference available to every route and update document semantics.
   useEffect(() => {
     if (!isClientMounted) return;
-    try {
-      localStorage.setItem('cosmictantra_lang', lang);
-    } catch {}
+    document.documentElement.lang = lang;
+    try { localStorage.setItem('cosmictantra_lang', lang); } catch {}
+    window.dispatchEvent(new CustomEvent('cosmictantra:language-change', { detail: lang }));
   }, [lang, isClientMounted]);
 
   // Update panchang when city changes

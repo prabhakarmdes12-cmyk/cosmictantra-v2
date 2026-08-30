@@ -93,6 +93,7 @@ export default function SampleKundlisShowcase({ lang = 'en', theme = 'dark' }: S
         latitude: sample.latitude,
         longitude: sample.longitude,
         timezone: sample.timezone,
+        language: lang,
         source: 'SAMPLE_SHOWCASE'
       }));
     } catch {}
