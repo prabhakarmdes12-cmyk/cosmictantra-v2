@@ -29,3 +29,8 @@ export type PjosRelationshipType =
 export type PjosGrantScope = 'READ' | 'WRITE' | 'CONSULT' | 'MANAGE';
 
 export type PjosConsentStatus = 'GRANTED' | 'REVOKED' | 'EXPIRED';
+
+/** Birth-time confidence carried on the kundli record; drives the uncertainty model. */
+export type PjosTimeConfidence = 'EXACT' | 'APPROXIMATE' | 'UNKNOWN';
+
+/** Birth-time confidence — drives the uncertainty model (never faked). */

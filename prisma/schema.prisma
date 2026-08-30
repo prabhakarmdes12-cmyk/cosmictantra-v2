@@ -381,6 +381,8 @@ model PjosPerson {
   relationships PjosPersonRelationship[]
   accessGrants  PjosAccessGrant[]
   consents      PjosConsentRecord[]
+  kundliRecords PjosKundliRecord[]
+  predictions   PjosPredictionRecord[]
 
   @@index([projectId])
 }
@@ -440,4 +442,63 @@ model PjosConsentRecord {
   // referencing the same purpose+version.
   @@index([personId, status])
   @@index([accountId])
+}
+
+// ----------------------------------------------------------------------------
+// PJOS-01 DOMAIN: persistent kundli records + prediction ledger.
+// A PjosKundliRecord is an immutable content-addressed snapshot: the same
+// birth inputs + engine version always resolve to the same snapshotHash, so
+// recomputation is idempotent and evidence node IDs (which embed the hash)
+// stay stable across servers and time.
+// ----------------------------------------------------------------------------
+
+model PjosKundliRecord {
+  id             String    @id @default(uuid())
+  projectId      String    @default("cosmic-tantra")
+  personId       String
+  snapshotHash   String // 32 hex — content hash of the canonical snapshot
+  engineVersion  String
+  birthDate      DateTime
+  birthTime      String // HH:mm
+  birthPlace     String?
+  birthLat       Float?
+  birthLon       Float?
+  timezone       Float?
+  // EXACT | APPROXIMATE | UNKNOWN — drives the uncertainty model downstream.
+  timeConfidence String    @default("EXACT")
+  // Canonical JSON of the CanonicalJyotishSnapshot — the single truth.
+  snapshotJson   String
+  createdAt      DateTime  @default(now())
+
+  person      PjosPerson           @relation(fields: [personId], references: [id], onDelete: Cascade)
+  predictions PjosPredictionRecord[]
+
+  @@unique([personId, snapshotHash])
+  @@index([personId])
+}
+
+model PjosPredictionRecord {
+  id              String   @id @default(uuid())
+  // Content-addressed ledger ID (distinct from the DB surrogate id) — the
+  // chain hash references it, so it must be stored for re-verification.
+  contentId       String   @unique
+  projectId       String   @default("cosmic-tantra")
+  personId        String
+  kundliId        String
+  statement       String
+  evidenceNodeIds String // canonical JSON array of evidence node IDs
+  // Derived at write time, never declared:
+  // EVIDENCE_BACKED | INSUFFICIENT_CALCULATION_EVIDENCE
+  status          String
+  confidence      Float
+  basis           String // DERIVED_FROM_CALCULATION | CONVENTION_RULE | DIRECT_OBSERVATION
+  prevHash        String
+  hash            String
+  createdAt       DateTime @default(now())
+
+  person PjosPerson       @relation(fields: [personId], references: [id], onDelete: Cascade)
+  kundli PjosKundliRecord @relation(fields: [kundliId], references: [id], onDelete: Cascade)
+
+  @@index([personId])
+  @@index([kundliId])
 }

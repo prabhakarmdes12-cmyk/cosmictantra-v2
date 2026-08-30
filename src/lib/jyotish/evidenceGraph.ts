@@ -75,12 +75,17 @@ export function canonicalStringify(value: unknown): string {
 }
 
 export function snapshotHash(snapshot: unknown): string {
-  // Content hash of the canonical snapshot EXCLUDING run-metadata timestamps
-  // (meta.calculatedAt): identity must depend only on birth inputs + engine,
-  // so the same birth computed twice yields the same hash.
+  // Content hash of the canonical snapshot, normalized to its PERSISTABLE
+  // form before hashing:
+  //  - meta.calculatedAt (run timestamp) is excluded: identity depends only
+  //    on birth inputs + engine, so the same birth always hashes identically.
+  //  - a JSON round-trip normalizes Date instances and drops undefined
+  //    keys, so hash(freshSnapshot) === hash(JSON.parse(storedSnapshot)) —
+  //    the same kundli rebuilt from storage yields the same node IDs.
   const { meta, ...rest } = snapshot as { meta?: Record<string, unknown> } & Record<string, unknown>;
   const stableMeta = meta ? Object.fromEntries(Object.entries(meta).filter(([k]) => k !== 'calculatedAt')) : meta;
-  return hashHex(`snapshot|${canonicalStringify({ meta: stableMeta, ...rest })}`, 32);
+  const persistable = JSON.parse(JSON.stringify({ meta: stableMeta, ...rest }));
+  return hashHex(`snapshot|${canonicalStringify(persistable)}`, 32);
 }
 
 /* ------------------------------------------------------------------ */
@@ -276,6 +281,53 @@ export class EvidenceStore {
 /* Prediction ledger (immutable, hash-chained)                         */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Derived status — the single place the EVIDENCE_BACKED rule lives.
+ * A prediction is evidence-backed iff every cited node resolves AND no two
+ * cited nodes contradict each other (same subject+claim, different value).
+ * Exported so persistence can derive status without an in-memory ledger.
+ */
+export function derivePredictionStatus(store: EvidenceStore, evidenceNodeIds: string[]): PredictionStatus {
+  const cited = evidenceNodeIds.map((n) => store.getNode(n)).filter(Boolean) as EvidenceNode[];
+  const allResolved = cited.length === evidenceNodeIds.length;
+  if (!allResolved) return PREDICTION_STATUS.INSUFFICIENT_CALCULATION_EVIDENCE;
+
+  const groups = new Map<string, EvidenceNode[]>();
+  for (const n of cited) {
+    const key = `${n.subject}|${n.claim}`;
+    groups.set(key, [...(groups.get(key) ?? []), n]);
+  }
+  for (const group of groups.values()) {
+    const values = new Set(group.map((n) => canonicalStringify(n.value)));
+    if (values.size > 1) return PREDICTION_STATUS.INSUFFICIENT_CALCULATION_EVIDENCE;
+  }
+  return PREDICTION_STATUS.EVIDENCE_BACKED;
+}
+
+export function predictionRecordId(
+  prevHash: string,
+  personRef: string,
+  statement: string,
+  evidenceNodeIds: string[],
+  createdAt: string
+): string {
+  return hashHex(
+    `prediction|${prevHash}|${personRef}|${statement}|${canonicalStringify(evidenceNodeIds)}|${createdAt}`,
+    24
+  );
+}
+
+export function predictionRecordHash(
+  prevHash: string,
+  id: string,
+  personRef: string,
+  statement: string,
+  evidenceNodeIds: string[],
+  status: PredictionStatus
+): string {
+  return hashHex([prevHash, id, personRef, statement, canonicalStringify(evidenceNodeIds), status].join('|'));
+}
+
 export interface PredictionRecord {
   id: string;
   /** Opaque reference. D-1: resolved to personId + access grant at the
@@ -323,32 +375,9 @@ export class PredictionLedger {
    * evidence-backed status without resolvable, non-conflicting nodes.
    */
   append(store: EvidenceStore, payload: NewPrediction, createdAt: string = new Date().toISOString()): PredictionRecord {
-    const id = hashHex(`prediction|${this.lastHash}|${payload.personRef}|${payload.statement}|${canonicalStringify(payload.evidenceNodeIds)}|${createdAt}`, 24);
-    const cited = payload.evidenceNodeIds.map((n) => store.getNode(n)).filter(Boolean) as EvidenceNode[];
-    const allResolved = cited.length === payload.evidenceNodeIds.length;
-
-    let conflictFree = true;
-    if (allResolved) {
-      const groups = new Map<string, EvidenceNode[]>();
-      for (const n of cited) {
-        const key = `${n.subject}|${n.claim}`;
-        groups.set(key, [...(groups.get(key) ?? []), n]);
-      }
-      for (const group of groups.values()) {
-        const values = new Set(group.map((n) => canonicalStringify(n.value)));
-        if (values.size > 1) {
-          conflictFree = false;
-          break;
-        }
-      }
-    }
-
-    const status: PredictionStatus =
-      allResolved && conflictFree ? PREDICTION_STATUS.EVIDENCE_BACKED : PREDICTION_STATUS.INSUFFICIENT_CALCULATION_EVIDENCE;
-
-    const hash = hashHex(
-      [this.lastHash, id, payload.personRef, payload.statement, canonicalStringify(payload.evidenceNodeIds), status].join('|')
-    );
+    const id = predictionRecordId(this.lastHash, payload.personRef, payload.statement, payload.evidenceNodeIds, createdAt);
+    const status = derivePredictionStatus(store, payload.evidenceNodeIds);
+    const hash = predictionRecordHash(this.lastHash, id, payload.personRef, payload.statement, payload.evidenceNodeIds, status);
     const record: PredictionRecord = Object.freeze({
       id,
       personRef: payload.personRef,
@@ -371,7 +400,7 @@ export class PredictionLedger {
     let prev = 'GENESIS';
     for (const r of this.records) {
       if (r.prevHash !== prev) return false;
-      const expected = hashHex([r.prevHash, r.id, r.personRef, r.statement, canonicalStringify(r.evidenceNodeIds), r.status].join('|'));
+      const expected = predictionRecordHash(r.prevHash, r.id, r.personRef, r.statement, r.evidenceNodeIds, r.status);
       if (expected !== r.hash) return false;
       prev = r.hash;
     }
