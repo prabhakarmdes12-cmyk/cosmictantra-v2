@@ -4,8 +4,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -86,8 +86,8 @@ model AstrologyConsultant {
   id                   String             @id @default(uuid())
   publicId             String?            @default(uuid())
   projectId            String             @default("cosmic-tantra")
-  name                 String?            // Legacy field
-  photo                String?            // Legacy field
+  name                 String? // Legacy field
+  photo                String? // Legacy field
   fullName             String             @default("Pandit Ji")
   displayName          String             @default("Pandit Ji")
   phone                String             @default("")
@@ -97,9 +97,9 @@ model AstrologyConsultant {
   languages            String[]           @default(["Hindi", "English"])
   expertise            String[]           @default(["Kundali"])
   yearsExperience      Int                @default(0)
-  experience           String?            // Legacy field
-  location             String?            // Legacy field
-  bio                  String?            // Legacy field
+  experience           String? // Legacy field
+  location             String? // Legacy field
+  bio                  String? // Legacy field
   biography            String?
   tradition            String?
   qualifications       String?
@@ -130,68 +130,68 @@ model AstrologyConsultant {
 }
 
 model AstrologyConsultation {
-  id                   String             @id @default(uuid())
-  publicId             String             @unique @default(uuid())
-  projectId            String             @default("cosmic-tantra")
-  practitionerId       String?
-  isTestCase           Boolean            @default(false)
-  orderType            String             @default("STANDARD_PAID") // STANDARD_PAID, INTERNAL_TEST
-  status               ConsultationStatus @default(DRAFT)
-  
+  id             String             @id @default(uuid())
+  publicId       String             @unique @default(uuid())
+  projectId      String             @default("cosmic-tantra")
+  practitionerId String?
+  isTestCase     Boolean            @default(false)
+  orderType      String             @default("STANDARD_PAID") // STANDARD_PAID, INTERNAL_TEST
+  status         ConsultationStatus @default(DRAFT)
+
   // Customer Inputs
-  customerName         String
-  customerPhone        String?
-  customerEmail        String?
-  customerQuestion     String
-  birthDate            DateTime
-  birthTime            String             @default("10:30")
-  birthCity            String             @default("Patna")
-  birthLat             Float              @default(25.5941)
-  birthLon             Float              @default(85.1376)
-  timezone             Float              @default(5.5)
+  customerName     String
+  customerPhone    String?
+  customerEmail    String?
+  customerQuestion String
+  birthDate        DateTime
+  birthTime        String   @default("10:30")
+  birthCity        String   @default("Patna")
+  birthLat         Float    @default(25.5941)
+  birthLon         Float    @default(85.1376)
+  timezone         Float    @default(5.5)
 
   // Immutable Calculation Output
-  calculationSnapshot  Json?
-  calculationVersion   String?            @default("v34")
+  calculationSnapshot Json?
+  calculationVersion  String? @default("v34")
 
   // AI Working Draft Output
-  aiDraft              String?
-  aiModel              String?            @default("claude-sonnet-4-20250514")
-  promptVersion        String?            @default("v34")
+  aiDraft       String?
+  aiModel       String? @default("claude-sonnet-4-20250514")
+  promptVersion String? @default("v34")
 
   // Human Practitioner Verified Output
-  practitionerFinal    String?
-  practitionerNotes    String?
-  approvedBy           String?
-  approvedAt           DateTime?
+  practitionerFinal String?
+  practitionerNotes String?
+  approvedBy        String?
+  approvedAt        DateTime?
 
   // Caller vs Subject separation
-  callerPhone          String?
-  callerName           String?
-  relationship         String?            @default("SELF")
-  birthTimeConfidence  String?            @default("EXACT") // EXACT, APPROXIMATE, UNKNOWN
-  
+  callerPhone         String?
+  callerName          String?
+  relationship        String? @default("SELF")
+  birthTimeConfidence String? @default("EXACT") // EXACT, APPROXIMATE, UNKNOWN
+
   // Consultation Lifecycle Timing & Notes
-  connectedAt          DateTime?
-  completedAt          DateTime?
-  sessionDurationSec   Int?               @default(0)
-  consultationNotes    Json?              // 4 Quadrants (calculatedAstrology, scholarInterpretation, userReportedFact, traditionalRemedy)
-  cancellationReason   String?
+  connectedAt        DateTime?
+  completedAt        DateTime?
+  sessionDurationSec Int?      @default(0)
+  consultationNotes  Json? // 4 Quadrants (calculatedAstrology, scholarInterpretation, userReportedFact, traditionalRemedy)
+  cancellationReason String?
 
   // Payment & Delivery
-  paymentProvider      String?            @default("INTERNAL_TEST")
-  paymentStatus        String             @default("PENDING")
-  amount               Int                @default(501)
-  deliveryChannel      String?            @default("WHATSAPP")
-  deliveredAt          DateTime?
+  paymentProvider String?   @default("INTERNAL_TEST")
+  paymentStatus   String    @default("PENDING")
+  amount          Int       @default(501)
+  deliveryChannel String?   @default("WHATSAPP")
+  deliveredAt     DateTime?
 
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  customerProfileId    String?
-  customerProfile      AstrologyCustomerProfile? @relation(fields: [customerProfileId], references: [id], onDelete: SetNull)
-  practitioner         AstrologyConsultant?      @relation(fields: [practitionerId], references: [id], onDelete: SetNull)
-  auditLogs            AstrologyAuditLog[]
+  customerProfileId String?
+  customerProfile   AstrologyCustomerProfile? @relation(fields: [customerProfileId], references: [id], onDelete: SetNull)
+  practitioner      AstrologyConsultant?      @relation(fields: [practitionerId], references: [id], onDelete: SetNull)
+  auditLogs         AstrologyAuditLog[]
 
   @@index([projectId, status])
   @@index([practitionerId])
@@ -208,8 +208,8 @@ model AstrologyAuditLog {
   payload        Json?
   createdAt      DateTime @default(now())
 
-  practitioner   AstrologyConsultant?   @relation(fields: [practitionerId], references: [id], onDelete: SetNull)
-  consultation   AstrologyConsultation? @relation(fields: [consultationId], references: [id], onDelete: SetNull)
+  practitioner AstrologyConsultant?   @relation(fields: [practitionerId], references: [id], onDelete: SetNull)
+  consultation AstrologyConsultation? @relation(fields: [consultationId], references: [id], onDelete: SetNull)
 
   @@index([practitionerId])
   @@index([consultationId])
@@ -235,11 +235,11 @@ model AstrologyCustomerProfile {
   lastOtpVerifiedAt DateTime?
   otpVerified       Boolean   @default(false)
 
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  familyMembers     AstrologyFamilyMember[]
-  consultations     AstrologyConsultation[] // link via phone if needed
+  familyMembers AstrologyFamilyMember[]
+  consultations AstrologyConsultation[] // link via phone if needed
 
   @@index([projectId])
   @@index([whatsappPhone])
@@ -247,38 +247,38 @@ model AstrologyCustomerProfile {
 }
 
 model AstrologyFamilyMember {
-  id             String    @id @default(uuid())
-  profileId      String
-  name           String
-  birthDate      DateTime?
-  birthTime      String?   @default("10:30")
-  birthCity      String?   @default("Patna")
-  birthLat       Float?
-  birthLon       Float?
-  relation       String    @default("SELF") // SELF, SPOUSE, CHILD, PARENT, SIBLING, OTHER
-  gender         String?   // MALE, FEMALE, OTHER
+  id              String    @id @default(uuid())
+  profileId       String
+  name            String
+  birthDate       DateTime?
+  birthTime       String?   @default("10:30")
+  birthCity       String?   @default("Patna")
+  birthLat        Float?
+  birthLon        Float?
+  relation        String    @default("SELF") // SELF, SPOUSE, CHILD, PARENT, SIBLING, OTHER
+  gender          String? // MALE, FEMALE, OTHER
   // DPDP minor flag
-  isMinor        Boolean   @default(false)
-  guardianConsent Boolean  @default(false)
+  isMinor         Boolean   @default(false)
+  guardianConsent Boolean   @default(false)
 
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  profile        AstrologyCustomerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profile AstrologyCustomerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   @@index([profileId])
   @@index([relation])
 }
 
 model OtpVerification {
-  id          String   @id @default(uuid())
-  phone       String
-  otpHash     String   // never store plain OTP
-  purpose     String   @default("PROFILE_VERIFY") // PROFILE_VERIFY, CONSULTATION, DELIVERY_CONFIRM
-  expiresAt   DateTime
-  verifiedAt  DateTime?
-  attempts    Int      @default(0)
-  createdAt   DateTime @default(now())
+  id         String    @id @default(uuid())
+  phone      String
+  otpHash    String // never store plain OTP
+  purpose    String    @default("PROFILE_VERIFY") // PROFILE_VERIFY, CONSULTATION, DELIVERY_CONFIRM
+  expiresAt  DateTime
+  verifiedAt DateTime?
+  attempts   Int       @default(0)
+  createdAt  DateTime  @default(now())
 
   @@index([phone])
   @@index([purpose])
@@ -347,18 +347,18 @@ enum PjosConsentStatus {
 }
 
 model PjosAccount {
-  id          String   @id @default(uuid())
-  projectId   String   @default("cosmic-tantra")
+  id          String          @id @default(uuid())
+  projectId   String          @default("cosmic-tantra")
   // Replaceable auth transport: the credential channel never owns the Person.
   authChannel PjosAuthChannel
   authSubject String // phone (E.164) / email / provider subject id
   displayName String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
 
   relationships PjosPersonRelationship[]
-  grantsGranted PjosAccessGrant[] @relation("GrantedBy")
+  grantsGranted PjosAccessGrant[]        @relation("GrantedBy")
   consents      PjosConsentRecord[]
 
   @@unique([authChannel, authSubject])
@@ -366,17 +366,17 @@ model PjosAccount {
 }
 
 model PjosPerson {
-  id          String   @id @default(uuid())
-  projectId   String   @default("cosmic-tantra")
+  id          String    @id @default(uuid())
+  projectId   String    @default("cosmic-tantra")
   displayName String
   birthDate   DateTime?
   birthTime   String? // HH:mm — timeConfidence semantics live on the kundli record
   birthPlace  String?
   birthLat    Float?
   birthLon    Float?
-  isMinor     Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isMinor     Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   relationships PjosPersonRelationship[]
   accessGrants  PjosAccessGrant[]
@@ -423,18 +423,18 @@ model PjosAccessGrant {
 }
 
 model PjosConsentRecord {
-  id          String           @id @default(uuid())
+  id          String            @id @default(uuid())
   personId    String
   accountId   String? // null => consent given in a professional context
   sensitivity PjosSensitivity
   status      PjosConsentStatus @default(GRANTED)
   purpose     String
-  version     String           @default("v1")
-  grantedAt   DateTime         @default(now())
+  version     String            @default("v1")
+  grantedAt   DateTime          @default(now())
   revokedAt   DateTime?
 
-  person    PjosPerson    @relation(fields: [personId], references: [id], onDelete: Cascade)
-  givenBy   PjosAccount?  @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  person  PjosPerson   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  givenBy PjosAccount? @relation(fields: [accountId], references: [id], onDelete: SetNull)
 
   // Append-only: consent is never edited; revocation is a REVOKED record
   // referencing the same purpose+version.

@@ -2,9 +2,9 @@ import { test, expect } from '@playwright/test';
 
 const BASE_URL = 'http://localhost:3000';
 
-test.describe('CosmicTantra — AI Guru, CallMe4 E2EE & Pandit Onboarding Suite', () => {
+test.describe('CosmicTantra — CallMe4 E2EE & Pandit Onboarding Suite', () => {
 
-  test('Ask / Consultation Hub (/ask): Displays AI Guru banner, 4 Service Tiers, and triggers AI Guru modal', async ({ page }) => {
+  test('Ask / Consultation Hub (/ask): Displays Vedic Scholar Bench and 4 Service Tiers', async ({ page }) => {
     await page.goto(`${BASE_URL}/ask`, { waitUntil: 'domcontentloaded' });
 
     // Header and TrustBar
@@ -15,16 +15,6 @@ test.describe('CosmicTantra — AI Guru, CallMe4 E2EE & Pandit Onboarding Suite'
     await expect(page.getByText(/गोपनीय प्रत्यक्ष वॉयस कॉल/i)).toBeVisible();
     await expect(page.getByText(/साक्षात् वीडियो दर्शन/i)).toBeVisible();
     await expect(page.getByText(/पारिवारिक कुण्डली महा-सत्र/i)).toBeVisible();
-
-    // AI Guru Chatbot CTA button
-    const aiGuruBtn = page.getByRole('button', { name: /AI गुरु वार्तालाप प्रारम्भ करें/i }).first();
-    await expect(aiGuruBtn).toBeVisible();
-    await aiGuruBtn.click();
-    await page.waitForTimeout(300);
-
-    // AI Guru Chatbot Modal is open
-    await expect(page.getByText(/गुरु ज्योतिषदेव \(AI वैदिक मार्गदर्शक\)/i)).toBeVisible();
-    await expect(page.getByText(/ONLINE/i).first()).toBeVisible();
   });
 
   test('CallMe4 Encrypted Chamber (/consultation/room/CT-2026-0825-001): Zero Phone Leak, E2EE status, audio waveform, and synchronized Kundali', async ({ page }) => {
@@ -87,106 +77,6 @@ test.describe('CosmicTantra — AI Guru, CallMe4 E2EE & Pandit Onboarding Suite'
     const gheeBtn = page.getByRole('button', { name: /Pure A2 Cow Ghee/i }).first();
     await expect(gheeBtn).toBeVisible();
     await gheeBtn.click();
-  });
-
-  test('Floating AI Guru Avatar: Visible on homepage, opens concierge drawer, asks user details before 72h forecast when not known', async ({ page }) => {
-    await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
-
-    // Floating Avatar Button is rendered
-    const avatarBtn = page.locator('button[title="गुरु ज्योतिषदेव AI से बात करें"]');
-    await expect(avatarBtn).toBeVisible();
-    await avatarBtn.click();
-    await page.waitForTimeout(300);
-
-    // Concierge drawer opens with Guru Jyotishdev title
-    await expect(page.getByText(/गुरु ज्योतिषदेव/i).first()).toBeVisible();
-    await expect(page.getByText(/AI वैदिक मार्गदर्शक/i).first()).toBeVisible();
-
-    // Fast Action Chips present
-    await expect(page.getByRole('button', { name: /आज का 72h राशिफल व गोचर/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /26 महातीर्थ लाइव दर्शन व आरती/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /कुण्डली व जीवन प्रश्न/i })).toBeVisible();
-
-    // Click on 72h Forecast Chip -> Guru asks for birth details first
-    const forecastChip = page.getByRole('button', { name: /आज का 72h राशिफल व गोचर/i });
-    await forecastChip.click();
-    await page.waitForTimeout(600);
-
-    // Guru prompts for details
-    await expect(page.getByText(/सटीक व्यक्तिगत फल जानने हेतु मुझे आपकी जन्म-पत्रिका|कृपया अपना शुभ नाम बताएं/i).first()).toBeVisible();
-    await expect(page.getByRole('button', { name: /सामान्य 72h गोचर हब देखें/i })).toBeVisible();
-  });
-
-  test('Floating AI Guru In-Chat Intake Flow: Guides through Domain, Name, DOB, Time, City, and Question to render Kundali snapshot', async ({ page }) => {
-    await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
-
-    // Open Guru Avatar
-    const avatarBtn = page.locator('button[title="गुरु ज्योतिषदेव AI से बात करें"]');
-    await avatarBtn.click();
-    await page.waitForTimeout(300);
-
-    // Click "🔮 कुण्डली व जीवन प्रश्न"
-    const intakeChip = page.getByRole('button', { name: /कुण्डली व जीवन प्रश्न/i }).first();
-    await intakeChip.click();
-    await page.waitForTimeout(400);
-
-    // Select Domain (e.g. Career)
-    const careerChip = page.getByRole('button', { name: /करियर, व्यापार व धन लाभ/i });
-    await careerChip.click();
-    await page.waitForTimeout(400);
-
-    // Enter Name
-    const chatInput = page.locator('input[placeholder="पूछें: आज का दिन, विवाह, व्यापार, या मन्त्र..."]');
-    await chatInput.fill('आदित्य शर्मा');
-    const sendBtn = page.locator('form:has(input[placeholder*="पूछें"]) button[type="submit"]');
-    await sendBtn.click();
-    await page.waitForTimeout(500);
-
-    // Select Date chip
-    const dateChip = page.getByRole('button', { name: /1995-06-15/i }).first();
-    await dateChip.click();
-    await page.waitForTimeout(500);
-
-    // Select Time chip
-    const timeChip = page.getByRole('button', { name: /10:30 \(सुबह\)/i }).first();
-    await timeChip.click();
-    await page.waitForTimeout(500);
-
-    // Select City chip
-    const cityChip = page.getByRole('button', { name: /Varanasi/i }).first();
-    await cityChip.click();
-    await page.waitForTimeout(500);
-
-    // Enter Question
-    await chatInput.fill('व्यापार में नए निवेश हेतु क्या शुभ मुहूर्त है?');
-    await sendBtn.click();
-    await page.waitForTimeout(1000);
-
-    // Verify Kundali Snapshot & Transit Status
-    await expect(page.getByText(/लग्न \(Ascendant\)|Janma Kundali Snapshot/i).first()).toBeVisible();
-    await expect(page.getByText(/₹501 लिखित विद्वत्-परामर्श पत्र/i)).toBeVisible();
-  });
-
-  test('Floating AI Guru In-Chat Links: Clicking 72h general hub chip navigates to /daily and closes chat drawer', async ({ page }) => {
-    await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
-
-    // Open Guru Avatar
-    const avatarBtn = page.locator('button[title="गुरु ज्योतिषदेव AI से बात करें"]');
-    await avatarBtn.click();
-    await page.waitForTimeout(300);
-
-    // Click 72h forecast chip -> reveals general hub navigation chip
-    const forecastChip = page.getByRole('button', { name: /आज का 72h राशिफल व गोचर/i });
-    await forecastChip.click();
-    await page.waitForTimeout(600);
-
-    // Click in-chat direct link chip
-    const hubChip = page.getByRole('button', { name: /सामान्य 72h गोचर हब देखें/i });
-    await expect(hubChip).toBeVisible();
-    await hubChip.click();
-
-    // Verify successful navigation to /daily
-    await expect(page).toHaveURL(/.*\/daily/);
   });
 
 });
