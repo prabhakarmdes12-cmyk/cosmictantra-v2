@@ -300,3 +300,144 @@ model AstrologyService {
   @@index([code])
   @@index([isActive])
 }
+
+// ============================================================================
+// PJOS-01 DOMAIN (Decision D-1): server-side identity & access.
+// Account != Person. One account may contain Me / Child / Parent / Partner /
+// Client — the account is NOT the person. Auth transport is replaceable
+// (PHONE_OTP / EMAIL / GOOGLE) without changing Person ownership.
+// Ownership invariant: every server-side object resolves
+//   resource -> personId -> authorized account relationship OR
+//   professional access grant
+// BEFORE any read or mutation. See src/lib/pjos/ownershipGuard.ts.
+// ============================================================================
+
+enum PjosAuthChannel {
+  PHONE_OTP
+  EMAIL
+  GOOGLE
+}
+
+enum PjosSensitivity {
+  ACCOUNT_PRIVATE
+  PERSONAL_ASTROLOGY
+  CONSULTATION_CONFIDENTIAL
+  PANDIT_INTERNAL
+}
+
+enum PjosRelationshipType {
+  SELF
+  GUARDIAN_MANAGED // minor, managed by a guardian account
+  WITH_CONSENT // another adult who consented to being in this account
+  IMPORTED_FOR_PRIVATE_ANALYSIS
+  PANDIT_CLIENT
+}
+
+enum PjosGrantScope {
+  READ
+  WRITE
+  CONSULT
+  MANAGE
+}
+
+enum PjosConsentStatus {
+  GRANTED
+  REVOKED
+  EXPIRED
+}
+
+model PjosAccount {
+  id          String   @id @default(uuid())
+  projectId   String   @default("cosmic-tantra")
+  // Replaceable auth transport: the credential channel never owns the Person.
+  authChannel PjosAuthChannel
+  authSubject String // phone (E.164) / email / provider subject id
+  displayName String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  relationships PjosPersonRelationship[]
+  grantsGranted PjosAccessGrant[] @relation("GrantedBy")
+  consents      PjosConsentRecord[]
+
+  @@unique([authChannel, authSubject])
+  @@index([projectId])
+}
+
+model PjosPerson {
+  id          String   @id @default(uuid())
+  projectId   String   @default("cosmic-tantra")
+  displayName String
+  birthDate   DateTime?
+  birthTime   String? // HH:mm — timeConfidence semantics live on the kundli record
+  birthPlace  String?
+  birthLat    Float?
+  birthLon    Float?
+  isMinor     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  relationships PjosPersonRelationship[]
+  accessGrants  PjosAccessGrant[]
+  consents      PjosConsentRecord[]
+
+  @@index([projectId])
+}
+
+model PjosPersonRelationship {
+  id           String               @id @default(uuid())
+  accountId    String
+  personId     String
+  relationType PjosRelationshipType
+  guardianRole String? // for GUARDIAN_MANAGED: FATHER / MOTHER / ...
+  isActive     Boolean              @default(true)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  account PjosAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  person  PjosPerson  @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, personId])
+  @@index([personId])
+}
+
+model PjosAccessGrant {
+  id                    String          @id @default(uuid())
+  personId              String
+  granteeAccountId      String? // family/professional-account grantee
+  granteePractitionerId String? // professional (practitioner) grantee
+  scope                 PjosGrantScope
+  sensitivity           PjosSensitivity
+  grantedById           String? // account that created the grant
+  grantedAt             DateTime        @default(now())
+  expiresAt             DateTime?
+  revokedAt             DateTime?
+
+  person    PjosPerson   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  grantedBy PjosAccount? @relation("GrantedBy", fields: [grantedById], references: [id], onDelete: SetNull)
+
+  @@index([personId])
+  @@index([granteeAccountId])
+  @@index([granteePractitionerId])
+}
+
+model PjosConsentRecord {
+  id          String           @id @default(uuid())
+  personId    String
+  accountId   String? // null => consent given in a professional context
+  sensitivity PjosSensitivity
+  status      PjosConsentStatus @default(GRANTED)
+  purpose     String
+  version     String           @default("v1")
+  grantedAt   DateTime         @default(now())
+  revokedAt   DateTime?
+
+  person    PjosPerson    @relation(fields: [personId], references: [id], onDelete: Cascade)
+  givenBy   PjosAccount?  @relation(fields: [accountId], references: [id], onDelete: SetNull)
+
+  // Append-only: consent is never edited; revocation is a REVOKED record
+  // referencing the same purpose+version.
+  @@index([personId, status])
+  @@index([accountId])
+}
