@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sun, Moon, MapPin, Compass, ShieldAlert, Sparkles, ChevronDown } from 'lucide-react';
 import { chitiSensory } from '@/lib/chitiAudio';
+import InfoTip from './InfoTip';
 
 interface CosmicNowDialProps {
   panchangData: any;
@@ -498,7 +499,7 @@ export default function CosmicNowDial({
         <div className="grid grid-cols-2 gap-3 pb-3">
           <div>
             <div className="text-[9px] text-[#696256] dark:text-[#8E877B] uppercase tracking-wider font-semibold">
-              {isHi ? 'तिथि (चन्द्र दिवस)' : 'TITHI (LUNAR DAY)'}
+              {isHi ? 'तिथि (चन्द्र दिवस)' : 'TITHI (LUNAR DAY)'}<InfoTip term="tithi" lang={isHi ? 'hi' : 'en'} />
             </div>
             <div className="font-editorial text-sm sm:text-base font-bold text-[#1C1917] dark:text-[#FFFFFF] mt-0.5 truncate">
               {tithiName}
@@ -510,7 +511,7 @@ export default function CosmicNowDial({
 
           <div className="border-l border-black/[0.06] dark:border-white/[0.08] pl-3">
             <div className="text-[9px] text-[#696256] dark:text-[#8E877B] uppercase tracking-wider font-semibold">
-              {isHi ? 'नक्षत्र एवं पद' : 'NAKSHATRA (MANSION)'}
+              {isHi ? 'नक्षत्र एवं पद' : 'NAKSHATRA (MANSION)'}<InfoTip term="nakshatra" lang={isHi ? 'hi' : 'en'} />
             </div>
             <div className="font-editorial text-sm sm:text-base font-bold text-[#1C1917] dark:text-[#FFFFFF] mt-0.5 truncate">
               {nakshatraName}
@@ -525,7 +526,7 @@ export default function CosmicNowDial({
         <div className="grid grid-cols-2 gap-3 pt-3">
           <div>
             <div className="text-[9px] text-[#696256] dark:text-[#8E877B] uppercase tracking-wider font-semibold">
-              {isHi ? 'योग एवं करण' : 'YOGA & KARANA'}
+              {isHi ? 'योग एवं करण' : 'YOGA & KARANA'}<InfoTip term="yoga" lang={isHi ? 'hi' : 'en'} />
             </div>
             <div className="font-semibold text-[#1C1917] dark:text-[#FFFFFF] text-xs mt-0.5 truncate">
               {yogaName}
@@ -538,13 +539,14 @@ export default function CosmicNowDial({
           <div className="border-l border-black/[0.06] dark:border-white/[0.08] pl-3">
             <div className="text-[9px] text-[#991B1B] dark:text-[#F87171] uppercase tracking-wider font-bold flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0 inline-block" /> 
-              {isHi ? 'राहु काल (वर्ज्य)' : 'RAHU KAAL (AVOID)'}
+              {isHi ? 'राहु काल (वर्ज्य)' : 'RAHU KAAL (AVOID)'}<InfoTip term="rahuKaal" lang={isHi ? 'hi' : 'en'} />
             </div>
             <div className="font-mono-data font-bold text-[#991B1B] dark:text-[#F87171] text-xs mt-0.5 truncate">
               {displayRahuTime}
             </div>
-            <div className="text-[9px] text-[#8E6F1D] dark:text-[#D4AF37] mt-0.5 truncate">
-              {ayanamshaVal}
+            <div className="text-[9px] text-[#8E6F1D] dark:text-[#D4AF37] mt-0.5 flex items-center gap-0.5 min-w-0">
+              <span className="truncate">{ayanamshaVal}</span>
+              <InfoTip term="ayanamsha" lang={isHi ? 'hi' : 'en'} />
             </div>
           </div>
         </div>

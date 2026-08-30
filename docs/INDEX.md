@@ -1,4 +1,4 @@
-﻿# 📚 COSMICTANTRA — MASTER STARTUP DOCUMENTATION REPOSITORY
+# 📚 COSMICTANTRA — MASTER STARTUP DOCUMENTATION REPOSITORY
 **Company**: CosmicTantra Technologies Pvt. Ltd. · **Edition**: 2026
 **Category**: Vedic Astronomical Observatory × Verified Scholarly Counsel
 **Design Standard**: Chiti Technologies Unified Design System v3
@@ -19,6 +19,7 @@ All institutional, strategic, design, growth, engineering, and scholar documenta
 * **[`PROJECT_DESIGN_JOURNAL.md`](./PROJECT_DESIGN_JOURNAL.md)** — Core design manifesto, rejection of AI-template tropes, spatial narrative (Chapters 01–12), and Chiti token rules.
 * **[`BRAND_ASSET_SPECIFICATION.md`](./BRAND_ASSET_SPECIFICATION.md)** — Visual identity, sacred geometry logo tokens, typography pairings, and audio sensory cues.
 * **[`LANDING_PAGE_2026_REVAMP_PLAN.md`](./LANDING_PAGE_2026_REVAMP_PLAN.md)** — Spatial recomposition from SaaS container cards to an edge-to-edge living observatory.
+* **[`NEW_USER_UX_AUDIT_AND_JOURNEY_SIMPLIFICATION.md`](./NEW_USER_UX_AUDIT_AND_JOURNEY_SIMPLIFICATION.md)** — First-session UX audit, competitor onboarding benchmarks (AstroTalk/AstroSage/InstaAstro), friction log, and the simplified 60-second Kundli-first journey with prioritised P0/P1/P2 roadmap.
 * **[`HERO_VIDEO_PROMPTS.md`](./HERO_VIDEO_PROMPTS.md)** — Cinematic video prompts for Kashi ghats, celestial observatories, and atmospheric scrims.
 
 ### 🚀 3. Go-To-Market, Growth & Expansion

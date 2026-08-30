@@ -28,8 +28,11 @@ import AskBetterQuestions from '@/components/AskBetterQuestions';
 import KnowledgeGraphSection from '@/components/KnowledgeGraphSection';
 import FinalChapterCta from '@/components/FinalChapterCta';
 import Footer from '@/components/Footer';
+import MobileBottomNav from '@/components/layout/MobileBottomNav';
+import FirstSessionChecklist from '@/components/onboarding/FirstSessionChecklist';
 
 import { getPersistedLocation, LOCATION_CHANGE_EVENT, LocationAnchor } from '@/lib/location';
+import { getActiveProfile, kundaliForProfile } from '@/lib/profileStore';
 import HelpDeskCtaBanner from '@/components/helpdesk/HelpDeskCtaBanner';
 
 // Dynamic Load for Heavy WebGL Canvas & Modals
@@ -43,11 +46,13 @@ import FloatingAIGuruAvatar from '@/components/consultation/FloatingAIGuruAvatar
 export default function AppLandingPage() {
   const [currentCity, setCurrentCity] = useState<any>(DEFAULT_CITY);
   const [panchangData, setPanchangData] = useState(() => calculatePanchang(new Date(), DEFAULT_CITY));
-  const [kundaliData, setKundaliData] = useState(null);
+  const [tomorrowPanchangData, setTomorrowPanchangData] = useState(() => calculatePanchang(new Date(Date.now() + 24 * 60 * 60 * 1000), DEFAULT_CITY));
+  const [kundaliData, setKundaliData] = useState<any>(null);
 
   // Day/Night & Language State (Chiti UDS v3 compliant — Light/Day mode default, SSR-safe)
+  // Hindi-first default for pilot districts (sticky: saved preference always wins)
   const [theme, setTheme] = useState('light');
-  const [lang, setLang] = useState('en');
+  const [lang, setLang] = useState<'hi' | 'en'>('hi');
   const [isClientMounted, setIsClientMounted] = useState(false);
 
   // Modals state
@@ -67,7 +72,7 @@ export default function AppLandingPage() {
         setTheme(savedTheme);
       }
       const savedLang = localStorage.getItem('cosmictantra_lang');
-      if (savedLang) {
+      if (savedLang === 'hi' || savedLang === 'en') {
         setLang(savedLang);
       }
       const savedLoc = getPersistedLocation();
@@ -110,10 +115,26 @@ export default function AppLandingPage() {
     } catch {}
   }, [lang, isClientMounted]);
 
+  // Restore the visitor's saved chart (Parivaar vault) so a refresh never loses
+  // their Kundali — the free chart is the activation moment, it must persist.
+  useEffect(() => {
+    if (!isClientMounted) return;
+    try {
+      const profile = getActiveProfile();
+      if (profile?.birthDate) {
+        const restored = kundaliForProfile(profile);
+        if (restored) setKundaliData(restored);
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isClientMounted]);
+
   // Update panchang when city changes
   useEffect(() => {
     const updated = calculatePanchang(new Date(), currentCity);
     setPanchangData(updated);
+    const tomorrow = calculatePanchang(new Date(Date.now() + 24 * 60 * 60 * 1000), currentCity);
+    setTomorrowPanchangData(tomorrow);
   }, [currentCity]);
 
   // Initial visit analytics
@@ -159,9 +180,14 @@ export default function AppLandingPage() {
       <PersonalisationBridge
         kundaliData={kundaliData}
         onClearProfile={() => setKundaliData(null)}
+        panchangData={panchangData}
+        tomorrowPanchangData={tomorrowPanchangData}
         lang={lang}
         theme={theme}
       />
+
+      {/* 2b. First-session activation checklist (new visitors, dismissible) */}
+      <FirstSessionChecklist lang={lang} />
 
       <main className="flex-1">
         {/* 3. Hero & Live "Cosmic Now" Precision Instrument */}
@@ -306,12 +332,15 @@ export default function AppLandingPage() {
         theme={theme}
       />
 
+      {/* 20. Mobile 5-thumb-task bottom navigation (phones only) */}
+      <MobileBottomNav lang={lang} />
+
       {/* Modals & Dialogs */}
       <LanguageSelectorModal
         isOpen={isLanguageModalOpen}
         currentLang={lang}
         onClose={() => setIsLanguageModalOpen(false)}
-        onSelectLang={(newLang) => setLang(newLang)}
+        onSelectLang={(newLang: any) => setLang(newLang === 'en' ? 'en' : 'hi')}
       />
 
       <CitySelectorModal

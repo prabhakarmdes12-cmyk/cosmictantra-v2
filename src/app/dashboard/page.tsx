@@ -16,16 +16,9 @@ export default function ScholarDashboard() {
   const refreshProfiles = () => {
     const profiles = getProfiles();
     setAllProfiles(profiles);
-    const current = getActiveProfile() || profiles[0] || {
-      name: 'Priya Sharma',
-      cosmicId: 'CT-4821',
-      birthDate: '1995-06-15',
-      birthTime: '10:30',
-      birthCity: 'Patna',
-      lat: 25.5941,
-      lng: 85.1376,
-      tz: 5.5,
-    };
+    // Never fabricate a demo profile — an empty desk is honest and routes the
+    // new user straight into the 30-second Kundali flow instead.
+    const current = getActiveProfile() || profiles[0] || null;
     setActiveProfileState(current);
   };
 
@@ -44,13 +37,29 @@ export default function ScholarDashboard() {
     return (
       <CosmicTantraShell>
         <div className="min-h-[60vh] flex items-center justify-center p-6">
-          <div className="text-center">
+          <div className="text-center max-w-md">
             <div className="text-5xl mb-4">🪔</div>
             <h1 className="font-editorial text-3xl font-bold">Welcome to Your Scholar’s Desk</h1>
-            <p className="mt-2 text-xs font-mono-data text-[#57524A] dark:text-[#B3ADA3]">Create your Cosmic Profile to begin.</p>
-            <Link href="/profile" className="mt-6 inline-block px-6 py-2.5 bg-[#8E6F1D] text-white rounded-xl text-xs font-mono-data font-bold">
-              Create Profile →
-            </Link>
+            <p className="mt-3 text-sm text-[#57524A] dark:text-[#B3ADA3]">
+              अपनी जन्म कुण्डली 30 सेकंड में बनाएं — यह डेस्क स्वतः आपका Cosmic ID बना देगा।
+            </p>
+            <p className="mt-1 text-xs font-mono-data text-[#57524A] dark:text-[#B3ADA3]">
+              Make your free Kundali first — it takes 30 seconds and creates your Cosmic ID automatically.
+            </p>
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link
+                href="/#kundali-section"
+                className="px-6 py-3 bg-[#8E6F1D] text-white rounded-xl text-xs font-mono-data font-bold shadow-md hover:opacity-90"
+              >
+                निःशुल्क कुण्डली बनाएं → Make my Kundali
+              </Link>
+              <Link
+                href="/daily"
+                className="px-6 py-3 border border-[#8E6F1D]/40 dark:border-[#D4AF37]/40 rounded-xl text-xs font-mono-data font-bold text-[#1C1917] dark:text-white hover:border-[#8E6F1D] transition-all"
+              >
+                आज का पञ्चाङ्ग देखें (Today’s Panchang)
+              </Link>
+            </div>
           </div>
         </div>
       </CosmicTantraShell>
@@ -88,9 +97,9 @@ export default function ScholarDashboard() {
         <div className="grid lg:grid-cols-12 gap-8 mt-8">
           {/* Left: Cosmic Identity Card */}
           <div className="lg:col-span-5 space-y-6">
-            <CosmicIdCard 
+            <CosmicIdCard
               profile={{
-                whatsappPhone: activeProfile.whatsappPhone || '+91 98765 43210',
+                whatsappPhone: activeProfile.whatsappPhone || '',
                 fullName: activeProfile.name,
                 cosmicId: activeProfile.cosmicId,
                 consentGiven: true,

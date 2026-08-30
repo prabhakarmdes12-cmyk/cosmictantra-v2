@@ -4,6 +4,7 @@
  */
 
 const STORAGE_KEY = 'cosmictantra_intent_session';
+const FIRST_VISIT_KEY = 'cosmictantra_first_visit_ms';
 
 export const ANALYTICS_EVENTS = {
   HOME_VIEW: 'HOME_VIEW',
@@ -14,6 +15,11 @@ export const ANALYTICS_EVENTS = {
   FESTIVAL_SELECTED: 'FESTIVAL_SELECTED',
   KUNDALI_STARTED: 'KUNDALI_STARTED',
   KUNDALI_GENERATED: 'KUNDALI_GENERATED',
+  KUNDALI_SHARED: 'KUNDALI_SHARED',
+  FIRST_KUNDALI_GENERATED: 'FIRST_KUNDALI_GENERATED',
+  PROFILE_SAVED: 'PROFILE_SAVED',
+  CHECKLIST_TASK_CLICKED: 'CHECKLIST_TASK_CLICKED',
+  ASK_STEP_VIEWED: 'ASK_STEP_VIEWED',
   DASHA_OPENED: 'DASHA_OPENED',
   SWARGA_LOK_OPENED: 'SWARGA_LOK_OPENED',
   PRACTITIONER_VIEWED: 'PRACTITIONER_VIEWED',
@@ -61,6 +67,13 @@ class IntentTracker {
   }
 
   public track(eventName: string, payload: Record<string, any> = {}) {
+    // Stamp the visitor's first arrival once — powers time-to-value metrics
+    try {
+      if (typeof window !== 'undefined' && !localStorage.getItem(FIRST_VISIT_KEY)) {
+        localStorage.setItem(FIRST_VISIT_KEY, String(Date.now()));
+      }
+    } catch {}
+
     const eventRecord = {
       event: eventName,
       payload,
@@ -94,6 +107,33 @@ class IntentTracker {
       productsUsed: this.session.productsUsed,
       totalEvents: this.session.events.length
     };
+  }
+
+  /** Milliseconds since the visitor's first arrival (activation speed / TTV). */
+  public getTimeToValueMs(): number | null {
+    try {
+      if (typeof window === 'undefined') return null;
+      const t = localStorage.getItem(FIRST_VISIT_KEY);
+      return t ? Date.now() - Number(t) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Fires an event at most once per visitor (e.g. FIRST_KUNDALI_GENERATED) and
+   * automatically annotates it with time-to-value. Keyed dedupe flag in
+   * localStorage keeps it stable across sessions.
+   */
+  public trackOnce(onceKey: string, eventName: string, payload: Record<string, any> = {}) {
+    try {
+      if (typeof window !== 'undefined') {
+        const flagKey = `cosmictantra_once_${onceKey}`;
+        if (localStorage.getItem(flagKey)) return;
+        localStorage.setItem(flagKey, '1');
+      }
+    } catch {}
+    this.track(eventName, { ...payload, ttfvMs: this.getTimeToValueMs() });
   }
 }
 

@@ -50,7 +50,7 @@ export default function HelpDeskCtaBanner({
   if (variant === 'floating') {
     return (
       <>
-        <div className="fixed bottom-6 right-6 z-40">
+        <div className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-40">
           <button
             type="button"
             onClick={() => setIsOpen(true)}

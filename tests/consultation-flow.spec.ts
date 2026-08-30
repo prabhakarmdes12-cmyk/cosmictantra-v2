@@ -4,13 +4,30 @@ const BASE_URL = 'http://localhost:3000';
 
 test.describe('CosmicTantra — CallMe4 E2EE & Pandit Onboarding Suite', () => {
 
-  test('Ask / Consultation Hub (/ask): Displays Vedic Scholar Bench and 4 Service Tiers', async ({ page }) => {
+  test('Ask / Consultation Hub (/ask): Progressive 3-step journey (question → birth details → 4 service tiers)', async ({ page }) => {
     await page.goto(`${BASE_URL}/ask`, { waitUntil: 'domcontentloaded' });
 
     // Header and TrustBar
     await expect(page.getByText(/विद्वान् ज्योतिषी परामर्श|VEDIC SCHOLAR BENCH/i).first()).toBeVisible();
 
-    // 4 Service Tiers
+    // STEP 1: question first (progressive disclosure — tiers are NOT shown yet)
+    await expect(page.getByText(/पंडित जी हेतु आपका मुख्य प्रश्न/i)).toBeVisible();
+    await expect(page.getByText(/लिखित विद्वत्-परामर्श पत्र/i)).toHaveCount(0);
+
+    // One-tap example question chip fills the textarea
+    const chip = page.getByRole('button', { name: /शादी कब होगी\?/ });
+    await chip.click();
+    await page.getByRole('button', { name: /आगे बढ़ें — जन्म विवरण/i }).click();
+
+    // STEP 2: birth details (name / date / time with "don't know" escape hatch)
+    await expect(page.getByText(/जन्म तिथि \*/i).first()).toBeVisible();
+    await expect(page.getByText(/समय नहीं पता/i).first()).toBeVisible();
+    await page.locator('input[type="text"]').first().fill('Priya Sharma');
+    await page.locator('input[type="date"]').fill('1995-06-15');
+    await page.locator('input[type="time"]').fill('10:30');
+    await page.getByRole('button', { name: /आगे बढ़ें — परामर्श चुनें/i }).click();
+
+    // STEP 3: 4 Service Tiers now visible
     await expect(page.getByText(/लिखित विद्वत्-परामर्श पत्र/i)).toBeVisible();
     await expect(page.getByText(/गोपनीय प्रत्यक्ष वॉयस कॉल/i)).toBeVisible();
     await expect(page.getByText(/साक्षात् वीडियो दर्शन/i)).toBeVisible();

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Compass,
   Calendar,
@@ -14,7 +14,9 @@ import {
   Sparkles,
   BookOpen,
   Eye,
-  CheckCircle
+  CheckCircle,
+  Share2,
+  HelpCircle
 } from 'lucide-react';
 import { calculateKundali } from '../lib/astrologyEngine';
 import { CITIES, searchCities, DEFAULT_CITY } from '../lib/cities';
@@ -22,6 +24,8 @@ import { getCurrentGpsLocation, resolveBirthPlace } from '../lib/location';
 import { analytics, ANALYTICS_EVENTS } from '../lib/analytics';
 import { TRANSLATIONS } from '../lib/translations';
 import { chitiSensory } from '../lib/chitiAudio';
+import { calculateVimshottariDasha } from '../lib/dashaEngine';
+import { getProfiles, getActiveProfile, upsertProfile, setActiveProfile } from '../lib/profileStore';
 import NorthIndianChart from './NorthIndianChart';
 
 const POPULAR_PANCHANG_ANCHORS = [
@@ -43,15 +47,17 @@ export default function KundaliExperience({
   lang = 'en',
   theme = 'dark'
 }) {
+  // NEW VISITOR: empty fields + placeholders only (never a stranger's demo data).
+  // Returning visitor: prefilled from their saved Parivaar profile below.
   const [formData, setFormData] = useState({
-    name: 'Priya Sharma',
-    birthDate: '1995-06-15',
-    birthTime: '10:30',
-    cityName: 'Patna',
-    stateName: 'Bihar',
-    latitude: 25.5941,
-    longitude: 85.1376,
-    timezone: 5.5,
+    name: '',
+    birthDate: '',
+    birthTime: '',
+    cityName: DEFAULT_CITY.name,
+    stateName: DEFAULT_CITY.state,
+    latitude: DEFAULT_CITY.lat,
+    longitude: DEFAULT_CITY.lng,
+    timezone: DEFAULT_CITY.tz || 5.5,
     isCustomCoordinates: false
   });
 
@@ -59,8 +65,34 @@ export default function KundaliExperience({
   const [showCoordinateAdvanced, setShowCoordinateAdvanced] = useState(false);
   const [gpsStatus, setGpsStatus] = useState('');
   const [viewMode, setViewMode] = useState('simple');
+  const [savedCosmicId, setSavedCosmicId] = useState(null);
+  // Birth-time-unknown path: many first-time users do not know their exact
+  // time. Instead of abandoning, we compute a noon chart (Moon/Nakshatra stay
+  // reliable) and honestly flag that Lagna needs scholarly rectification.
+  const [birthTimeUnknown, setBirthTimeUnknown] = useState(false);
   const isHi = lang === 'hi';
   const t = TRANSLATIONS[lang]?.kundali || TRANSLATIONS.en.kundali;
+
+  // Prefill from the active saved profile (returning visitor)
+  useEffect(() => {
+    try {
+      const p = getActiveProfile();
+      if (p && p.birthDate) {
+        setFormData(prev => ({
+          ...prev,
+          name: p.name || prev.name,
+          birthDate: p.birthDate || prev.birthDate,
+          birthTime: p.birthTime || prev.birthTime,
+          cityName: p.birthCity || p.cityName || prev.cityName,
+          stateName: p.state || prev.stateName,
+          latitude: p.lat ?? p.birthLat ?? prev.latitude,
+          longitude: p.lng ?? p.birthLon ?? prev.longitude,
+          timezone: p.tz ?? p.timezone ?? prev.timezone
+        }));
+        if (p.cosmicId) setSavedCosmicId(p.cosmicId);
+      }
+    } catch {}
+  }, []);
 
   const handleCitySelect = (city) => {
     chitiSensory.playTick();
@@ -105,26 +137,112 @@ export default function KundaliExperience({
     const lat = parseFloat(formData.latitude);
     const lng = parseFloat(formData.longitude);
     const tz = parseFloat(formData.timezone || 5.5);
+    const effectiveBirthTime = birthTimeUnknown ? '12:00' : (formData.birthTime || '12:00');
 
     const locationLabel = formData.cityName + ', ' + (formData.stateName || 'India');
 
     const data = calculateKundali({
       birthDate: formData.birthDate,
-      birthTime: formData.birthTime,
+      birthTime: effectiveBirthTime,
       latitude: lat,
       longitude: lng,
       timezone: tz,
       locationName: locationLabel
     });
-    
+
     analytics.track(ANALYTICS_EVENTS.KUNDALI_GENERATED, {
       lagna: data.lagna.rashiName,
       moonNak: data.moon.nakshatra,
       lat,
-      lng
+      lng,
+      birthTimeKnown: !birthTimeUnknown
+    });
+    // Activation metric — once per visitor, annotated with time-to-value
+    analytics.trackOnce('first_kundali', ANALYTICS_EVENTS.FIRST_KUNDALI_GENERATED, {
+      lagna: data.lagna.rashiName,
+      birthTimeKnown: !birthTimeUnknown
     });
 
+    // Persist silently to the Parivaar vault (localStorage → Cosmic ID).
+    // The chart survives refresh and auto-fills /ask — account-later, never a gate.
+    try {
+      const birthDate = formData.birthDate;
+      const birthTime = effectiveBirthTime;
+      const existing = getProfiles().find(
+        (p) => p.relation === 'Self' && p.birthDate === birthDate && p.birthTime === birthTime
+      );
+      const saved = upsertProfile({
+        id: existing?.id,
+        name: (formData.name || '').trim() || (isHi ? 'जातक' : 'Native'),
+        relation: 'Self',
+        birthDate,
+        birthTime,
+        birthTimeKnown: !birthTimeUnknown,
+        birthCity: formData.cityName,
+        birthLat: lat,
+        birthLon: lng,
+        lat,
+        lng,
+        timezone: tz,
+        tz
+      });
+      if (saved && saved.id) setActiveProfile(saved.id);
+      if (saved?.cosmicId) setSavedCosmicId(saved.cosmicId);
+      if (saved) analytics.track(ANALYTICS_EVENTS.PROFILE_SAVED, { cosmicId: saved.cosmicId, relation: 'Self' });
+    } catch {}
+
     onGenerateKundali(data);
+  };
+
+  // Plain-language highlights (the "aha" block for first-time visitors)
+  const highlights = (() => {
+    if (!kundaliData) return [];
+    const lagnaName = kundaliData.lagna?.rashiName || '';
+    const lagnaEn = kundaliData.lagna?.rashiEn || kundaliData.lagna?.rasiName || '';
+    const moonRashi = kundaliData.moon?.rashiName || '';
+    const moonNak = kundaliData.moon?.nakshatra?.name || kundaliData.moon?.nakshatra || '';
+    const moonPada = kundaliData.moon?.pada || 1;
+    const items = [
+      isHi
+        ? `आपका लग्न ${lagnaName}${lagnaEn ? ` (${lagnaEn})` : ''} है — स्वभाव व जीवन-दृष्टि का सूचक।`
+        : `Your Lagna (rising sign) is ${lagnaEn || lagnaName} — it shapes temperament & outlook.`,
+      isHi
+        ? `चन्द्र ${moonRashi} राशि, ${moonNak} नक्षत्र (पाद ${moonPada}) में — मन की प्रवृत्ति का सूचक।`
+        : `Moon in ${moonRashi}, ${moonNak} Nakshatra (Pada ${moonPada}) — it shows the mind's nature.`
+    ];
+    try {
+      const moonLon = kundaliData.moon?.longitude;
+      if (typeof moonLon === 'number' && formData.birthDate) {
+        const schedule = calculateVimshottariDasha(moonLon, formData.birthDate);
+        const current = schedule?.mahadashas?.find?.((m) => m.isCurrent);
+        if (current) {
+          const endYear = (current.endDate || '').slice(0, 4);
+          items.push(
+            isHi
+              ? `अभी ${current.lordHi || current.lord} महादशा चल रही है${endYear ? ` (${endYear} तक)` : ''} — जीवन का वर्तमान अध्याय।`
+              : `Currently running ${current.lord} Mahadasha${endYear ? ` (till ${endYear})` : ''} — life's present chapter.`
+          );
+        }
+      }
+    } catch {}
+    return items;
+  })();
+
+  // 1-tap WhatsApp share (Web Share API → wa.me fallback) — the viral loop
+  const handleWhatsAppShare = () => {
+    chitiSensory.playTick();
+    const lagna = kundaliData?.lagna?.rashiEn || kundaliData?.lagna?.rashiName || '';
+    const moonNak = kundaliData?.moon?.nakshatra?.name || kundaliData?.moon?.nakshatra || '';
+    const name = (formData.name || '').trim() || (isHi ? 'जातक' : 'Native');
+    const text = isHi
+      ? `🕉 ${name} की जन्म कुण्डली (CosmicTantra)\n• लग्न: ${lagna}\n• चन्द्र नक्षत्र: ${moonNak}\n• जन्म: ${formData.birthDate}, ${birthTimeUnknown ? 'समय अज्ञात' : formData.birthTime}, ${formData.cityName}\n\nनिःशुल्क कुण्डली यहाँ बनाएं: https://cosmictantra.chiti.tech`
+      : `🕉 ${name}'s Janma Kundali (CosmicTantra)\n• Lagna: ${lagna}\n• Moon Nakshatra: ${moonNak}\n• Born: ${formData.birthDate}, ${birthTimeUnknown ? 'time unknown' : formData.birthTime}, ${formData.cityName}\n\nMake your free Kundali: https://cosmictantra.chiti.tech`;
+    analytics.track(ANALYTICS_EVENTS.KUNDALI_SHARED, { source: 'KUNDALI_RESULT' });
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      navigator.share({ text }).catch(() => {});
+    } else {
+      window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+    }
   };
 
   const handleDemoFill = () => {
@@ -220,10 +338,30 @@ export default function KundaliExperience({
                 <input
                   type="time"
                   required
-                  value={formData.birthTime}
+                  disabled={birthTimeUnknown}
+                  value={birthTimeUnknown ? '12:00' : formData.birthTime}
                   onChange={(e) => setFormData({ ...formData, birthTime: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] dark:bg-[#05060A] border border-black/[0.1] dark:border-white/[0.1] text-xs text-[#1C1917] dark:text-[#EFECE6] focus:outline-none focus:border-[#D4AF37] font-bold"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] dark:bg-[#05060A] border border-black/[0.1] dark:border-white/[0.1] text-xs text-[#1C1917] dark:text-[#EFECE6] focus:outline-none focus:border-[#D4AF37] font-bold disabled:opacity-60"
                 />
+                <label className="flex items-start gap-1.5 text-[10px] text-[#57524A] dark:text-[#AAA49A] cursor-pointer font-bold">
+                  <input
+                    type="checkbox"
+                    checked={birthTimeUnknown}
+                    onChange={(e) => {
+                      setBirthTimeUnknown(e.target.checked);
+                      setFormData(prev => ({ ...prev, birthTime: e.target.checked ? '12:00' : '' }));
+                    }}
+                    className="mt-0.5 cursor-pointer accent-[#8E6F1D]"
+                  />
+                  <span>{isHi ? 'समय नहीं पता — दोपहर 12:00 से गणना करें' : 'I don\u2019t know my birth time — use 12:00 noon'}</span>
+                </label>
+                {birthTimeUnknown && (
+                  <p className="text-[10px] leading-relaxed text-[#A6461D] dark:text-[#E2825B] font-medium">
+                    {isHi
+                      ? 'ⓘ बिना समय के चन्द्र राशि व नक्षत्र शुद्ध रहते हैं, परन्तु लग्न सटीक नहीं होगा। पंडित जी से जन्म समय शोधन (rectification) परामर्श लें।'
+                      : 'ⓘ Without the exact time, Moon sign & Nakshatra stay reliable but the Lagna will be approximate. Ask a scholar about birth-time rectification.'}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-1.5 relative">
@@ -307,6 +445,28 @@ export default function KundaliExperience({
                   <div className="text-xs font-mono text-[#57524A] dark:text-[#AAA49A]">
                     {kundaliData.meta?.birthDate} • {kundaliData.meta?.birthTime} • Lahiri Ayanamsha {kundaliData.ayanamsha}°
                   </div>
+                  {savedCosmicId && (
+                    <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
+                        <CheckCircle className="w-3 h-3" />
+                        <span>{isHi ? 'कुण्डली सुरक्षित — आपका Cosmic ID' : 'Kundali saved — your Cosmic ID'}: {savedCosmicId}</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleWhatsAppShare}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#25D366]/10 border border-[#25D366]/40 text-[10px] font-bold text-[#128C4A] dark:text-[#4ADE80] hover:bg-[#25D366]/20 transition-colors cursor-pointer"
+                      >
+                        <Share2 className="w-3 h-3" />
+                        <span>{isHi ? 'व्हाट्सएप पर भेजें' : 'Share on WhatsApp'}</span>
+                      </button>
+                      {birthTimeUnknown && (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-[10px] font-bold text-amber-700 dark:text-amber-300">
+                          <HelpCircle className="w-3 h-3" />
+                          <span>{isHi ? 'समय अज्ञात — लग्न सांकेतिक' : 'Time unknown — Lagna approximate'}</span>
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -330,6 +490,23 @@ export default function KundaliExperience({
                 </button>
               </div>
             </div>
+
+            {/* 3 Plain-Language Highlights — the first-timer "aha" block */}
+            {highlights.length > 0 && (
+              <div className="grid sm:grid-cols-3 gap-3">
+                {highlights.map((h, i) => (
+                  <div
+                    key={i}
+                    className="p-4 rounded-2xl bg-gradient-to-br from-[#FAF7F2] to-white dark:from-[#0B0D16] dark:to-[#090B14] border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30"
+                  >
+                    <div className="text-[9px] uppercase tracking-[0.18em] font-bold text-[#8E6F1D] dark:text-[#F0C968] mb-1.5 font-mono-data">
+                      {isHi ? `आपकी ३ मुख्य बातें · ${i + 1}/३` : `YOUR 3 HIGHLIGHTS · ${i + 1}/3`}
+                    </div>
+                    <p className="text-xs leading-relaxed font-medium text-[#1C1917] dark:text-[#EFECE6]">{h}</p>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* 1. SIMPLE VIEW */}
             {viewMode === 'simple' && (

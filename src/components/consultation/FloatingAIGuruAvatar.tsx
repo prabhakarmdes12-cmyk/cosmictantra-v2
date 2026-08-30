@@ -221,6 +221,7 @@ export default function FloatingAIGuruAvatar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showGreetingTooltip, setShowGreetingTooltip] = useState(false);
   const [tooltipText, setTooltipText] = useState('हर हर महादेव! काशी सहायक से पूछें 🙏');
+  const [uiLang, setUiLang] = useState<'en' | 'hi'>('hi');
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isPlayingOm, setIsPlayingOm] = useState(false);
   const [offeredDiyaMsgIds, setOfferedDiyaMsgIds] = useState<Record<string, boolean>>({});
@@ -246,26 +247,37 @@ export default function FloatingAIGuruAvatar() {
   const [inputVal, setInputVal] = useState('');
   const chatScrollRef = useRef<HTMLDivElement>(null);
 
-  // Time-aware greeting
+  // Time-aware greeting — bilingual (honours the saved UI language) and NEVER
+  // auto-opens: a first-time visitor should not be interrupted after 2.5s.
+  // The tooltip appears on hover; the avatar's pulse halo draws attention.
   useEffect(() => {
+    let savedLang: string | null = null;
+    try {
+      savedLang = localStorage.getItem('cosmictantra_lang');
+    } catch {}
+    const isEn = savedLang === 'en';
+    setUiLang(isEn ? 'en' : 'hi');
+
     const hour = new Date().getHours();
-    let salutation = 'हर हर महादेव! 🙏 आज का पञ्चाङ्ग या दर्शन करें?';
+    let salutation: string;
     if (hour >= 5 && hour < 11) {
-      salutation = 'सुप्रभात! ☀️ ब्रह्म मुहूर्त • आज का पञ्चाङ्ग व काशी दर्शन 🙏';
+      salutation = isEn
+        ? 'Suprabhat! ☀️ Brahma Muhurat — ask about today’s Panchang or Kashi Darshan 🙏'
+        : 'सुप्रभात! ☀️ ब्रह्म मुहूर्त • आज का पञ्चाङ्ग व काशी दर्शन 🙏';
     } else if (hour >= 11 && hour < 17) {
-      salutation = 'नमस्ते! ⚡ आज का राहुकाल, शुभ मुहूर्त व कुण्डली प्रश्न 🙏';
+      salutation = isEn
+        ? 'Namaste! ⚡ Ask about Rahu Kaal, Shubh Muhurat or your Kundali 🙏'
+        : 'नमस्ते! ⚡ आज का राहुकाल, शुभ मुहूर्त व कुण्डली प्रश्न 🙏';
     } else if (hour >= 17 && hour < 22) {
-      salutation = 'शुभ संध्या! 🪔 दशाश्वमेध घाट गंगा महाआरती लाइव दर्शन 🌸';
+      salutation = isEn
+        ? 'Shubh Sandhya! 🪔 Live Ganga Mahaarti Darshan from Dashashwamedh Ghat 🌸'
+        : 'शुभ संध्या! 🪔 दशाश्वमेध घाट गंगा महाआरती लाइव दर्शन 🌸';
     } else {
-      salutation = 'हर हर महादेव! 🌙 कल के दिन का पञ्चाङ्ग व ग्रह स्थिति जानें 🙏';
+      salutation = isEn
+        ? 'Har Har Mahadev! 🌙 Ask about tomorrow’s Panchang & planetary positions 🙏'
+        : 'हर हर महादेव! 🌙 कल के दिन का पञ्चाङ्ग व ग्रह स्थिति जानें 🙏';
     }
     setTooltipText(salutation);
-
-    const t = setTimeout(() => {
-      setShowGreetingTooltip(true);
-    }, 2500);
-
-    return () => clearTimeout(t);
   }, []);
 
   // Prefill active profile if available
@@ -1128,8 +1140,10 @@ export default function FloatingAIGuruAvatar() {
 
   return (
     <>
-      {/* FLOATING KASHI SAHAYAK AVATAR BUTTON (Fixed Bottom-Right) */}
-      <div className="fixed bottom-6 right-4 sm:right-6 z-50 flex flex-col items-end pointer-events-auto font-mono-data">
+      {/* FLOATING KASHI SAHAYAK AVATAR BUTTON (Fixed Bottom-LEFT — keeps the
+          bottom-right corner free for the WhatsApp Help Desk pill; sits above
+          the mobile bottom navigation bar) */}
+      <div className="fixed bottom-20 md:bottom-6 left-4 md:left-6 z-50 flex flex-col items-start pointer-events-auto font-mono-data">
         
         {/* Dynamic Contextual Tooltip Greeting */}
         {!isOpen && showGreetingTooltip && (
@@ -1164,10 +1178,12 @@ export default function FloatingAIGuruAvatar() {
         {/* The Banaras Character Avatar Button */}
         <button
           onClick={toggleOpen}
+          onMouseEnter={() => { if (!isOpen) setShowGreetingTooltip(true); }}
           className={`relative group w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden shadow-2xl hover:scale-108 active:scale-95 transition-all duration-300 cursor-pointer flex items-center justify-center border-2 border-[#D4AF37] ${
             isOpen ? 'rotate-90 bg-black/80' : 'bg-[#0E101D]'
           }`}
-          title="काशी सहायक से बात करें"
+          title={uiLang === 'en' ? 'Ask Kashi Sahayak' : 'काशी सहायक से बात करें'}
+          aria-label={uiLang === 'en' ? 'Ask Kashi Sahayak' : 'काशी सहायक से बात करें'}
         >
           {/* Subtle Breathing Halo Ring */}
           {!isOpen && (
@@ -1192,7 +1208,7 @@ export default function FloatingAIGuruAvatar() {
 
       {/* EXPANDED INTERACTIVE SACRED CONCIERGE CHAT DRAWER */}
       {isOpen && (
-        <div className="fixed inset-x-3 bottom-20 sm:bottom-24 sm:right-6 sm:left-auto sm:w-[460px] max-h-[85vh] sm:max-h-[660px] h-[620px] bg-white/95 dark:bg-[#0C0E1A]/95 backdrop-blur-2xl border-2 border-[#8E6F1D]/40 dark:border-[#D4AF37]/50 rounded-3xl shadow-2xl z-50 flex flex-col overflow-hidden font-mono-data animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-x-3 bottom-[9rem] md:bottom-24 md:left-6 md:right-auto md:w-[460px] max-h-[85vh] sm:max-h-[660px] h-[620px] bg-white/95 dark:bg-[#0C0E1A]/95 backdrop-blur-2xl border-2 border-[#8E6F1D]/40 dark:border-[#D4AF37]/50 rounded-3xl shadow-2xl z-50 flex flex-col overflow-hidden font-mono-data animate-in zoom-in-95 duration-200">
           
           {/* Top Sanctum Header with Banaras Avatar */}
           <div className="p-3 px-4 bg-gradient-to-r from-[#8E6F1D]/15 via-[#FAF7F2] to-[#D4AF37]/20 dark:from-[#D4AF37]/15 dark:via-[#121526] dark:to-[#8E6F1D]/20 border-b border-black/10 dark:border-white/10 flex items-center justify-between shrink-0">

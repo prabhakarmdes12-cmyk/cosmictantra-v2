@@ -61,7 +61,7 @@ export default function PwaRegister() {
   if (!showBanner) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 z-[9998] max-w-sm bg-[#0E101D]/95 text-white backdrop-blur-xl border border-[#8E6F1D]/50 rounded-2xl p-4 shadow-2xl animate-in slide-in-from-bottom-5">
+    <div className="fixed bottom-20 md:bottom-4 left-4 right-4 md:left-auto md:right-6 z-[9998] max-w-sm bg-[#0E101D]/95 text-white backdrop-blur-xl border border-[#8E6F1D]/50 rounded-2xl p-4 shadow-2xl animate-in slide-in-from-bottom-5">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8E6F1D] to-[#D4AF37] p-2 flex items-center justify-center shrink-0 shadow-lg">

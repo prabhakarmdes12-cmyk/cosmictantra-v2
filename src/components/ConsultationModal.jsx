@@ -32,9 +32,11 @@ export default function ConsultationModal({
     name: '',
     phone: '',
     email: '',
-    birthDate: kundaliData?.meta?.birthDate || '5015-05-15',
-    birthTime: kundaliData?.meta?.birthTime || '14:30',
-    birthPlace: kundaliData?.meta?.locationName || 'Dhanbad, Jharkhand',
+    // Never pre-fill fabricated birth data — a typo'd year (5015) silently computed
+    // a wrong chart. Fields are `required`; kundali context fills them when present.
+    birthDate: kundaliData?.meta?.birthDate || '',
+    birthTime: kundaliData?.meta?.birthTime || '',
+    birthPlace: kundaliData?.meta?.locationName || '',
     birthLat: kundaliData?.meta?.latitude || 23.7957,
     birthLon: kundaliData?.meta?.longitude || 86.4304,
     timezone: kundaliData?.meta?.timezone || 5.5,
@@ -71,7 +73,7 @@ export default function ConsultationModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           customerName: formData.name,
-          customerPhone: formData.phone || '+919876543210',
+          customerPhone: (formData.phone || '').trim(),
           customerEmail: formData.email,
           customerQuestion: formData.question,
           birthDate: formData.birthDate,
