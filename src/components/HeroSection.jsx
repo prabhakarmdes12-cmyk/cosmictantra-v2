@@ -363,15 +363,8 @@ export default function HeroSection({
                 <span>{t.footerNote}</span>
               </div>
               <a
-                href="#methodology-section"
-                onClick={(e) => {
-                  const el = document.getElementById('methodology-section');
-                  if (el) {
-                    e.preventDefault();
-                    el.scrollIntoView({ behavior: 'smooth' });
-                  }
-                }}
-                className="text-[#8E6F1D] dark:text-[#D4AF37] hover:underline font-semibold flex items-center gap-0.5 ml-auto"
+                href="/library/lahiri-ayanamsha"
+                className="min-h-11 text-[#8E6F1D] dark:text-[#D4AF37] hover:underline font-semibold flex items-center gap-0.5 ml-auto"
               >
                 <span>{t.viewMethodology || (isHi ? 'गणना पद्धति देखें →' : 'View methodology →')}</span>
               </a>

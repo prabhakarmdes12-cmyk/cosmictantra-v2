@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { BookOpen, CalendarDays, HeartHandshake, Sparkles } from 'lucide-react';
 import { DEFAULT_CITY } from '@/lib/cities';
 import { calculatePanchang } from '@/lib/panchang';
 import { calculateKundali } from '@/lib/astrologyEngine';
@@ -14,31 +16,12 @@ import LanguageSelectorModal from '@/components/layout/LanguageSelectorModal';
 import PersonalisationBridge from '@/components/PersonalisationBridge';
 import HeroSection from '@/components/HeroSection';
 import TodayAtAGlance from '@/components/TodayAtAGlance';
-import IntentRouter from '@/components/IntentRouter';
-import MuhuratDiscovery from '@/components/MuhuratDiscovery';
 import FestivalStrip from '@/components/FestivalStrip';
-import WorldToYouTransition from '@/components/WorldToYouTransition';
-import SampleKundlisShowcase from '@/components/SampleKundlisShowcase';
-import DashaHero from '@/components/DashaHero';
-import MethodologySection from '@/components/MethodologySection';
-import PractitionersSection from '@/components/PractitionersSection';
-import ConsultationOffer from '@/components/ConsultationOffer';
-import SampleConsultation from '@/components/SampleConsultation';
-import AskBetterQuestions from '@/components/AskBetterQuestions';
-import KnowledgeGraphSection from '@/components/KnowledgeGraphSection';
-import FinalChapterCta from '@/components/FinalChapterCta';
-import Footer from '@/components/Footer';
+import GlobalFooter from '@/components/layout/GlobalFooter';
 
 import { getPersistedLocation, LOCATION_CHANGE_EVENT, LocationAnchor } from '@/lib/location';
-import HelpDeskCtaBanner from '@/components/helpdesk/HelpDeskCtaBanner';
-
-// Dynamic Load for Heavy WebGL Canvas & Modals
-const SwargaLok = nextDynamic(() => import('@/components/SwargaLok'), { ssr: false });
+// Dynamic Load for Modals
 const CitySelectorModal = nextDynamic(() => import('@/components/CitySelectorModal'), { ssr: false });
-const CosmicSearchModal = nextDynamic(() => import('@/components/CosmicSearchModal'), { ssr: false });
-const CapabilityRegistryModal = nextDynamic(() => import('@/components/CapabilityRegistryModal'), { ssr: false });
-const ConsultationModal = nextDynamic(() => import('@/components/ConsultationModal'), { ssr: false });
-import FloatingAIGuruAvatar from '@/components/consultation/FloatingAIGuruAvatar';
 
 // Disable static prerendering — homepage uses new Date() (panchang) which must be server-rendered fresh
 export const dynamic = 'force-dynamic';
@@ -57,10 +40,6 @@ export default function AppLandingPage() {
   // Modals state
   const [isCityModalOpen, setIsCityModalOpen] = useState(false);
   const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
-  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-  const [isCapabilityModalOpen, setIsCapabilityModalOpen] = useState(false);
-  const [isConsultationModalOpen, setIsConsultationModalOpen] = useState(false);
-  const [consultationPrompt, setConsultationPrompt] = useState('');
 
   // Sync client-persisted preferences and real-time location on mount to eliminate SSR hydration mismatch
   useEffect(() => {
@@ -135,9 +114,8 @@ export default function AppLandingPage() {
     setLang(prev => (prev === 'en' ? 'hi' : 'en'));
   };
 
-  const handleOpenConsultation = (initialPrompt = '') => {
-    setConsultationPrompt(initialPrompt);
-    setIsConsultationModalOpen(true);
+  const handleOpenConsultation = () => {
+    window.location.href = '/ask';
   };
 
   const handleNavigateSection = (sectionId: string) => {
@@ -170,6 +148,8 @@ export default function AppLandingPage() {
       />
 
       <main className="flex-1">
+        {isClientMounted ? (
+          <>
         {/* 3. Hero & Live "Cosmic Now" Precision Instrument */}
         <HeroSection
           panchangData={panchangData}
@@ -182,39 +162,48 @@ export default function AppLandingPage() {
           theme={theme}
         />
 
-        {/* Free WhatsApp Help Desk Direct Entry Banner */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <HelpDeskCtaBanner source="HOME" lang={lang === 'hi' ? 'hi' : 'en'} />
-        </div>
-
         {/* 4. Today At A Glance (Vedic Day Arc & Stepped Ribbon) */}
         <TodayAtAGlance
           panchangData={panchangData}
           currentCity={currentCity}
-          onOpenConsultation={() => handleOpenConsultation('Daily Muhurat Consultation')}
-          lang={lang}
-          theme={theme}
-        />
-
-        {/* 5. What Brought You Here? (Primary Intent Router) */}
-        <IntentRouter
-          onSelectIntent={(id: string) => handleNavigateSection(id)}
-          onOpenConsultation={handleOpenConsultation}
-          onExplorePanchang={() => handleNavigateSection('panchang-section')}
-          onCreateKundali={() => handleNavigateSection('hero-section')}
-          onOpenDasha={() => handleNavigateSection('dasha-section')}
-          onOpenFestivals={() => handleNavigateSection('festival-section')}
-          onOpenMuhurat={() => handleNavigateSection('muhurat-section')}
-          lang={lang}
-          theme={theme}
-        />
-
-        {/* 6. Muhurat Discovery */}
-        <MuhuratDiscovery
           onOpenConsultation={handleOpenConsultation}
           lang={lang}
           theme={theme}
         />
+
+        {/* 5. Compact access to deeper tools without competing with the core journey */}
+        <section className="px-4 py-14 sm:px-6 sm:py-20" aria-labelledby="explore-heading">
+          <div className="mx-auto max-w-5xl">
+            <div className="mb-8 max-w-2xl">
+              <p className="mb-2 text-sm font-semibold uppercase tracking-[0.16em] text-[#8E6F1D] dark:text-[#D4AF37]">
+                {lang === 'hi' ? 'आगे अन्वेषण करें' : 'Explore when you need more'}
+              </p>
+              <h2 id="explore-heading" className="font-editorial text-3xl font-bold text-[#1C1917] dark:text-white sm:text-4xl">
+                {lang === 'hi' ? 'एक स्पष्ट अगला कदम चुनें' : 'Choose one clear next step'}
+              </h2>
+              <p className="mt-3 text-base leading-7 text-[#5F584E] dark:text-[#B8B1A5]">
+                {lang === 'hi'
+                  ? 'दैनिक समय, सम्बन्ध, शुभ मुहूर्त और अध्ययन के उपकरण एक स्थान पर उपलब्ध हैं।'
+                  : 'Open focused tools for daily timing, relationships, auspicious dates, or study.'}
+              </p>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                { href: '/calendar', title: lang === 'hi' ? 'वैदिक कैलेंडर' : 'Vedic calendar', detail: lang === 'hi' ? 'तिथि, पर्व और शुभ दिन' : 'Tithi, festivals and useful dates', icon: CalendarDays },
+                { href: '/kundali-milan', title: lang === 'hi' ? 'कुण्डली मिलान' : 'Kundali matching', detail: lang === 'hi' ? 'दो जन्म विवरणों का मिलान' : 'Compare two birth profiles', icon: HeartHandshake },
+                { href: '/muhurat/personalized', title: lang === 'hi' ? 'व्यक्तिगत मुहूर्त' : 'Personal Muhurat', detail: lang === 'hi' ? 'महत्वपूर्ण कार्य का सही समय' : 'Find timing for an important event', icon: Sparkles },
+                { href: '/library', title: lang === 'hi' ? 'वैदिक पुस्तकालय' : 'Vedic library', detail: lang === 'hi' ? 'विधि और शब्द सरल रूप में' : 'Understand methods and terminology', icon: BookOpen },
+              ].map(({ href, title, detail, icon: Icon }) => (
+                <Link key={href} href={href} className="group min-h-32 rounded-2xl border border-black/10 bg-white/75 p-5 transition hover:-translate-y-0.5 hover:border-[#8E6F1D]/60 hover:shadow-lg dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-[#D4AF37]/60">
+                  <Icon className="mb-4 h-6 w-6 text-[#8E6F1D] dark:text-[#D4AF37]" aria-hidden="true" />
+                  <h3 className="text-base font-bold text-[#1C1917] dark:text-white">{title}</h3>
+                  <p className="mt-1 text-sm leading-6 text-[#696256] dark:text-[#AAA397]">{detail}</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
 
         {/* 7. Festival & Vrat Strip (Cultural Calendar 2026) */}
         <FestivalStrip
@@ -222,91 +211,19 @@ export default function AppLandingPage() {
           theme={theme}
         />
 
-        {/* 8. World to You Transition */}
-        <WorldToYouTransition
-          lang={lang}
-          theme={theme}
-        />
-
-        {/* 9. Qualified Sample Kundlis Showcase */}
-        <SampleKundlisShowcase
-          lang={lang}
-          theme={theme}
-        />
-
-        {/* 10. Vimshottari Dasha Hero Product (with 3-Tier Granular Drill-Down) */}
-        <DashaHero
-          kundaliData={kundaliData}
-          onOpenConsultation={handleOpenConsultation}
-          lang={lang}
-          theme={theme}
-        />
-
-        {/* 11. Swarga Lok (Brand Theatre & 3D Nakshatra Sphere) */}
-        <SwargaLok
-          lang={lang}
-          theme={theme}
-          kundaliData={kundaliData}
-        />
-
-        {/* 12. Methodology (Calculation is not Interpretation) */}
-        <MethodologySection
-          onOpenConsultation={handleOpenConsultation}
-          lang={lang}
-          theme={theme}
-        />
-
-        {/* 13. Practicing Jyotishis & Video Trust Archive */}
-        <PractitionersSection
-          onOpenConsultation={handleOpenConsultation}
-          lang={lang}
-          theme={theme}
-        />
-
-        {/* 14. ₹501 Consultation Offer & 5-Stage Transparent Pipeline */}
-        <ConsultationOffer
-          onOpenConsultation={handleOpenConsultation}
-          lang={lang}
-          theme={theme}
-        />
-
-        {/* 15. Sample Real Written Consultation Demonstration */}
-        <SampleConsultation
-          lang={lang}
-          theme={theme}
-        />
-
-        {/* 16. Ask Better Questions (Conversion & Formulation Tool) */}
-        <AskBetterQuestions
-          onOpenConsultation={handleOpenConsultation}
-          lang={lang}
-          theme={theme}
-        />
-
-        {/* 17. Knowledge Graph / Jyotish Constellation */}
-        <KnowledgeGraphSection
-          lang={lang}
-          theme={theme}
-        />
-
-        {/* 18. Final Chapter CTA */}
-        <FinalChapterCta
-          panchangData={panchangData}
-          onOpenConsultation={handleOpenConsultation}
-          onMeetPractitioners={() => handleNavigateSection('practitioners-section')}
-          lang={lang}
-          theme={theme}
-        />
+          </>
+        ) : (
+          <section className="mx-auto flex min-h-[70vh] max-w-5xl items-center px-4 py-20 sm:px-6" aria-label="Loading current Vedic calculations">
+            <div className="w-full animate-pulse space-y-6">
+              <div className="h-5 w-40 rounded-full bg-[#8E6F1D]/15 dark:bg-[#D4AF37]/15" />
+              <div className="h-16 max-w-2xl rounded-2xl bg-black/[0.06] dark:bg-white/[0.06]" />
+              <div className="h-36 rounded-3xl bg-black/[0.04] dark:bg-white/[0.04]" />
+            </div>
+          </section>
+        )}
       </main>
 
-      {/* 19. Deep Information Map Footer */}
-      <Footer
-        onOpenCapabilityModal={() => setIsCapabilityModalOpen(true)}
-        onOpenConsultation={handleOpenConsultation}
-        onNavigateSection={handleNavigateSection}
-        lang={lang}
-        theme={theme}
-      />
+      <GlobalFooter lang={lang} />
 
       {/* Modals & Dialogs */}
       <LanguageSelectorModal
@@ -324,37 +241,6 @@ export default function AppLandingPage() {
         lang={lang}
         theme={theme}
       />
-
-      <CosmicSearchModal
-        isOpen={isSearchModalOpen}
-        onClose={() => setIsSearchModalOpen(false)}
-        onNavigateSection={handleNavigateSection}
-        onOpenConsultation={handleOpenConsultation}
-        lang={lang}
-        theme={theme}
-      />
-
-      <CapabilityRegistryModal
-        isOpen={isCapabilityModalOpen}
-        onClose={() => setIsCapabilityModalOpen(false)}
-        lang={lang}
-        theme={theme}
-      />
-
-      <ConsultationModal
-        isOpen={isConsultationModalOpen}
-        onClose={() => setIsConsultationModalOpen(false)}
-        initialQuestion={consultationPrompt}
-        kundaliData={kundaliData}
-        lang={lang}
-        theme={theme}
-      />
-
-      {/* Floating Free WhatsApp Help Desk Direct Pill */}
-      <HelpDeskCtaBanner variant="floating" source="HOME" lang={lang === 'hi' ? 'hi' : 'en'} />
-
-      {/* Floating AI Guru Concierge Avatar & Proactive Guide */}
-      <FloatingAIGuruAvatar />
 
     </div>
   );

@@ -13,7 +13,6 @@ import { ShellMode } from '@/lib/routeRegistry';
 import { chitiSensory } from '@/lib/chitiAudio';
 import { SUPPORTED_LANGUAGES } from '@/lib/translations';
 import FullMegaMenuModal from '@/components/layout/FullMegaMenuModal';
-import HelpDeskCtaBanner from '@/components/helpdesk/HelpDeskCtaBanner';
 
 interface GlobalHeaderProps {
   mode?: ShellMode;
@@ -162,7 +161,7 @@ export default function GlobalHeader({
             {onLangToggle && (
               <button
                 onClick={onLangToggle}
-                className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl sm:rounded-2xl border border-[#8E6F1D]/30 dark:border-[#D4AF37]/40 bg-[#8E6F1D]/10 dark:bg-[#D4AF37]/10 hover:bg-[#8E6F1D]/20 dark:hover:bg-[#D4AF37]/20 text-xs font-mono-data font-bold text-[#8E6F1D] dark:text-[#F0C968] hover:border-[#8E6F1D] dark:hover:border-[#D4AF37] transition-all cursor-pointer shadow-xs active:scale-95"
+                className="flex min-h-11 items-center gap-1 sm:gap-1.5 px-3 py-2 rounded-xl sm:rounded-2xl border border-[#8E6F1D]/30 dark:border-[#D4AF37]/40 bg-[#8E6F1D]/10 dark:bg-[#D4AF37]/10 hover:bg-[#8E6F1D]/20 dark:hover:bg-[#D4AF37]/20 text-xs font-mono-data font-bold text-[#8E6F1D] dark:text-[#F0C968] hover:border-[#8E6F1D] dark:hover:border-[#D4AF37] transition-all cursor-pointer shadow-xs active:scale-95"
                 title="Select Sacred Language (12 Prime Indian Languages)"
               >
                 <Languages className="w-3.5 h-3.5 text-[#8E6F1D] dark:text-[#F0C968]" />
@@ -180,7 +179,7 @@ export default function GlobalHeader({
             {onThemeToggle && (
               <button
                 onClick={onThemeToggle}
-                className="flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-[#1C1917] dark:text-white hover:border-[#8E6F1D] dark:hover:border-[#D4AF37] transition-all cursor-pointer shadow-xs active:scale-95"
+                className="flex items-center justify-center w-11 h-11 rounded-xl sm:rounded-2xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-[#1C1917] dark:text-white hover:border-[#8E6F1D] dark:hover:border-[#D4AF37] transition-all cursor-pointer shadow-xs active:scale-95"
                 title="Toggle Day/Night"
               >
                 {theme === 'dark' ? <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#F59E0B]" /> : <Moon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#8E6F1D]" />}
@@ -222,14 +221,11 @@ export default function GlobalHeader({
 
           {/* RIGHT COLUMN: Minimal Action & Luxury Mega Menu Trigger */}
           <div className="flex items-center justify-end gap-1.5 sm:gap-3 shrink-0">
-            {/* Free Help Desk Button */}
-            <HelpDeskCtaBanner variant="header" lang={lang === 'hi' ? 'hi' : 'en'} />
-
             {/* Quick Consultation CTA */}
             <Link
               href="/ask"
               onClick={() => chitiSensory.playTick()}
-              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl text-xs font-mono-data font-bold bg-[#8E6F1D]/15 hover:bg-[#8E6F1D]/25 dark:bg-[#D4AF37]/15 dark:hover:bg-[#D4AF37]/25 text-[#8E6F1D] dark:text-[#F0C968] border border-[#8E6F1D]/30 dark:border-[#D4AF37]/40 hover:border-[#8E6F1D] transition-all shrink-0 cursor-pointer shadow-xs active:scale-95"
+              className="hidden min-h-11 sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl text-sm font-mono-data font-bold bg-[#8E6F1D]/15 hover:bg-[#8E6F1D]/25 dark:bg-[#D4AF37]/15 dark:hover:bg-[#D4AF37]/25 text-[#8E6F1D] dark:text-[#F0C968] border border-[#8E6F1D]/30 dark:border-[#D4AF37]/40 hover:border-[#8E6F1D] transition-all shrink-0 cursor-pointer shadow-xs active:scale-95"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-500" />
               <span>{lang === 'hi' ? 'परामर्श' : 'Consult'}</span>
@@ -241,7 +237,7 @@ export default function GlobalHeader({
                 chitiSensory.playTick();
                 setMegaMenuOpen(true);
               }}
-              className="px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl bg-gradient-to-r from-[#8E6F1D] via-[#A88424] to-[#8E6F1D] dark:from-[#D4AF37] dark:via-[#F0C968] dark:to-[#D4AF37] text-white dark:text-[#060709] font-mono-data font-bold text-xs flex items-center gap-1.5 sm:gap-2 shadow-lg shadow-[#8E6F1D]/20 dark:shadow-[#D4AF37]/25 cursor-pointer transition-all hover:scale-105 active:scale-95 shrink-0 hover:shadow-xl"
+              className="min-h-11 px-3 py-2 sm:px-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-[#8E6F1D] via-[#A88424] to-[#8E6F1D] dark:from-[#D4AF37] dark:via-[#F0C968] dark:to-[#D4AF37] text-white dark:text-[#060709] font-mono-data font-bold text-xs flex items-center gap-1.5 sm:gap-2 shadow-lg shadow-[#8E6F1D]/20 dark:shadow-[#D4AF37]/25 cursor-pointer transition-all hover:scale-105 active:scale-95 shrink-0 hover:shadow-xl"
               aria-label="Open navigation menu"
             >
               <Menu className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />

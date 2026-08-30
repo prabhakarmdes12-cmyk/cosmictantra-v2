@@ -126,6 +126,20 @@ img, video, canvas, svg {
   input, select, textarea, .chiti-input {
     font-size: 16px !important;
   }
+
+  /* Customer-facing mobile readability and touch-target baseline. */
+  main p {
+    font-size: 16px !important;
+    line-height: 1.6 !important;
+  }
+
+  main button,
+  main input,
+  main select,
+  main textarea,
+  [role="button"] {
+    min-height: 44px;
+  }
 }
 
 /* Fluid Editorial Typography Clamps */
