@@ -84,20 +84,23 @@ export default function NorthIndianChart({ kundali, size = 320, theme = 'dark' }
               >
                 {house.rasiName?.slice(0, 3)}
               </text>
-              {house.planets?.map((planet, pi) => (
-                <text
-                  key={planet}
-                  x={cell.cx + (pi % 3 - 1) * 3.5}
-                  y={cell.cy + 5.5 + Math.floor(pi / 3) * 3.5}
-                  textAnchor="middle"
-                  fontSize="3.2"
-                  fill={PLANET_COLOR[planet] || '#ccc'}
-                  fontFamily="monospace"
-                  fontWeight="bold"
-                >
-                  {PLANET_ABBR[planet] || planet.slice(0, 2)}
-                </text>
-              ))}
+              {house.planets?.map((planet, pi) => {
+                const planetName = typeof planet === 'string' ? planet : (planet?.name || '');
+                return (
+                  <text
+                    key={typeof planet === 'string' ? `${planet}-${pi}` : `${planetName}-${pi}`}
+                    x={cell.cx + (pi % 3 - 1) * 3.5}
+                    y={cell.cy + 5.5 + Math.floor(pi / 3) * 3.5}
+                    textAnchor="middle"
+                    fontSize="3.2"
+                    fill={PLANET_COLOR[planetName] || '#ccc'}
+                    fontFamily="monospace"
+                    fontWeight="bold"
+                  >
+                    {PLANET_ABBR[planetName] || (typeof planetName === 'string' ? planetName.slice(0, 2) : '')}
+                  </text>
+                );
+              })}
               {isLagna && (
                 <text
                   x={cell.cx}

@@ -6,7 +6,7 @@ import { calculatePanchang } from '@/lib/panchang';
 import { calculateKundali } from '@/lib/astrologyEngine';
 import { analytics, ANALYTICS_EVENTS } from '@/lib/analytics';
 
-import dynamic from 'next/dynamic';
+import nextDynamic from 'next/dynamic';
 
 // Primary Above-the-Fold Components (Eager)
 import GlobalHeader from '@/components/layout/GlobalHeader';
@@ -18,7 +18,7 @@ import IntentRouter from '@/components/IntentRouter';
 import MuhuratDiscovery from '@/components/MuhuratDiscovery';
 import FestivalStrip from '@/components/FestivalStrip';
 import WorldToYouTransition from '@/components/WorldToYouTransition';
-import KundaliExperience from '@/components/KundaliExperience';
+import SampleKundlisShowcase from '@/components/SampleKundlisShowcase';
 import DashaHero from '@/components/DashaHero';
 import MethodologySection from '@/components/MethodologySection';
 import PractitionersSection from '@/components/PractitionersSection';
@@ -33,16 +33,20 @@ import { getPersistedLocation, LOCATION_CHANGE_EVENT, LocationAnchor } from '@/l
 import HelpDeskCtaBanner from '@/components/helpdesk/HelpDeskCtaBanner';
 
 // Dynamic Load for Heavy WebGL Canvas & Modals
-const SwargaLok = dynamic(() => import('@/components/SwargaLok'), { ssr: false });
-const CitySelectorModal = dynamic(() => import('@/components/CitySelectorModal'), { ssr: false });
-const CosmicSearchModal = dynamic(() => import('@/components/CosmicSearchModal'), { ssr: false });
-const CapabilityRegistryModal = dynamic(() => import('@/components/CapabilityRegistryModal'), { ssr: false });
-const ConsultationModal = dynamic(() => import('@/components/ConsultationModal'), { ssr: false });
+const SwargaLok = nextDynamic(() => import('@/components/SwargaLok'), { ssr: false });
+const CitySelectorModal = nextDynamic(() => import('@/components/CitySelectorModal'), { ssr: false });
+const CosmicSearchModal = nextDynamic(() => import('@/components/CosmicSearchModal'), { ssr: false });
+const CapabilityRegistryModal = nextDynamic(() => import('@/components/CapabilityRegistryModal'), { ssr: false });
+const ConsultationModal = nextDynamic(() => import('@/components/ConsultationModal'), { ssr: false });
 import FloatingAIGuruAvatar from '@/components/consultation/FloatingAIGuruAvatar';
+
+// Disable static prerendering — homepage uses new Date() (panchang) which must be server-rendered fresh
+export const dynamic = 'force-dynamic';
 
 export default function AppLandingPage() {
   const [currentCity, setCurrentCity] = useState<any>(DEFAULT_CITY);
-  const [panchangData, setPanchangData] = useState(() => calculatePanchang(new Date(), DEFAULT_CITY));
+  // Initialize with a computed value; also refreshed client-side via useEffect
+  const [panchangData, setPanchangData] = useState<any>(() => calculatePanchang(new Date(), DEFAULT_CITY));
   const [kundaliData, setKundaliData] = useState(null);
 
   // Day/Night & Language State (Chiti UDS v3 compliant — Light/Day mode default, SSR-safe)
@@ -61,6 +65,8 @@ export default function AppLandingPage() {
   // Sync client-persisted preferences and real-time location on mount to eliminate SSR hydration mismatch
   useEffect(() => {
     setIsClientMounted(true);
+    // Initialize panchang client-side only (uses new Date() which differs between server & client)
+    setPanchangData(calculatePanchang(new Date(), DEFAULT_CITY));
     try {
       const savedTheme = localStorage.getItem('cosmictantra_theme');
       if (savedTheme === 'light' || savedTheme === 'dark') {
@@ -171,7 +177,7 @@ export default function AppLandingPage() {
           onOpenCitySelector={() => setIsCityModalOpen(true)}
           onOpenConsultation={() => handleOpenConsultation()}
           onExplorePanchang={() => handleNavigateSection('panchang-section')}
-          onCreateKundali={() => handleNavigateSection('kundali-section')}
+          onCreateKundali={() => handleNavigateSection('hero-section')}
           lang={lang}
           theme={theme}
         />
@@ -195,7 +201,7 @@ export default function AppLandingPage() {
           onSelectIntent={(id: string) => handleNavigateSection(id)}
           onOpenConsultation={handleOpenConsultation}
           onExplorePanchang={() => handleNavigateSection('panchang-section')}
-          onCreateKundali={() => handleNavigateSection('kundali-section')}
+          onCreateKundali={() => handleNavigateSection('hero-section')}
           onOpenDasha={() => handleNavigateSection('dasha-section')}
           onOpenFestivals={() => handleNavigateSection('festival-section')}
           onOpenMuhurat={() => handleNavigateSection('muhurat-section')}
@@ -222,12 +228,8 @@ export default function AppLandingPage() {
           theme={theme}
         />
 
-        {/* 9. Personal Kundali Experience */}
-        <KundaliExperience
-          kundaliData={kundaliData}
-          onGenerateKundali={(data: any) => setKundaliData(data)}
-          onOpenConsultation={handleOpenConsultation}
-          onOpenDasha={() => handleNavigateSection('dasha-section')}
+        {/* 9. Qualified Sample Kundlis Showcase */}
+        <SampleKundlisShowcase
           lang={lang}
           theme={theme}
         />
