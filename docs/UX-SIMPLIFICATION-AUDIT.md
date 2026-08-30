@@ -1,7 +1,23 @@
 # CosmicTantra UI/UX Simplification Audit
 
-Date: 30 August 2026  
+Date: 30 August 2026
 Scope: Primary public journeys and customer-facing tools, reviewed in the rendered application on desktop and a 390 × 844 mobile viewport.
+
+## Implementation status
+
+Sprint 1 was implemented in commit `0c35727` and verified on 30 August 2026.
+
+| Measure | Before | After |
+|---|---:|---:|
+| Home visible buttons | 90 | 10 |
+| Home visible text | 20,572 characters | 5,018 characters |
+| Home first-load bundle | 243 KB | 193 KB |
+| Mobile undersized targets | 87 | 2 non-primary links |
+| Mobile paragraphs below 14px | 67 | 0 |
+| Mobile horizontal overflow | None | None |
+| Browser console errors | Not measured in baseline | None |
+
+Completed work includes the simplified public header/footer, a focused home composition, one `/ask` consultation path, compact Explore cards, mobile typography/touch-target baselines, and hydration-safe live calculations. The P1 and P2 recommendations below remain the active backlog.
 
 ## Executive conclusion
 

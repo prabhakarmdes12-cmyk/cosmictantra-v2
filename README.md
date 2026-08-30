@@ -5,6 +5,31 @@
 
 ---
 
+## Current Release — 30 August 2026
+
+The current release focuses the public experience around three clear user intents:
+
+1. **Understand today** — location-aware Panchang and daily guidance.
+2. **Understand my chart** — create or open a Master Kundli.
+3. **Ask an expert** — one consultation route at `/ask`.
+
+Recent production-ready changes:
+
+- simplified the home page from 90 visible buttons to 10 while retaining deeper tools under Explore;
+- reduced the home first-load bundle from 243 KB to 193 KB;
+- established a 16px mobile reading baseline and 44px interactive target baseline;
+- simplified the public header and footer and removed duplicate consultation/help actions;
+- added language-aware detailed Master Kundli PDFs;
+- embedded licensed Noto Sans Devanagari Regular and Bold fonts in Hindi PDFs;
+- added cached, chunked, browser-safe font loading with graceful fallback;
+- resolved home-page hydration mismatches caused by live date calculations.
+
+Implementation history: `14edd75` → `871ec59` → `0c35727`.
+
+See [the UX simplification audit](docs/UX-SIMPLIFICATION-AUDIT.md) for measured before/after results.
+
+---
+
 ## 🌟 What is CosmicTantra?
 
 CosmicTantra is an atmospheric digital observatory and vertical consultation operating system replacing predatory "per-minute call timer apps" with:
@@ -20,8 +45,9 @@ CosmicTantra is an atmospheric digital observatory and vertical consultation ope
 
 | Surface | Description | Route |
 |---|---|---|
-| **Living Vedic Observatory** | Real-time 24-hour diurnal solar arc dial (`▲ NOW [14:32]`), Nakshatras & Horas | `/` |
-| **CosmicTantra Sabha** | Private consultation booking with WebRTC & Exotel masked PSTN | `/ask` & `ConsultationModal` |
+| **Living Vedic Observatory** | Focused entry to today, Master Kundli, expert guidance, and Explore tools | `/` |
+| **CosmicTantra Sabha** | Unified consultation intake and guidance route | `/ask` |
+| **Master Kundli Report** | 17-volume report with detailed English/Hindi PDF export and Unicode Devanagari fonts | `/report` |
 | **Pandit Workspace & Cockpit** | Scholar workbench with live chart sync, AI Copilot, and Upaya prescribing | `/pandit/workspace` |
 | **Live Temple Darshan** | 12 Jyotirlingas, 52 Shakti Peeths, Char Dham & Dashashwamedh Ganga Aarti | `/darshan` |
 | **Stellarium Observatory** | Celestial canvas with Local Sidereal Time (LST) & Graha Sphuta | `/observatory` |
@@ -35,7 +61,10 @@ CosmicTantra is an atmospheric digital observatory and vertical consultation ope
 
 ```bash
 # Type check with zero errors
-npx tsc --noEmit
+npm run typecheck
+
+# Production build (includes Prisma generation)
+npm run build
 
 # Run full end-to-end Playwright integrity test suite
 npx playwright test tests/shell-integrity.spec.ts --workers=1

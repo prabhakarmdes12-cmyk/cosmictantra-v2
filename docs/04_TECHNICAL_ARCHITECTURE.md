@@ -4,6 +4,18 @@
 
 ---
 
+## CURRENT WEB DELIVERY BASELINE — 30 AUGUST 2026
+
+- The public home defers live Panchang/Kundli rendering until client mount, preventing server/client time drift and React hydration mismatch.
+- The public bundle no longer eagerly includes the former 18-section catalogue, WebGL theatre, duplicate consultation modals, or floating assistant surfaces; the measured home first-load bundle is 193 KB.
+- Mobile customer content enforces a 16px paragraph baseline and 44px form/button target baseline.
+- `src/lib/pdfFonts.ts` caches and registers Noto Sans Devanagari Regular/Bold with jsPDF using `addFileToVFS` and `addFont`.
+- Font ArrayBuffers are converted to base64 in bounded chunks without spreading large typed arrays into function arguments.
+- Hindi PDF generation selects the registered Devanagari family; English retains Helvetica. Font-fetch failure logs and displays a warning before falling back.
+- Font binaries and their SIL Open Font License are stored under `public/fonts/`.
+
+---
+
 ## 1. 🏗️ SYSTEM TOPOLOGY & COMPONENT TOPOGRAPHY
 
 ```text

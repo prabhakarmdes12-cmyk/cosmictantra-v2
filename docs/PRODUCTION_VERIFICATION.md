@@ -2,6 +2,25 @@
 **Date:** 24 Aug 2026 · **Verified against:** origin/main `7f29fd8` (+ `0589b94`), live https://cosmictantra.chiti.tech
 **Method:** fetched exact committed tree into isolated checkout, ran the agent's own test suite, ran independent (Meeus-formula, non-derivative) astronomical verification, simulated React rendering, and probed the live production endpoints.
 
+> Historical verification notice: the findings below describe the 24 Aug baseline. The repository advanced on 30 Aug 2026 through `14edd75`, `871ec59`, and `0c35727`. The latest verified changes add detailed bilingual Kundli reports, embedded Devanagari PDF fonts, and the Sprint 1 public UX simplification.
+
+## 30 August 2026 verification addendum
+
+| Check | Result |
+|---|---|
+| `npm run typecheck` | Passed |
+| Direct Next.js production build | Passed; 610 static pages generated |
+| Home visible buttons | Reduced from 90 to 10 |
+| Home visible text | Reduced from ~20,572 to ~5,018 characters |
+| 390px mobile targets below 44px | Reduced from 87 to 2 non-action brand/glimpse links |
+| Mobile paragraphs below 14px | Reduced from 67 to 0 |
+| Horizontal overflow | None at 390px |
+| Browser console errors | None after hydration correction |
+| Home first-load bundle | Reduced from 243 KB to 193 KB |
+| English/Hindi PDF font integration | Typechecked and production-built |
+
+The combined `npm run build` wrapper can fail locally on Windows when Prisma's existing query-engine DLL is held open (`EPERM`). Running the Next.js production build directly succeeds; this is a local file-lock condition rather than a compilation defect.
+
 ---
 
 ## 1. Claim-by-claim verdict

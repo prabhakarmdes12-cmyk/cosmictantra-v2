@@ -1,6 +1,14 @@
 # 📋 COSMICTANTRA — COMPLETE PRODUCT SPECIFICATION (PRD)
-**Version**: 3.0.0 · **Architecture**: Next.js 14 App Router · **State Engine**: CosmicTantra Consultation OS
+**Version**: 3.1.0 · **Architecture**: Next.js 14 App Router · **State Engine**: CosmicTantra Consultation OS
 **Design Standard**: Chiti Technologies Unified Design System v3
+
+---
+
+## CURRENT CUSTOMER EXPERIENCE BASELINE — 30 AUGUST 2026
+
+The public information architecture now prioritizes three intents: **Understand today**, **Understand my chart**, and **Ask an expert**. The home page retains access to Calendar, Kundali Milan, Personal Muhurat, and the Vedic Library through a compact Explore section instead of rendering the complete product catalogue at once.
+
+Customer-facing mobile surfaces use a 16px body-copy baseline and 44px minimum control height. Master Kundli exports support English and Hindi, including embedded licensed Noto Sans Devanagari Regular/Bold fonts, automatic wrapping, multi-page headers, page numbers, technical provenance, and graceful font-fetch fallback.
 
 ---
 
@@ -118,7 +126,7 @@ CosmicTantra natively supports **12 languages** with native script UI, regional 
 
 ## 6. 🗺️ 21 CORE SURFACE ROUTES
 
-1. **`/`** — Living Vedic Observatory & Cosmic Now 24-hour solar dial.
+1. **`/`** — Focused three-intent home: today, Master Kundli, and expert guidance, with compact Explore access.
 2. **`/daily`** — Location-specific astrological weather & 9:16 WhatsApp cards.
 3. **`/family-panchang`** — Multi-profile synchronized family diurnal intelligence.
 4. **`/kundali-milan`** — Ashta-Koota 36-point compatibility & Mangal Dosha studio.
@@ -133,7 +141,7 @@ CosmicTantra natively supports **12 languages** with native script UI, regional 
 13. **`/profile`** — Parivaar & Devotee Vault with DPDP export and alerts.
 14. **`/presentation`** — Interactive scholar and institutional deck.
 15. **`/pandit/workspace`** — Scholar workbench & CosmicTantra Sabha Cockpit.
-16. **`/report`** — Vector PDF Written Folio generation.
+16. **`/report`** — 17-volume Master Kundli with detailed English/Hindi Unicode PDF generation.
 17. **`/api/guru/chat` & `/api/ai/chat`** — Kashi Sahayak AI Gateway endpoints.
 
 ---

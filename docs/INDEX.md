@@ -3,6 +3,8 @@
 **Category**: Vedic Astronomical Observatory × Verified Scholarly Counsel
 **Design Standard**: Chiti Technologies Unified Design System v3
 
+**Current implementation baseline (30 Aug 2026):** focused three-intent home experience, simplified global navigation, mobile readability/touch-target baseline, and English/Hindi Master Kundli PDFs with embedded Noto Sans Devanagari fonts. Current release commits: `14edd75`, `871ec59`, `0c35727`.
+
 ---
 
 ## 🗂️ Startup Documentation Directory
@@ -15,6 +17,7 @@ All institutional, strategic, design, growth, engineering, and scholar documenta
 * **[`03_BUSINESS_MODEL_AND_UNIT_ECONOMICS.md`](./03_BUSINESS_MODEL_AND_UNIT_ECONOMICS.md)** — Financial waterfall, ₹199 written consultation model, LTV:CAC modeling, and 3-year ARR projections.
 
 ### 📐 2. Product Architecture & Design (Chiti UDS v3)
+* **[`UX-SIMPLIFICATION-AUDIT.md`](./UX-SIMPLIFICATION-AUDIT.md)** — Measured desktop/mobile audit, implemented Sprint 1 results, remaining P1/P2 flow recommendations, and success metrics.
 * **[`04_ASCII_WIREFRAME_BLUEPRINTS.md`](./ASCII_WIREFRAME_BLUEPRINTS.md)** — Exhaustive ASCII wireframe blueprints for all 21 core routes (Observatory, Kundali Studio, jsPDF Folio, Pandit Desk).
 * **[`PROJECT_DESIGN_JOURNAL.md`](./PROJECT_DESIGN_JOURNAL.md)** — Core design manifesto, rejection of AI-template tropes, spatial narrative (Chapters 01–12), and Chiti token rules.
 * **[`BRAND_ASSET_SPECIFICATION.md`](./BRAND_ASSET_SPECIFICATION.md)** — Visual identity, sacred geometry logo tokens, typography pairings, and audio sensory cues.
@@ -48,11 +51,11 @@ All institutional, strategic, design, growth, engineering, and scholar documenta
          ┌──────────────────────────────────────┼──────────────────────────────────────┐
          │                                      │                                      │
   [ 01. PUBLIC UTILITIES ]             [ 02. CONSULTATION & PDF ]             [ 03. SCHOLAR & OPS ]
-  ├─ / (Core Observatory)              ├─ /ask (₹199 Written Folio)           ├─ /dashboard (Scholar Desk)
+  ├─ / (3-intent public home)          ├─ /ask (Unified consultation)         ├─ /dashboard (My Space)
   ├─ /daily (Daily Forecast & Share)   ├─ /ask/success/[orderId]              ├─ /pandit/workspace (v1 & v2)
   ├─ /aarti-stotra (50 Texts)          ├─ /report (jsPDF Folio Engine)        ├─ /pandit-ji & /presentation
   ├─ /upaya & /upaya/book              └─ /remedy-tracker                     ├─ /admin/analytics & /upaya
-  ├─ /family-panchang                                                         └─ /partner/dashboard
+  ├─ /family-panchang                  └─ /report (Unicode EN/HI PDF)         └─ /partner/dashboard
   ├─ /kundali-milan (36-Pt Match)
   ├─ /numerology/* (Name, Mobile)
   ├─ /my-calendar (ICS Export)
