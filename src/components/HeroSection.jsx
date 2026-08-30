@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowRight, ShieldCheck, Flame } from 'lucide-react';
 import { analytics, ANALYTICS_EVENTS } from '../lib/analytics';
 import { TRANSLATIONS } from '../lib/translations';
@@ -19,20 +19,41 @@ export default function HeroSection({
 }) {
   const t = TRANSLATIONS[lang]?.hero || TRANSLATIONS.en.hero;
 
+  // Mobile gets the poster image only — the 9.7 MB hero video is a desktop
+  // luxury; on 4G phones it dominates LCP and costs real data.
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const apply = () => setIsMobileViewport(mq.matches);
+    apply();
+    mq.addEventListener?.('change', apply);
+    return () => mq.removeEventListener?.('change', apply);
+  }, []);
+
   return (
     <section id="hero-section" className="relative pt-16 pb-16 sm:pt-20 lg:pt-20 lg:pb-24 border-b border-black/[0.1] dark:border-white/[0.08] transition-colors duration-250 overflow-hidden">
-      {/* Clean Edge-to-Edge Background Video Layer */}
+      {/* Clean Edge-to-Edge Background Video Layer (poster-only ≤768px) */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="w-full h-full object-cover object-center"
-          poster="/varanasi-ghats-hero.jpg"
-        >
-          <source src="/kashi-hero-video.mp4" type="video/mp4" />
-        </video>
+        {isMobileViewport ? (
+          <img
+            src="/varanasi-ghats-hero.jpg"
+            alt="Varanasi ghats at dawn"
+            className="w-full h-full object-cover object-center"
+            loading="eager"
+          />
+        ) : (
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="metadata"
+            className="w-full h-full object-cover object-center"
+            poster="/varanasi-ghats-hero.jpg"
+          >
+            <source src="/kashi-hero-video.mp4" type="video/mp4" />
+          </video>
+        )}
         {/* Subtle Local Ambient Scrim for Flawless WCAG Contrast without SaaS Containerization */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#FAF7F2]/90 via-[#FAF7F2]/60 to-transparent dark:from-[#06070B]/95 dark:via-[#06070B]/70 dark:to-transparent lg:w-3/4" />
       </div>

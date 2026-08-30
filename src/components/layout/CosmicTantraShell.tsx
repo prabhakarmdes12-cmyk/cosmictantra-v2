@@ -6,6 +6,7 @@ import GlobalHeader from './GlobalHeader';
 import Breadcrumbs from './Breadcrumbs';
 import GlobalFooter from './GlobalFooter';
 import FloatingAIGuruAvatar from '@/components/consultation/FloatingAIGuruAvatar';
+import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import { getRouteConfig, ShellMode, FooterMode, BreadcrumbItem } from '@/lib/routeRegistry';
 
 interface CosmicTantraShellProps {
@@ -124,6 +125,9 @@ export default function CosmicTantraShell({
         mode={activeFooterMode} 
         lang={lang} 
       />
+
+      {/* Mobile 5-thumb-task bottom navigation (phones only) */}
+      {activeShellMode === 'public' && <MobileBottomNav lang={lang} />}
     </div>
   );
 }

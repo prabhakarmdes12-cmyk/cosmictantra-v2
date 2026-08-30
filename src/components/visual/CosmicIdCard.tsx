@@ -49,7 +49,7 @@ export default function CosmicIdCard({ profile, onManageFamily }: CosmicIdCardPr
             <div className="flex items-center gap-2 text-[#857E74] mb-1">
               <MapPin className="w-4 h-4" /> WHATSAPP
             </div>
-            <div className="font-mono text-lg tracking-wider">{profile.whatsappPhone}</div>
+            <div className="font-mono text-lg tracking-wider">{profile.whatsappPhone || (profile.consentGiven ? '— जोड़ा नहीं गया —' : '🔒 Consent Locked')}</div>
           </div>
           <div>
             <div className="flex items-center gap-2 text-[#857E74] mb-1">

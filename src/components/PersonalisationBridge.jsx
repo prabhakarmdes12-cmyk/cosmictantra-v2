@@ -7,26 +7,37 @@ import { chitiSensory } from '../lib/chitiAudio';
 
 export default function PersonalisationBridge({ 
   kundaliData, 
-  onClearProfile, 
+  onClearProfile,
+  panchangData,
+  tomorrowPanchangData,
   lang = 'en', 
   theme = 'dark' 
 }) {
 
-  // Dynamic 72h Glimpse Text
-  const moonName = kundaliData?.moon?.nakshatra?.name || kundaliData?.moon?.nakshatra || 'Rohini';
-  const lagnaName = kundaliData?.lagna?.rashiName || 'Vrishabha';
+  // 72h Glimpse — REAL computed transits only (never fabricated from chart fallbacks).
+  // The Active Chart bar above shows personal data; this ticker shows today's actual
+  // sky for the selected city so a first-time visitor is never shown a fake reading.
+  const tithiName = panchangData?.tithi?.name || '';
+  const pakshaName = panchangData?.tithi?.paksha || '';
+  const moonNakToday = panchangData?.nakshatra?.name || '';
+  const moonNakTomorrow = tomorrowPanchangData?.nakshatra?.name || '';
 
   const todayGlimpse = lang === 'hi'
-    ? `आज: चन्द्र ${moonName} में (11वाँ भाव) • वित्तीय लाभ व संवाद सिद्धि`
-    : `TODAY: Moon in ${moonName} (11th House) • High Financial Liquidity & Deal Momentum`;
-
+    ? `आज: ${pakshaName} ${tithiName} • चन्द्र ${moonNakToday} नक्षत्र में`
+    : `TODAY: ${tithiName}, ${pakshaName} • Moon in ${moonNakToday}`;
   const tomorrowGlimpse = lang === 'hi'
-    ? `कल: चन्द्र मृगशिरा में • अनुसंधान व त्वरित कार्य`
-    : `TOMORROW: Moon in Mrigashira • Strategic Research & Communication`;
+    ? `कल: चन्द्र ${moonNakTomorrow} नक्षत्र में`
+    : `TOMORROW: Moon in ${moonNakTomorrow}`;
 
-  const dayAfterGlimpse = lang === 'hi'
-    ? `परसों: चन्द्र आर्द्रा में • गहन समस्या निवारण`
-    : `DAY AFTER: Moon in Ardra • Breakthrough Focus & Deep Solutions`;
+  // Chart-anchored line — ONLY when a real chart exists
+  const lagnaName = kundaliData?.lagna?.rashiName;
+  const moonName = kundaliData?.moon?.nakshatra?.name || kundaliData?.moon?.nakshatra;
+  const chartGlimpse = (kundaliData && lagnaName && moonName)
+    ? (lang === 'hi'
+        ? `आपकी कुण्डली: लग्न ${lagnaName} • चन्द्र ${moonName}`
+        : `YOUR CHART: Lagna ${lagnaName} • Moon ${moonName}`)
+    : null;
+
 
   return (
     <div className="sticky top-16 sm:top-20 z-30 w-full font-mono-data text-xs transition-colors duration-300 pointer-events-auto">
@@ -94,6 +105,12 @@ export default function PersonalisationBridge({
               <span className="font-bold text-[#203608] dark:text-[#BEF264]">{todayGlimpse}</span>
               <span className="opacity-40 hidden lg:inline">•</span>
               <span className="hidden lg:inline">{tomorrowGlimpse}</span>
+              {chartGlimpse && (
+                <>
+                  <span className="opacity-40 hidden lg:inline">•</span>
+                  <span className="hidden lg:inline opacity-80">{chartGlimpse}</span>
+                </>
+              )}
             </div>
           </div>
 
