@@ -31,6 +31,7 @@ import { getCanonicalJyotishSnapshot } from '@/lib/jyotish/canonicalSnapshot';
 import { generateKundliBookModel, BookVolume } from '@/lib/jyotish/kundliBookModel';
 import NorthIndianChart from '@/components/NorthIndianChart';
 import { chitiSensory } from '@/lib/chitiAudio';
+import { getPdfFontFamily, registerDevanagariFont } from '@/lib/pdfFonts';
 
 export default function MasterKundliReportClient() {
   const searchParams = useSearchParams();
@@ -186,10 +187,17 @@ export default function MasterKundliReportClient() {
     window.print();
   };
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     chitiSensory.playTick();
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const isHindi = lang === 'hi';
+    const devanagariReady = isHindi ? await registerDevanagariFont(doc) : false;
+    const pdfFont = getPdfFontFamily(lang, devanagariReady);
+    if (isHindi && !devanagariReady) {
+      const warning = 'हिंदी PDF फ़ॉन्ट लोड नहीं हो सका। PDF एक वैकल्पिक फ़ॉन्ट के साथ बनाई जाएगी और कुछ हिंदी अक्षर सही न दिखें।';
+      console.warn(`[Kundli PDF] ${warning}`);
+      window.alert(warning);
+    }
     const text = (en: string, hi: string) => isHindi ? hi : en;
     const gold = '#8E6F1D';
     const ink = '#1C1917';
@@ -198,7 +206,7 @@ export default function MasterKundliReportClient() {
     let page = 1;
 
     const header = () => {
-      doc.setFont('helvetica', 'normal');
+      doc.setFont(pdfFont, 'normal');
       doc.setFontSize(8); doc.setTextColor('#78716C');
       doc.text(`CosmicTantra • ${birthState.name}`, margin, 10);
       doc.text(`${page}`, 192, 10, { align: 'right' });
@@ -208,17 +216,19 @@ export default function MasterKundliReportClient() {
     const ensure = (h = 8) => { if (y + h > 278) newPage(); };
     const line = (value: string, size = 9, bold = false) => {
       const clean = String(value).replace(/[\u0000-\u001f]/g, '');
+      doc.setFont(pdfFont, bold ? 'bold' : 'normal');
+      doc.setFontSize(size);
       const lines = doc.splitTextToSize(clean, 174);
       ensure(lines.length * (size * .48) + 3);
-      doc.setFont('helvetica', bold ? 'bold' : 'normal'); doc.setFontSize(size); doc.setTextColor(ink);
+      doc.setTextColor(ink);
       doc.text(lines, margin, y); y += lines.length * (size * .48) + 3;
     };
-    const title = (value: string) => { ensure(13); doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(gold); doc.text(value, margin, y); y += 8; doc.setDrawColor('#D8C89F'); doc.line(margin,y,192,y); y += 5; };
-    const section = (value: string) => { ensure(12); doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(gold); doc.text(value, margin, y); y += 6; };
+    const title = (value: string) => { ensure(13); doc.setFont(pdfFont,'bold'); doc.setFontSize(13); doc.setTextColor(gold); doc.text(value, margin, y); y += 8; doc.setDrawColor('#D8C89F'); doc.line(margin,y,192,y); y += 5; };
+    const section = (value: string) => { ensure(12); doc.setFont(pdfFont,'bold'); doc.setFontSize(10); doc.setTextColor(gold); doc.text(value, margin, y); y += 6; };
     const valueLabel = (label: string, value: unknown) => line(`${label}: ${value ?? '—'}`);
 
     header();
-    doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(gold);
+    doc.setFont(pdfFont,'bold'); doc.setFontSize(20); doc.setTextColor(gold);
     doc.text(text('COSMICTANTRA MASTER KUNDLI', 'COSMICTANTRA जन्म कुण्डली'), 105, 34, { align: 'center' });
     doc.setFontSize(11); doc.setTextColor(ink); doc.text(text('Detailed Vedic astrology report', 'विस्तृत वैदिक ज्योतिष रिपोर्ट'), 105, 42, { align: 'center' });
     y = 58;
