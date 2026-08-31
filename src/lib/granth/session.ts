@@ -81,6 +81,22 @@ export interface ReaderTurn {
 }
 
 export const DEFAULT_SPEED = 1;
+
+const SCOPE_LABEL_HI: Record<ReadingScopeKind, string> = {
+  book: 'सम्पूर्ण ग्रन्थ',
+  chapter: 'अध्याय',
+  verse: 'श्लोक',
+  range: 'श्लोक-सीमा',
+  section: 'अनुभाग',
+};
+
+const SCOPE_LABEL_EN: Record<ReadingScopeKind, string> = {
+  book: 'full book',
+  chapter: 'chapter',
+  verse: 'verse',
+  range: 'verse range',
+  section: 'section',
+};
 const MAX_CHUNK_CHARS = 220;
 
 function newToken(): string {
@@ -181,9 +197,9 @@ export function describePosition(session: ReadingSession): string {
   const total = session.queue.length;
   const pos = Math.min(session.cursorIndex + 1, Math.max(total, 1));
   if (session.language === 'en') {
-    return `${session.bookTitle} — ${session.scope.kind} • ${pos}/${total}`;
+    return `${session.bookTitle} — ${SCOPE_LABEL_EN[session.scope.kind]} • ${pos}/${total}`;
   }
-  return `${session.bookTitle} — ${session.scope.kind} • ${devanagariNumber(pos)}/${devanagariNumber(total)}`;
+  return `${session.bookTitle} — ${SCOPE_LABEL_HI[session.scope.kind]} • ${devanagariNumber(pos)}/${devanagariNumber(total)}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -293,8 +309,8 @@ export async function startReading(options: StartReadingOptions): Promise<Reader
   const first = await currentPassage(session);
   const passages = first ? [first] : [];
   const header = session.language === 'en'
-    ? `${result.bookTitle} — ${result.scope.kind} ready (${session.queue.length} passages). Edition: ${result.editionLabel}.`
-    : `${result.bookTitle} — ${result.scope.kind} पंक्ति तैयार (${devanagariNumber(session.queue.length)} अंश)। संस्करण: ${result.editionLabel}।`;
+    ? `${result.bookTitle} — ${SCOPE_LABEL_EN[result.scope.kind]} ready (${session.queue.length} passages). Edition: ${result.editionLabel}.`
+    : `${result.bookTitle} — ${SCOPE_LABEL_HI[result.scope.kind]} पंक्ति तैयार (${devanagariNumber(session.queue.length)} अंश)। संस्करण: ${result.editionLabel}।`;
   const completeness = result.isCompleteScope
     ? ''
     : session.language === 'en'
