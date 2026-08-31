@@ -36,6 +36,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { KASHI_VOICE_INTEGRATION } from './kashiVoiceIntegration';
 
 const STORAGE_KEY = 'kashi-voice-enabled';
 
@@ -364,11 +365,17 @@ export function useKashiVoice() {
         const chunk = chunks[index];
         const utterance = new SpeechSynthesisUtterance(chunk);
         const voice = pickBestVoice(voicesRef.current, clean);
+        // The registered feminine voice identity (voice-00, hi-IN) is the canonical speaker for Kashi Sahayak.
+        // If a matching browser voice is available, it is selected; the registered identity is preserved for audit.
+        const selectedVoiceName = voice ? voice.name : 'browser-default';
+        const selectedVoiceLang = voice ? voice.lang : (detectSpokenLanguage(clean) === 'hi' ? 'hi-IN' : 'en-IN');
+        const selectedVoiceGender = KASHI_VOICE_INTEGRATION.registeredVoiceGender;
         if (voice) {
           utterance.voice = voice;
           utterance.lang = voice.lang;
         } else {
-          utterance.lang = detectSpokenLanguage(clean) === 'hi' ? 'hi-IN' : 'en-IN';
+          // Fall back to the registered Kashi Sahayak voice identity when no matching browser voice is found.
+          utterance.lang = KASHI_VOICE_INTEGRATION.registeredVoiceLang; // 'hi-IN'
         }
 
         const { rate, pitch } = prosodyFor(chunk);

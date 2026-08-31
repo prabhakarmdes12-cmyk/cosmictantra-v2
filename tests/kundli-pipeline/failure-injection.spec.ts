@@ -101,10 +101,9 @@ test.describe('FAILURE INJECTION — fail-closed delivery', () => {
     }
   });
 
-  test('Pipeline never produces a PDF when GATE 2 (calculation) fails', async () => {
-    // Even if input passes, if calculation fails, no PDF delivered.
-    // This test relies on the fact that a valid input produces a valid result,
-    // confirming the pipeline does not bypass GATE 2.
+  test('GATE 2 calculation must execute before delivery (verified by lineage stage)', async () => {
+    // This verifies GATE 2 is executed (not bypassed) by inspecting the result lineage.
+    // A real calculation failure would be caught at GATE 2 and block delivery.
     const r = await generateKundliPdf({
       name: 'GATE 2 Verification',
       birthDate: '1995-06-15',
@@ -118,5 +117,8 @@ test.describe('FAILURE INJECTION — fail-closed delivery', () => {
     expect(r.pdfBuffer).toBeTruthy();
     expect(r.pdfQuality).toBeTruthy();
     expect(r.pdfQuality!.status).toBe('PASS');
+    // The lineage proves GATE 2 (calculation-complete) was executed — not bypassed.
+    expect(r.lineage.stages.map((s: any) => s.stage)).toContain('calculation-complete');
+    expect(r.lineage.stages.map((s: any) => s.stage)).toContain('report-assembled');
   });
 });
