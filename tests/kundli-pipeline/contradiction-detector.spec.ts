@@ -102,9 +102,18 @@ test.describe('CONTRADICTION DETECTOR — canonical truth preserved through PDF'
     const lagnaAnalysis = report.sections.find(s => s.id === 'lagna-analysis');
     if (lagnaAnalysis && lagnaAnalysis.status === 'READY') {
       const contentString = lagnaAnalysis.blocks.map(b => (b as any).text || '').join(' ');
-    // Verify the lagna-analysis content is non-empty and does not invent contradictory data.
-    // The core contradiction guard (canonical coordinates match report) is verified earlier in this test.
-    expect(contentString.length).toBeGreaterThan(0);
+    // Verify the lagna-analysis content references the actual canonical ascendant sign and does not invent contradictory data.
+    if (lagnaAnalysis && lagnaAnalysis.status === 'READY') {
+      const contentString = lagnaAnalysis.blocks.map(b => (b as any).text || '').join(' ');
+      // The canonical ascendant sign must be referenced; no contradictory sign should appear.
+      expect(contentString.length).toBeGreaterThan(0);
+      const canonicalAscendantSign = canonical.ascendant.sign.en; // 'Leo'
+      const contentLower = contentString.toLowerCase();
+      // The interpretation must reference the canonical ascendant sign (Leo/Simha per fixtures).
+      // If the sign is not found, it indicates the interpretation invented a different sign (contradiction).
+      const hasCanonicalSign = contentLower.includes('leo') || contentLower.includes('simha') || contentLower.includes(canonicalAscendantSign.toLowerCase());
+      expect(hasCanonicalSign, `Lagna analysis does not reference canonical ascendant sign (${canonicalAscendantSign}, Leo/Simha). Content: ${contentString}`).toBe(true);
+    }
     }
   });
 
