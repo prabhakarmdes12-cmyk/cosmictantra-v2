@@ -214,7 +214,7 @@ export interface ReaderGatewayResult {
 function isReadingUtterance(query: string): boolean {
   const q = normalizeQuery(query);
   if (READ_TRIGGERS.test(q)) return true;
-  return /श्लोक|अध्याय|पाठ|सुनाओ|सुनाएं|chapter|verse|shlok|recite|reading/i.test(q);
+  return /श्लोक|अध्याय|पाठ|सुनाओ|सुनाएं|कहाँ लिखा|कहां लिखा|स्रोत|किस अध्याय|कौन से अध्याय|chapter|verse|shlok|recite|reading|source/i.test(q);
 }
 
 function clarification(language: 'hi' | 'en', session: ReadingSession | null): ReaderGatewayResult {
@@ -324,9 +324,22 @@ export async function handleReaderCommand(
     case 'EXPLAIN':
       if (!session) return requireSession('explain');
       return turnToResult(await explainCurrent(session));
-    case 'SOURCE':
-      if (!session) return requireSession('cite');
+    case 'SOURCE': {
+      if (!session) {
+        // Honest answer: without a quoted passage there is no source to show.
+        return {
+          handled: true,
+          found: false,
+          text:
+            lang === 'en'
+              ? 'Nothing has been quoted from the stored corpus in this conversation yet, so there is no source to show. Give me a reference (e.g. "Gita 2.47") and I will cite the stored text and its edition.'
+              : 'इस बातचीत में अभी तक संग्रहीत पाठ से कोई अंश उद्धृत नहीं हुआ है — दिखाने के लिए कोई स्रोत नहीं है। अध्याय व श्लोक बताइए (जैसे "गीता २.४७"); संग्रहीत पाठ और उसका संस्करण बताऊँगी।',
+          provenance: 'AI_EXPLANATION',
+          cancelledTokens: [],
+        };
+      }
       return turnToResult(await citeCurrent(session));
+    }
     case 'MEANING':
       if (!session) return requireSession('change');
       return turnToResult(setPreferences(session, { includeMeaning: command.include }));

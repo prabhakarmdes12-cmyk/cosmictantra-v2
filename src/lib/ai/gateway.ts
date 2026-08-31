@@ -12,6 +12,9 @@ import { LANGUAGE_QUALIFICATION_MATRIX } from './languages';
 import { KashiSahayakTelemetry } from './telemetry';
 import { executeVedicTool } from './tools/executor';
 import { findScriptureInsight } from './scriptureMap';
+import { detectConversationPreference, preferenceReply } from './conversationPrefs';
+import { buildGroundedAnswer, buildPracticalAnswer, looksLikePracticalConcern } from './groundedAnswer';
+import { retrieveGroundedPassages, verifyQuotation, extractQuotedFragment } from '@/lib/granth/retrieval';
 import { retrieveDurableConsultationMemory } from '../sabha/orchestrator';
 import { readScriptureText, parseScriptureReadRequest, handleReaderCommand } from './granthReader';
 import { reviveSession, saveServerSession } from '@/lib/granth/session';
@@ -32,6 +35,11 @@ export interface KashiSahayakResponse {
   cancelledReadingTokens?: string[];
 }
 
+/**
+ * Pull a quoted fragment out of utterances like
+ * "गीता में लिखा है: कर्मण्येवाधिकारस्ते" or 'the Gita says "…"'.
+ * Returns null when the sentence quotes nothing concrete.
+ */
 export async function processKashiSahayakQuery(
   userQuery: string,
   history: Array<{ role: string; content: string }> = [],
@@ -102,6 +110,65 @@ export async function processKashiSahayakQuery(
   }
 
   // =========================================================================
+  // 3.1 QUOTATION VERIFICATION (Phase 3)
+  // =========================================================================
+  // "गीता में लिखा है …" followed by a quotation is verified against the stored
+  // corpus. If it does not match, we say so instead of confirming it.
+  const quotedFragment = extractQuotedFragment(query);
+  if (quotedFragment) {
+    const verified = await verifyQuotation(quotedFragment);
+    if (verified.results.length) {
+      const hit = verified.results[0];
+      return {
+        text: [
+          lang === 'en' ? 'Yes — that line is in the stored text:' : 'हाँ — यह पंक्ति संग्रहीत पाठ में है:',
+          `${hit.reference}`,
+          hit.passage.original,
+          hit.passage.meaning ? (lang === 'en' ? `Meaning: ${hit.passage.meaning}` : `भावार्थ: ${hit.passage.meaning}`) : '',
+        ].filter(Boolean).join('\n'),
+        intent: 'GRANTH_READ',
+        confidence: 0.9,
+        provenance: createDocumentedProvenance(hit.bookTitle, hit.reference, 'DIRECT_QUOTE'),
+        structuredCard: {
+          granthReadCard: {
+            found: true,
+            code: 'FOUND',
+            verification: 'QUOTATION_VERIFIED_AGAINST_STORED_CORPUS',
+            passages: [{
+              passageId: hit.passage.passageId,
+              label: hit.reference,
+              kind: hit.passage.kind,
+              original: hit.passage.original,
+              meaning: hit.passage.meaning ?? null,
+              checksum: hit.passage.checksum,
+              editionId: hit.editionId,
+            }],
+          },
+        },
+        toolCallsExecuted: ['verify_quotation'],
+        quickChips: [
+          { label: '📖 यह अध्याय पढ़ें', action: 'READER_CONTINUE' },
+          { label: '📚 आरती एवं ग्रन्थ पुस्तकालय', action: 'OPEN_LIBRARY', href: '/aarti-stotra' },
+        ],
+      };
+    }
+    return {
+      text: lang === 'en'
+        ? 'I could not find that wording in the stored Gita text, so I will not confirm it as scripture. If you tell me the chapter and verse, I will read the stored passage exactly as it is.'
+        : 'यह वाक्य संग्रहीत गीता-पाठ में मुझे नहीं मिला, इसलिए मैं इसे शास्त्र-वचन मानकर पुष्ट नहीं करूँगी। अध्याय व श्लोक बताइए — संग्रहीत पाठ ज्यों का त्यों पढ़ कर सुनाऊँगी।',
+      intent: 'GRANTH_READ',
+      confidence: 0.8,
+      provenance: createAIExplanationProvenance(),
+      structuredCard: { granthReadCard: { found: false, code: 'NOT_STORED', verification: 'QUOTATION_NOT_FOUND' } },
+      toolCallsExecuted: ['verify_quotation'],
+      quickChips: [
+        { label: '📖 गीता अध्याय २ पढ़ें', action: 'INTENT_SCRIPTURE' },
+        { label: '📚 आरती एवं ग्रन्थ पुस्तकालय', action: 'OPEN_LIBRARY', href: '/aarti-stotra' },
+      ],
+    };
+  }
+
+  // =========================================================================
   // 3. ADVERSARIAL FATALISM & GUARANTEE CHECKS
   // =========================================================================
   const qLower = query.toLowerCase();
@@ -130,6 +197,28 @@ export async function processKashiSahayakQuery(
         { label: '📖 गीता २.४७ कर्म सिद्धान्त', action: 'INTENT_SCRIPTURE' },
         { label: '📿 मन्त्र जप संग्रह', action: 'INTENT_MANTRA' }
       ]
+    };
+  }
+
+  // =========================================================================
+  // 3.2 STATED CONVERSATION PREFERENCE (Phase 3)
+  // =========================================================================
+  // "बस बात करो" / "श्लोक मत सुनाओ" / "बस सुनना है" outrank scripture
+  // retrieval, chart intake and every commercial suggestion.
+  const statedPreference = detectConversationPreference(query);
+  if (statedPreference) {
+    KashiSahayakTelemetry.log('HUMAN_BOUNDARY_SHOWN', sessionId, { intent: 'CONVERSATION_PREFERENCE' });
+    return {
+      text: preferenceReply(statedPreference, lang),
+      intent: 'CONVERSATION_PREFERENCE',
+      confidence: 0.95,
+      provenance: createAIExplanationProvenance(),
+      toolCallsExecuted: ['conversation_preference'],
+      quickChips: [
+        { label: '🕉️ आज का पञ्चाङ्ग', action: 'INTENT_PANCHANG' },
+        { label: '📜 विद्वान् ज्योतिषी परामर्श', action: 'INTENT_SCHOLAR', href: '/ask' },
+      ],
+      readingSession: null,
     };
   }
 
@@ -392,6 +481,50 @@ export async function processKashiSahayakQuery(
   }
 
   // 4.8 LIFE QUESTION (Vague/Distress) & Scripture Wisdom
+  //
+  // Phase 3: source-grounded retrieval first. Exact references win, then a
+  // lexical match over the stored corpus. The curated situation→verse registry
+  // below is now the FALLBACK, not the primary path.
+  const grounded = await retrieveGroundedPassages(query, { limit: 2 });
+  // Only quote a lexical hit when the person actually asked about the text —
+  // otherwise a keyword coincidence would be presented as a relevant answer.
+  const asksForPassage =
+    /गीता|ग्रन्थ|ग्रंथ|पुराण|मानस|उपनिषद|शास्त्र|श्लोक|अध्याय|वचन|कहा गया|कहती है|कहता है|लिखा|gita|shloka|sloka|verse|chapter|says|quote/i.test(
+      query,
+    );
+  if (grounded.results.length && (grounded.mode === 'EXACT_LOOKUP' || asksForPassage)) {
+    KashiSahayakTelemetry.log('TOOL_USED', sessionId, { toolName: 'grounded_scripture_retrieval' });
+    const answer = buildGroundedAnswer(query, grounded, lang);
+    const primary = answer.passages[0];
+    return {
+      text: answer.text,
+      intent: 'LIFE_QUESTION',
+      confidence: 0.85,
+      provenance: createDocumentedProvenance(
+        answer.booksInvolved.length > 1 ? answer.booksInvolved.join(' + ') : primary.bookTitle,
+        primary.reference,
+        'DIRECT_QUOTE',
+      ),
+      structuredCard: {
+        groundedPassages: answer.passages,
+        retrieval: {
+          mode: answer.retrievalMode,
+          note: grounded.note,
+          terms: grounded.terms,
+          searchedBooks: grounded.searchedBooks,
+          semanticSearch: false,
+        },
+        consentQuestion: answer.consentQuestion,
+      },
+      toolCallsExecuted: ['grounded_scripture_retrieval'],
+      quickChips: [
+        { label: '💡 यह समझाएं', action: 'READER_EXPLAIN' },
+        { label: '🕉️ आज का पञ्चाङ्ग', action: 'INTENT_PANCHANG' },
+        { label: '📜 विद्वान् ज्योतिषी परामर्श', action: 'INTENT_SCHOLAR', href: '/ask' },
+      ],
+    };
+  }
+
   const scripture = findScriptureInsight(query);
   if (scripture) {
     KashiSahayakTelemetry.log('TOOL_USED', sessionId, { toolName: 'get_scripture_insight' });
@@ -460,19 +593,48 @@ export async function processKashiSahayakQuery(
     };
   }
 
-  // 4.8.1 LIFE_QUESTION Fallback when no direct scripture mapped
-  if (intentRes.intent === 'LIFE_QUESTION') {
+  // 4.8.1 LIFE_QUESTION Fallback when no stored passage and no curated insight
+  //       matched. Practical help first; nothing is quoted, and any long
+  //       reading is only OFFERED (consent comes before it starts).
+  if (intentRes.intent === 'LIFE_QUESTION' || looksLikePracticalConcern(query)) {
+    const practical = buildPracticalAnswer(query, lang);
     return {
-      text: 'हर हर महादेव! 🙏 जीवन में आने वाले उतार-चढ़ाव और मानसिक द्वन्द्व स्वाभाविक हैं। वैदिक दृष्टिकोण से यह काल धैर्य और कर्म पर केंद्रित होने का है। आप चाहें तो आज का पञ्चाङ्ग देख सकते हैं या काशी के विद्वान् ज्योतिषी से मार्गदर्शन प्राप्त कर सकते हैं।',
-      intent: 'LIFE_QUESTION',
+      text: practical.text,
+      intent: intentRes.intent === 'LIFE_QUESTION' ? 'LIFE_QUESTION' : intentRes.intent,
       confidence: intentRes.confidence,
-      provenance: createDocumentedProvenance('श्रीमद्भगवद्गीता कर्म-योग'),
-      toolCallsExecuted: ['get_scripture_insight'],
+      provenance: createAIExplanationProvenance(),
+      structuredCard: {
+        retrieval: {
+          mode: 'NONE',
+          note: 'No stored passage matched; nothing is quoted.',
+          terms: [],
+          searchedBooks: [],
+          semanticSearch: false,
+        },
+        consentQuestion: practical.consentQuestion,
+      },
+      toolCallsExecuted: [],
       quickChips: [
         { label: '🕉️ आज का पञ्चाङ्ग', action: 'INTENT_PANCHANG' },
         { label: '🪔 काशी विश्वनाथ लाइव दर्शन', action: 'INTENT_DARSHAN' },
         { label: '📜 विद्वान् ज्योतिषी परामर्श', action: 'INTENT_SCHOLAR', href: '/ask' }
       ]
+    };
+  }
+
+  // Bare consent to a reading we offered ("हाँ पढ़ो", "read it") with no active
+  // session: ask which text, instead of silently doing nothing.
+  if (!incomingSession && /^(हाँ|हां|जी|haan|yes|ok|okay|सुनाओ)?[\s,.]*(पढ़ो|पढ़ें|पढ़िए|सुनाओ|read it|go ahead|start)[\s.]*$/i.test(query.trim())) {
+    return {
+      text:
+        lang === 'en'
+          ? 'Which text should I read? For example: "read Gita chapter 2" — I will read the stored edition one passage at a time.'
+          : 'क्या पढ़ूँ? जैसे — "गीता अध्याय २ पढ़ो"; संग्रहीत संस्करण से एक-एक अंश करके पढ़ूँगी।',
+      intent: 'GRANTH_READ',
+      confidence: 0.6,
+      provenance: createAIExplanationProvenance(),
+      toolCallsExecuted: [],
+      quickChips: [{ label: '📖 आरती एवं ग्रन्थ पुस्तकालय', action: 'OPEN_LIBRARY', href: '/aarti-stotra' }],
     };
   }
 
