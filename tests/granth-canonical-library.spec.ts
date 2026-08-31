@@ -153,21 +153,37 @@ test('a valid-but-unstored unit is never returned as stored content', async () =
 });
 
 test('the extracted modules still match the pre-migration page literals byte for byte', () => {
-  // Fidelity proof: parse the page as it was committed before the migration and
+  // Fidelity proof: parse the page as it was committed BEFORE the migration and
   // compare every string to what the library page now renders from the shared
   // modules. Guards against silent text drift during extraction.
+  //
+  // The baseline is PINNED to ca5951c (the reviewed main this branch is based
+  // on), not HEAD: HEAD now contains the migrated page, which imports the
+  // extracted modules instead of declaring the literals — comparing against it
+  // would prove nothing and could pass with an empty comparison.
+  const MIGRATION_BASELINE = 'ca5951c';
   const repoRoot = path.resolve(__dirname, '..');
   let original = '';
   try {
-    original = execFileSync('git', ['show', 'HEAD:src/app/aarti-stotra/page.tsx'], {
+    original = execFileSync('git', ['show', `${MIGRATION_BASELINE}:src/app/aarti-stotra/page.tsx`], {
       cwd: repoRoot,
       encoding: 'utf8',
       maxBuffer: 64 * 1024 * 1024,
     });
   } catch (error) {
-    test.skip(true, 'git history unavailable — cannot verify extraction fidelity here.');
-    return;
+    // No skip here: a missing baseline means the fidelity check cannot run and
+    // that must be visible, not silently green.
+    throw new Error(
+      `Migration baseline ${MIGRATION_BASELINE}:src/app/aarti-stotra/page.tsx unavailable — ` +
+        `cannot verify extraction fidelity (${String(error)}).`,
+    );
   }
+
+  // The baseline must really be the pre-migration page (literals inline).
+  expect(
+    original.includes(`from '@/lib/granth/libraryData'`) || original.includes('granthLibrary'),
+    `${MIGRATION_BASELINE} must be the PRE-migration page (literals inline, no library import)`,
+  ).toBe(false);
 
   const tree = ts.createSourceFile('page.tsx', original, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   function literal(node: ts.Node): any {
@@ -199,10 +215,12 @@ test('the extracted modules still match the pre-migration page literals byte for
     }
   }
 
-  // The pre-migration commit still contains the literals; if it ever does not,
-  // this guard has nothing to compare and must say so rather than pass silently.
-  const hasLiterals = Object.keys(wanted).length === 4;
-  test.skip(!hasLiterals, 'HEAD already imports the extracted modules — nothing to compare.');
+  // If the pinned baseline ever stops carrying the four literals, this guard has
+  // nothing to compare: fail loudly instead of passing on an empty comparison.
+  expect(
+    Object.keys(wanted).sort(),
+    `${MIGRATION_BASELINE} must declare all four data literals`,
+  ).toEqual(['aartisData', 'granthsData', 'siddhaStutiData', 'stotrasData']);
 
   expect(JSON.stringify(GRANTHS_DATA)).toBe(JSON.stringify(wanted.granthsData));
   expect(JSON.stringify(STOTRAS_DATA)).toBe(JSON.stringify(wanted.stotrasData));

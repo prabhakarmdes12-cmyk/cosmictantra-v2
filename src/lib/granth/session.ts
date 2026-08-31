@@ -22,7 +22,7 @@ import {
   lookupContext,
   resolveBookId,
 } from './lookup';
-import { loadBook } from './registry';
+import { getEditionManifest, loadBook } from './registry';
 import type { LookupResult, PassageRecord, ReadingScopeKind } from './types';
 
 export type ReadingState = 'idle' | 'loading' | 'reading' | 'paused' | 'explaining' | 'completed' | 'error';
@@ -81,6 +81,21 @@ export interface ReaderTurn {
 }
 
 export const DEFAULT_SPEED = 1;
+/** Speech-rate bounds. Anything outside is rejected on revive and clamped on set. */
+export const MIN_SPEED = 0.5;
+export const MAX_SPEED = 2;
+/** Sanity bound on a reading queue (the whole Gita is 770 rows). */
+const MAX_QUEUE_LENGTH = 5000;
+/** Sanity bound on chunk position inside one passage. */
+const MAX_CHUNK_INDEX = 2000;
+
+export const READING_STATES: ReadingState[] = ['idle', 'loading', 'reading', 'paused', 'explaining', 'completed', 'error'];
+const SCOPE_KINDS: ReadingScopeKind[] = ['book', 'chapter', 'verse', 'range', 'section'];
+
+export function clampSpeed(value: number): number {
+  if (!Number.isFinite(value)) return DEFAULT_SPEED;
+  return Math.min(MAX_SPEED, Math.max(MIN_SPEED, value));
+}
 
 const SCOPE_LABEL_HI: Record<ReadingScopeKind, string> = {
   book: 'सम्पूर्ण ग्रन्थ',
@@ -251,7 +266,7 @@ export async function startReading(options: StartReadingOptions): Promise<Reader
     ...(options.previousSession ? baseSessionFrom(options.previousSession) : baseSession(bookId ?? options.bookId)),
     language: options.language ?? options.previousSession?.language ?? 'hi',
     includeMeaning: options.includeMeaning ?? options.previousSession?.includeMeaning ?? true,
-    speed: options.speed ?? options.previousSession?.speed ?? DEFAULT_SPEED,
+    speed: clampSpeed(options.speed ?? options.previousSession?.speed ?? DEFAULT_SPEED),
     cancellationToken: newToken(),
     state: 'loading',
     updatedAt: Date.now(),
@@ -558,7 +573,7 @@ export function setPreferences(
     ...session,
     language: patch.language ?? session.language,
     includeMeaning: patch.includeMeaning ?? session.includeMeaning,
-    speed: patch.speed ?? session.speed,
+    speed: patch.speed === undefined ? session.speed : clampSpeed(patch.speed),
     cancellationToken: newToken(),
     updatedAt: Date.now(),
   };
@@ -589,14 +604,176 @@ export function setPreferences(
   };
 }
 
+/**
+ * Should the reader pull the NEXT stored passage after this turn has been
+ * spoken?
+ *
+ * Driven by the server's own session state — never assumed client-side — and
+ * only when another passage is actually queued. Paused, explained, completed
+ * and single-passage readings therefore never auto-continue, so a reading can
+ * not run away unattended.
+ */
+export function shouldAutoAdvance(
+  session: ReadingSession | null | undefined,
+  passageCount: number,
+): boolean {
+  if (!session || session.state !== 'reading') return false;
+  if (passageCount <= 0) return false;
+  const queueLength = Array.isArray(session.queue) ? session.queue.length : 0;
+  if (!Number.isInteger(session.cursorIndex) || session.cursorIndex < 0) return false;
+  return session.cursorIndex < queueLength - 1;
+}
+
+/** Speech-rate multiplier for a session, clamped to the supported range. */
+export function speechRateFor(session: ReadingSession | null | undefined): number {
+  return clampSpeed(session?.speed ?? DEFAULT_SPEED);
+}
+
+/**
+ * Why a session was rejected. Returned (not thrown) so callers can log it and
+ * answer the user honestly instead of pretending the session never existed.
+ */
+export type SessionRejectionReason =
+  | 'NOT_AN_OBJECT'
+  | 'WRONG_VERSION'
+  | 'UNKNOWN_BOOK'
+  | 'BAD_SESSION_ID'
+  | 'BAD_STATE'
+  | 'BAD_SCOPE'
+  | 'BAD_QUEUE'
+  | 'BAD_CURSOR'
+  | 'BAD_LAST_COMPLETED'
+  | 'BAD_CHUNK_INDEX'
+  | 'BAD_SPEED'
+  | 'BAD_LANGUAGE'
+  | 'BAD_PREFERENCES'
+  | 'BAD_TOKEN'
+  | 'BAD_TIMESTAMP'
+  | 'BAD_EDITION'
+  | 'UNKNOWN_PASSAGE';
+
+export interface SessionValidation {
+  session: ReadingSession | null;
+  reason?: SessionRejectionReason;
+}
+
+function isInt(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value);
+}
+
+/**
+ * Structural validation of a session that came from an UNTRUSTED client.
+ *
+ * A recognised book id is not enough: every field the server later indexes or
+ * speaks with is checked, so a tampered payload cannot crash a lookup, point
+ * the cursor outside the queue, or push the speech rate out of range.
+ */
+export function validateSessionShape(input: unknown): SessionValidation {
+  if (!input || typeof input !== 'object') return { session: null, reason: 'NOT_AN_OBJECT' };
+  const candidate = input as Partial<ReadingSession>;
+
+  if (candidate.version !== SESSION_SCHEMA_VERSION) return { session: null, reason: 'WRONG_VERSION' };
+  if (typeof candidate.bookId !== 'string' || !resolveBookId(candidate.bookId)) {
+    return { session: null, reason: 'UNKNOWN_BOOK' };
+  }
+  if (typeof candidate.sessionId !== 'string' || candidate.sessionId.length === 0) {
+    return { session: null, reason: 'BAD_SESSION_ID' };
+  }
+  if (!READING_STATES.includes(candidate.state as ReadingState)) return { session: null, reason: 'BAD_STATE' };
+  if (typeof candidate.cancellationToken !== 'string' || candidate.cancellationToken.length === 0) {
+    return { session: null, reason: 'BAD_TOKEN' };
+  }
+  if (typeof candidate.updatedAt !== 'number' || !Number.isFinite(candidate.updatedAt)) {
+    return { session: null, reason: 'BAD_TIMESTAMP' };
+  }
+  // The edition must be one this build actually stores: a client must not be
+  // able to attach its own edition label to quoted text.
+  const declaredEdition = getEditionManifest(resolveBookId(candidate.bookId) as string)?.editionId;
+  if (typeof declaredEdition === 'string' && candidate.editionId !== declaredEdition) {
+    return { session: null, reason: 'BAD_EDITION' };
+  }
+  if (typeof candidate.editionId !== 'string' || candidate.editionId.length === 0) {
+    return { session: null, reason: 'BAD_EDITION' };
+  }
+  if (!candidate.scope || typeof candidate.scope !== 'object' || !SCOPE_KINDS.includes(candidate.scope.kind)) {
+    return { session: null, reason: 'BAD_SCOPE' };
+  }
+  if (candidate.language !== 'hi' && candidate.language !== 'en') return { session: null, reason: 'BAD_LANGUAGE' };
+  if (typeof candidate.includeMeaning !== 'boolean') return { session: null, reason: 'BAD_PREFERENCES' };
+  if (
+    typeof candidate.speed !== 'number' ||
+    !Number.isFinite(candidate.speed) ||
+    candidate.speed < MIN_SPEED ||
+    candidate.speed > MAX_SPEED
+  ) {
+    return { session: null, reason: 'BAD_SPEED' };
+  }
+  if (!Array.isArray(candidate.queue) || candidate.queue.length > MAX_QUEUE_LENGTH) {
+    return { session: null, reason: 'BAD_QUEUE' };
+  }
+  if (!candidate.queue.every((id) => typeof id === 'string' && id.length > 0)) {
+    return { session: null, reason: 'BAD_QUEUE' };
+  }
+  // Cursor bounds: 0 <= cursor <= queue.length (queue.length means "finished").
+  if (!isInt(candidate.cursorIndex) || candidate.cursorIndex < 0 || candidate.cursorIndex > candidate.queue.length) {
+    return { session: null, reason: 'BAD_CURSOR' };
+  }
+  if (
+    !isInt(candidate.lastCompletedIndex) ||
+    candidate.lastCompletedIndex < -1 ||
+    candidate.lastCompletedIndex > Math.max(candidate.queue.length - 1, -1)
+  ) {
+    return { session: null, reason: 'BAD_LAST_COMPLETED' };
+  }
+  if (!isInt(candidate.chunkIndex) || candidate.chunkIndex < 0 || candidate.chunkIndex > MAX_CHUNK_INDEX) {
+    return { session: null, reason: 'BAD_CHUNK_INDEX' };
+  }
+
+  return { session: { ...(input as ReadingSession) } };
+}
+
 /** Validate/upgrade a session that came from an untrusted client. */
 export function reviveSession(input: unknown): ReadingSession | null {
-  if (!input || typeof input !== 'object') return null;
-  const candidate = input as Partial<ReadingSession>;
-  if (candidate.version !== SESSION_SCHEMA_VERSION) return null;
-  if (typeof candidate.bookId !== 'string' || !Array.isArray(candidate.queue)) return null;
-  if (!resolveBookId(candidate.bookId)) return null;
-  return { ...(input as ReadingSession) };
+  return validateSessionShape(input).session;
+}
+
+/**
+ * Validate a client session AND check it against the stored corpus:
+ *  - every queued passage id must exist in the book;
+ *  - the edition id must be the edition the book actually stores (a forged
+ *    edition would otherwise be echoed back as provenance);
+ *  - the human-facing book/edition labels are taken from the store, never
+ *    from the client.
+ *
+ * Async because the book must be loaded. Prefer this at the API boundary.
+ */
+export async function reviveVerifiedSession(input: unknown): Promise<SessionValidation> {
+  const shape = validateSessionShape(input);
+  if (!shape.session) return shape;
+
+  const session = shape.session;
+  const bookId = resolveBookId(session.bookId);
+  if (!bookId) return { session: null, reason: 'UNKNOWN_BOOK' };
+
+  try {
+    const book = await loadBook(bookId);
+    if (session.editionId !== book.editionId) return { session: null, reason: 'BAD_EDITION' };
+    for (const passageId of session.queue) {
+      if (!book.byId[passageId]) return { session: null, reason: 'UNKNOWN_PASSAGE' };
+    }
+    return {
+      session: {
+        ...session,
+        bookId,
+        bookTitle: book.title,
+        editionId: book.editionId,
+        editionLabel: book.editionLabel,
+      },
+    };
+  } catch {
+    // A book that cannot be loaded cannot be verified: reject rather than trust.
+    return { session: null, reason: 'UNKNOWN_BOOK' };
+  }
 }
 
 // ---------------------------------------------------------------------------

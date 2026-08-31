@@ -41,6 +41,7 @@ import { chitiSensory } from '@/lib/chitiAudio';
 import { ScriptureInsight, findScriptureInsight, SCRIPTURE_WISDOM_REGISTRY } from '@/lib/ai/scriptureMap';
 import { MOOD_OPTIONS, MOOD_QUESTION_HI, getMoodById } from '@/lib/ai/moodOptions';
 import { useKashiVoice } from '@/lib/ai/useKashiVoice';
+import { shouldAutoAdvance, speechRateFor } from '@/lib/granth/session';
 import { getChatSafetyReply } from '@/lib/ai/chatSafety';
 
 // Provenance Metadata Schema
@@ -284,6 +285,16 @@ export default function FloatingAIGuruAvatar() {
   // -----------------------------------------------------------------
   const READING_SESSION_KEY = 'cosmictantra_granth_reading_session_v1';
   const readingSessionRef = useRef<any>(null);
+  /**
+   * True only while a stored passage has been spoken and the NEXT stored
+   * passage should follow automatically. Set from the server's own session
+   * state (never guessed locally) and cleared on pause, stop, explain,
+   * completion, mute or close — so reading can never run away unattended.
+   */
+  const readingAutoAdvanceRef = useRef(false);
+  /** Re-entrancy guard for the auto-advance request. */
+  const advancingRef = useRef(false);
+  const advanceReadingRef = useRef<null | (() => Promise<void>)>(null);
 
   useEffect(() => {
     try {
@@ -297,6 +308,12 @@ export default function FloatingAIGuruAvatar() {
   const voice = useKashiVoice();
   const [inputVal, setInputVal] = useState('');
   const chatScrollRef = useRef<HTMLDivElement>(null);
+  /** Mirrors isOpen for callbacks (speech completion) that outlive a render. */
+  const isOpenRef = useRef(false);
+  useEffect(() => {
+    isOpenRef.current = isOpen;
+    if (!isOpen) readingAutoAdvanceRef.current = false;
+  }, [isOpen]);
 
   // Time-aware greeting — always capability-led and feeling-first so the
   // seeker instantly knows what Kashi Sahayak offers and feels invited to
@@ -390,6 +407,7 @@ export default function FloatingAIGuruAvatar() {
   const handleResetSession = () => {
     playClick();
     voice.stop();
+    readingAutoAdvanceRef.current = false;
     try {
       window.localStorage.removeItem(SESSION_KEY);
     } catch {
@@ -417,7 +435,20 @@ export default function FloatingAIGuruAvatar() {
     const last = chatMessages[chatMessages.length - 1];
     if (last && last.sender === 'GURU' && last.text && last.id !== lastSpokenIdRef.current) {
       lastSpokenIdRef.current = last.id;
-      voice.speak(last.text);
+      const session = readingSessionRef.current;
+      const shouldAdvance = readingAutoAdvanceRef.current === true;
+      voice.speak(last.text, {
+        // The reading session's own speed ("धीरे पढ़ो" → 0.9×) is applied to
+        // speech; without it a speed change would change nothing audible.
+        rate: speechRateFor(session),
+        onDone: () => {
+          // Fires only when this message finished speaking on its own: stop()
+          // cancels it, which is what pause/mute rely on.
+          if (!shouldAdvance) return;
+          const advance = advanceReadingRef.current;
+          if (advance) void advance();
+        },
+      });
     }
   }, [chatMessages, isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -1036,8 +1067,9 @@ export default function FloatingAIGuruAvatar() {
             : chip.action === 'READER_EXPLAIN' ? 'यह समझाओ'
               : null;
       if (phrase) {
-        setInputVal(phrase);
-        setTimeout(() => handleSendMessage(), 0);
+        // Pass the phrase in: no state round-trip, so the command that is sent
+        // is always the command the chip shows.
+        void handleSendMessage(undefined, phrase);
       }
       return;
     }
@@ -1305,12 +1337,133 @@ export default function FloatingAIGuruAvatar() {
     }
   };
 
-  const handleSendMessage = async (e?: React.FormEvent) => {
+  /**
+   * One round trip to /api/guru/chat: sends the current reading session,
+   * stores the returned session, and appends the assistant's reply.
+   *
+   * Also decides whether speech completion should pull the NEXT stored passage:
+   * only when the SERVER reports state 'reading' AND another passage is queued.
+   * Pause / explain / completion / a rejected session all leave it off, so
+   * "continue" can never loop on its own.
+   */
+  const postGuru = async (text: string): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/guru/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text,
+          history: chatMessages.slice(-4).map(m => ({
+            role: m.sender === 'USER' ? 'user' : 'assistant',
+            content: m.text
+          })),
+          context: {
+            city: seekerData.birthCity || 'Varanasi',
+            profileName: seekerData.name,
+            readingSession: readingSessionRef.current
+          }
+        })
+      });
+
+      if (!res.ok) return false;
+      const data = await res.json();
+
+      // Stale-audio guard: any token the server invalidated must not keep
+      // playing, so outstanding speech for the previous turn is stopped.
+      if (Array.isArray(data.cancelledReadingTokens) && data.cancelledReadingTokens.length > 0) {
+        voice.stop();
+      }
+
+      const session = data.readingSession ?? null;
+      if (session) {
+        readingSessionRef.current = session;
+        try {
+          localStorage.setItem(READING_SESSION_KEY, JSON.stringify(session));
+        } catch {
+          // Storage full or blocked: the in-memory session still works.
+        }
+      }
+
+      // Auto-advance is driven by the server's own state (shared rule, also
+      // unit-tested) — never assumed here.
+      const passages = data.structuredCard?.granthReadCard?.passages ?? [];
+      readingAutoAdvanceRef.current = shouldAutoAdvance(session, passages.length);
+
+      setChatMessages(prev => [
+        ...prev,
+        {
+          id: `g-${Date.now()}`,
+          sender: 'GURU',
+          text: data.text || 'हर हर महादेव! 🙏',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          provenance: data.provenance,
+          ...(data.structuredCard || {}),
+          quickChips: data.quickChips || [
+            { label: '🕉️ आज का पञ्चाङ्ग व राहुकाल', action: 'INTENT_PANCHANG' },
+            { label: '🪔 काशी विश्वनाथ लाइव दर्शन', action: 'INTENT_DARSHAN_KASHI' },
+            { label: '🚩 काशी यात्रा परिपथ', action: 'INTENT_JOURNEY_KASHI' },
+            { label: '📜 विद्वान् ज्योतिषी परामर्श', action: 'INTENT_SCHOLAR' }
+          ]
+        }
+      ]);
+      return true;
+    } catch (e) {
+      console.warn('/api/guru/chat fetch fallback:', e);
+      readingAutoAdvanceRef.current = false;
+      return false;
+    }
+  };
+
+  /**
+   * Ask the server for the next stored passage (the same command the
+   * "आगे पढ़ो" chip sends). Called when a passage has finished being spoken.
+   */
+  const advanceReading = async (): Promise<void> => {
+    if (advancingRef.current) return;
+    // Never keep reading into a closed panel: speech completion can land after
+    // the user has closed the chat.
+    if (!isOpenRef.current) {
+      readingAutoAdvanceRef.current = false;
+      return;
+    }
+    const before = readingSessionRef.current;
+    if (!before || before.state !== 'reading') {
+      readingAutoAdvanceRef.current = false;
+      return;
+    }
+    advancingRef.current = true;
+    try {
+      const delivered = await postGuru('आगे पढ़ो');
+      const after = readingSessionRef.current;
+      // No progress (same cursor, no session, or the server declined) → stop
+      // pulling, instead of asking again forever.
+      if (!delivered || !after || after.cursorIndex === before.cursorIndex) {
+        readingAutoAdvanceRef.current = false;
+      }
+    } finally {
+      advancingRef.current = false;
+    }
+  };
+
+  useEffect(() => {
+    advanceReadingRef.current = advanceReading;
+  }, [advanceReading]);
+
+  /**
+   * Send a message.
+   *
+   * `commandText` lets a caller (quick chips, reader controls, auto-advance)
+   * send an explicit phrase. It is REQUIRED for those paths: setting React
+   * state and then reading it in the same tick would send the previous, stale
+   * input value instead.
+   */
+  const handleSendMessage = async (e?: React.FormEvent, commandText?: string) => {
     if (e) e.preventDefault();
-    if (!inputVal.trim()) return;
+    const raw = commandText ?? inputVal;
+    const text = raw.trim();
+    if (!text) return;
 
     playClick();
-    const text = inputVal.trim();
     setInputVal('');
 
     const newMsg: ChatMessage = {
@@ -1516,63 +1669,8 @@ export default function FloatingAIGuruAvatar() {
       }
 
       // General Query -> Call /api/guru/chat backend AI Gateway with deterministic fallback
-      try {
-        const res = await fetch('/api/guru/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: text,
-            history: chatMessages.slice(-4).map(m => ({
-              role: m.sender === 'USER' ? 'user' : 'assistant',
-              content: m.text
-            })),
-            context: {
-              city: seekerData.birthCity || 'Varanasi',
-              profileName: seekerData.name,
-              readingSession: readingSessionRef.current
-            }
-          })
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-
-          // Stale-audio guard: any token the server invalidated must not keep
-          // playing, so outstanding speech for the previous turn is stopped.
-          if (Array.isArray(data.cancelledReadingTokens) && data.cancelledReadingTokens.length > 0) {
-            voice.stop();
-          }
-          if (data.readingSession) {
-            readingSessionRef.current = data.readingSession;
-            try {
-              localStorage.setItem(READING_SESSION_KEY, JSON.stringify(data.readingSession));
-            } catch {
-              // Storage full or blocked: the in-memory session still works.
-            }
-          }
-
-          setChatMessages(prev => [
-            ...prev,
-            {
-              id: `g-${Date.now()}`,
-              sender: 'GURU',
-              text: data.text || 'हर हर महादेव! 🙏',
-              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-              provenance: data.provenance,
-              ...(data.structuredCard || {}),
-              quickChips: data.quickChips || [
-                { label: '🕉️ आज का पञ्चाङ्ग व राहुकाल', action: 'INTENT_PANCHANG' },
-                { label: '🪔 काशी विश्वनाथ लाइव दर्शन', action: 'INTENT_DARSHAN_KASHI' },
-                { label: '🚩 काशी यात्रा परिपथ', action: 'INTENT_JOURNEY_KASHI' },
-                { label: '📜 विद्वान् ज्योतिषी परामर्श', action: 'INTENT_SCHOLAR' }
-              ]
-            }
-          ]);
-          return;
-        }
-      } catch (e) {
-        console.warn('/api/guru/chat fetch fallback:', e);
-      }
+      const delivered = await postGuru(text);
+      if (delivered) return;
 
       // Fallback
       setTimeout(() => {

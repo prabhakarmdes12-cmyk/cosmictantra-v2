@@ -303,9 +303,20 @@ export async function handleReaderCommand(
         cancelledTokens: turn.cancelledTokens,
       };
     }
-    case 'CONTINUE':
+    case 'CONTINUE': {
       if (!session) return requireSession('continue');
+      // "आगे पढ़ो" while a reading is already in progress means "read on": it
+      // advances to the next stored passage. After an interruption (paused,
+      // explained, completed) the same words mean "resume here", so the
+      // passage that was interrupted is re-read from its start.
+      if (session.state === 'reading') {
+        const advanced = await moveCursor(session, 1);
+        // At the end of the queue moveCursor reports completion; that is the
+        // honest answer, so it is returned as-is instead of looping.
+        return turnToResult(advanced);
+      }
       return turnToResult(await resumeReading(session));
+    }
     case 'PAUSE':
       if (!session) return requireSession('pause');
       return turnToResult(await pauseReading(session));

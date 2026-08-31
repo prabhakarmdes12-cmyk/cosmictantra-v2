@@ -95,3 +95,53 @@ test('live route: a tampered client session is rejected, not trusted', async () 
   expect(next.readingSession?.bookId).not.toBe('invented-book');
   await api.dispose();
 });
+
+test('live route: "आगे पढ़ो" reads on while reading, and resumes after a pause', async () => {
+  const api = await playwrightRequest.newContext({ baseURL: BASE_URL });
+
+  const started = await chat(api, 'गीता अध्याय १२ पढ़ो');
+  expect(started.readingSession?.state).toBe('reading');
+  const firstId = started.structuredCard?.granthReadCard?.passages?.[0]?.passageId;
+
+  // While a reading is in progress the same command must move to the NEXT
+  // stored passage, not repeat the one that was just read.
+  const advanced = await chat(api, 'आगे पढ़ो', started.readingSession);
+  expect(advanced.readingSession?.cursorIndex).toBe((started.readingSession?.cursorIndex ?? 0) + 1);
+  expect(advanced.structuredCard?.granthReadCard?.found).toBe(true);
+  expect(advanced.structuredCard?.granthReadCard?.passages?.[0]?.passageId).not.toBe(firstId);
+
+  // After a pause the same command resumes the interrupted passage.
+  const paused = await chat(api, 'रुको', advanced.readingSession);
+  expect(paused.readingSession?.state).toBe('paused');
+  const resumed = await chat(api, 'आगे पढ़ो', paused.readingSession);
+  expect(resumed.readingSession?.cursorIndex).toBe(advanced.readingSession?.cursorIndex);
+  expect(resumed.structuredCard?.granthReadCard?.passages?.[0]?.passageId).toBe(
+    advanced.structuredCard?.granthReadCard?.passages?.[0]?.passageId,
+  );
+
+  await api.dispose();
+});
+
+test('live route: a tampered session (cursor, edition, state, speed) is rejected', async () => {
+  const api = await playwrightRequest.newContext({ baseURL: BASE_URL });
+  const started = await chat(api, 'गीता अध्याय १२ पढ़ो');
+  const good = started.readingSession!;
+  const tamperedVariants: Array<Record<string, unknown>> = [
+    { ...good, cursorIndex: -3 },
+    { ...good, cursorIndex: 99_999 },
+    { ...good, editionId: 'ct-gita-forged-2026' },
+    { ...good, state: 'singing' },
+    { ...good, speed: 42 },
+    { ...good, chunkIndex: -1 },
+  ];
+
+  for (const tampered of tamperedVariants) {
+    const next = await chat(api, 'आगे पढ़ो', tampered);
+    // A rejected session yields no stored passage and no echoed forgery.
+    expect(next.structuredCard?.granthReadCard?.found ?? false, JSON.stringify(tampered)).toBe(false);
+    expect(next.provenance.type, JSON.stringify(tampered)).toBe('AI_EXPLANATION');
+    expect(JSON.stringify(next), JSON.stringify(tampered)).not.toContain('ct-gita-forged-2026');
+  }
+
+  await api.dispose();
+});

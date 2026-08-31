@@ -17,7 +17,7 @@ import { buildGroundedAnswer, buildPracticalAnswer, looksLikePracticalConcern } 
 import { retrieveGroundedPassages, verifyQuotation, extractQuotedFragment } from '@/lib/granth/retrieval';
 import { retrieveDurableConsultationMemory } from '../sabha/orchestrator';
 import { readScriptureText, parseScriptureReadRequest, handleReaderCommand } from './granthReader';
-import { reviveSession, saveServerSession } from '@/lib/granth/session';
+import { reviveVerifiedSession, saveServerSession } from '@/lib/granth/session';
 import type { ReadingSession } from '@/lib/granth/session';
 
 export interface KashiSahayakResponse {
@@ -229,7 +229,15 @@ export async function processKashiSahayakQuery(
   // pause / repeat / next / previous / explain / source / speed / language)
   // is handled here, against the shared reading session, before generic
   // intent routing. Nothing here generates scripture text.
-  const incomingSession = reviveSession(userContext.readingSession);
+  // The session comes from the client, so it is verified against the stored
+  // corpus (shape + passage ids + edition) before it drives any lookup.
+  const revived = await reviveVerifiedSession(userContext.readingSession);
+  if (userContext.readingSession && !revived.session) {
+    // Server-side trace only: the user is told through the normal "no reading
+    // in progress" answers, never with a fabricated position.
+    console.warn('[granth] client reading session rejected:', revived.reason);
+  }
+  const incomingSession = revived.session;
   const reader = await handleReaderCommand(query, lang, incomingSession);
   if (reader.handled) {
     const updatedSession = reader.session ? saveServerSession(reader.session) : null;
