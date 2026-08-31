@@ -29,14 +29,19 @@ import {
   Phone,
   Video,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  RotateCcw
 } from 'lucide-react';
-import { getActiveProfile } from '@/lib/profileStore';
+import { getActiveProfile, upsertProfile, setActiveProfileId } from '@/lib/profileStore';
+import { parseBirthTime, parseBirthDate, resolveBirthCity, CityChoice } from '@/lib/ai/intakeParsing';
+import { CITIES } from '@/lib/cities';
 import { calculateKundali } from '@/lib/astrologyEngine';
 import { calculatePanchang } from '@/engines/panchang.js';
 import { chitiSensory } from '@/lib/chitiAudio';
-import { ScriptureInsight, findScriptureInsight } from '@/lib/ai/scriptureMap';
+import { ScriptureInsight, findScriptureInsight, SCRIPTURE_WISDOM_REGISTRY } from '@/lib/ai/scriptureMap';
+import { MOOD_OPTIONS, MOOD_QUESTION_HI, getMoodById } from '@/lib/ai/moodOptions';
 import { useKashiVoice } from '@/lib/ai/useKashiVoice';
+import { getChatSafetyReply } from '@/lib/ai/chatSafety';
 
 // Provenance Metadata Schema
 interface ProvenanceMeta {
@@ -130,6 +135,20 @@ function toHindiDigits(str: string | number | undefined): string {
   if (!str) return '';
   return String(str).replace(/[0-9]/g, (d) => HINDI_DIGITS[parseInt(d, 10)]);
 }
+
+// ---------------------------------------------------------------------
+// Capability Quick-Chips — "what do you need today?" (shown right after
+// the emotional check-in so the seeker sees every offering at a glance)
+// ---------------------------------------------------------------------
+const CAPABILITY_CHIPS: Array<{ label: string; action: string; href?: string }> = [
+  { label: '🕉️ आज का पञ्चाङ्ग व राहुकाल', action: 'INTENT_PANCHANG' },
+  { label: '🪔 काशी विश्वनाथ व गंगा आरती दर्शन', action: 'INTENT_DARSHAN_KASHI' },
+  { label: '🔮 मेरी कुण्डली व दशा (Intake)', action: 'START_INTAKE' },
+  { label: '💍 विवाह व शुभ मुहूर्त', action: 'INTENT_MUHURTA' },
+  { label: '📿 महामृत्युंजय मन्त्र व १०८ जप', action: 'INTENT_MANTRA_MRITYUNJAYA' },
+  { label: '🚩 काशी यात्रा योजना (Sacred Journey)', action: 'INTENT_JOURNEY_KASHI' },
+  { label: '📜 विद्वान् ज्योतिषी से परामर्श', action: 'INTENT_SCHOLAR' },
+];
 
 // -------------------------------------------------------------
 // Sacred Shrine Registry (Direct Live Streams & Sanctums)
@@ -239,27 +258,40 @@ export default function FloatingAIGuruAvatar() {
     birthDate: '',
     birthTime: '10:30',
     birthCity: 'Varanasi',
+    birthLat: 25.3176,
+    birthLon: 82.9739,
+    birthTz: 5.5,
     domain: 'करियर व व्यापार',
     question: '',
+    mood: '', // seeker's emotional state from the greeting check-in
   });
+
+  /**
+   * Intake confirmations are carried INSIDE the quick-chip actions
+   * themselves ("CONFIRM_INTAKE_date::1996-08-15"), so even chips from
+   * older messages always confirm exactly the value they display — no
+   * shared mutable pending-state races.
+   */
 
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const voice = useKashiVoice();
   const [inputVal, setInputVal] = useState('');
   const chatScrollRef = useRef<HTMLDivElement>(null);
 
-  // Time-aware greeting
+  // Time-aware greeting — always capability-led and feeling-first so the
+  // seeker instantly knows what Kashi Sahayak offers and feels invited to
+  // share their inner state before any question.
   useEffect(() => {
     const hour = new Date().getHours();
-    let salutation = 'हर हर महादेव! 🙏 आज का पञ्चाङ्ग या दर्शन करें?';
+    let salutation = 'हर हर महादेव! 🙏 पञ्चाङ्ग • दर्शन • कुण्डली • विद्वान् परामर्श — बताइए, आज मन कैसा है?';
     if (hour >= 5 && hour < 11) {
-      salutation = 'सुप्रभात! ☀️ ब्रह्म मुहूर्त • आज का पञ्चाङ्ग व काशी दर्शन 🙏';
+      salutation = 'सुप्रभात! ☀️ आज का पञ्चाङ्ग व ब्रह्म मुहूर्त तैयार है 🙏 बताइए, आज मन कैसा है?';
     } else if (hour >= 11 && hour < 17) {
-      salutation = 'नमस्ते! ⚡ आज का राहुकाल, शुभ मुहूर्त व कुण्डली प्रश्न 🙏';
+      salutation = 'नमस्कार! ⚡ राहुकाल • शुभ मुहूर्त • विद्वान् परामर्श — आज आपका मन कैसा है? 🙏';
     } else if (hour >= 17 && hour < 22) {
-      salutation = 'शुभ संध्या! 🪔 दशाश्वमेध घाट गंगा महाआरती लाइव दर्शन 🌸';
+      salutation = 'शुभ संध्या! 🪔 गंगा महाआरती लाइव दर्शन व मन की बात — आज आप कैसा महसूस कर रहे हैं?';
     } else {
-      salutation = 'हर हर महादेव! 🌙 कल के दिन का पञ्चाङ्ग व ग्रह स्थिति जानें 🙏';
+      salutation = 'हर हर महादेव! 🌙 कल का पञ्चाङ्ग, ग्रह स्थिति व विद्वान् मार्गदर्शन — मन की बात कहिए 🙏';
     }
     setTooltipText(salutation);
 
@@ -270,7 +302,7 @@ export default function FloatingAIGuruAvatar() {
     return () => clearTimeout(t);
   }, []);
 
-  // Prefill active profile if available
+  // Prefill active profile if available (name + real birth coordinates)
   useEffect(() => {
     const p = getActiveProfile();
     if (p && p.name) {
@@ -280,9 +312,76 @@ export default function FloatingAIGuruAvatar() {
         birthDate: p.birthDate || prev.birthDate,
         birthTime: p.birthTime || prev.birthTime,
         birthCity: p.birthCity || prev.birthCity,
+        birthLat: p.lat ?? prev.birthLat,
+        birthLon: p.lng ?? prev.birthLon,
+        birthTz: p.tz ?? prev.birthTz,
       }));
     }
   }, []);
+
+  // -------------------------------------------------------------------
+  // SESSION MEMORY — the chatbot remembers the seeker across page loads:
+  // conversation, intake state and seeker details persist locally
+  // (DPDP-conscious: localStorage only). The ↺ header button starts fresh.
+  // -------------------------------------------------------------------
+  const SESSION_KEY = 'kashi-chat-session-v1';
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = window.localStorage.getItem(SESSION_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      if (!saved.savedAt || Date.now() - Date.parse(saved.savedAt) > 7 * 86400000 ||
+        !Number.isFinite(Date.parse(saved.savedAt))) {
+        window.localStorage.removeItem(SESSION_KEY);
+        return;
+      }
+      if (Array.isArray(saved?.messages) && saved.messages.length > 0) {
+        const restored = saved.messages.slice(-60);
+        setChatMessages(restored);
+        // Don't re-announce the restored last reply aloud on reopen
+        const last = restored[restored.length - 1];
+        if (last?.sender === 'GURU') lastSpokenIdRef.current = last.id;
+        if (saved.seekerData) setSeekerData(prev => ({ ...prev, ...saved.seekerData }));
+        if (saved.intakeStep) setIntakeStep(saved.intakeStep);
+      }
+    } catch {
+      // ignore corrupted session storage
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || chatMessages.length === 0) return;
+    try {
+      window.localStorage.setItem(
+        SESSION_KEY,
+        JSON.stringify({
+          messages: chatMessages.slice(-60),
+          seekerData,
+          intakeStep,
+          savedAt: new Date().toISOString(),
+        })
+      );
+    } catch {
+      // storage full or blocked — non-fatal
+    }
+  }, [chatMessages, seekerData, intakeStep]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleResetSession = () => {
+    playClick();
+    voice.stop();
+    try {
+      window.localStorage.removeItem(SESSION_KEY);
+    } catch {
+      // ignore
+    }
+    setChatMessages([]);
+    setIntakeStep('IDLE');
+    setOfferedDiyaMsgIds({});
+    setOfferedFlowersMsgIds({});
+    setActiveDarshanVideoMsgIds({});
+    setIsOpen(false); // next open greets fresh (profile still prefilled)
+  };
 
   // Scroll to bottom
   useEffect(() => {
@@ -324,11 +423,36 @@ export default function FloatingAIGuruAvatar() {
       const p = calculatePanchang(new Date(), 25.3176, 82.9739, 5.5);
       const dateStr = new Date().toLocaleDateString('hi-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
+      // Personalized, capability-led, feeling-first greeting:
+      // 1) who I am, 2) everything I can do for you (one breath),
+      // 3) today's cosmic snapshot as a value teaser,
+      // 4) emotional check-in — "आज आपका मन कैसा है?" — answered via mood chips.
+      const hour = new Date().getHours();
+      const daySalutation =
+        hour >= 5 && hour < 11 ? 'सुप्रभात'
+        : hour >= 11 && hour < 17 ? 'नमस्कार'
+        : hour >= 17 && hour < 22 ? 'शुभ संध्या'
+        : 'हर हर महादेव';
+      const nameHonorific = seekerData.name ? ` ${seekerData.name} जी` : '';
+      const pakshaHi = p.tithi?.paksha === 'Shukla Paksha' ? 'शुक्ल' : 'कृष्ण';
+
+      const greetingText =
+        `${daySalutation}${nameHonorific}! हर हर महादेव! 🙏\n\n` +
+        `मैं काशी सहायक हूँ — काशी विश्वनाथ की पावन धरा से आपकी वैदिक सहायिका।\n\n` +
+        `आपके लिए मैं ये सब कर सकती हूँ:\n` +
+        `• आज का पञ्चाङ्ग, राहुकाल व शुभ मुहूर्त\n` +
+        `• काशी विश्वनाथ सहित महातीर्थों के साक्षात् लाइव दर्शन\n` +
+        `• मन्त्र, स्तोत्र व १०८ जप माला\n` +
+        `• आपकी कुण्डली की प्रत्यक्ष खगोलीय गणना व दशा\n` +
+        `• और ज़रूरत हो तो काशी के सत्यापित विद्वान् ज्योतिषी से प्रत्यक्ष परामर्श\n\n` +
+        `आज ${dateStr} है — ${pakshaHi} ${p.tithi?.name}, नक्षत्र ${p.nakshatra?.name}।\n\n` +
+        MOOD_QUESTION_HI;
+
       setChatMessages([
         {
           id: 'welcome-1',
           sender: 'GURU',
-          text: `हर हर महादेव! 🙏 मैं काशी सहायक (CosmicTantra Vedic Assistant) हूँ — काशी विश्वनाथ की पावन धरा से आपका साथी।\n\nआज का दिवस: ${dateStr}\nतिथि: ${p.tithi?.paksha === 'Shukla Paksha' ? 'शुक्ल' : 'कृष्ण'} ${p.tithi?.name} • नक्षत्र: ${p.nakshatra?.name}\n\nआप मुझसे क्या जानना चाहते हैं?`,
+          text: greetingText,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           provenance: {
             calculation: 'CosmicTantra Lahiri Engine',
@@ -337,13 +461,10 @@ export default function FloatingAIGuruAvatar() {
             interpretation: 'काशी सहायक • AI-Assisted'
           },
           quickChips: [
-            { label: '🕉️ आज का पञ्चाङ्ग व राहुकाल', action: 'INTENT_PANCHANG' },
-            { label: '🪔 काशी विश्वनाथ व गंगा आरती दर्शन', action: 'INTENT_DARSHAN_KASHI' },
-            { label: '🚩 काशी यात्रा योजना (Sacred Journey)', action: 'INTENT_JOURNEY_KASHI' },
-            { label: '📿 महामृत्युंजय मन्त्र व १०८ जप', action: 'INTENT_MANTRA_MRITYUNJAYA' },
-            { label: '💍 विवाह व शुभ मुहूर्त', action: 'INTENT_MUHURTA' },
-            { label: '🔮 मेरी कुण्डली व दशा (Intake)', action: 'START_INTAKE' },
-            { label: '📜 विद्वान् ज्योतिषी से परामर्श', action: 'INTENT_SCHOLAR' }
+            // Mood quick-check chips first — one tap tells Kashi Sahayak how
+            // the seeker feels today; capability chips follow in the reply.
+            ...MOOD_OPTIONS.map((m) => ({ label: m.chipLabel, action: m.id })),
+            { label: '⏩ सीधे विषय पर चलें', action: 'SKIP_MOOD' },
           ],
         },
       ]);
@@ -718,6 +839,45 @@ export default function FloatingAIGuruAvatar() {
     }, 400);
   };
 
+  // -------------------------------------------------------------------
+  // Emotional check-in: the seeker taps a mood chip, Kashi Sahayak
+  // acknowledges the feeling warmly, anchors an authentic shastra wisdom
+  // card (when the mood carries one), and then reveals every capability
+  // so the seeker instantly understands the offering.
+  // -------------------------------------------------------------------
+  const handleMoodSelection = (moodId: string) => {
+    const mood = moodId === 'SKIP_MOOD' ? null : getMoodById(moodId);
+    if (mood) {
+      setSeekerData(prev => ({ ...prev, mood: mood.speakLabel }));
+    }
+
+    const insight =
+      mood && mood.insightId
+        ? SCRIPTURE_WISDOM_REGISTRY.find((s) => s.id === mood.insightId) || null
+        : null;
+
+    const acknowledgement = mood
+      ? mood.acknowledgeHi
+      : 'बहुत अच्छा! 🙏 चलिए सीधे मुख्य विषय पर चलते हैं।';
+
+    setTimeout(() => {
+      setChatMessages(prev => [
+        ...prev,
+        {
+          id: `g-${Date.now()}`,
+          sender: 'GURU',
+          text: `${acknowledgement}\n\nअब बताइए — आज आपके लिए किस विषय की सहायता सबसे महत्वपूर्ण है? नीचे से चुन सकते हैं या अपनी बात सीधे लिख सकते हैं:`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          ...(insight ? { scriptureCard: insight } : {}),
+          provenance: insight
+            ? { source: insight.sourceGrantha, interpretation: 'काशी सहायक • भाव-संवेदन (Mood-Aware)' }
+            : { interpretation: 'काशी सहायक • भाव-संवेदन (Mood-Aware)' },
+          quickChips: CAPABILITY_CHIPS,
+        },
+      ]);
+    }, 400);
+  };
+
   const handleChipClick = (chip: { label: string; action: string; href?: string }) => {
     playClick();
 
@@ -729,6 +889,12 @@ export default function FloatingAIGuruAvatar() {
     };
 
     setChatMessages(prev => [...prev, userMsg]);
+
+    // Emotional check-in chips (greeting flow)
+    if (chip.action.startsWith('MOOD_') || chip.action === 'SKIP_MOOD') {
+      handleMoodSelection(chip.action);
+      return;
+    }
 
     if (chip.action === 'INTENT_PANCHANG') {
       handlePanchangQuery();
@@ -822,81 +988,286 @@ export default function FloatingAIGuruAvatar() {
       return;
     }
 
+    // Intake re-confirmation chips — the canonical value is embedded in the
+    // action itself, so the chip always commits exactly the value it shows.
+    if (chip.action.startsWith('CONFIRM_INTAKE_')) {
+      const rest = chip.action.replace('CONFIRM_INTAKE_', '');
+      const sepIdx = rest.indexOf('::');
+      const kind = (sepIdx >= 0 ? rest.slice(0, sepIdx) : rest) as 'date' | 'time';
+      const value = sepIdx >= 0 ? rest.slice(sepIdx + 2) : '';
+      confirmPendingIntake(kind, value);
+      return;
+    }
+    if (chip.action.startsWith('RETRY_INTAKE_')) {
+      retryIntake(chip.action.replace('RETRY_INTAKE_', ''));
+      return;
+    }
+    if (chip.action.startsWith('CHOOSE_CITY_')) {
+      chooseCity(chip.action.replace('CHOOSE_CITY_', ''));
+      return;
+    }
+
     if (chip.action === 'SELECT_DATE_SAMPLE') {
-      processDateInput(chip.label);
+      if (intakeStep !== 'ASK_BIRTH_DATE') return;
+      processDateInput(chip.label, true); // explicit tap = already confirmed
     } else if (chip.action === 'SELECT_TIME_SAMPLE') {
-      processTimeInput(chip.label);
-    } else if (chip.action === 'SELECT_CITY_SAMPLE') {
-      processCityInput(chip.label);
+      if (intakeStep !== 'ASK_BIRTH_TIME') return;
+      processTimeInput(chip.label, true);
     }
   };
 
-  const processDateInput = (dob: string) => {
-    setSeekerData(prev => ({ ...prev, birthDate: dob }));
-    setIntakeStep('ASK_BIRTH_TIME');
-
+  // -------------------------------------------------------------------
+  // Guided intake — natural-language tolerant parsing + re-confirmation
+  // "2.20" → 02:20 AM, "bilaspur ,cg" → Bilaspur, Chhattisgarh. Every typed
+  // value is echoed back with ✅ confirm / ✏️ correct chips (or city
+  // suggestions) before anything is committed to the seeker's profile.
+  // -------------------------------------------------------------------
+  const pushGuruMsg = (partial: Partial<ChatMessage>) => {
     setTimeout(() => {
       setChatMessages(prev => [
         ...prev,
         {
-          id: `g-${Date.now()}`,
+          id: `g-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
           sender: 'GURU',
-          text: `जन्म तिथि "${dob}" दर्ज हुई। आपका जन्म समय क्या था? (नीचे त्वरित समय चुनें या ठीक समय लिखें, उदा. 10:30):`,
+          text: '',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          quickChips: [
-            { label: '06:00 (प्रातः)', action: 'SELECT_TIME_SAMPLE' },
-            { label: '10:30 (सुबह)', action: 'SELECT_TIME_SAMPLE' },
-            { label: '12:00 (दोपहर)', action: 'SELECT_TIME_SAMPLE' },
-            { label: '18:00 (सायं)', action: 'SELECT_TIME_SAMPLE' },
-            { label: '21:00 (रात्रि)', action: 'SELECT_TIME_SAMPLE' },
-          ],
-        },
+          ...partial,
+        } as ChatMessage,
       ]);
     }, 400);
   };
 
-  const processTimeInput = (timeStr: string) => {
-    const cleanTime = timeStr.split(' ')[0] || '10:30';
-    setSeekerData(prev => ({ ...prev, birthTime: cleanTime }));
-    setIntakeStep('ASK_BIRTH_CITY');
+  const askBirthTimeMsg = () => {
+    pushGuruMsg({
+      text: 'बहुत अच्छा 🙏 अब आपका जन्म समय बताइए — जैसे 10:30 AM, "14:45", "2.20" या "शाम 7 बजे" (नीचे त्वरित समय भी चुन सकते हैं):',
+      quickChips: [
+        { label: '06:00 (प्रातः)', action: 'SELECT_TIME_SAMPLE' },
+        { label: '10:30 (सुबह)', action: 'SELECT_TIME_SAMPLE' },
+        { label: '12:00 (दोपहर)', action: 'SELECT_TIME_SAMPLE' },
+        { label: '18:00 (सायं)', action: 'SELECT_TIME_SAMPLE' },
+        { label: '21:00 (रात्रि)', action: 'SELECT_TIME_SAMPLE' },
+      ],
+    });
+  };
 
-    setTimeout(() => {
-      setChatMessages(prev => [
-        ...prev,
-        {
-          id: `g-${Date.now()}`,
-          sender: 'GURU',
-          text: `जन्म समय "${cleanTime}" दर्ज हुआ। आपका जन्म स्थान / नगर क्या है? (सटीक अक्षांश व रेखांश गणना हेतु):`,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          quickChips: [
-            { label: 'Varanasi', action: 'SELECT_CITY_SAMPLE' },
-            { label: 'Patna', action: 'SELECT_CITY_SAMPLE' },
-            { label: 'New Delhi', action: 'SELECT_CITY_SAMPLE' },
-            { label: 'Mumbai', action: 'SELECT_CITY_SAMPLE' },
-            { label: 'Lucknow', action: 'SELECT_CITY_SAMPLE' },
-            { label: 'Kolkata', action: 'SELECT_CITY_SAMPLE' },
-            { label: 'Bengaluru', action: 'SELECT_CITY_SAMPLE' },
-          ],
-        },
-      ]);
-    }, 400);
+  const askBirthCityMsg = () => {
+    pushGuruMsg({
+      text: 'उत्तम। अब आपका जन्म स्थान बताइए — शहर या कस्बे का नाम लिखें (जैसे "bilaspur ,cg" या "पटना बिहार" — मैं सटीक अक्षांश-रेखांश स्वयं पहचान लूँगी):',
+      quickChips: [
+        { label: '🏛️ Varanasi (काशी)', action: 'CHOOSE_CITY_varanasi' },
+        { label: 'Patna (Bihar)', action: 'CHOOSE_CITY_patna' },
+        { label: 'New Delhi', action: 'CHOOSE_CITY_delhi' },
+        { label: 'Mumbai', action: 'CHOOSE_CITY_mumbai' },
+        { label: 'Bilaspur (CG)', action: 'CHOOSE_CITY_bilaspur-cg' },
+        { label: 'Lucknow (UP)', action: 'CHOOSE_CITY_lucknow' },
+        { label: 'Bengaluru', action: 'CHOOSE_CITY_bengaluru' },
+      ],
+    });
+  };
+
+  const askQuestionMsg = () => {
+    pushGuruMsg({
+      text: 'सब कुछ दर्ज हो गया 🙏 अब कृपया अपना वह मुख्य प्रश्न या परिस्थिति विस्तार से लिखें, जिस पर आप काशी के वरिष्ठ विद्वान् से समाधान चाहते हैं:',
+    });
+  };
+
+  /**
+   * Commits the seeker's details into the CosmicTantra profile store so the
+   * WHOLE site (daily panchang, dashboard, calendar, kundali pages) shows
+   * their real data instead of demo values. Updates the existing active
+   * profile when it's the same person; creates one for a new seeker.
+   */
+  const persistSeekerProfile = (override?: Partial<typeof seekerData>) => {
+    const d = { ...seekerData, ...(override || {}) };
+    if (!d.name || !parseBirthDate(d.birthDate).ok || !parseBirthTime(d.birthTime).ok ||
+      !Number.isFinite(d.birthLat) || !Number.isFinite(d.birthLon)) return;
+    try {
+      const existing = getActiveProfile();
+      const samePerson =
+        !!existing?.name && existing.name.trim().toLowerCase() === d.name.trim().toLowerCase() &&
+        existing.birthDate === d.birthDate && existing.birthTime === d.birthTime &&
+        existing.lat === d.birthLat && existing.lng === d.birthLon;
+      const saved = upsertProfile({
+        id: samePerson ? existing!.id : undefined,
+        name: d.name,
+        relation: samePerson ? existing!.relation || 'Self' : 'Self',
+        birthDate: d.birthDate,
+        birthTime: d.birthTime,
+        birthCity: d.birthCity,
+        lat: d.birthLat,
+        lng: d.birthLon,
+        tz: d.birthTz,
+      } as any);
+      setActiveProfileId(saved.id);
+    } catch (err) {
+      console.warn('Profile persist failed:', err);
+    }
+  };
+
+  const processDateInput = (dob: string, trusted: boolean = false) => {
+    const parsed = parseBirthDate(dob);
+    if (!parsed.ok) {
+      pushGuruMsg({
+        text: `क्षमा करें 🙏 "${dob}" तिथि समझ नहीं आई। कृपया इस रूप में लिखें — 1996-08-15, 15/08/1996 या "15 अगस्त 1996":`,
+        quickChips: [
+          { label: '1995-06-15', action: 'SELECT_DATE_SAMPLE' },
+          { label: '1998-08-10', action: 'SELECT_DATE_SAMPLE' },
+          { label: '2000-01-25', action: 'SELECT_DATE_SAMPLE' },
+        ],
+      });
+      return;
+    }
+    if (!trusted) {
+      // Re-confirm before committing — devotees often mistype. The parsed
+      // value travels inside the chip action, so this chip always confirms
+      // exactly the date it displays.
+      pushGuruMsg({
+        text: `मैं आपकी जन्म तिथि ${parsed.labelHi} (${parsed.labelEn}) के रूप में समझ रही हूँ — क्या यह सही है?`,
+        quickChips: [
+          { label: `✅ हाँ — ${parsed.labelHi}`, action: `CONFIRM_INTAKE_date::${parsed.iso}` },
+          { label: '✏️ नहीं, दुबारा लिखूँगी/लिखूँगा', action: 'RETRY_INTAKE_date' },
+        ],
+      });
+      return;
+    }
+    setSeekerData(prev => ({ ...prev, birthDate: parsed.iso! }));
+    setIntakeStep('ASK_BIRTH_TIME');
+    askBirthTimeMsg();
+  };
+
+  const processTimeInput = (timeStr: string, trusted: boolean = false) => {
+    const parsed = parseBirthTime(timeStr);
+    if (!parsed.ok) {
+      pushGuruMsg({
+        text: `क्षमा करें 🙏 "${timeStr}" समय समझ नहीं आया। कृपया इस रूप में लिखें — 2:20 AM, 14:45, "2.20" या "शाम 7 बजे":`,
+        quickChips: [
+          { label: '06:00 (प्रातः)', action: 'SELECT_TIME_SAMPLE' },
+          { label: '10:30 (सुबह)', action: 'SELECT_TIME_SAMPLE' },
+          { label: '18:00 (सायं)', action: 'SELECT_TIME_SAMPLE' },
+        ],
+      });
+      return;
+    }
+    if (!trusted) {
+      pushGuruMsg({
+        text: `मैं जन्म समय ${parsed.label} के रूप में समझ रही हूँ — क्या यह सही है?`,
+        quickChips: [
+          { label: `✅ हाँ — ${parsed.label}`, action: `CONFIRM_INTAKE_time::${parsed.time24}` },
+          { label: '✏️ नहीं, दुबारा लिखूँगी/लिखूँगा', action: 'RETRY_INTAKE_time' },
+        ],
+      });
+      return;
+    }
+    setSeekerData(prev => ({ ...prev, birthTime: parsed.time24! }));
+    setIntakeStep('ASK_BIRTH_CITY');
+    askBirthCityMsg();
   };
 
   const processCityInput = (cityStr: string) => {
-    setSeekerData(prev => ({ ...prev, birthCity: cityStr }));
-    setIntakeStep('ASK_QUESTION');
+    const res = resolveBirthCity(cityStr);
 
-    setTimeout(() => {
-      setChatMessages(prev => [
-        ...prev,
-        {
-          id: `g-${Date.now()}`,
-          sender: 'GURU',
-          text: `स्थान: "${cityStr}"। अब कृपया अपना वह मुख्य प्रश्न या परिस्थिति विस्तार से लिखें, जिस पर आप काशी के वरिष्ठ विद्वान् से समाधान चाहते हैं:`,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        },
-      ]);
-    }, 400);
+    if (res.status === 'none') {
+      pushGuruMsg({
+        text: `क्षमा करें 🙏 मैं "${cityStr}" को पहचान नहीं पाई। कृपया निकटतम बड़े शहर व राज्य का नाम लिखें — जैसे "Bilaspur, CG" या "पटना बिहार"। अंग्रेज़ी या हिन्दी — दोनों चलेंगे:`,
+        quickChips: [
+          { label: '🏛️ Varanasi (काशी)', action: 'CHOOSE_CITY_varanasi' },
+          { label: 'Patna (Bihar)', action: 'CHOOSE_CITY_patna' },
+          { label: 'New Delhi', action: 'CHOOSE_CITY_delhi' },
+          { label: 'Bilaspur (CG)', action: 'CHOOSE_CITY_bilaspur-cg' },
+        ],
+      });
+      return;
+    }
+
+    if (res.status === 'choices') {
+      pushGuruMsg({
+        text: `"${cityStr}" से मुझे ये स्थान मिले — कृपया अपना सही जन्म स्थान चुनें (ताकि अक्षांश-रेखांश सटीक रहे):`,
+        quickChips: [
+          ...res.choices.map((c) => ({
+            label: `${c.name}, ${c.state}${c.country !== 'India' ? ' (' + c.country + ')' : ''}`,
+            action: `CHOOSE_CITY_${c.id}`,
+          })),
+          { label: '✏️ इनमें से कोई नहीं — दुबारा लिखें', action: 'RETRY_INTAKE_city' },
+        ],
+      });
+      return;
+    }
+
+    // exact — still re-confirm, since coordinates drive the kundali math
+    const c = res.primary!;
+    pushGuruMsg({
+      text: `मैं "${cityStr}" को ${c.name}, ${c.state} (अक्षांश ${c.lat}°N, रेखांश ${c.lng}°E) के रूप में समझ रही हूँ — क्या यह सही है?`,
+      quickChips: [
+        { label: `✅ हाँ — ${c.name}, ${c.state}`, action: `CHOOSE_CITY_${c.id}` },
+        { label: '✏️ नहीं, दुबारा लिखूँगी/लिखूँगा', action: 'RETRY_INTAKE_city' },
+      ],
+    });
+  };
+
+  /** Commit a city picked from a suggestion/confirm chip (explicit = confirmed). */
+  const chooseCity = (cityId: string) => {
+    if (intakeStep !== 'ASK_BIRTH_CITY') return;
+    // STRICT match — never silently fall back to a default city, the picked
+    // coordinates drive the kundali calculation.
+    const c = CITIES.find((x) => x.id === cityId) as CityChoice | undefined;
+    if (!c || !cityId) return;
+    const next = {
+      birthCity: `${c.name}, ${c.state}`,
+      birthLat: c.lat,
+      birthLon: c.lng,
+      birthTz: c.tz ?? 5.5,
+    };
+    setSeekerData(prev => ({ ...prev, ...next }));
+    setIntakeStep('ASK_QUESTION');
+    pushGuruMsg({
+      text: `धन्यवाद 🙏 जन्म स्थान ${c.name}, ${c.state} दर्ज हो गया — अब आपकी कुण्डली सटीक अक्षांश-रेखांश (${c.lat}°N, ${c.lng}°E) से बनेगी।`,
+    });
+    askQuestionMsg();
+  };
+
+  /** Confirm a typed date/time — the canonical value rides inside the chip. */
+  const confirmPendingIntake = (kind: 'date' | 'time', value: string) => {
+    if ((kind === 'date' && intakeStep !== 'ASK_BIRTH_DATE') ||
+      (kind === 'time' && intakeStep !== 'ASK_BIRTH_TIME')) return;
+    if (!value) return;
+    if (kind === 'date') {
+      setSeekerData(prev => ({ ...prev, birthDate: value }));
+      setIntakeStep('ASK_BIRTH_TIME');
+      pushGuruMsg({ text: 'धन्यवाद 🙏 जन्म तिथि दर्ज हो गई।' });
+      askBirthTimeMsg();
+    } else {
+      setSeekerData(prev => ({ ...prev, birthTime: value }));
+      setIntakeStep('ASK_BIRTH_CITY');
+      pushGuruMsg({ text: 'धन्यवाद 🙏 जन्म समय दर्ज हो गया।' });
+      askBirthCityMsg();
+    }
+  };
+
+  const retryIntake = (kind: string) => {
+    if ((kind === 'date' && intakeStep !== 'ASK_BIRTH_DATE') ||
+      (kind === 'time' && intakeStep !== 'ASK_BIRTH_TIME') ||
+      (kind === 'city' && intakeStep !== 'ASK_BIRTH_CITY')) return;
+    if (kind === 'date') {
+      pushGuruMsg({
+        text: 'कोई बात नहीं 🙏 कृपया जन्म तिथि दुबारा लिखें — 1996-08-15, 15/08/1996 या "15 अगस्त 1996":',
+        quickChips: [
+          { label: '1995-06-15', action: 'SELECT_DATE_SAMPLE' },
+          { label: '1998-08-10', action: 'SELECT_DATE_SAMPLE' },
+        ],
+      });
+    } else if (kind === 'time') {
+      pushGuruMsg({
+        text: 'कोई बात नहीं 🙏 कृपया जन्म समय दुबारा लिखें — जैसे 2:20 PM, 14:45 या "रात 10:30":',
+        quickChips: [
+          { label: '06:00 (प्रातः)', action: 'SELECT_TIME_SAMPLE' },
+          { label: '18:00 (सायं)', action: 'SELECT_TIME_SAMPLE' },
+        ],
+      });
+    } else {
+      pushGuruMsg({
+        text: 'कोई बात नहीं 🙏 कृपया अपना जन्म स्थान दुबारा लिखें — शहर व राज्य (जैसे "Bilaspur, Chhattisgarh"):',
+      });
+    }
   };
 
   const handleSendMessage = async (e?: React.FormEvent) => {
@@ -915,6 +1286,16 @@ export default function FloatingAIGuruAvatar() {
     };
 
     setChatMessages(prev => [...prev, newMsg]);
+
+    const safetyReply = getChatSafetyReply(text);
+    if (safetyReply) {
+      voice.stop();
+      setChatMessages(prev => [...prev, {
+        id: `safety-${Date.now()}`, sender: 'GURU', text: safetyReply,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      }]);
+      return;
+    }
 
     // Handle Guided Intake Step Machine
     if (intakeStep === 'ASK_NAME') {
@@ -949,6 +1330,7 @@ export default function FloatingAIGuruAvatar() {
     } else if (intakeStep === 'ASK_QUESTION') {
       setSeekerData(prev => ({ ...prev, question: text }));
       setIntakeStep('COMPLETED');
+      persistSeekerProfile(); // safety net — profile active across the whole site
 
       // Compute deterministic Vedic Ephemeris
       let lagnaName = 'वृषभ (Vrishabha)';
@@ -960,9 +1342,9 @@ export default function FloatingAIGuruAvatar() {
         const kundali = calculateKundali(
           isNaN(dObj.getTime()) ? new Date('1995-06-15') : dObj,
           seekerData.birthTime || '10:30',
-          25.3176,
-          82.9739,
-          5.5
+          seekerData.birthLat ?? 25.3176,
+          seekerData.birthLon ?? 82.9739,
+          seekerData.birthTz ?? 5.5
         );
 
         if (kundali?.lagna?.rashiEn) {
@@ -1070,6 +1452,34 @@ export default function FloatingAIGuruAvatar() {
         ]);
       }, 400);
     } else {
+      // Feeling-first fast path: if the seeker typed their emotional state
+      // (e.g. "aaj mann bahut udaas hai", "मुझे डर लग रहा है"), Kashi Sahayak
+      // understands instantly from the local emotion-keyword engine — no
+      // network roundtrip — and responds with an empathetic shastra-anchored
+      // bridge plus the full capability offering.
+      const localInsight = findScriptureInsight(text);
+      if (localInsight) {
+        setSeekerData(prev => (prev.mood ? prev : { ...prev, mood: localInsight.situation }));
+        setTimeout(() => {
+          setChatMessages(prev => [
+            ...prev,
+            {
+              id: `g-${Date.now()}`,
+              sender: 'GURU',
+              text: `${localInsight.kashiSahayakBridge}\n\nऔर बताइए — इस भावना के साथ आज किस विषय में सहायता चाहिए? नीचे से चुनें या विस्तार से लिखें:`,
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              scriptureCard: localInsight,
+              provenance: {
+                source: localInsight.sourceGrantha,
+                interpretation: 'काशी सहायक • भाव-संवेदन (Mood-Aware)',
+              },
+              quickChips: CAPABILITY_CHIPS,
+            },
+          ]);
+        }, 400);
+        return;
+      }
+
       // General Query -> Call /api/guru/chat backend AI Gateway with deterministic fallback
       try {
         const res = await fetch('/api/guru/chat', {
@@ -1120,19 +1530,13 @@ export default function FloatingAIGuruAvatar() {
           {
             id: `g-${Date.now()}`,
             sender: 'GURU',
-            text: `आपके विचार "${text}" के संदर्भ में वैदिक ज्योतिषीय दृष्टि से यह समय सजग अवलोकन का है। मैं आपके लिए आज का पञ्चाङ्ग निकाल सकता हूँ, महातीर्थों का साक्षात् लाइव दर्शन करा सकता हूँ, या काशी के विद्वान् ज्योतिषी से आपकी कुण्डली की विवेचना करा सकता हूँ।`,
+            text: `आपके विचार "${text}" के संदर्भ में वैदिक ज्योतिषीय दृष्टि से यह समय सजग अवलोकन का है। मैं आपके लिए आज का पञ्चाङ्ग निकाल सकती हूँ, महातीर्थों का साक्षात् लाइव दर्शन करा सकती हूँ, या काशी के विद्वान् ज्योतिषी से आपकी कुण्डली की विवेचना करा सकती हूँ।`,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             provenance: {
               interpretation: 'काशी सहायक • AI-Assisted',
               source: 'CosmicTantra Universal Router'
             },
-            quickChips: [
-              { label: '🕉️ आज का पञ्चाङ्ग व राहुकाल', action: 'INTENT_PANCHANG' },
-              { label: '🪔 काशी विश्वनाथ लाइव दर्शन', action: 'INTENT_DARSHAN_KASHI' },
-              { label: '🚩 काशी यात्रा परिपथ', action: 'INTENT_JOURNEY_KASHI' },
-              { label: '📿 महामृत्युंजय मन्त्र जप', action: 'INTENT_MANTRA_MRITYUNJAYA' },
-              { label: '📜 विद्वान् ज्योतिषी परामर्श', action: 'INTENT_SCHOLAR' }
-            ],
+            quickChips: CAPABILITY_CHIPS,
           },
         ]);
       }, 400);
@@ -1156,9 +1560,10 @@ export default function FloatingAIGuruAvatar() {
             <div className="flex items-start gap-2.5 cursor-pointer" onClick={toggleOpen}>
               <div className="relative w-9 h-9 rounded-full overflow-hidden shrink-0 border border-amber-400/60 shadow-sm">
                 <Image
-                  src="/images/avatar/guru_varanasi.jpg"
+                  src="/images/avatar/kashi_sahayak_apsara.jpg"
                   alt="Kashi Sahayak Avatar"
                   fill
+                  sizes="36px"
                   className="object-cover"
                 />
               </div>
@@ -1192,9 +1597,10 @@ export default function FloatingAIGuruAvatar() {
           ) : (
             <div className="w-full h-full relative">
               <Image
-                src="/images/avatar/guru_varanasi.jpg"
+                src="/images/avatar/kashi_sahayak_apsara.jpg"
                 alt="Kashi Sahayak Avatar"
                 fill
+                sizes="64px"
                 className="object-cover"
               />
               <span className="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-black" />
@@ -1212,9 +1618,10 @@ export default function FloatingAIGuruAvatar() {
             <div className="flex items-center gap-2.5">
               <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-amber-400 shadow-md">
                 <Image
-                  src="/images/avatar/guru_varanasi.jpg"
+                  src="/images/avatar/kashi_sahayak_apsara.jpg"
                   alt="Kashi Sahayak"
                   fill
+                  sizes="40px"
                   className="object-cover"
                 />
               </div>
@@ -1255,6 +1662,15 @@ export default function FloatingAIGuruAvatar() {
                 {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5 text-rose-400" />}
               </button>
 
+              {/* Fresh session (clears remembered chat & seeker intake) */}
+              <button
+                onClick={handleResetSession}
+                className="p-1.5 rounded-xl bg-black/5 dark:bg-white/5 text-[#696256] dark:text-[#9E988D] hover:text-[#1C1917] dark:hover:text-white cursor-pointer"
+                title="नया सत्र आरम्भ करें (Start Fresh — clears this chat's memory)"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+              </button>
+
               {/* Kashi Sahayak Voice (TTS) Toggle */}
               <button
                 onClick={() => { playClick(); voice.toggleVoice(); }}
@@ -1290,9 +1706,10 @@ export default function FloatingAIGuruAvatar() {
                   {msg.sender === 'GURU' && (
                     <div className="relative w-7 h-7 rounded-full overflow-hidden shrink-0 border border-amber-400/50 mt-1 shadow-xs">
                       <Image
-                        src="/images/avatar/guru_varanasi.jpg"
+                        src="/images/avatar/kashi_sahayak_apsara.jpg"
                         alt="Kashi Sahayak"
                         fill
+                        sizes="28px"
                         className="object-cover"
                       />
                     </div>
@@ -1823,7 +2240,7 @@ export default function FloatingAIGuruAvatar() {
               type="text"
               value={inputVal}
               onChange={(e) => setInputVal(e.target.value)}
-              placeholder="पूछें: आज का राहुकाल, काशी विश्वनाथ दर्शन, शादी मुहूर्त..."
+              placeholder="मन की बात या प्रश्न लिखें — जैसे 'आज मन उदास है' या 'आज का राहुकाल'..."
               className="flex-1 px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#070912] border border-black/10 dark:border-white/10 text-xs sm:text-sm text-[#1C1917] dark:text-white placeholder:text-[#8C827A] dark:placeholder:text-[#6C7280] focus:outline-none focus:border-[#8E6F1D]"
             />
             <button

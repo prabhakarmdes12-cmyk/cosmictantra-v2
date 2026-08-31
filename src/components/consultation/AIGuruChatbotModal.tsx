@@ -25,10 +25,14 @@ import {
   Volume2,
   VolumeX
 } from 'lucide-react';
-import { getActiveProfile, getProfiles } from '@/lib/profileStore';
+import { getActiveProfile, getProfiles, upsertProfile, setActiveProfileId } from '@/lib/profileStore';
 import { chitiSensory } from '@/lib/chitiAudio';
 import { calculateKundali } from '@/lib/astrologyEngine';
 import { useKashiVoice } from '@/lib/ai/useKashiVoice';
+import { getChatSafetyReply } from '@/lib/ai/chatSafety';
+import { MOOD_OPTIONS, MOOD_QUESTION_HI, MOOD_QUESTION_EN, MoodOption, getMoodById } from '@/lib/ai/moodOptions';
+import { findScriptureInsight } from '@/lib/ai/scriptureMap';
+import { parseBirthTime, parseBirthDate, resolveBirthCity, CityChoice } from '@/lib/ai/intakeParsing';
 
 // Loads Razorpay Checkout dynamically
 let rzpScriptPromise: Promise<any> | null = null;
@@ -80,8 +84,8 @@ export default function AIGuruChatbotModal({
 }: AIGuruChatbotModalProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const voice = useKashiVoice();
-  const [step, setStep] = useState<'WELCOME' | 'NAME' | 'BIRTH_DATE' | 'BIRTH_TIME' | 'BIRTH_PLACE' | 'DOMAIN' | 'QUESTION' | 'CALCULATING' | 'PULSE_READY' | 'PACKAGE_SELECT' | 'PAYMENT_PENDING' | 'CONFIRMED'>('WELCOME');
-  
+  const [step, setStep] = useState<'WELCOME' | 'MOOD' | 'NAME' | 'BIRTH_DATE' | 'BIRTH_TIME' | 'BIRTH_PLACE' | 'DOMAIN' | 'QUESTION' | 'CALCULATING' | 'PULSE_READY' | 'PACKAGE_SELECT' | 'PAYMENT_PENDING' | 'CONFIRMED'>('WELCOME');
+
   const [userData, setUserData] = useState({
     name: '',
     gender: 'MALE',
@@ -95,6 +99,7 @@ export default function AIGuruChatbotModal({
     timezone: 5.5,
     domain: 'CAREER',
     question: '',
+    mood: '', // emotional check-in captured at greeting — forwarded to scholar dossier
   });
 
   const [inputText, setInputText] = useState('');
@@ -103,6 +108,22 @@ export default function AIGuruChatbotModal({
   const [selectedTier, setSelectedTier] = useState<'WRITTEN' | 'VOICE' | 'VIDEO' | 'PARIVAAR'>('WRITTEN');
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [createdCaseId, setCreatedCaseId] = useState('');
+
+  /**
+   * Pending confirmation for typed birth details — every typed value is
+   * parsed to canonical form ("2.20" → 02:20, "bilaspur,cg" → Bilaspur,
+   * Chhattisgarh) and echoed back with ✅/✏️ chips (or city suggestions)
+   * before it is committed.
+   */
+  const [pendingConfirm, setPendingConfirm] = useState<{
+    kind: 'date' | 'time' | 'place';
+    value: string;
+    label: string;
+    lat?: number;
+    lng?: number;
+    tz?: number;
+    suggestions?: CityChoice[];
+  } | null>(null);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -122,10 +143,89 @@ export default function AIGuruChatbotModal({
     }
   }, [messages]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Initialize Guru AI greeting
+  // ------------------------------------------------------------------
+  // SESSION MEMORY — the consultation chat remembers the seeker across
+  // modal closes and page reloads (localStorage, DPDP-conscious). A
+  // completed booking is NOT replayed — it starts fresh.
+  // ------------------------------------------------------------------
+  const MODAL_SESSION_KEY = 'kashi-consult-session-v1';
+
+  const resetConsultSession = () => {
+    chitiSensory.playTick();
+    voice.stop();
+    try {
+      window.localStorage.removeItem(MODAL_SESSION_KEY);
+    } catch {
+      // ignore
+    }
+    setMessages([]);
+    setStep('WELCOME');
+    setPendingConfirm(null);
+    setPulseReport(null);
+    setCreatedCaseId('');
+    setIsProcessingPayment(false);
+    setSelectedTier('WRITTEN');
+    setUserData({
+      name: '', gender: 'MALE', phone: '', email: '',
+      birthDate: '1995-06-15', birthTime: '10:30', birthPlace: 'Varanasi, UP',
+      birthLat: 25.3176, birthLon: 82.9739, timezone: 5.5,
+      domain: 'CAREER', question: '', mood: '',
+    });
+    // messages.length === 0 makes the greeting effect below re-fire
+  };
+
+  // Persist the conversation so reopens restore it
+  useEffect(() => {
+    if (typeof window === 'undefined' || messages.length === 0) return;
+    try {
+      if (step === 'CONFIRMED') {
+        window.localStorage.removeItem(MODAL_SESSION_KEY);
+        return;
+      }
+      window.localStorage.setItem(
+        MODAL_SESSION_KEY,
+        JSON.stringify({
+          messages: messages.slice(-80),
+          step,
+          userData,
+          pulseReport,
+          createdCaseId,
+          pendingConfirm,
+          savedAt: new Date().toISOString(),
+        })
+      );
+    } catch {
+      // storage full/blocked — non-fatal
+    }
+  }, [messages, step, userData, pulseReport, createdCaseId, pendingConfirm]);
+
+  // Initialize Guru AI greeting (or restore a remembered session)
   useEffect(() => {
     if (isOpen && messages.length === 0) {
+      // 1. Restore remembered session first — the bot remembers this seeker
+      try {
+        const raw = window.localStorage.getItem(MODAL_SESSION_KEY);
+        if (raw) {
+          const saved = JSON.parse(raw);
+          if (Array.isArray(saved?.messages) && saved.messages.length > 0 && saved.step !== 'CONFIRMED' &&
+            Number.isFinite(Date.parse(saved.savedAt)) && Date.now() - Date.parse(saved.savedAt) < 7 * 86400000) {
+            setMessages(saved.messages.slice(-80));
+            if (saved.step) setStep(saved.step === 'CALCULATING' ? 'QUESTION' :
+              saved.step === 'PAYMENT_PENDING' ? 'PACKAGE_SELECT' : saved.step);
+            if (saved.pendingConfirm) setPendingConfirm(saved.pendingConfirm);
+            if (saved.userData) setUserData(prev => ({ ...prev, ...saved.userData }));
+            if (saved.pulseReport) setPulseReport(saved.pulseReport);
+            if (saved.createdCaseId) setCreatedCaseId(saved.createdCaseId);
+            return;
+          }
+        }
+      } catch {
+        // corrupted session — fall through to a fresh greeting
+      }
+
+      // 2. Fresh greeting, personalized when we already know the seeker
       const activeProfile = getActiveProfile();
+      const knownName = activeProfile?.name || '';
       if (activeProfile && activeProfile.name) {
         setUserData(prev => ({
           ...prev,
@@ -135,16 +235,23 @@ export default function AIGuruChatbotModal({
           birthPlace: activeProfile.birthCity || prev.birthPlace,
           birthLat: activeProfile.lat || prev.birthLat,
           birthLon: activeProfile.lng || prev.birthLon,
+          timezone: activeProfile.tz ?? prev.timezone,
         }));
       }
 
       setIsTyping(true);
       setTimeout(() => {
         setIsTyping(false);
+        // Capability-led, feeling-first greeting: the seeker instantly learns
+        // WHAT Kashi Sahayak offers (free kundali pulse + verified scholar
+        // consult via folio/call/video), and Kashi Sahayak first learns HOW
+        // the seeker feels today via one-tap mood chips.
+        const backHi = knownName ? `पुनः स्वागत है, ${knownName} जी!` : 'प्रणाम!';
+        const backEn = knownName ? `Welcome back, ${knownName}!` : 'Namaste!';
         const greetingText = lang === 'hi'
-          ? `प्रणाम! 🙏 मैं काशी सहायक (CosmicTantra Vedic Assistant) हूँ। मैं आपकी कुण्डली की प्रत्यक्ष खगोलीय गणना कर काशी के विद्वान् ज्योतिषी हेतु आपकी संपूर्ण विवेचना तैयार करूंगा।\n\nकृपया अपना नाम बताएं या अपने सेव किए प्रोफाइल से आगे बढ़ें:`
-          : `Namaste! 🙏 I am Kashi Sahayak (CosmicTantra Vedic Assistant). I will calculate your birth ephemeris and prepare a comprehensive pre-context dossier for our practicing Banaras Vedic Scholars.\n\nPlease share your full name or continue with your saved profile:`;
-        
+          ? `${backHi} 🙏 मैं काशी सहायक हूँ — काशी विश्वनाथ की पावन धरा से आपकी वैदिक सहायिका।\n\nमैं आपकी कुण्डली की प्रत्यक्ष खगोलीय गणना करके आपकी निःशुल्क प्रारम्भिक स्थिति (Vedic Pulse) तुरंत तैयार कर दूँगी। और चाहें तो काशी के सत्यापित विद्वान् ज्योतिषी से प्रत्यक्ष परामर्श भी करा सकती हूँ — लिखित परामर्श पत्र, गोपनीय वॉयस कॉल या साक्षात् वीडियो दर्शन के माध्यम से।\n\n${MOOD_QUESTION_HI}`
+          : `${backEn} 🙏 I am Kashi Sahayak — your Vedic companion from the sacred soil of Kashi Vishwanath.\n\nI will compute your birth chart with real astronomical precision and instantly prepare your free Vedic Pulse. And whenever you wish, I can connect you with a verified Banaras scholar — through a written consultation folio, a private voice call, or a live video darshan.\n\n${MOOD_QUESTION_EN}`;
+
         setMessages([
           {
             id: 'msg-1',
@@ -153,10 +260,10 @@ export default function AIGuruChatbotModal({
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           }
         ]);
-        setStep('NAME');
+        setStep('MOOD');
       }, 700);
     }
-  }, [isOpen, lang]);
+  }, [isOpen, lang, messages.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!isOpen) return null;
 
@@ -197,6 +304,149 @@ export default function AIGuruChatbotModal({
     setStep('DOMAIN');
   };
 
+  // One-tap emotional check-in — acknowledge the feeling with warmth, then
+  // glide into the consultation intake. The mood rides along into the
+  // scholar dossier so the human pandit already knows the seeker's state.
+  const handleSelectMood = (moodId: string) => {
+    chitiSensory.playTick();
+    const mood: MoodOption | undefined = getMoodById(moodId);
+    if (!mood) return;
+
+    setUserData(prev => ({ ...prev, mood: mood.speakLabel }));
+
+    const ack = lang === 'hi' ? mood.acknowledgeHi : mood.acknowledgeEn;
+    const followUp = lang === 'hi'
+      ? 'चलिए शुरुआत करते हैं — कृपया अपना शुभ नाम बताएं या सेव किए प्रोफाइल से आगे बढ़ें:'
+      : 'Let us begin — please share your full name, or continue with your saved profile:';
+
+    setMessages(prev => [
+      ...prev,
+      {
+        id: `user-${Date.now()}`,
+        sender: 'USER',
+        text: lang === 'hi' ? mood.chipLabel : mood.chipLabelEn,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      },
+      {
+        id: `guru-${Date.now() + 1}`,
+        sender: 'GURU_AI',
+        text: `${ack} 🙏\n\n${followUp}`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      }
+    ]);
+    setStep('NAME');
+  };
+
+  // ------------------------------------------------------------------
+  // Re-confirmation actions for typed birth details. The seeker taps ✅
+  // to commit the parsed value, a suggestion chip to pick a specific city,
+  // or ✏️ to retype. Nothing lands in the profile until confirmed.
+  // ------------------------------------------------------------------
+  const confirmPendingInput = (cityPick?: CityChoice) => {
+    chitiSensory.playTick();
+    const p = pendingConfirm;
+    if (!p && !cityPick) return;
+
+    setIsTyping(true);
+    setTimeout(() => {
+      setIsTyping(false);
+
+      if (cityPick || p?.kind === 'place') {
+        const c = cityPick;
+        const placeValue = c ? `${c.name}, ${c.state}` : p!.value;
+        const lat = c ? c.lat : p!.lat;
+        const lng = c ? c.lng : p!.lng;
+        const tz = c ? c.tz : p!.tz;
+        setUserData(prev => ({
+          ...prev,
+          birthPlace: placeValue,
+          birthLat: lat ?? prev.birthLat,
+          birthLon: lng ?? prev.birthLon,
+          timezone: tz ?? prev.timezone,
+        }));
+        setMessages(prev => [
+          ...prev,
+          {
+            id: `guru-${Date.now()}`,
+            sender: 'GURU_AI',
+            text: lang === 'hi'
+              ? `धन्यवाद 🙏 जन्म स्थान ${placeValue} दर्ज हो गया — आपकी कुण्डली अब सटीक अक्षांश-रेखांश से बनेगी।\n\nअब कृपया नीचे दिए गए विकल्पों में से अपना मुख्य विषय चुनें:`
+              : `Thank you 🙏 Birth place ${placeValue} recorded — your chart now uses exact coordinates.\n\nNow please select the core life domain for your consultation:`,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          }
+        ]);
+        setPendingConfirm(null);
+        setStep('DOMAIN');
+        return;
+      }
+
+      if (p!.kind === 'date') {
+        setUserData(prev => ({ ...prev, birthDate: p!.value }));
+        setMessages(prev => [
+          ...prev,
+          {
+            id: `guru-${Date.now()}`,
+            sender: 'GURU_AI',
+            text: lang === 'hi'
+              ? `धन्यवाद 🙏 जन्म तिथि ${p!.label} दर्ज हो गई।\n\nअब कृपया अपना जन्म समय बताएं — किसी भी रूप में: 2:20 AM, 14:45, "2.20", "शाम 7 बजे":`
+              : `Thank you 🙏 Birth date ${p!.label} recorded.\n\nNow your birth time, any format works: 2:20 AM, 14:45, "evening 7 o'clock":`,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          }
+        ]);
+        setPendingConfirm(null);
+        setStep('BIRTH_TIME');
+        return;
+      }
+
+      // time
+      setUserData(prev => ({ ...prev, birthTime: p!.value }));
+      setMessages(prev => [
+        ...prev,
+        {
+          id: `guru-${Date.now()}`,
+          sender: 'GURU_AI',
+          text: lang === 'hi'
+            ? `धन्यवाद 🙏 जन्म समय ${p!.label} दर्ज हो गया।\n\nअब कृपया अपना जन्म स्थान बताएं — शहर या कस्बा, अंग्रेज़ी या हिन्दी में (जैसे "bilaspur ,cg" या "पटना बिहार"):`
+            : `Thank you 🙏 Birth time ${p!.label} recorded.\n\nNow please tell me your birth place — town or city, English or Hindi (e.g. "Bilaspur, CG" or "पटना बिहार"):`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        }
+      ]);
+      setPendingConfirm(null);
+      setStep('BIRTH_PLACE');
+    }, 400);
+  };
+
+  const correctPendingInput = () => {
+    chitiSensory.playTick();
+    const p = pendingConfirm;
+    setPendingConfirm(null);
+    if (!p) return;
+    const reask = {
+      date: lang === 'hi'
+        ? 'कोई बात नहीं 🙏 कृपया जन्म तिथि दुबारा लिखें — जैसे 1996-08-15 या "15 अगस्त 1996":'
+        : 'No problem 🙏 Please retype your birth date — e.g. 1996-08-15 or "15 August 1996":',
+      time: lang === 'hi'
+        ? 'कोई बात नहीं 🙏 कृपया जन्म समय दुबारा लिखें — जैसे 2:20 PM या "रात 10:30":'
+        : 'No problem 🙏 Please retype your birth time — e.g. 2:20 PM or "10:30 at night":',
+      place: lang === 'hi'
+        ? 'कोई बात नहीं 🙏 कृपया जन्म स्थान दुबारा लिखें — शहर व राज्य (जैसे "Bilaspur, Chhattisgarh"):'
+        : 'No problem 🙏 Please retype your birth place — city and state (e.g. "Bilaspur, Chhattisgarh"):',
+    }[p.kind];
+    setIsTyping(true);
+    setTimeout(() => {
+      setIsTyping(false);
+      setMessages(prev => [
+        ...prev,
+        {
+          id: `guru-${Date.now()}`,
+          sender: 'GURU_AI',
+          text: reask,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        }
+      ]);
+    }, 400);
+  };
+
   const handleSendText = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!inputText.trim()) return;
@@ -214,8 +464,48 @@ export default function AIGuruChatbotModal({
 
     setMessages(prev => [...prev, newMsg]);
 
+    const safetyReply = getChatSafetyReply(currentInput, lang);
+    if (safetyReply) {
+      voice.stop();
+      setPendingConfirm(null);
+      setIsTyping(false);
+      setMessages(prev => [...prev, {
+        id: `safety-${Date.now()}`, sender: 'GURU_AI', text: safetyReply,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      }]);
+      return;
+    }
+
     // State machine transitions
-    if (step === 'NAME') {
+    if (step === 'MOOD') {
+      // The seeker typed their feeling in words instead of tapping a chip —
+      // recognise the emotion through the local scripture-wisdom engine so
+      // the acknowledgment is specific, not generic.
+      const insight = findScriptureInsight(currentInput);
+      setUserData(prev => ({ ...prev, mood: insight ? insight.situation : currentInput }));
+      setIsTyping(true);
+      setTimeout(() => {
+        setIsTyping(false);
+        const ackHi = insight
+          ? insight.kashiSahayakBridge
+          : `मैं समझ गयी — "${currentInput}"। आपकी भावना मेरे लिए महत्वपूर्ण है, इसे ध्यान में रखकर आगे बढ़ेंगे।`;
+        const ackEn = insight
+          ? `I hear you. ${insight.meaningEn.split('.')[0]}. Your feeling matters here — we will carry it into your consultation.`
+          : `I hear you — "${currentInput}". How you feel matters here, and we will carry it into your consultation.`;
+        setMessages(prev => [
+          ...prev,
+          {
+            id: `guru-${Date.now()}`,
+            sender: 'GURU_AI',
+            text: (lang === 'hi' ? ackHi : ackEn) + '\n\n' + (lang === 'hi'
+              ? 'चलिए शुरुआत करते हैं — कृपया अपना शुभ नाम बताएं:'
+              : 'Let us begin — please share your full name:'),
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          }
+        ]);
+        setStep('NAME');
+      }, 600);
+    } else if (step === 'NAME') {
       setUserData(prev => ({ ...prev, name: currentInput }));
       setIsTyping(true);
       setTimeout(() => {
@@ -234,59 +524,125 @@ export default function AIGuruChatbotModal({
         setStep('BIRTH_DATE');
       }, 600);
     } else if (step === 'BIRTH_DATE') {
-      setUserData(prev => ({ ...prev, birthDate: currentInput }));
+      // Tolerant parse: "1996-08-15", "15/08/1996", "15 अगस्त १९९६"…
+      const parsed = parseBirthDate(currentInput);
       setIsTyping(true);
       setTimeout(() => {
         setIsTyping(false);
+        if (!parsed.ok) {
+          setPendingConfirm(null);
+          setMessages(prev => [
+            ...prev,
+            {
+              id: `guru-${Date.now()}`,
+              sender: 'GURU_AI',
+              text: lang === 'hi'
+                ? `क्षमा करें 🙏 "${currentInput}" तिथि समझ नहीं आई। कृपया इस रूप में लिखें — 1996-08-15, 15/08/1996 या "15 अगस्त 1996":`
+                : `Sorry 🙏 I could not read "${currentInput}" as a date. Please write it as 1996-08-15, 15/08/1996, or "15 August 1996":`,
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            }
+          ]);
+          return;
+        }
+        // Re-confirm before committing
+        setPendingConfirm({ kind: 'date', value: parsed.iso!, label: lang === 'hi' ? parsed.labelHi! : parsed.labelEn! });
         setMessages(prev => [
           ...prev,
           {
             id: `guru-${Date.now()}`,
             sender: 'GURU_AI',
             text: lang === 'hi'
-              ? `उत्तम। अब कृपया अपना जन्म समय (जैसे 10:30 AM या 14:45) बताएं:`
-              : `Understood. Now please enter your Exact Time of Birth (e.g. 10:30 AM or 14:45):`,
+              ? `मैं आपकी जन्म तिथि ${parsed.labelHi} (${parsed.iso}) के रूप में समझ रही हूँ — क्या यह सही है?`
+              : `I read your birth date as ${parsed.labelEn} (${parsed.iso}) — is that correct?`,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           }
         ]);
-        setStep('BIRTH_TIME');
-      }, 600);
+      }, 500);
     } else if (step === 'BIRTH_TIME') {
-      setUserData(prev => ({ ...prev, birthTime: currentInput }));
+      // Tolerant parse: "2.20", "2:20 am", "14:45", "shaam 7 baje"…
+      const parsed = parseBirthTime(currentInput);
       setIsTyping(true);
       setTimeout(() => {
         setIsTyping(false);
+        if (!parsed.ok) {
+          setPendingConfirm(null);
+          setMessages(prev => [
+            ...prev,
+            {
+              id: `guru-${Date.now()}`,
+              sender: 'GURU_AI',
+              text: lang === 'hi'
+                ? `क्षमा करें 🙏 "${currentInput}" समय समझ नहीं आया। कृपया इस रूप में लिखें — 2:20 AM, 14:45, "2.20" या "शाम 7 बजे":`
+                : `Sorry 🙏 I could not read "${currentInput}" as a time. Please write it as 2:20 AM, 14:45, or "evening 7 o'clock":`,
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            }
+          ]);
+          return;
+        }
+        setPendingConfirm({ kind: 'time', value: parsed.time24!, label: lang === 'hi' ? parsed.label! : parsed.labelEn! });
         setMessages(prev => [
           ...prev,
           {
             id: `guru-${Date.now()}`,
             sender: 'GURU_AI',
             text: lang === 'hi'
-              ? `कृपया अपना जन्म स्थान (शहर, राज्य) बताएं:`
-              : `Please enter your Birth City and State:`,
+              ? `मैं जन्म समय ${parsed.label} (${parsed.time24}) के रूप में समझ रही हूँ — क्या यह सही है?`
+              : `I read your birth time as ${parsed.labelEn} (${parsed.time24}) — is that correct?`,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           }
         ]);
-        setStep('BIRTH_PLACE');
-      }, 600);
+      }, 500);
     } else if (step === 'BIRTH_PLACE') {
-      setUserData(prev => ({ ...prev, birthPlace: currentInput }));
+      // City resolution with state abbreviations ("bilaspur ,cg"), Hindi
+      // spellings ("बनारस"), and multi-match disambiguation suggestions.
+      const res = resolveBirthCity(currentInput);
       setIsTyping(true);
       setTimeout(() => {
         setIsTyping(false);
+        if (res.status === 'none') {
+          setPendingConfirm(null);
+          setMessages(prev => [
+            ...prev,
+            {
+              id: `guru-${Date.now()}`,
+              sender: 'GURU_AI',
+              text: lang === 'hi'
+                ? `क्षमा करें 🙏 मैं "${currentInput}" को पहचान नहीं पाई। कृपया निकटतम बड़े शहर व राज्य का नाम लिखें — जैसे "Bilaspur, CG" या "पटना बिहार":`
+                : `Sorry 🙏 I could not recognise "${currentInput}". Please write the nearest major city with its state — e.g. "Bilaspur, Chhattisgarh":`,
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            }
+          ]);
+          return;
+        }
+        if (res.status === 'choices') {
+          setPendingConfirm({ kind: 'place', value: '', label: '', suggestions: res.choices });
+          setMessages(prev => [
+            ...prev,
+            {
+              id: `guru-${Date.now()}`,
+              sender: 'GURU_AI',
+              text: lang === 'hi'
+                ? `"${currentInput}" से मुझे ये स्थान मिले — कृपया अपना सही जन्म स्थान चुनें:`
+                : `I found these places for "${currentInput}" — please pick your actual birth city:`,
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            }
+          ]);
+          return;
+        }
+        const c = res.primary!;
+        setPendingConfirm({ kind: 'place', value: `${c.name}, ${c.state}`, label: `${c.name}, ${c.state}`, lat: c.lat, lng: c.lng, tz: c.tz });
         setMessages(prev => [
           ...prev,
           {
             id: `guru-${Date.now()}`,
             sender: 'GURU_AI',
             text: lang === 'hi'
-              ? `धन्यवाद। अब कृपया नीचे दिए गए विकल्पों में से अपना मुख्य विषय चुनें:`
-              : `Thank you. Now please select the core life domain for your consultation:`,
+              ? `मैं "${currentInput}" को ${c.name}, ${c.state} (अक्षांश ${c.lat}°N, रेखांश ${c.lng}°E) के रूप में समझ रही हूँ — क्या यह सही है?`
+              : `I read "${currentInput}" as ${c.name}, ${c.state} (lat ${c.lat}°N, lng ${c.lng}°E) — is that correct?`,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           }
         ]);
-        setStep('DOMAIN');
-      }, 600);
+      }, 500);
     } else if (step === 'QUESTION') {
       setUserData(prev => ({ ...prev, question: currentInput }));
       runVedicCalculationAndDeliverPulse(currentInput);
@@ -321,6 +677,35 @@ export default function AIGuruChatbotModal({
   const runVedicCalculationAndDeliverPulse = (seekerQuestion: string) => {
     setStep('CALCULATING');
     setIsTyping(true);
+
+    // Persist the seeker as the browser's ACTIVE PROFILE immediately, so the
+    // entire site (daily panchang, dashboard, my-calendar, kundali pages…)
+    // shows THEIR real data everywhere instead of demo/dummy values. Updating
+    // in place when it's the same person; a new profile for a new seeker.
+    try {
+      const existing = getActiveProfile();
+      const samePerson =
+        !!existing?.name &&
+        !!userData.name &&
+        existing.name.trim().toLowerCase() === userData.name.trim().toLowerCase() &&
+        existing.birthDate === userData.birthDate && existing.birthTime === userData.birthTime &&
+        existing.lat === userData.birthLat && existing.lng === userData.birthLon;
+      const saved = upsertProfile({
+        id: samePerson ? existing!.id : undefined,
+        name: userData.name || 'जिज्ञासु',
+        relation: samePerson ? (existing as any).relation || 'Self' : 'Self',
+        birthDate: userData.birthDate,
+        birthTime: userData.birthTime,
+        birthCity: userData.birthPlace,
+        lat: userData.birthLat,
+        lng: userData.birthLon,
+        tz: userData.timezone,
+      } as any);
+      setActiveProfileId(saved.id);
+    } catch (persistErr) {
+      console.warn('Seeker profile persist failed:', persistErr);
+    }
+
 
     setTimeout(() => {
       // Deterministic calculation
@@ -422,6 +807,7 @@ export default function AIGuruChatbotModal({
           customerPhone: userData.phone || '+919876543210',
           customerEmail: userData.email,
           customerQuestion: userData.question,
+          customerMood: userData.mood || undefined,
           birthDate: userData.birthDate,
           birthTime: userData.birthTime,
           birthCity: userData.birthPlace,
@@ -430,7 +816,9 @@ export default function AIGuruChatbotModal({
           timezone: userData.timezone,
           consultationMode: tier,
           amount: config.amount,
-          pulseDossier: pulseReport,
+          pulseDossier: pulseReport
+            ? { ...pulseReport, seekerMood: userData.mood || undefined }
+            : pulseReport,
         }),
       });
 
@@ -545,6 +933,13 @@ export default function AIGuruChatbotModal({
 
           <div className="flex items-center gap-2">
             <button
+              onClick={resetConsultSession}
+              className="p-2 rounded-xl text-[#696256] dark:text-[#9E988D] hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+              title={lang === 'hi' ? 'नया सत्र आरम्भ करें (Start Fresh — इस चैट की स्मृति मिटाएं)' : 'Start fresh (clear this chat memory)'}
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+            <button
               onClick={() => { chitiSensory.playTick(); voice.toggleVoice(); }}
               className={`p-2 rounded-xl transition-colors cursor-pointer ${
                 voice.voiceEnabled
@@ -640,6 +1035,70 @@ export default function AIGuruChatbotModal({
                 <span className="w-2 h-2 rounded-full bg-[#8E6F1D] dark:bg-[#D4AF37] animate-bounce" />
                 <span className="w-2 h-2 rounded-full bg-[#8E6F1D] dark:bg-[#D4AF37] animate-bounce [animation-delay:0.2s]" />
                 <span className="w-2 h-2 rounded-full bg-[#8E6F1D] dark:bg-[#D4AF37] animate-bounce [animation-delay:0.4s]" />
+              </div>
+            </div>
+          )}
+
+          {/* STEP 0: EMOTIONAL CHECK-IN (आज मन कैसा है?) */}
+          {step === 'MOOD' && (
+            <div className="space-y-2 pt-2 animate-in fade-in">
+              <div className="text-xs text-[#696256] dark:text-[#9E988D] font-bold">
+                {lang === 'hi' ? 'एक स्पर्श में बताइए — आज आपका मन कैसा है?' : 'One tap — how are you feeling today?'}
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {MOOD_OPTIONS.map(m => (
+                  <button
+                    key={m.id}
+                    onClick={() => handleSelectMood(m.id)}
+                    className="p-3 rounded-xl bg-white dark:bg-[#121522] border border-black/10 dark:border-white/10 hover:border-[#8E6F1D] dark:hover:border-[#D4AF37] text-left text-xs font-bold text-[#1C1917] dark:text-white transition-all cursor-pointer hover:shadow-md active:scale-98"
+                  >
+                    {lang === 'hi' ? m.chipLabel : m.chipLabelEn}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-[#696256] dark:text-[#9E988D]">
+                {lang === 'hi'
+                  ? '💬 या अपनी भावना शब्दों में नीचे लिखें — काशी सहायक समझ जाएगी।'
+                  : '💬 Or describe your feeling in words below — Kashi Sahayak will understand.'}
+              </p>
+            </div>
+          )}
+
+          {/* RE-CONFIRM CHIPS: typed birth details echoed back before commit */}
+          {pendingConfirm && (
+            <div className="space-y-2 pt-2 animate-in fade-in">
+              {pendingConfirm.suggestions && pendingConfirm.suggestions.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {pendingConfirm.suggestions.map((c) => (
+                    <button
+                      key={c.id}
+                      onClick={() => confirmPendingInput(c)}
+                      className="px-3 py-2 rounded-xl bg-white dark:bg-[#121522] border border-[#8E6F1D]/40 dark:border-[#D4AF37]/50 hover:bg-[#8E6F1D] hover:text-white dark:hover:bg-[#D4AF37] dark:hover:text-[#080A10] text-xs font-bold text-[#1C1917] dark:text-white transition-all cursor-pointer shadow-xs active:scale-95"
+                    >
+                      📍 {c.name}, {c.state}{c.country !== 'India' ? ` (${c.country})` : ''}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <></>
+              )}
+              <div className="flex flex-wrap gap-1.5">
+                {!pendingConfirm.suggestions && (
+                  <button
+                    onClick={() => confirmPendingInput()}
+                    className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all cursor-pointer shadow-md active:scale-95"
+                  >
+                    {lang === 'hi'
+                      ? `✅ हाँ, सही है${pendingConfirm.label ? ` — ${pendingConfirm.label}` : ''}`
+                      : `✅ Yes, correct${pendingConfirm.label ? ` — ${pendingConfirm.label}` : ''}`}
+                  </button>
+                )}
+                <button
+                  onClick={correctPendingInput}
+                  className="px-3.5 py-2 rounded-xl bg-white dark:bg-[#121522] border border-black/15 dark:border-white/15 hover:border-rose-400 text-xs font-bold text-[#1C1917] dark:text-white transition-all cursor-pointer active:scale-95"
+                >
+                  {lang === 'hi' ? '✏️ नहीं, दुबारा लिखूँगा/लिखूँगी' : '✏️ No, let me retype'}
+                </button>
               </div>
             </div>
           )}
@@ -837,8 +1296,8 @@ export default function AIGuruChatbotModal({
         </div>
 
         {/* BOTTOM INPUT BAR (Active for text prompt stages) */}
-        {['NAME', 'BIRTH_DATE', 'BIRTH_TIME', 'BIRTH_PLACE', 'QUESTION'].includes(step) && (
-          <form 
+        {['MOOD', 'NAME', 'BIRTH_DATE', 'BIRTH_TIME', 'BIRTH_PLACE', 'QUESTION'].includes(step) && (
+          <form
             onSubmit={handleSendText}
             className="p-3 sm:p-4 bg-white dark:bg-[#0E101D] border-t border-black/10 dark:border-white/10 flex items-center gap-2 shrink-0"
           >
@@ -847,6 +1306,7 @@ export default function AIGuruChatbotModal({
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               placeholder={
+                step === 'MOOD' ? (lang === 'hi' ? 'अपनी भावना लिखें, जैसे — आज मन थोड़ा भारी है...' : 'Describe how you feel today...') :
                 step === 'NAME' ? (lang === 'hi' ? 'अपना पूरा नाम लिखें...' : 'Enter your full name...') :
                 step === 'BIRTH_DATE' ? (lang === 'hi' ? 'जन्म तिथि लिखें: जैसे 1996-08-15' : 'Birth date: e.g. 1996-08-15') :
                 step === 'BIRTH_TIME' ? (lang === 'hi' ? 'जन्म समय लिखें: जैसे 14:30' : 'Birth time: e.g. 14:30') :

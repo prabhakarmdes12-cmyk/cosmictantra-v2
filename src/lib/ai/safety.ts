@@ -14,7 +14,8 @@ export function evaluateSafetyCritical(query: string): SafetyEvaluationResult {
   if (
     q.includes('kill myself') || q.includes('suicide') || q.includes('end my life') ||
     q.includes('want to die') || q.includes('harm myself') || q.includes('आत्महत्या') ||
-    q.includes('जान दे दूंगा') || q.includes('मरना चाहता हूँ') || q.includes('मर जाऊं') ||
+    q.includes('जान दे दूंगा') || q.includes('जान दे दूंगी') || q.includes('जान दे दूँगी') ||
+    q.includes('मरना चाहती हूँ') || q.includes('मरना चाहता हूँ') || q.includes('मर जाऊं') ||
     q.includes('जीने का मन नहीं') || q.includes('फांसी') || q.includes('zehar') || 
     q.includes('poison') || q.includes('sleeping pills') || q.includes('swallowed')
   ) {

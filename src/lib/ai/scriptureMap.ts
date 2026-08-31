@@ -31,7 +31,7 @@ export const SCRIPTURE_WISDOM_REGISTRY: ScriptureInsight[] = [
     transliteration: "mātrā-sparśās tu kaunteya śītoṣṇa-sukha-duḥkha-dāḥ ।\nāgamāpāyino 'nityās tāṁs titikṣasva bhārata ॥",
     meaningHi: 'हे कुन्तीपुत्र! सर्दी-गर्मी और सुख-दुख देने वाले इन्द्रिय और विषयों के संयोग तो उत्पत्ति और विनाशशील तथा अनित्य हैं, इसलिए हे भारत! तुम उन्हें धैर्यपूर्वक सहन करो। यह समय भी बीत जाएगा।',
     meaningEn: 'O son of Kunti, the nonpermanent appearance of happiness and distress, and their disappearance in due course, are like the appearance and disappearance of winter and summer seasons. One must learn to tolerate them without being disturbed.',
-    kashiSahayakBridge: 'हर हर महादेव! 🙏 आपके मन की व्यथा और उदासी को हम समझ सकते हैं। जब मन भारी हो, तो भगवान श्रीकृष्ण का यह अमर वचन स्मरण करें। ज्योतिष में मन का स्वामी चन्द्रमा है — जिस प्रकार चन्द्रमा की कलाएं घटती-बढ़ती हैं, उसी प्रकार जीवन के सुख-दुख भी अनित्य हैं।',
+    kashiSahayakBridge: 'हर हर महादेव! 🙏 आपके मन की व्यथा और उदासी को मैं समझ सकती हूँ। जब मन भारी हो, तो भगवान श्रीकृष्ण का यह अमर वचन स्मरण करें। ज्योतिष में मन का स्वामी चन्द्रमा है — जिस प्रकार चन्द्रमा की कलाएं घटती-बढ़ती हैं, उसी प्रकार जीवन के सुख-दुख भी अनित्य हैं।',
     suggestedAction: 'भगवान विश्वनाथ के दिव्य साक्षात् दर्शन करें तथा १०८ बार महामृत्युंजय मन्त्र का शांत श्रवण करें।',
     quickChips: [
       { label: '📿 महामृत्युंजय मन्त्र जप', action: 'INTENT_MANTRA_MRITYUNJAYA' },

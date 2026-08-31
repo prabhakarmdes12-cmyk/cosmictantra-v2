@@ -358,7 +358,7 @@ export async function processKashiSahayakQuery(
 
   // Fallback (Restrained & Honest)
   return {
-    text: 'मैं काशी सहायक हूँ — CosmicTantra का वैदिक सहायक। मैं आपके लिए पञ्चाङ्ग निकाल सकता हूँ, महातीर्थों का लाइव दर्शन करा सकता हूँ, अथवा आपकी कुण्डली की विवेचना हेतु काशी के वरिष्ठ विद्वान् से जोड़ सकता हूँ।',
+    text: 'मैं काशी सहायक हूँ — CosmicTantra की वैदिक सहायिका। मैं आपके लिए पञ्चाङ्ग निकाल सकती हूँ, महातीर्थों का लाइव दर्शन करा सकती हूँ, अथवा आपकी कुण्डली की विवेचना हेतु काशी के वरिष्ठ विद्वान् से जोड़ सकती हूँ।',
     intent: 'UNKNOWN',
     confidence: 0.40,
     provenance: createAIExplanationProvenance(),
