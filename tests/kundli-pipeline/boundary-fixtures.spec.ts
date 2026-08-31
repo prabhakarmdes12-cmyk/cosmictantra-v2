@@ -3,7 +3,7 @@
  * Tests for astronomically sensitive boundaries.
  */
 import { test, expect } from '@playwright/test';
-import { generateKundliPdf } from '../src/lib/kundli/pipeline';
+import { generateKundliPdf } from '../../src/lib/kundli/pipeline';
 
 test.describe('BOUNDARY FIXTURES — time, timezone, nakshatra, sign, dasha', () => {
   // Midnight-adjacent birth time test

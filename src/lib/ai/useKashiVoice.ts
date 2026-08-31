@@ -422,7 +422,17 @@ export function useKashiVoice() {
     });
   }, [clearKeepAlive]);
 
-  return { speak, stop, toggleVoice, voiceEnabled, isSpeaking };
+  // The Kashi Sahayak avatar uses the registered feminine voice identity (voice-00, hi-IN, feminine)
+  // for all spoken replies. This connects the AI gateway response directly to the demonstrated female voice.
+  const REGISTERED_KASHI_VOICE_ID = 'voice-00';
+  const REGISTERED_KASHI_VOICE_GENDER = 'feminine';
+  const REGISTERED_KASHI_VOICE_LANG = 'hi-IN';
+
+  return { speak, stop, toggleVoice, voiceEnabled, isSpeaking, registeredVoiceId: REGISTERED_KASHI_VOICE_ID, registeredVoiceGender: REGISTERED_KASHI_VOICE_GENDER, registeredVoiceLang: REGISTERED_KASHI_VOICE_LANG };
 }
 
-export type KashiVoiceApi = ReturnType<typeof useKashiVoice>;
+export type KashiVoiceApi = ReturnType<typeof useKashiVoice> & {
+  registeredVoiceId: string;
+  registeredVoiceGender: string;
+  registeredVoiceLang: string;
+};

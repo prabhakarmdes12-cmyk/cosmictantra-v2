@@ -3,7 +3,7 @@
  * Deliberately break dependencies and verify fail-closed delivery.
  */
 import { test, expect } from '@playwright/test';
-import { generateKundliPdf } from '../src/lib/kundli/pipeline';
+import { generateKundliPdf } from '../../src/lib/kundli/pipeline';
 
 test.describe('FAILURE INJECTION — fail-closed delivery', () => {
   test('Broken longitude must block delivery', async () => {
