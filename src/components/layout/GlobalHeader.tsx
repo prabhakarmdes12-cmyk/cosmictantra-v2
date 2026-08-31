@@ -70,7 +70,7 @@ export default function GlobalHeader({
               Cases Queue
             </Link>
             <Link href="/report" className="text-[#696256] dark:text-[#9E988D] hover:text-[#1C1917] dark:hover:text-white transition-colors">
-              Folios Archive
+              My Kundli
             </Link>
             <Link href="/presentation" className="text-[#696256] dark:text-[#9E988D] hover:text-[#1C1917] dark:hover:text-white transition-colors">
               Presentation

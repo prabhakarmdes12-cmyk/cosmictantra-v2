@@ -1,4 +1,4 @@
-﻿# 📚 COSMICTANTRA — MASTER STARTUP DOCUMENTATION REPOSITORY
+# 📚 COSMICTANTRA — MASTER STARTUP DOCUMENTATION REPOSITORY
 **Company**: CosmicTantra Technologies Pvt. Ltd. · **Edition**: 2026
 **Category**: Vedic Astronomical Observatory × Verified Scholarly Counsel
 **Design Standard**: Chiti Technologies Unified Design System v3
@@ -32,6 +32,9 @@ All institutional, strategic, design, growth, engineering, and scholar documenta
 
 ### ⚙️ 4. Engineering, Ephemeris & Security
 * **[`04_TECHNICAL_ARCHITECTURE.md`](./04_TECHNICAL_ARCHITECTURE.md)** — System architecture, Meeus IAU-76 algorithms, Lahiri sidereal formulas, and Next.js 14 SSR hydration invariants.
+* **[`KUNDLI_INCIDENT_FINAL_ENGINEERING_REPORT.md`](./KUNDLI_INCIDENT_FINAL_ENGINEERING_REPORT.md)** — Final engineering report on the 454-page PDF incident: root causes, data lineage, KUNDLI_INV_001–015 mapping, engine/PDF status, Ganesh + established-format + P1-8 deliverables, test results, production verdict.
+* **[`CELEBRITY_KUNDLI_CROSSCHECK.md`](./CELEBRITY_KUNDLI_CROSSCHECK.md)** — Engine cross-check against published kundlis (Kohli, Modi, Sachin, Dhoni) with per-placement evidence tables and source conflicts.
+* **[`KUNDLI_FLOW_UX_REVIEW.md`](./KUNDLI_FLOW_UX_REVIEW.md)** — Kundli journey UX review vs. 30 years of kundli software conventions (P0 + P1 implemented status).
 * **[`PRODUCTION_VERIFICATION.md`](./PRODUCTION_VERIFICATION.md)** — Production hardening report, golden invariant test proofs (Meeus/Lahiri), PII masking verification, and security audits.
 * **[`MASTER_IMPROVEMENT_PLAN_FOR_AGENT.md`](./MASTER_IMPROVEMENT_PLAN_FOR_AGENT.md)** — Engineering sprint backlog, quality gates, and automated test pipelines.
 * **[`IMPROVEMENT_AUDIT.md`](./IMPROVEMENT_AUDIT.md)** — Complete historical code and design audit log across all iterations.

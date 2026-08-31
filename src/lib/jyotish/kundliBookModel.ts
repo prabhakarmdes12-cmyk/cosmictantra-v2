@@ -5,6 +5,157 @@
  */
 
 import { CanonicalJyotishSnapshot, NormalizedBirthContext } from './canonicalSnapshot';
+import { calculateCelestialEphemeris } from './celestialEngine';
+import { buildCanonicalModel, nakshatraRulerByName } from '../kundli/canonicalModel';
+import { interpretCanonicalModel, planetKaraka } from '../kundli/interpretation';
+import { BirthProfile } from '../kundli/types';
+import { fnv1aHex } from '../kundli/lineage';
+import { KUNDLI_PIPELINE_CONFIG } from '../kundli/config';
+
+/**
+ * Derived, per-subject data — replaces the previous hardcoded (wrong-person)
+ * interpretation/gochar/timeline text. Everything below is computed from the
+ * canonical snapshot for THIS birth record.
+ */
+
+const RASHI_EN: Record<number, string> = {
+  1: 'Aries', 2: 'Taurus', 3: 'Gemini', 4: 'Cancer', 5: 'Leo', 6: 'Virgo',
+  7: 'Libra', 8: 'Scorpio', 9: 'Sagittarius', 10: 'Capricorn', 11: 'Aquarius', 12: 'Pisces'
+};
+
+function profileFromContext(personName: string, ctx: NormalizedBirthContext): BirthProfile {
+  const [h, mi] = (ctx.birthTime || '12:00').split(':').map(Number);
+  const offset = Number(ctx.timezone) || 0;
+  const local = `${ctx.birthDate}T${String(h).padStart(2, '0')}:${String(mi).padStart(2, '0')}`;
+  const utc = new Date(`${local}:00${offset >= 0 ? '+' : '-'}${String(Math.abs(Math.floor(offset))).padStart(2, '0')}:${String(Math.round((Math.abs(offset) % 1) * 60)).padStart(2, '0')}`).toISOString();
+  const inIndia = Number(ctx.latitude) >= 6 && Number(ctx.latitude) <= 37.5 && Number(ctx.longitude) >= 68 && Number(ctx.longitude) <= 97.5;
+  return {
+    name: personName,
+    birthDate: ctx.birthDate,
+    birthTime: ctx.birthTime,
+    locationName: ctx.locationName || '(coordinates only)',
+    coordinates: { latitude: Number(ctx.latitude), longitude: Number(ctx.longitude), provenance: 'MANUAL' },
+    timezone: {
+      localDateTime: local,
+      timezoneId: inIndia ? 'Asia/Kolkata' : '',
+      utcOffsetAtBirth: offset,
+      utcDateTime: utc,
+      offsetProvenance: inIndia ? 'IANA_HISTORICAL' : 'USER_SUPPLIED'
+    }
+  };
+}
+
+function transitHouseFromNatal(transitRashiId: number, natalMoonRashiId: number): number {
+  return ((transitRashiId - natalMoonRashiId + 12) % 12) + 1;
+}
+
+function deriveGochar(snapshot: CanonicalJyotishSnapshot): Record<string, string> {
+  const ctx = snapshot.context;
+  const target = ctx.targetDate instanceof Date ? ctx.targetDate : new Date();
+  let lines: Record<string, string>;
+  try {
+    const ephem = calculateCelestialEphemeris({
+      dateUtc: target,
+      latitude: Number(ctx.latitude),
+      longitude: Number(ctx.longitude),
+      nodeMode: 'MEAN_NODE'
+    });
+    const natalMoonRashiId = Number((snapshot.planets as any)?.Moon?.rashiId) || 1;
+    const sat = ephem.bodies.Saturn.siderealLongitude;
+    const jup = ephem.bodies.Jupiter.siderealLongitude;
+    const rahu = ephem.bodies.Rahu.siderealLongitude;
+    const ketu = ephem.bodies.Ketu.siderealLongitude;
+    const satFromMoon = transitHouseFromNatal(Math.floor(sat / 30) + 1, natalMoonRashiId);
+    const jupFromMoon = transitHouseFromNatal(Math.floor(jup / 30) + 1, natalMoonRashiId);
+    const rahuFromMoon = transitHouseFromNatal(Math.floor(rahu / 30) + 1, natalMoonRashiId);
+    const ketuFromMoon = transitHouseFromNatal(Math.floor(ketu / 30) + 1, natalMoonRashiId);
+    lines = {
+      saturnTransit: `Saturn is transiting ${RASHI_EN[Math.floor(sat / 30) + 1]} — ${ordinal(satFromMoon)} from the natal Moon (${snapshot.birthPanchang?.nakshatra?.name || 'natal nakshatra'}).`,
+      jupiterTransit: `Jupiter is transiting ${RASHI_EN[Math.floor(jup / 30) + 1]} — ${ordinal(jupFromMoon)} from the natal Moon.`,
+      rahuKetuTransit: `Rahu transits ${RASHI_EN[Math.floor(rahu / 30) + 1]} and Ketu ${RASHI_EN[Math.floor(ketu / 30) + 1]} — ${ordinal(rahuFromMoon)} and ${ordinal(ketuFromMoon)} from the natal Moon respectively.`
+    };
+  } catch {
+    lines = {
+      saturnTransit: 'Transit computation unavailable for this birth record.',
+      jupiterTransit: 'Transit computation unavailable for this birth record.',
+      rahuKetuTransit: 'Transit computation unavailable for this birth record.'
+    };
+  }
+  return lines;
+}
+
+function ordinal(n: number): string {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return s[(v - 20) % 10] || s[v] || s[0];
+}
+
+/**
+ * Multi-tier lifespan timeline (Volume XVI): unites the full Vimshottari
+ * Mahadasha progression, the current Antardasha window, the next period
+ * transition (milestone), Sade Sati phase, and current gochar highlights —
+ * all deterministic values from the canonical snapshot.
+ */
+function deriveTimeline(snapshot: CanonicalJyotishSnapshot): Record<string, any> {
+  const md = (snapshot.dasha?.mahadashas ?? []) as any[];
+  const current = md.find((m: any) => m.isCurrent) || md[0];
+  const ad = current?.antardashas?.find((a: any) => a.isCurrent) || current?.antardashas?.[0];
+  const next = md.find((m: any) => !m.isCurrent && new Date(m.startDate) > new Date(current?.startDate || 0));
+  const nextAd = next?.antardashas?.[0];
+  const sadeSati = snapshot.yogasAndDoshas?.sadeSati;
+  const gochar = deriveGochar(snapshot);
+  const milestones = md
+    .filter((m: any) => !m.isCurrent)
+    .map((m: any) => `${m.lord} Mahadasha begins ${String(m.startDate || '').slice(0, 10)}`)
+    .slice(0, 5);
+  return {
+    currentEra: `${current?.lord || current?.planet || '—'} Mahadasha (${String(current?.startDate || '').slice(0, 10)}–${String(current?.endDate || '').slice(0, 10)}) / ${ad?.lord || '—'} Antardasha (${String(ad?.startDate || '').slice(0, 10)}–${String(ad?.endDate || '').slice(0, 10)})`,
+    nextEra: `${next?.lord || next?.planet || '—'} Mahadasha (${String(next?.startDate || '').slice(0, 10)}–${String(next?.endDate || '').slice(0, 10)})`,
+    upcomingPeakWindow: `${nextAd?.lord || '—'} Antardasha in ${next?.lord || '—'} Mahadasha (from ${String(nextAd?.startDate || '').slice(0, 10)})`,
+    dashaProgression: md.map((m: any) => ({
+      lord: m.lord || m.planet || '—',
+      startDate: String(m.startDate || '').slice(0, 10),
+      endDate: String(m.endDate || '').slice(0, 10),
+      isCurrent: !!m.isCurrent,
+      antardashas: String((m.antardashas ?? []).length)
+    })),
+    sadeSatiPhase: sadeSati
+      ? `${sadeSati.phase}${sadeSati.isActive ? ' — active now' : ''}. ${sadeSati.description}`
+      : 'Not active.',
+    gocharHighlights: [
+      gochar.saturnTransit,
+      gochar.jupiterTransit,
+      gochar.rahuKetuTransit
+    ],
+    milestones
+  };
+}
+
+function deriveInterpretationVolume(snapshot: CanonicalJyotishSnapshot, personName: string): { data: Record<string, any>; evidenceIds: string[] } {
+  const profile = profileFromContext(personName, snapshot.context);
+  const fingerprint = fnv1aHex(JSON.stringify({
+    profile,
+    calc: KUNDLI_PIPELINE_CONFIG.calculation,
+    engine: snapshot.meta?.engineVersion
+  }));
+  const canonical = buildCanonicalModel({ profile: { ...profile, fingerprint }, snapshot, config: KUNDLI_PIPELINE_CONFIG.calculation });
+  const interps = interpretCanonicalModel(canonical);
+  const byId = new Map(interps.map(i => [i.sectionId, i]));
+  const pick = (id: string, fallback: string): string => byId.get(id)?.text || fallback;
+  const data: Record<string, any> = {
+    personality: pick('lagna-analysis', 'Lagna interpretation unavailable.'),
+    career: pick('career', 'Career interpretation unavailable.'),
+    wealth: pick('finance', 'Finance interpretation unavailable.'),
+    relationships: pick('relationships', 'Relationship interpretation unavailable.'),
+    spirituality: pick('spiritual-tendencies', 'Spiritual interpretation unavailable.'),
+    currentPeriod: pick('current-period', 'Current period interpretation unavailable.')
+  };
+  const evidenceIds = interps
+    .filter(i => i.sourceFacts.length > 0)
+    .map(i => `EVID-${i.sectionId.toUpperCase().replace(/[^A-Z0-9]/g, '-')}`)
+    .slice(0, 12);
+  return { data, evidenceIds: evidenceIds.length > 0 ? evidenceIds : ['EVID-NONE'] };
+}
 
 export type ReportVariant =
   | 'COSMIC_SNAPSHOT'
@@ -50,8 +201,7 @@ export function generateKundliBookModel(
     context,
     lagna,
     planets,
-    houses,
-    birthPanchang,
+    houses,    birthPanchang,
     dasha,
     vargas,
     relationships,
@@ -65,6 +215,7 @@ export function generateKundliBookModel(
     avakhada
   } = snapshot;
 
+  const interpVolume = deriveInterpretationVolume(snapshot, personName);
   const volumes: BookVolume[] = [
     // Volume I (Index 0): Birth Foundation & Panchang
     {
@@ -349,17 +500,13 @@ export function generateKundliBookModel(
       volumeNumber: 'XIV',
       title: 'Gochar: Real-Time Planetary Transits & Natal Resonance',
       sanskritTitle: 'गोचर: वर्तमान ग्रह चाल एवं प्रभाव',
-      description: 'Current transits of Saturn, Jupiter, Rahu, and Ketu evaluated against natal Moon and Lagna.',
+      description: 'Current transits of Saturn, Jupiter, Rahu, and Ketu evaluated from the natal Moon (Chandra Gochar).',
       sections: [
         {
           id: 'gochar_transits',
           title: 'Current Major Planetary Transits',
           category: 'GOCHAR',
-          data: {
-            saturnTransit: 'Saturn in Kumbha (Aquarius) - 2nd from natal Moon (Makara), Setting Phase of Sade Sati.',
-            jupiterTransit: 'Jupiter in Vrishabha (Taurus) - 5th from natal Moon, 3rd from natal Lagna (Highly auspicious trine).',
-            rahuKetuTransit: 'Rahu in Meena (Pisces / 1st House) and Ketu in Kanya (Virgo / 7th House) - Spiritual elevation & partnership restructuring.'
-          }
+          data: deriveGochar(snapshot)
         }
       ]
     },
@@ -389,13 +536,9 @@ export function generateKundliBookModel(
       sections: [
         {
           id: 'destiny_timeline',
-          title: 'Lifespan Multi-Tier Timeline (1989–2089)',
+          title: 'Lifespan Multi-Tier Vimshottari Timeline',
           category: 'TIMELINE',
-          data: {
-            currentEra: 'Jupiter Mahadasha (2016–2032) / Saturn Antardasha (2024–2026)',
-            nextEra: 'Jupiter Mahadasha / Mercury Antardasha (2026–2029)',
-            upcomingPeakWindow: '2027–2029 (Mercury AD in 3rd House of Enterprise & Intellect)'
-          }
+          data: deriveTimeline(snapshot)
         }
       ]
     },
@@ -411,39 +554,41 @@ export function generateKundliBookModel(
           id: 'interpretation_synthesis',
           title: '12-Domain Life Synthesis with Evidence Trace',
           category: 'INTERPRETATION',
-          evidenceIds: ['EVID-PISCES-LAGNA', 'EVID-JUP-SAT-DASHA', 'EVID-4TH-MARS', 'EVID-GAJAKESARI'],
-          data: {
-            personality: 'Deeply intuitive, philosophical, and visionary nature (Pisces Ascendant ruled by Jupiter in Taurus). Grounded pragmatic execution with high intellectual curiosity.',
-            career: 'Exceptional capacity for strategic leadership, systems engineering, higher research, and advisory roles (D10 Jupiter in Kendra, 10th lord in 3rd house with Venus/Mercury).',
-            wealth: 'Steady cumulative financial growth through intellectual products, institutional advisory, and durable assets (2nd lord Mars in 4th house, 11th lord Saturn in 10th).',
-            relationships: 'Deep devotion with high ethical standards. Requires mutual intellectual respect and clarity in marital communication (D9 Navamsha Venus in Taurus).',
-            spirituality: 'Natural inclination toward Vedic philosophy, esoteric wisdom, and higher consciousness (Lagna in Meena, Moon in Shravana ruled by Vishnu).',
-            currentPeriod: 'Jupiter-Saturn Dasha (2024–2026): A rigorous consolidation phase of structural endurance, monumental focus, and establishing institutional credibility.'
-          }
+          evidenceIds: interpVolume.evidenceIds,
+          data: interpVolume.data
         },
         {
           id: 'technical_appendix',
           title: 'Astronomical & Mathematical Provenance Matrix',
           category: 'APPENDIX',
           data: {
-            calculationEngine: 'CosmicTantra Professional Kernel V36.0 (Deterministic)',
-            ephemerisModel: 'VSOP87 / ELP2000-82 (High Precision Analytical Ephemeris)',
-            astronomicalReferenceStatus: 'NASA/JPL HORIZONS 7,000-EPOCH & ASTROSAGE QUALIFIED',
-            ayanamshaSystem: 'Chitra Paksha (Lahiri Standard, 23° 42\' 32\" at epoch)',
+            calculationEngine: meta.engineVersion,
+            ephemerisModel: 'VSOP87 / ELP2000-82 (in-process astronomy-engine adapter)',
+            astronomicalReferenceStatus: 'Deterministic in-process ephemeris; benchmark corpus documented in docs/',
+            ayanamshaSystem: `${meta.ayanamshaName} (${meta.ayanamshaValue.toFixed(4)}° at birth)`,
             nodeCalculationMode: 'Mean Node (Standard Classical Vedic Tradition)',
             houseSystem: 'Equal House / Shripati Compatible',
             geodeticCoordinates: `${context.latitude}° N, ${context.longitude}° E`,
             julianDay: meta.julianDay,
             generatedAt: meta.calculatedAt,
-            calculationHash: 'CT-MASTER-1989-BILASPUR-001'
+            calculationHash: fnv1aHex(JSON.stringify({
+              ctx: { d: context.birthDate, t: context.birthTime, lat: context.latitude, lng: context.longitude, tz: context.timezone },
+              engine: meta.engineVersion
+            }))
           }
         }
       ]
     }
   ];
 
+  const fingerprint = fnv1aHex(JSON.stringify({
+    ctx: { d: context.birthDate, t: context.birthTime, lat: context.latitude, lng: context.longitude, tz: context.timezone },
+    engine: meta.engineVersion,
+    variant
+  }));
+
   return {
-    reportId: `CT-MASTER-${Date.now().toString(36).toUpperCase()}`,
+    reportId: `CT-MASTER-${fingerprint.slice(0, 8).toUpperCase()}`,
     variant,
     generatedAt: new Date().toISOString(),
     engineVersion: meta.engineVersion,

@@ -6,6 +6,7 @@ test.describe('CosmicTantra — Deep QA & Mobile Clickability Suite', () => {
   test('Mobile (390px): Hamburger Menu opens full-screen mega menu and navigates cleanly', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('http://localhost:3000/', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('networkidle');
 
     // Open mega menu
     const menuBtn = page.getByRole('button', { name: /Open Full Navigation Menu|Open navigation menu|Menu/i }).first();
@@ -29,6 +30,7 @@ test.describe('CosmicTantra — Deep QA & Mobile Clickability Suite', () => {
   test('Mobile (390px): Store category filtering, add to cart, cart drawer and checkout are clickable', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('http://localhost:3000/store', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('networkidle');
 
     // Category pills horizontal scroll and click
     const dhoopTab = page.getByRole('button', { name: /धूप, अगरबत्ती व कपूर/i }).first();
@@ -70,6 +72,7 @@ test.describe('CosmicTantra — Deep QA & Mobile Clickability Suite', () => {
   test('Mobile (390px): Live Darshan Category Switcher, Diya Lighting and Shrine Navigation', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('http://localhost:3000/darshan', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('networkidle');
 
     // Switch to Char Dham category
     const charDhamTab = page.locator('button').filter({ hasText: /चार धाम/i }).first();
@@ -86,7 +89,7 @@ test.describe('CosmicTantra — Deep QA & Mobile Clickability Suite', () => {
     await expect(diyaBtn).toBeVisible();
     await diyaBtn.scrollIntoViewIfNeeded();
     await diyaBtn.click();
-    await expect(page.getByText(/दीपदान ✓/i)).toBeVisible();
+    await expect(page.getByText(/दीपदान प्रज्वलित|दीपदान ✓/i)).toBeVisible();
 
     // Offer Flowers (पुष्प अर्पण) action
     const flowerBtn = page.locator('button').filter({ hasText: /पुष्प अर्पण/i }).first();
@@ -150,6 +153,7 @@ test.describe('CosmicTantra — Deep QA & Mobile Clickability Suite', () => {
   test('Desktop (1440px): Mega Menu direct navigation to all platform hubs', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('http://localhost:3000/', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('networkidle');
 
     // Open mega menu modal
     const menuBtn = page.getByRole('button', { name: /Open Full Navigation Menu|Menu/i }).first();

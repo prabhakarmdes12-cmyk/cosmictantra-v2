@@ -54,14 +54,28 @@ export default function AskQuestionPage() {
     customerName: '',
     customerPhone: '',
     customerEmail: '',
-    birthDate: '1995-06-15',
-    birthTime: '10:30',
-    birthCity: 'Varanasi',
-    birthLat: 25.3176,
-    birthLon: 82.9739,
+    birthDate: '',
+    birthTime: '',
+    birthCity: '',
+    birthLat: Number.NaN,
+    birthLon: Number.NaN,
     timezone: 5.5,
     customerQuestion: '',
   });
+
+  // Deliberately empty birth fields: prefilled birth data is how
+  // wrong-person charts get generated. A sample button fills demo values.
+  const fillSampleBirth = () => {
+    setForm((f) => ({
+      ...f,
+      birthDate: f.birthDate || '1995-06-15',
+      birthTime: f.birthTime || '10:30',
+      birthCity: f.birthCity || 'Varanasi',
+      birthLat: Number.isFinite(f.birthLat) ? f.birthLat : 25.3176,
+      birthLon: Number.isFinite(f.birthLon) ? f.birthLon : 82.9739,
+      timezone: 5.5,
+    }));
+  };
 
   const tierPricing: Record<string, { amount: number; titleHi: string; titleEn: string; desc: string }> = {
     WRITTEN: { amount: 501, titleHi: 'लिखित विद्वत्-परामर्श पत्र', titleEn: 'Written Scholar Folio', desc: 'Verified PDF folio signed by Banaras scholar with planetary remedies' },
@@ -348,6 +362,14 @@ export default function AskQuestionPage() {
                 />
               </div>
             </div>
+
+            <button
+              type="button"
+              onClick={fillSampleBirth}
+              className="text-[10px] font-bold text-[#8E6F1D] hover:text-[#785E18] underline underline-offset-2"
+            >
+              ✨ No chart handy? Try a sample birth (1995-06-15, 10:30, Varanasi)
+            </button>
 
             <div>
               <label className="block text-xs font-bold text-[#696256] dark:text-[#9E988D] mb-1">

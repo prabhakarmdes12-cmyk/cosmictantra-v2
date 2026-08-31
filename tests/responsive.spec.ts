@@ -60,13 +60,13 @@ test.describe('CosmicTantra Mobile Responsiveness & Hardening Suite', () => {
       const videoBg = page.locator('video');
       await expect(videoBg).toBeVisible();
 
-      // 4. Hero Headline & CTAs Reachable
-      const panchangBtn = page.locator('#hero-section button:has-text("PANCHANG")').first();
-      const createKundaliBtn = page.locator('#hero-section button:has-text("KUNDALI")').first();
-      const askScholarBtn = page.locator('#hero-section button:has-text("JYOTISHI")').first();
+      // 4. Hero CTAs Reachable (current three-intent hero)
+      const masterKundaliBtn = page.locator('#hero-section button:has-text("GENERATE MASTER KUNDLI")').first();
+      const panchangBtn = page.locator('#hero-section button:has-text("See Today\'s Panchang")').first();
+      const askScholarBtn = page.locator('#hero-section button:has-text("Ask a Jyotishi")').first();
 
       await expect(panchangBtn).toBeVisible();
-      await expect(createKundaliBtn).toBeVisible();
+      await expect(masterKundaliBtn).toBeVisible();
       await expect(askScholarBtn).toBeVisible();
 
       // Take screenshot for visual regression verification

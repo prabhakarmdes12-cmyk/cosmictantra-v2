@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { 
   Download, 
@@ -24,27 +24,145 @@ import {
   Edit3, 
   ArrowLeft,
   X,
-  Share2
+  Share2,
+  Search,
+  Navigation,
+  LayoutDashboard,
+  ChevronDown,
+  Telescope
 } from 'lucide-react';
-import jsPDF from 'jspdf';
 import { getCanonicalJyotishSnapshot } from '@/lib/jyotish/canonicalSnapshot';
 import { generateKundliBookModel, BookVolume } from '@/lib/jyotish/kundliBookModel';
 import NorthIndianChart from '@/components/NorthIndianChart';
+import GlobalHeader from '@/components/layout/GlobalHeader';
+import { CosmicTantraEmblem } from '@/components/visual/CosmicTantraLogo';
 import { chitiSensory } from '@/lib/chitiAudio';
-import { getPdfFontFamily, registerDevanagariFont } from '@/lib/pdfFonts';
+import { generateKundliPdf } from '@/lib/kundli/pipeline';
+import { KUNDLI_SAFE_MESSAGES } from '@/lib/kundli/errors';
+import { searchCities } from '@/lib/cities';
+import type { KundliPipelineResult, PipelineState, RawBirthInput } from '@/lib/kundli/types';
+
+/**
+ * Vimshottari 120-year timeline: one segment per Mahadasha, a "now" marker,
+ * and antardasha chips for the selected period (default: current).
+ */
+function DashaTimeline({ mahadashas, currentAD, selectedIndex, onSelect }: {
+  mahadashas: any[];
+  currentAD: string;
+  selectedIndex: number;
+  onSelect: (i: number) => void;
+}) {
+  const [nowPct, setNowPct] = useState(0);
+  // The NOW marker position derives from Date.now() — computing it during
+  // render makes server and client HTML differ by milliseconds (React
+  // hydration mismatch warning). Compute it only after mount.
+  useEffect(() => {
+    if (!Array.isArray(mahadashas) || mahadashas.length === 0) return;
+    const start = new Date(mahadashas[0].startDate).getTime();
+    const end = new Date(mahadashas[mahadashas.length - 1].endDate).getTime();
+    const span = Math.max(end - start, 1);
+    setNowPct(Math.min(100, Math.max(0, ((Date.now() - start) / span) * 100)));
+  }, [mahadashas]);
+  if (!Array.isArray(mahadashas) || mahadashas.length === 0) return null;
+  const start = new Date(mahadashas[0].startDate).getTime();
+  const end = new Date(mahadashas[mahadashas.length - 1].endDate).getTime();
+  const span = Math.max(end - start, 1);
+  const colors = ['#C2410C', '#0284C7', '#DC2626', '#16A34A', '#D97706', '#DB2777', '#4F46E5', '#7C3AED', '#0D9488'];
+  const currentIdx = mahadashas.findIndex((m) => m.isCurrent);
+  const active = selectedIndex >= 0 ? selectedIndex : (currentIdx >= 0 ? currentIdx : 0);
+  const sel = mahadashas[active] ?? mahadashas[0];
+  return (
+    <div className="space-y-3">
+      <div>
+        <div className="relative h-14">
+          <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-7 rounded-full bg-[#F5EFE6] border border-[#E5D7BC] overflow-hidden">
+            {mahadashas.map((m: any, i: number) => {
+              const ms = new Date(m.startDate).getTime();
+              const me = new Date(m.endDate).getTime();
+              const w = Math.max(((me - ms) / span) * 100, 1.5);
+              const left = ((ms - start) / span) * 100;
+              // Fit the lord name to the segment: full name on wide segments,
+              // abbreviation on narrow ones — never clipped text.
+              const label =
+                w >= 7 ? m.lord
+                  : w >= 4.5 ? m.lord.slice(0, 4)
+                    : (m.lord === 'Mercury' ? 'Mer' : m.lord.slice(0, 3));
+              return (
+                <button
+                  key={m.lord}
+                  onClick={() => onSelect(i)}
+                  title={`${m.lord}: ${String(m.startDate).slice(0, 10)} – ${String(m.endDate).slice(0, 10)}`}
+                  className={`absolute top-0 bottom-0 text-[8px] font-bold text-white flex items-center justify-center overflow-hidden transition-all border-r border-white/50 ${m.isCurrent ? 'ring-2 ring-[#8E6F1D] z-10' : 'hover:brightness-110'}`}
+                  style={{ left: `${left}%`, width: `${w}%`, background: colors[i % colors.length], opacity: m.isCurrent ? 1 : 0.78 }}
+                >
+                  <span className="px-0.5">{label}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="absolute top-0 bottom-0 w-0.5 bg-[#1C1917] rounded" style={{ left: `${nowPct}%` }}>
+            <span className="absolute -top-0.5 -translate-x-1/2 text-[8px] font-bold text-[#1C1917] whitespace-nowrap">● NOW</span>
+          </div>
+        </div>
+        <div className="flex justify-between text-[9px] font-mono-data text-[#78716C] mt-1">
+          <span>{String(mahadashas[0].startDate).slice(0, 4)}</span>
+          <span>{String(mahadashas[mahadashas.length - 1].endDate).slice(0, 4)}</span>
+        </div>
+      </div>
+      <div>
+        <div className="text-[10px] font-bold uppercase tracking-wider text-[#78716C] mb-1.5">
+          {sel?.lord} Mahadasha — Antardashas
+          {selectedIndex >= 0 && (
+            <button onClick={() => onSelect(-1)} className="ml-2 text-[9px] font-mono-data text-[#8E6F1D] underline underline-offset-2">
+              back to current
+            </button>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {(sel?.antardashas ?? []).map((ad: any) => {
+            const isCur = ad.lord === currentAD && !!sel?.isCurrent;
+            return (
+              <span
+                key={ad.lord}
+                title={`${ad.lord}: ${String(ad.startDate).slice(0, 10)} – ${String(ad.endDate).slice(0, 10)}`}
+                className={`px-2 py-1 rounded-lg text-[10px] font-semibold border ${isCur ? 'bg-[#8E6F1D] text-white border-[#8E6F1D]' : 'bg-white text-[#44403C] border-[#E5D7BC]'}`}
+              >
+                {ad.lord}
+                <span className={`font-mono-data ${isCur ? 'text-amber-100' : 'text-[#A8A29E]'}`}> · {String(ad.startDate).slice(0, 10)}</span>
+                {isCur && <span className="ml-1 text-[8px] font-bold uppercase">◀ current</span>}
+              </span>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function MasterKundliReportClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  // Active view mode: 17-Volume Encyclopedic Folio vs Interactive Visual Workbench
-  const [activeTab, setActiveTab] = useState<'FOLIO' | 'WORKBENCH'>('FOLIO');
+  // Active view mode: Overview (default, progressive disclosure) vs
+  // 17-Volume Encyclopedic Folio vs Interactive Visual Workbench
+  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'FOLIO' | 'WORKBENCH'>('OVERVIEW');
+  const [selectedMdIndex, setSelectedMdIndex] = useState<number>(-1); // -1 => current mahadasha
+  const [chartPlanet, setChartPlanet] = useState<{ name: string; house: number } | null>(null);
   const [readingDepth, setReadingDepth] = useState<'SIMPLE' | 'DETAILED' | 'PANDIT'>('DETAILED');
   const [activeGraha, setActiveGraha] = useState<string | null>('Saturn');
-  const [activeVolumeIndex, setActiveVolumeIndex] = useState<number>(0);
+  // Accordion-style volume browsing: first volume open, the rest collapsed.
+  const [openVolumes, setOpenVolumes] = useState<Set<number>>(() => new Set([0]));
   const [activeDivision, setActiveDivision] = useState<number>(1); // 1 = D1, 9 = D9, 10 = D10, 60 = D60
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [lang, setLang] = useState('en');
+
+  // P0 UX: demo chip, city autocomplete, live validation, geolocation
+  const [isDemoProfile, setIsDemoProfile] = useState(true);
+  const [cityQuery, setCityQuery] = useState('');
+  const [citySuggestions, setCitySuggestions] = useState<ReturnType<typeof searchCities>>([]);
+  const [showCitySuggestions, setShowCitySuggestions] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Dynamic Birth Input State (URL params > localStorage > Default Bilaspur 1989)
   const [birthState, setBirthState] = useState({
@@ -57,6 +175,27 @@ export default function MasterKundliReportClient() {
     locationName: 'Bilaspur, Chhattisgarh, India'
   });
 
+  // Pipeline state (KUNDLI_INV_015 / fail-safe UX)
+  const [pipelineState, setPipelineState] = useState<PipelineState | null>(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [failSafe, setFailSafe] = useState<{ message: string; code: string } | null>(null);
+  const [lastPdfMeta, setLastPdfMeta] = useState<{ pageCount: number; fileSizeKB: number } | null>(null);
+
+  // RAW input that faithfully reflects what the caller actually supplied.
+  // NO silent default substitution happens here — the pipeline validates it.
+  const rawInputRef = useRef<RawBirthInput | null>(null);
+
+  // The demo profile is a complete, explicit PROFILE (never a fallback).
+  const DEMO_PROFILE = {
+    name: 'Prabhakar Sharma',
+    birthDate: '1989-05-26',
+    birthTime: '02:20:30',
+    latitude: 22.0797,
+    longitude: 82.1391,
+    timezone: 5.5,
+    locationName: 'Bilaspur, Chhattisgarh, India'
+  };
+
   useEffect(() => {
     const savedLanguage = localStorage.getItem('cosmictantra_lang');
     if (savedLanguage) {
@@ -64,7 +203,7 @@ export default function MasterKundliReportClient() {
       document.documentElement.lang = savedLanguage;
     }
 
-    // 1. Check URL parameters
+    // 1. Check URL parameters — record EXACTLY what was provided.
     const paramName = searchParams.get('name');
     const paramDob = searchParams.get('dob');
     const paramTob = searchParams.get('tob');
@@ -72,51 +211,177 @@ export default function MasterKundliReportClient() {
     const paramLat = searchParams.get('lat');
     const paramLng = searchParams.get('lng') || searchParams.get('lon');
     const paramTz = searchParams.get('tz');
+    const paramTzId = searchParams.get('tzid');
 
-    if (paramDob) {
+    const urlProvided = paramDob || paramLat || paramCity || paramName;
+
+    if (urlProvided) {
+      // Display state keeps the legacy look, but the RAW input preserves
+      // the caller's true values — including what is MISSING.
+      rawInputRef.current = {
+        ...(paramName ? { name: paramName } : {}),
+        ...(paramDob ? { birthDate: paramDob } : {}),
+        ...(paramTob ? { birthTime: paramTob } : {}),
+        ...(paramCity ? { locationName: paramCity } : {}),
+        ...(paramLat ? { latitude: parseFloat(paramLat) } : {}),
+        ...(paramLng ? { longitude: parseFloat(paramLng) } : {}),
+        ...(paramTz ? { utcOffsetHours: parseFloat(paramTz) } : {}),
+        ...(paramTzId ? { timezoneId: paramTzId } : {}),
+        coordinateProvenance: (paramLat && paramLng) ? 'MANUAL' : undefined
+      };
       setBirthState({
-        name: paramName || 'Seeker',
-        birthDate: paramDob,
-        birthTime: paramTob || '10:30:00',
-        latitude: paramLat ? parseFloat(paramLat) : 22.0797,
-        longitude: paramLng ? parseFloat(paramLng) : 82.1391,
-        timezone: paramTz ? parseFloat(paramTz) : 5.5,
-        locationName: paramCity || 'Bilaspur, India'
+        name: paramName || '',
+        birthDate: paramDob || '',
+        birthTime: paramTob || '',
+        latitude: paramLat ? parseFloat(paramLat) : Number.NaN,
+        longitude: paramLng ? parseFloat(paramLng) : Number.NaN,
+        timezone: paramTz ? parseFloat(paramTz) : Number.NaN,
+        locationName: paramCity || ''
       });
+      setIsDemoProfile(false);
       return;
     }
 
-    // 2. Check localStorage
+    // 2. Check localStorage (complete profile or nothing — no partial merging)
     try {
       const saved = localStorage.getItem('cosmictantra_active_kundli');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.birthDate) {
+        const hasComplete = parsed.birthDate && parsed.birthTime && (parsed.latitude !== undefined || parsed.birthLat !== undefined) && (parsed.longitude !== undefined || parsed.birthLon !== undefined || parsed.lng !== undefined);
+        if (hasComplete) {
+          const lat = Number(parsed.latitude ?? parsed.birthLat);
+          const lng = Number(parsed.longitude ?? parsed.birthLon ?? parsed.lng);
+          rawInputRef.current = {
+            name: parsed.name || 'Seeker',
+            birthDate: parsed.birthDate,
+            birthTime: parsed.birthTime,
+            locationName: parsed.city || parsed.locationName || '',
+            latitude: lat,
+            longitude: lng,
+            ...(parsed.timezone ? { utcOffsetHours: Number(parsed.timezone) } : {}),
+            coordinateProvenance: 'PROFILE'
+          };
           setBirthState({
             name: parsed.name || 'Seeker',
             birthDate: parsed.birthDate,
-            birthTime: parsed.birthTime || '10:30:00',
-            latitude: parsed.latitude || 22.0797,
-            longitude: parsed.longitude || 82.1391,
-            timezone: parsed.timezone || 5.5,
-            locationName: parsed.city || parsed.locationName || 'Bilaspur, India'
+            birthTime: parsed.birthTime,
+            latitude: lat,
+            longitude: lng,
+            timezone: Number(parsed.timezone) || 5.5,
+            locationName: parsed.city || parsed.locationName || 'India'
           });
+          setIsDemoProfile(false);
+          return;
         }
       }
     } catch {}
+
+    // 3. Complete demo profile (explicit PROFILE provenance) — clearly
+    // labelled as sample data so nobody mistakes it for their own chart.
+    rawInputRef.current = { ...DEMO_PROFILE, coordinateProvenance: 'PROFILE' };
+    setIsDemoProfile(true);
   }, [searchParams]);
 
+  // Whether the display input is complete enough to run the chart workspace.
+  // (The qualified PDF pipeline performs its own strict validation; this flag
+  // only protects the interactive preview from NaN coordinates.)
+  const inputComplete = Number.isFinite(birthState.latitude) &&
+    Number.isFinite(birthState.longitude) &&
+    Boolean(birthState.birthDate) && Boolean(birthState.birthTime) && Boolean(birthState.name);
+
+  // Live validation mirror of pipeline GATE 1 — surfaces problems while the
+  // user types, before any generation attempt.
+  const validateLive = (b: typeof birthState): Record<string, string> => {
+    const e: Record<string, string> = {};
+    if (!b.name.trim()) e.name = 'Name is required.';
+    if (!b.birthDate) e.birthDate = 'Birth date is required.';
+    else if (!/^\d{4}-\d{2}-\d{2}$/.test(b.birthDate)) e.birthDate = 'Use YYYY-MM-DD.';
+    else {
+      const [y, m, d] = b.birthDate.split('-').map(Number);
+      if (m < 1 || m > 12 || d < 1 || d > 31) e.birthDate = 'Date is out of range.';
+    }
+    if (!b.birthTime) e.birthTime = 'Birth time is required.';
+    else if (!/^\d{1,2}:\d{2}/.test(b.birthTime)) e.birthTime = 'Use HH:MM (24h).';
+    if (!Number.isFinite(b.latitude) || !Number.isFinite(b.longitude)) {
+      e.lat = 'Latitude and longitude are required together.';
+    } else {
+      if (b.latitude < -90 || b.latitude > 90) e.lat = 'Latitude must be -90…90.';
+      if (b.longitude < -180 || b.longitude > 180) e.lng = 'Longitude must be -180…180.';
+    }
+    return e;
+  };
+
+  const cityAutocomplete = (q: string) => {
+    setCityQuery(q);
+    if (!q.trim()) { setCitySuggestions([]); setShowCitySuggestions(false); return; }
+    const hits = searchCities(q).slice(0, 6);
+    setCitySuggestions(hits);
+    setShowCitySuggestions(hits.length > 0);
+  };
+
+  const pickCity = (c: { name: string; state: string; lat: number; lng: number; tz: number }) => {
+    setBirthState((prev) => ({
+      ...prev,
+      locationName: `${c.name}, ${c.state}`,
+      latitude: c.lat,
+      longitude: c.lng,
+      timezone: c.tz
+    }));
+    setCityQuery('');
+    setCitySuggestions([]);
+    setShowCitySuggestions(false);
+    setFieldErrors((prev) => ({ ...prev, lat: '', lng: '' }));
+  };
+
+  const useMyLocation = () => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setFieldErrors((prev) => ({ ...prev, lat: 'Location access is not available on this device.' }));
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setBirthState((prev) => ({
+          ...prev,
+          latitude: Number(pos.coords.latitude.toFixed(4)),
+          longitude: Number(pos.coords.longitude.toFixed(4)),
+          locationName: prev.locationName || 'My location'
+        }));
+        setFieldErrors((prev) => ({ ...prev, lat: '', lng: '' }));
+        setLocating(false);
+      },
+      () => {
+        setFieldErrors((prev) => ({ ...prev, lat: 'Could not read your location. Please type the city or coordinates.' }));
+        setLocating(false);
+      },
+      { timeout: 8000 }
+    );
+  };
+
+  // Surface the fail-safe immediately when the caller's input was incomplete.
+  useEffect(() => {
+    if (!inputComplete && rawInputRef.current && !isGeneratingPdf) {
+      setFailSafe({
+        message: 'We could not complete this Kundli correctly. Your report has not been issued. Please verify the birth details (name, date, time and both coordinates) or contact CosmicTantra support.',
+        code: 'KUNDLI_INPUT_INVALID'
+      });
+    }
+  }, [inputComplete, isGeneratingPdf]);
+
   // Compute Canonical Astronomical Snapshot & 17-Volume Book Model
+  // (preview only — the PDF path never uses this fallback data)
+  const displayProfile = inputComplete ? birthState : DEMO_PROFILE;
   const snapshot = useMemo(() => {
     return getCanonicalJyotishSnapshot({
-      birthDate: birthState.birthDate,
-      birthTime: birthState.birthTime,
-      latitude: birthState.latitude,
-      longitude: birthState.longitude,
-      timezone: birthState.timezone,
-      locationName: birthState.locationName
+      birthDate: displayProfile.birthDate,
+      birthTime: displayProfile.birthTime,
+      latitude: displayProfile.latitude,
+      longitude: displayProfile.longitude,
+      timezone: Number.isFinite(displayProfile.timezone) ? displayProfile.timezone : 5.5,
+      locationName: displayProfile.locationName
     });
-  }, [birthState]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayProfile.birthDate, displayProfile.birthTime, displayProfile.latitude, displayProfile.longitude, displayProfile.timezone, displayProfile.locationName]);
 
   const book = useMemo(() => {
     return generateKundliBookModel(birthState.name, snapshot, 'COMPLETE_VEDIC_KUNDLI');
@@ -180,98 +445,116 @@ export default function MasterKundliReportClient() {
   }, [activeDivision, snapshot, chartD1Obj]);
 
   const grahas = snapshot.planetsArray;
-  const activeVolume = book.volumes[activeVolumeIndex] || book.volumes[0];
+
+  const selectedPlanetInfo = useMemo(() => {
+    if (!chartPlanet) return null;
+    const g = (Array.isArray(grahas) ? grahas : []).find((p: any) => p.name === chartPlanet.name);
+    if (!g) return null;
+    return {
+      name: g.name,
+      sanskrit: g.sanskrit || '',
+      rashiName: g.rashiName || '',
+      rashiEn: g.rashiEn || '',
+      degreeStr: g.degreeStr || '',
+      nakshatra: g.nakshatra?.name ?? '',
+      pada: g.pada ?? g.nakshatra?.pada ?? '',
+      house: chartPlanet.house || g.house,
+      isRetrograde: !!g.isRetrograde,
+      dignity: g.dignity || g.status || 'NEUTRAL',
+      karaka: g.karaka || '',
+      nature: g.nature || '',
+      longitude: g.longitude ?? null
+    };
+  }, [chartPlanet, grahas]);
+
+  const toggleVolume = (idx: number) => {
+    chitiSensory.playTick();
+    setOpenVolumes((prev) => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx); else next.add(idx);
+      return next;
+    });
+  };
 
   const handlePrint = () => {
     chitiSensory.playTick();
     window.print();
   };
 
+  /**
+   * QUALIFIED PDF PATH — runs the full Kundli pipeline with typed gates:
+   *   input validation -> geo/tz resolution -> calculation -> canonical model
+   *   -> interpretation -> report model -> pagination-guarded renderer
+   *   -> post-generation PDF integrity validation -> delivery.
+   * A PDF is only downloaded when the pipeline reaches READY_FOR_DELIVERY.
+   */
   const handleDownloadPDF = async () => {
     chitiSensory.playTick();
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const isHindi = lang === 'hi';
-    const devanagariReady = isHindi ? await registerDevanagariFont(doc) : false;
-    const pdfFont = getPdfFontFamily(lang, devanagariReady);
-    if (isHindi && !devanagariReady) {
-      const warning = 'हिंदी PDF फ़ॉन्ट लोड नहीं हो सका। PDF एक वैकल्पिक फ़ॉन्ट के साथ बनाई जाएगी और कुछ हिंदी अक्षर सही न दिखें।';
-      console.warn(`[Kundli PDF] ${warning}`);
-      window.alert(warning);
+    setIsGeneratingPdf(true);
+    setFailSafe(null);
+    setLastPdfMeta(null);
+    setPipelineState(null);
+    try {
+      const raw = (rawInputRef.current ?? {}) as RawBirthInput;
+      const result: KundliPipelineResult = await generateKundliPdf(raw, {
+        locale: lang === 'hi' ? 'hi' : 'en',
+        onMetric: (name) => {
+          const stageMap: Record<string, PipelineState> = {
+            'pipeline.gate1.passed': 'INPUT_VALIDATED',
+            'pipeline.gate2.passed': 'CALCULATION_COMPLETE',
+            'pipeline.gate3.passed': 'REPORT_READY',
+            'pipeline.render.passed': 'PDF_RENDERED',
+            'pipeline.validate.passed': 'PDF_VALIDATED',
+            'pipeline.delivered': 'READY_FOR_DELIVERY'
+          };
+          const next = stageMap[name];
+          if (next) setPipelineState(next);
+        }
+      });
+
+      if (result.state === 'READY_FOR_DELIVERY' && result.pdfBuffer && result.report) {
+        const blob = new Blob([result.pdfBuffer as unknown as BlobPart], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const safeName = (result.report.subject.name || 'Seeker').replace(/[^a-z0-9]+/gi, '_');
+        const dob = result.report.subject.birthDate || 'birthdate';
+        a.href = url;
+        a.download = `Kundli_${safeName}_${dob}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 2000);
+        setLastPdfMeta({
+          pageCount: result.pdfQuality?.pageCount ?? 0,
+          fileSizeKB: Math.round(result.pdfBuffer.byteLength / 1024)
+        });
+      } else {
+        // Fail-safe: never show a corrupt/incomplete Kundli.
+        const code = result.errorCode ?? 'KUNDLI_INPUT_INVALID';
+        setFailSafe({
+          message: KUNDLI_SAFE_MESSAGES[code as keyof typeof KUNDLI_SAFE_MESSAGES] ?? KUNDLI_SAFE_MESSAGES.KUNDLI_INPUT_INVALID,
+          code
+        });
+      }
+    } catch (err) {
+      console.error('[Kundli PDF] generation failed', err);
+      setFailSafe({
+        message: KUNDLI_SAFE_MESSAGES.KUNDLI_PDF_RENDER_FAILED,
+        code: 'KUNDLI_PDF_RENDER_FAILED'
+      });
+    } finally {
+      setIsGeneratingPdf(false);
+      setTimeout(() => setPipelineState(null), 1200);
     }
-    const text = (en: string, hi: string) => isHindi ? hi : en;
-    const gold = '#8E6F1D';
-    const ink = '#1C1917';
-    const margin = 18;
-    let y = 20;
-    let page = 1;
-
-    const header = () => {
-      doc.setFont(pdfFont, 'normal');
-      doc.setFontSize(8); doc.setTextColor('#78716C');
-      doc.text(`CosmicTantra • ${birthState.name}`, margin, 10);
-      doc.text(`${page}`, 192, 10, { align: 'right' });
-      doc.setDrawColor('#E5D7BC'); doc.line(margin, 13, 192, 13);
-    };
-    const newPage = () => { doc.addPage(); page += 1; y = 22; header(); };
-    const ensure = (h = 8) => { if (y + h > 278) newPage(); };
-    const line = (value: string, size = 9, bold = false) => {
-      const clean = String(value).replace(/[\u0000-\u001f]/g, '');
-      doc.setFont(pdfFont, bold ? 'bold' : 'normal');
-      doc.setFontSize(size);
-      const lines = doc.splitTextToSize(clean, 174);
-      ensure(lines.length * (size * .48) + 3);
-      doc.setTextColor(ink);
-      doc.text(lines, margin, y); y += lines.length * (size * .48) + 3;
-    };
-    const title = (value: string) => { ensure(13); doc.setFont(pdfFont,'bold'); doc.setFontSize(13); doc.setTextColor(gold); doc.text(value, margin, y); y += 8; doc.setDrawColor('#D8C89F'); doc.line(margin,y,192,y); y += 5; };
-    const section = (value: string) => { ensure(12); doc.setFont(pdfFont,'bold'); doc.setFontSize(10); doc.setTextColor(gold); doc.text(value, margin, y); y += 6; };
-    const valueLabel = (label: string, value: unknown) => line(`${label}: ${value ?? '—'}`);
-
-    header();
-    doc.setFont(pdfFont,'bold'); doc.setFontSize(20); doc.setTextColor(gold);
-    doc.text(text('COSMICTANTRA MASTER KUNDLI', 'COSMICTANTRA जन्म कुण्डली'), 105, 34, { align: 'center' });
-    doc.setFontSize(11); doc.setTextColor(ink); doc.text(text('Detailed Vedic astrology report', 'विस्तृत वैदिक ज्योतिष रिपोर्ट'), 105, 42, { align: 'center' });
-    y = 58;
-    section(text('Birth details', 'जन्म विवरण'));
-    valueLabel(text('Name', 'नाम'), birthState.name); valueLabel(text('Date and time', 'दिनांक और समय'), `${birthState.birthDate} ${birthState.birthTime}`); valueLabel(text('Birth place', 'जन्म स्थान'), birthState.locationName);
-    valueLabel(text('Coordinates', 'निर्देशांक'), `${birthState.latitude.toFixed(4)}°, ${birthState.longitude.toFixed(4)}°`); valueLabel('UTC', `+${birthState.timezone}`);
-    section(text('Calculation standard', 'गणना मानक'));
-    valueLabel('Ayanamsha', `Lahiri / Chitra Paksha (${snapshot.meta.ayanamshaValue.toFixed(4)}°)`); valueLabel('Engine', snapshot.meta.engineVersion); valueLabel('Julian Day', snapshot.meta.julianDay.toFixed(5));
-
-    newPage(); title(text('I. Janma Panchang and essentials', 'I. जन्म पंचांग और मूल विवरण'));
-    valueLabel(text('Ascendant', 'लग्न'), `${snapshot.lagna.rashiName} (${snapshot.lagna.degreeStr})`);
-    valueLabel(text('Birth Nakshatra', 'जन्म नक्षत्र'), `${snapshot.birthPanchang.nakshatra.name} • Pada ${snapshot.birthPanchang.nakshatra.pada}`);
-    valueLabel(text('Tithi', 'तिथि'), snapshot.birthPanchang.udayaTithi.fullName); valueLabel('Masa', snapshot.birthPanchang.masa?.name || 'Vedic'); valueLabel('Yoga', snapshot.birthPanchang.yoga.name); valueLabel('Karana', snapshot.birthPanchang.karana.name);
-    section(text('Rashi chart placements', 'राशि कुण्डली ग्रह स्थिति'));
-    snapshot.planetsArray.forEach((p: any) => valueLabel(`${p.name}${p.isRetrograde ? ' (R)' : ''}`, `${p.rashiName} • ${p.degreeStr} • House ${p.house} • ${p.dignity || ''}`));
-
-    newPage(); title(text('II. Vimshottari dasha timeline', 'II. विंशोत्तरी दशा क्रम'));
-    valueLabel(text('Current period', 'वर्तमान दशा'), snapshot.dasha.currentPeriodString); valueLabel(text('Date range', 'अवधि'), snapshot.dasha.currentDateRange);
-    const dasha = snapshot.dasha as any;
-    Object.entries(dasha).forEach(([key, val]) => { if (typeof val === 'string' || typeof val === 'number') valueLabel(key.replace(/([A-Z])/g,' $1'), val); });
-    section(text('Interpretive book volumes', 'व्याख्यात्मक खंड'));
-    book.volumes.forEach((vol: any) => { ensure(10); line(`${vol.volumeNumber}. ${vol.title} — ${vol.sanskritTitle}`, 9, true); line(vol.description || ''); });
-
-    newPage(); title(text('III. Divisional charts and strengths', 'III. वर्ग कुण्डलियाँ और बल'));
-    ['shodashavarga','balas','ashtakavarga','yogas','doshas'].forEach((key) => {
-      const data = (snapshot as any)[key]; if (!data) return; section(key.replace(/([A-Z])/g,' $1').toUpperCase());
-      const dump = (obj: any, prefix = '') => { if (obj === null || obj === undefined) return; if (typeof obj !== 'object') { line(`${prefix}: ${obj}`); return; } Object.entries(obj).slice(0, 80).forEach(([k,v]) => dump(v, prefix ? `${prefix}.${k}` : k)); };
-      dump(data);
-    });
-
-    newPage(); title(text('IV. Complete technical appendix', 'IV. सम्पूर्ण तकनीकी परिशिष्ट'));
-    const dump = (obj: any, prefix = '') => { if (obj === null || obj === undefined) return; if (typeof obj !== 'object') { line(`${prefix}: ${obj}`); return; } Object.entries(obj).forEach(([k,v]) => dump(v, prefix ? `${prefix}.${k}` : k)); };
-    dump(snapshot);
-    section(text('Important note', 'महत्वपूर्ण सूचना'));
-    line(text('This report presents calculated sidereal positions and traditional interpretive material. It is not a substitute for professional medical, legal, financial, or mental-health advice.', 'यह रिपोर्ट साइडीरियल गणनाओं और पारंपरिक व्याख्या पर आधारित है। यह चिकित्सकीय, कानूनी, वित्तीय या मानसिक स्वास्थ्य सलाह का विकल्प नहीं है।'));
-    doc.save(`CosmicTantra_Master_Kundli_${birthState.name.replace(/[^a-z0-9]+/gi, '_')}.pdf`);
   };
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-[#1C1917] font-sans antialiased pb-24 selection:bg-[#E5D7BC]">
-      
+
+      {/* 0. Global site header (logo, navigation, language) */}
+      <GlobalHeader />
+
       {/* 1. Header Toolbar */}
-      <header className="sticky top-0 z-50 bg-[#FDFBF7]/95 backdrop-blur-md border-b border-[#E5D7BC] px-4 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-4 print:hidden">
+      <header className="sticky top-16 sm:top-20 z-40 bg-[#FDFBF7]/95 backdrop-blur-md border-b border-[#E5D7BC] px-4 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-4 print:hidden">
         
         {/* Left: Branding & Subject Info */}
         <div className="flex items-center gap-3">
@@ -285,18 +568,30 @@ export default function MasterKundliReportClient() {
           <div>
             <div className="flex items-center gap-2">
               <span className="font-serif font-bold text-base lg:text-lg tracking-tight text-[#1C1917]">COSMICTANTRA MASTER KUNDLI</span>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[#8E6F1D]/15 text-[#8E6F1D] border border-[#8E6F1D]/20 uppercase tracking-wider">
-                V1 FOLIO
-              </span>
             </div>
-            <p className="text-[11px] text-[#78716C] font-mono-data">
+            <p className="text-[11px] text-[#78716C] font-mono-data flex flex-wrap items-center gap-1.5">
               <strong>{birthState.name}</strong> • {birthState.birthDate}, {birthState.birthTime} • {birthState.locationName}
+              {isDemoProfile && (
+                <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300 uppercase tracking-wide">
+                  <Sparkles className="w-2.5 h-2.5" /> Sample data — edit to yours
+                </span>
+              )}
             </p>
           </div>
         </div>
 
-        {/* Center: Mode Switcher (Folio vs Workbench) */}
+        {/* Center: Mode Switcher (Overview / Folio / Workbench) */}
         <div className="flex items-center gap-1 bg-[#F5EFE6] p-1 rounded-xl border border-[#E5D7BC]">
+          <button
+            onClick={() => {
+              chitiSensory.playTick();
+              setActiveTab('OVERVIEW');
+            }}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${activeTab === 'OVERVIEW' ? 'bg-[#1C1917] text-[#FDFBF7] shadow-sm' : 'text-[#78716C] hover:text-[#1C1917]'}`}
+          >
+            <LayoutDashboard className="w-3.5 h-3.5" />
+            <span>Overview</span>
+          </button>
           <button
             onClick={() => {
               chitiSensory.playTick();
@@ -305,9 +600,9 @@ export default function MasterKundliReportClient() {
             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${activeTab === 'FOLIO' ? 'bg-[#1C1917] text-[#FDFBF7] shadow-sm' : 'text-[#78716C] hover:text-[#1C1917]'}`}
           >
             <BookOpen className="w-3.5 h-3.5" />
-            <span>17-Volume Book</span>
+            <span className="hidden sm:inline">17-Volume Book</span>
+            <span className="sm:hidden">Book</span>
           </button>
-
           <button
             onClick={() => {
               chitiSensory.playTick();
@@ -316,7 +611,8 @@ export default function MasterKundliReportClient() {
             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${activeTab === 'WORKBENCH' ? 'bg-[#1C1917] text-[#FDFBF7] shadow-sm' : 'text-[#78716C] hover:text-[#1C1917]'}`}
           >
             <Grid className="w-3.5 h-3.5" />
-            <span>Interactive Workbench</span>
+            <span className="hidden sm:inline">Workbench</span>
+            <span className="sm:hidden">Charts</span>
           </button>
         </div>
 
@@ -355,20 +651,94 @@ export default function MasterKundliReportClient() {
 
           <button
             onClick={handleDownloadPDF}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#8E6F1D] hover:bg-[#785E18] text-white transition-colors shadow-sm"
+            disabled={isGeneratingPdf}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#8E6F1D] hover:bg-[#785E18] text-white transition-colors shadow-sm disabled:opacity-60 disabled:cursor-wait"
           >
             <Download className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">DOWNLOAD PDF</span>
+            <span className="hidden sm:inline">{isGeneratingPdf ? 'VALIDATING…' : 'DOWNLOAD PDF'}</span>
+            <span className="sr-only">DOWNLOAD PDF</span>
           </button>
         </div>
 
       </header>
 
+      {/* Generation progress / fail-safe strip (real backend states only) */}
+      {(isGeneratingPdf || pipelineState || failSafe) && (
+        <div className="border-b border-[#E5D7BC] bg-[#FAF6EF] px-4 lg:px-8 py-3 print:hidden">
+          {isGeneratingPdf ? (
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+              <span className="text-[11px] font-bold text-[#8E6F1D] uppercase tracking-wider">Kundli generation</span>
+              {[
+                ['INPUT_VALIDATED', 'Birth details validated'],
+                ['CALCULATION_COMPLETE', 'Chart calculated'],
+                ['REPORT_READY', 'Report assembled'],
+                ['PDF_RENDERED', 'PDF rendered'],
+                ['PDF_VALIDATED', 'Quality checked']
+              ].map(([state, label]) => {
+                const idx = ['INPUT_VALIDATED', 'CALCULATION_COMPLETE', 'REPORT_READY', 'PDF_RENDERED', 'PDF_VALIDATED', 'READY_FOR_DELIVERY'].indexOf(state);
+                const cur = ['INPUT_VALIDATED', 'CALCULATION_COMPLETE', 'REPORT_READY', 'PDF_RENDERED', 'PDF_VALIDATED', 'READY_FOR_DELIVERY'].indexOf(pipelineState ?? '');
+                const done = cur >= 0 && idx < cur;
+                const active = pipelineState === state || (state === 'PDF_VALIDATED' && pipelineState === 'READY_FOR_DELIVERY');
+                return (
+                  <span key={state} className={`flex items-center gap-1.5 text-[11px] ${done || active ? 'text-[#1C1917] font-semibold' : 'text-[#A8A29E]'}`}>
+                    <CheckCircle2 className={`w-3.5 h-3.5 ${done || active ? 'text-[#8E6F1D]' : ''}`} />
+                    {label}
+                  </span>
+                );
+              })}
+              {lastPdfMeta && (
+                <span className="text-[10px] font-mono-data text-[#78716C]">
+                  ✓ {lastPdfMeta.pageCount} pages · {lastPdfMeta.fileSizeKB} KB · quality PASS
+                </span>
+              )}
+            </div>
+          ) : failSafe ? (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-start gap-2.5 max-w-3xl">
+                <Shield className="w-4 h-4 text-[#B45309] mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs font-semibold text-[#1C1917]">{failSafe.message}</p>
+                  <p className="text-[10px] font-mono-data text-[#78716C] mt-0.5">
+                    Engineering reason: {failSafe.code} · No PDF was issued.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsEditModalOpen(true)}
+                className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg border border-[#8E6F1D]/30 bg-white text-[#8E6F1D] hover:bg-[#F5EFE6] transition-colors"
+              >
+                <Edit3 className="w-3.5 h-3.5" /> Verify birth details
+              </button>
+            </div>
+          ) : null}
+        </div>
+      )}
+
+      {/* 1b. Ganesh Vandana — the traditional opening of a Kundli.
+          Layout: Ganesh emblem left, invocation centred, CosmicTantra symbol
+          right — mirrored exactly on the PDF cover. */}
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 pt-5 print:hidden">
+        <div className="flex items-center justify-between gap-3 py-3 px-4 sm:px-8 rounded-2xl bg-gradient-to-r from-amber-50 via-white to-amber-50 border border-[#E5D7BC]">
+          <img
+            src="/images/ganesh_vandana_256.png"
+            alt="Shri Ganesh"
+            className="w-12 h-12 sm:w-14 sm:h-14 rounded-full ring-1 ring-amber-200 object-cover shrink-0"
+          />
+          <div className="text-center min-w-0">
+            <p className="text-base lg:text-lg font-serif font-bold text-[#8E6F1D]">॥ श्री गणेशाय नमः ॥</p>
+            <p className="text-[10px] text-[#78716C] font-mono-data">
+              Shri Ganeshaya Namah — may this Kundli be auspicious
+            </p>
+          </div>
+          <CosmicTantraEmblem className="w-12 h-12 sm:w-14 sm:h-14 shrink-0" />
+        </div>
+      </div>
+
       {/* 2. Graha Matrix Quick Bar */}
       <div className="bg-[#FAF6EF] border-b border-[#E5D7BC] px-4 lg:px-8 py-2 overflow-x-auto scrollbar-thin print:hidden">
         <div className="flex items-center gap-2 min-w-max">
           <span className="text-[11px] font-bold text-[#8E6F1D] uppercase tracking-wider flex items-center gap-1 mr-1">
-            <Activity className="w-3.5 h-3.5" /> Planetary Sphuta:
+            <Activity className="w-3.5 h-3.5" /> Graha Positions:
           </span>
           {grahas.map((g) => {
             const isSelected = activeGraha === g.name;
@@ -392,162 +762,409 @@ export default function MasterKundliReportClient() {
         </div>
       </div>
 
+      {/* 2b. Kundli at a Glance — the Era-2/3 convention: summary before depth */}
+      <section className="max-w-7xl mx-auto px-4 lg:px-8 pt-6 print:hidden">
+        <div className="rounded-2xl border border-[#E5D7BC] bg-white shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#F0E6D2] bg-[#FAF6EF]">
+            <h2 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5" /> Kundli at a Glance
+            </h2>
+            <span className="text-[10px] font-mono-data text-[#78716C]">{snapshot.meta.engineVersion}</span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 divide-x divide-y lg:divide-y-0 divide-[#F0E6D2]">
+            <div className="px-4 py-3">
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">Lagna</div>
+              <div className="text-sm font-bold text-[#1C1917] mt-0.5">{snapshot.lagna.rashiName}</div>
+              <div className="text-[10px] text-[#78716C]">{snapshot.lagna.rashiEn} · {snapshot.lagna.degreeStr}</div>
+            </div>
+            <div className="px-4 py-3">
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">Moon Rashi</div>
+              <div className="text-sm font-bold text-[#1C1917] mt-0.5">{(snapshot.planets as any)?.Moon?.rashiName ?? '—'}</div>
+              <div className="text-[10px] text-[#78716C]">{(snapshot.planets as any)?.Moon?.rashiEn ?? ''}</div>
+            </div>
+            <div className="px-4 py-3">
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">Janma Nakshatra</div>
+              <div className="text-sm font-bold text-[#1C1917] mt-0.5">{snapshot.birthPanchang.nakshatra?.name ?? '—'}</div>
+              <div className="text-[10px] text-[#78716C]">pada {(snapshot.birthPanchang.nakshatra as any)?.pada ?? '—'}</div>
+            </div>
+            <div className="px-4 py-3">
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">Tithi</div>
+              <div className="text-sm font-bold text-[#1C1917] mt-0.5">{snapshot.birthPanchang.udayaTithi?.fullName ?? '—'}</div>
+              <div className="text-[10px] text-[#78716C]">Udaya Tithi</div>
+            </div>
+            <div className="px-4 py-3">
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">Manglik</div>
+              <div className="text-sm font-bold mt-0.5">
+                {snapshot.yogasAndDoshas.manglik.isManglik
+                  ? <span className="text-[#B45309]">{snapshot.yogasAndDoshas.manglik.isCancelled ? 'Cancelled' : `Yes · ${snapshot.yogasAndDoshas.manglik.severity}`}</span>
+                  : <span className="text-[#15803D]">Not present</span>}
+              </div>
+              <div className="text-[10px] text-[#78716C]">as per engine rules</div>
+            </div>
+            <div className="px-4 py-3">
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">Current Dasha</div>
+              <div className="text-sm font-bold text-[#1C1917] mt-0.5">{snapshot.dasha.currentMahadasha}</div>
+              <div className="text-[10px] text-[#78716C]">{snapshot.dasha.currentAntardasha} AD · {snapshot.dasha.currentDateRange}</div>
+              <div className="text-[9px] font-mono-data text-[#A8A29E] mt-0.5">Dasha balance at birth: {snapshot.dasha.startingBalance}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* 3. Main Workspace Body */}
-      {activeTab === 'FOLIO' ? (
+      {activeTab === 'OVERVIEW' ? (
         /* ================================================================ */
-        /* MODE A: 17-VOLUME ENCYCLOPEDIC FOLIO                             */
+        /* MODE O: OVERVIEW — chart-first, progressive disclosure           */
         /* ================================================================ */
-        <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
-          {/* Left Sidebar: 17 Volumes Navigation */}
-          <aside className="lg:col-span-3 space-y-1 print:hidden">
-            <div className="text-xs font-bold uppercase tracking-wider text-[#78716C] px-3 pb-2 flex items-center justify-between">
-              <span>17 Book Volumes</span>
-              <span className="text-[10px] bg-[#E5D7BC] px-1.5 py-0.5 rounded text-[#1C1917] font-mono-data">17 / 17</span>
-            </div>
-            <div className="space-y-1 max-h-[calc(100vh-200px)] overflow-y-auto pr-1 scrollbar-thin">
-              {book.volumes.map((vol, idx) => {
-                const isCurrent = activeVolumeIndex === idx;
-                return (
-                  <button
-                    key={vol.volumeNumber}
-                    onClick={() => {
-                      chitiSensory.playTick();
-                      setActiveVolumeIndex(idx);
-                    }}
-                    className={`w-full text-left px-3 py-2.5 rounded-xl text-xs transition-all flex items-start justify-between gap-2 border ${isCurrent ? 'bg-[#8E6F1D]/10 text-[#8E6F1D] font-semibold border-[#8E6F1D]/30 shadow-xs' : 'text-[#57534E] hover:bg-[#F5EFE6] border-transparent'}`}
-                  >
-                    <div className="truncate">
-                      <div className="font-mono-data text-[10px] text-[#8E6F1D] font-bold">PART {vol.volumeNumber}</div>
-                      <div className="truncate font-medium">{vol.title.split(':')[0]}</div>
-                      <div className="text-[10px] text-[#78716C] truncate font-serif">{vol.sanskritTitle}</div>
-                    </div>
-                    {isCurrent && <ChevronRight className="w-3.5 h-3.5 shrink-0 mt-1 text-[#8E6F1D]" />}
-                  </button>
-                );
-              })}
-            </div>
-          </aside>
-
-          {/* Center/Right: Active Volume Viewer */}
-          <div className="lg:col-span-9 space-y-8">
-            
-            {/* Volume Title Card */}
-            <div className="bg-white rounded-2xl p-6 sm:p-8 border border-[#E5D7BC] shadow-sm relative overflow-hidden">
-              <div className="absolute right-4 top-4 text-7xl font-serif text-[#F5EFE6] font-bold select-none pointer-events-none">
-                {activeVolume.volumeNumber}
+        <main className="max-w-5xl mx-auto px-4 lg:px-8 py-8 space-y-6">
+          {/* Row 1: D1 chart + current period */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white rounded-2xl p-5 border border-[#E5D7BC] shadow-sm space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" /> Rashi Chart (D1)
+                </h3>
+                <span className="text-[10px] font-mono-data text-[#78716C]">Lagna {snapshot.lagna.rashiName}</span>
               </div>
-              <div className="relative z-10 space-y-1.5">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[11px] font-bold bg-[#8E6F1D]/10 text-[#8E6F1D] font-mono-data">
-                  VOLUME {activeVolume.volumeNumber} OF XVII
-                </div>
-                <h1 className="text-2xl sm:text-3xl font-serif font-bold text-[#1C1917] tracking-tight">
-                  {activeVolume.title}
-                </h1>
-                <p className="text-sm font-serif text-[#8E6F1D] italic font-semibold">
-                  {activeVolume.sanskritTitle}
-                </p>
-                <p className="text-xs sm:text-sm text-[#57534E] max-w-2xl pt-1 leading-relaxed">
-                  {activeVolume.description}
-                </p>
+              <div className="flex flex-col items-center gap-3">
+                <NorthIndianChart
+                  kundali={chartD1Obj}
+                  onPlanetClick={(name: string, house: number) => setChartPlanet({ name, house })}
+                  selectedPlanet={chartPlanet?.name ?? undefined}
+                />
+                <p className="text-[10px] text-[#A8A29E] font-mono-data -mt-1">Tap a planet for its details</p>
               </div>
-            </div>
-
-            {/* Selected Planet Micro-Banner */}
-            {activeGraha && (
-              <div className="bg-[#FAF6EF] rounded-xl p-4 border border-[#E5D7BC] flex flex-wrap items-center justify-between gap-3 text-xs font-mono-data">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-[#8E6F1D] uppercase">Selected Graha:</span>
-                  <span className="font-bold text-sm text-[#1C1917]">{activeGraha}</span>
-                  <span className="text-[#78716C]">
-                    ({snapshot.planets[activeGraha]?.rashiName} {snapshot.planets[activeGraha]?.degreeStr}, House {snapshot.planets[activeGraha]?.house})
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 text-[11px] text-[#57534E]">
-                  <span>Shadbala: <strong>{snapshot.balas?.shadbala[activeGraha]?.totalRupas.toFixed(2)} Rupas</strong></span>
-                  <span>•</span>
-                  <span>BAV: <strong>{snapshot.ashtakavarga?.bav[activeGraha]?.[(snapshot.planets[activeGraha]?.rashiId || 1) - 1]} Bindus</strong></span>
-                  <span>•</span>
-                  <span>Status: <strong>{snapshot.planets[activeGraha]?.isRetrograde ? 'Vakra (Retrograde)' : 'Direct'}</strong></span>
-                </div>
-              </div>
-            )}
-
-            {/* Charts Grid in Relevant Volumes */}
-            {(activeVolumeIndex === 0 || activeVolumeIndex === 1 || activeVolumeIndex === 3) && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white p-5 rounded-2xl border border-[#E5D7BC] shadow-sm space-y-3">
+              {selectedPlanetInfo && (
+                <div className="rounded-xl border border-[#8E6F1D]/30 bg-amber-50/60 p-3 space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold font-serif text-[#1C1917]">D1 Lagna Rashi Chart</h3>
-                    <span className="text-[10px] font-mono-data text-[#8E6F1D] bg-[#8E6F1D]/10 px-2 py-0.5 rounded font-bold">Lagna: {snapshot.lagna.rashiName}</span>
-                  </div>
-                  <div className="max-w-[340px] mx-auto aspect-square">
-                    <NorthIndianChart kundali={chartD1Obj} />
-                  </div>
-                </div>
-
-                <div className="bg-white p-5 rounded-2xl border border-[#E5D7BC] shadow-sm space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold font-serif text-[#1C1917]">D9 Navamsha Chart</h3>
-                    <span className="text-[10px] font-mono-data text-[#8E6F1D] bg-[#8E6F1D]/10 px-2 py-0.5 rounded font-bold">Dharmamsha</span>
-                  </div>
-                  <div className="max-w-[340px] mx-auto aspect-square">
-                    <NorthIndianChart kundali={chartD9Obj} />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Volume Content Sections */}
-            <div className="space-y-6">
-              {activeVolume.sections.map((sec, sIdx) => (
-                <div key={sIdx} className="bg-white rounded-2xl p-6 sm:p-7 border border-[#E5D7BC] shadow-sm space-y-4">
-                  <div className="border-b border-[#F0E6D2] pb-3 flex items-center justify-between">
-                    <h2 className="text-base sm:text-lg font-serif font-bold text-[#1C1917]">{sec.title}</h2>
-                    <span className="text-[10px] font-mono-data uppercase tracking-wider text-[#8E6F1D] font-bold bg-[#8E6F1D]/10 px-2 py-0.5 rounded">
-                      {sec.category || `SEC ${sIdx + 1}`}
+                    <span className="text-xs font-bold text-[#1C1917]">
+                      {selectedPlanetInfo.name}
+                      {selectedPlanetInfo.sanskrit ? ` · ${selectedPlanetInfo.sanskrit}` : ''}
                     </span>
+                    <button
+                      onClick={() => setChartPlanet(null)}
+                      className="text-[9px] font-bold uppercase text-[#8E6F1D] hover:underline"
+                    >
+                      ✕ close
+                    </button>
                   </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
+                    <span className="text-[#78716C]">Rashi</span>
+                    <span className="font-semibold text-[#1C1917] text-right">{selectedPlanetInfo.rashiName} ({selectedPlanetInfo.rashiEn})</span>
+                    <span className="text-[#78716C]">Degree</span>
+                    <span className="font-semibold text-[#1C1917] text-right">{selectedPlanetInfo.degreeStr}</span>
+                    <span className="text-[#78716C]">Nakshatra</span>
+                    <span className="font-semibold text-[#1C1917] text-right">{selectedPlanetInfo.nakshatra} pada {selectedPlanetInfo.pada}</span>
+                    <span className="text-[#78716C]">House</span>
+                    <span className="font-semibold text-[#1C1917] text-right">{selectedPlanetInfo.house}</span>
+                    <span className="text-[#78716C]">Dignity</span>
+                    <span className="font-semibold text-[#1C1917] text-right">
+                      {selectedPlanetInfo.isRetrograde ? 'Retrograde · ' : ''}{selectedPlanetInfo.dignity}
+                    </span>
+                    {selectedPlanetInfo.karaka && (
+                      <>
+                        <span className="text-[#78716C]">Karaka</span>
+                        <span className="font-semibold text-[#1C1917] text-right">{selectedPlanetInfo.karaka}</span>
+                      </>
+                    )}
+                    {selectedPlanetInfo.longitude !== null && (
+                      <>
+                        <span className="text-[#78716C]">Sidereal longitude</span>
+                        <span className="font-mono-data text-[#1C1917] text-right">{selectedPlanetInfo.longitude.toFixed(4)}°</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
 
-                  {/* Section Data Grid */}
-                  {sec.data && typeof sec.data === 'object' && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {Object.entries(sec.data).map(([key, val]) => {
-                        if (val === null || val === undefined) return null;
-                        if (typeof val === 'object' && !Array.isArray(val)) {
-                          return (
-                            <div key={key} className="col-span-full p-3.5 rounded-xl bg-[#FAF6EF] border border-[#E5D7BC]/70 space-y-1">
-                              <div className="text-[10px] font-bold text-[#8E6F1D] uppercase font-mono-data">
-                                {key.replace(/([A-Z])/g, ' $1')}
-                              </div>
-                              <div className="text-xs text-[#1C1917] font-mono-data flex flex-wrap gap-x-4 gap-y-1">
-                                {Object.entries(val).map(([subK, subV]) => (
-                                  <span key={subK}>
-                                    <strong className="text-[#78716C]">{subK}:</strong> {String(subV)}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          );
-                        }
-                        return (
-                          <div key={key} className="p-3 rounded-xl bg-[#FAF6EF] border border-[#E5D7BC]/70 space-y-0.5">
-                            <div className="text-[10px] font-mono-data text-[#78716C] uppercase">
-                              {key.replace(/([A-Z])/g, ' $1')}
-                            </div>
-                            <div className="text-xs sm:text-sm font-bold text-[#1C1917] font-mono-data truncate">
-                              {Array.isArray(val) ? `${val.length} items` : String(val)}
-                            </div>
-                          </div>
-                        );
-                      })}
+            <div className="bg-white rounded-2xl p-5 border border-[#E5D7BC] shadow-sm space-y-3">
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5" /> Current Dasha Period
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-xl bg-[#FAF6EF] border border-[#E5D7BC]/70">
+                  <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">Mahadasha</div>
+                  <div className="text-base font-bold text-[#1C1917]">{snapshot.dasha.currentMahadasha}</div>
+                  <div className="text-[10px] font-mono-data text-[#78716C]">{snapshot.dasha.currentDateRange}</div>
+                </div>
+                <div className="p-3 rounded-xl bg-[#FAF6EF] border border-[#E5D7BC]/70">
+                  <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">Antardasha</div>
+                  <div className="text-base font-bold text-[#1C1917]">{snapshot.dasha.currentAntardasha}</div>
+                  <div className="text-[10px] font-mono-data text-[#78716C]">Pratyantardasha {snapshot.dasha.currentPratyantardasha || '—'}</div>
+                </div>
+              </div>
+              <p className="text-[11px] leading-relaxed text-[#44403C]">
+                {snapshot.dasha.currentPeriodString}
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {(snapshot.yogasAndDoshas.rajYogas ?? []).slice(0, 3).map((y: string) => (
+                  <span key={y} className="px-2 py-1 rounded-lg text-[10px] font-semibold bg-amber-50 text-[#8E6F1D] border border-amber-200">{y}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Row 2: Vimshottari timeline (tap a period for antardashas) */}
+          <div className="bg-white rounded-2xl p-5 border border-[#E5D7BC] shadow-sm space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] flex items-center gap-1.5">
+                <Activity className="w-3.5 h-3.5" /> Vimshottari Dasha — 120-year cycle
+              </h3>
+              <span className="text-[10px] font-mono-data text-[#78716C]">Dasha balance at birth: {snapshot.dasha.startingBalance}</span>
+            </div>
+            <DashaTimeline
+              mahadashas={snapshot.dasha.mahadashas}
+              currentAD={snapshot.dasha.currentAntardasha}
+              selectedIndex={selectedMdIndex}
+              onSelect={setSelectedMdIndex}
+            />
+          </div>
+
+          {/* Row 3: Interpretation highlights (progressive disclosure) */}
+          <div className="bg-white rounded-2xl p-5 border border-[#E5D7BC] shadow-sm space-y-3">
+            <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5" /> Interpretation Highlights
+            </h3>
+            <div className="space-y-2">
+              {(() => {
+                const interpSection = book.volumes[16]?.sections.find((sec) => sec.id === 'interpretation_synthesis');
+                const data = (interpSection?.data ?? {}) as Record<string, string>;
+                const evidence = (interpSection?.evidenceIds ?? []) as string[];
+                const items: [string, string][] = [
+                  ['personality', 'Lagna & Personality'],
+                  ['career', 'Career'],
+                  ['wealth', 'Finance & Wealth'],
+                  ['relationships', 'Relationships'],
+                  ['spirituality', 'Spiritual Tendencies'],
+                  ['currentPeriod', 'Current Period']
+                ];
+                return items.map(([key, title]) => (
+                  <details key={key} className="group rounded-xl border border-[#E5D7BC]/80 bg-[#FAF6EF]/60 open:bg-white">
+                    <summary className="flex items-center justify-between px-3 py-2.5 cursor-pointer select-none text-xs font-bold text-[#1C1917]">
+                      <span className="flex items-center gap-2">
+                        <ChevronDown className="w-3.5 h-3.5 text-[#8E6F1D] transition-transform group-open:rotate-180" />
+                        {title}
+                      </span>
+                      <span className="text-[9px] font-mono-data text-[#A8A29E] uppercase">tap to read</span>
+                    </summary>
+                    <div className="px-4 pb-3 pt-1">
+                      <p className="text-xs leading-relaxed text-[#44403C]">{data[key] ?? 'Not available.'}</p>
+                      {evidence.length > 0 && (
+                        <p className="text-[9px] font-mono-data text-[#A8A29E] mt-2">Evidence: {evidence.join(', ')}</p>
+                      )}
                     </div>
-                  )}
+                  </details>
+                ));
+              })()}
+            </div>
+          </div>
+
+          {/* Row 4: Calculation standard (method transparency on screen) */}
+          <details className="bg-white rounded-2xl p-5 border border-[#E5D7BC] shadow-sm group">
+            <summary className="flex items-center justify-between cursor-pointer select-none">
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] flex items-center gap-1.5">
+                <Telescope className="w-3.5 h-3.5" /> How this Kundli was calculated
+              </h3>
+              <ChevronDown className="w-4 h-4 text-[#8E6F1D] transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[
+                ['Zodiac', 'Sidereal'],
+                ['Ayanamsha', snapshot.meta.ayanamshaName],
+                ['Ayanamsha value', `${snapshot.meta.ayanamshaValue.toFixed(4)}°`],
+                ['House system', 'Equal (whole-sign)'],
+                ['Node mode', 'Mean node'],
+                ['Ephemeris', 'VSOP87 / ELP2000-82'],
+                ['Engine', snapshot.meta.engineVersion],
+                ['Julian day', snapshot.meta.julianDay.toFixed(4)]
+              ].map(([k, v]) => (
+                <div key={k} className="p-2.5 rounded-xl bg-[#FAF6EF] border border-[#E5D7BC]/70">
+                  <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">{k}</div>
+                  <div className="text-[11px] font-semibold text-[#1C1917] break-words">{v}</div>
                 </div>
               ))}
             </div>
+          </details>
 
+          {/* Row 5: PDF actions */}
+          <div className="bg-white rounded-2xl p-5 border border-[#E5D7BC] shadow-sm flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D]">Your Kundli PDF</h3>
+              <p className="text-[11px] text-[#78716C] mt-0.5">
+                Validated, deterministic and bilingual — generated only when every quality gate passes.
+                {lastPdfMeta && <span className="text-[#15803D] font-semibold"> Last: {lastPdfMeta.pageCount} pages · {lastPdfMeta.fileSizeKB} KB · PASS</span>}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handlePrint}
+                className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-[#8E6F1D]/30 bg-white hover:bg-[#F5EFE6] text-[#8E6F1D] transition-colors"
+              >
+                <Printer className="w-3.5 h-3.5" /> Print
+              </button>
+              <button
+                onClick={() => setActiveTab('FOLIO')}
+                className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-[#E5D7BC] bg-white hover:bg-[#F5EFE6] text-[#1C1917] transition-colors"
+              >
+                <BookOpen className="w-3.5 h-3.5" /> Explore 17-Volume Book
+              </button>
+              <button
+                onClick={handleDownloadPDF}
+                disabled={isGeneratingPdf}
+                className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg bg-[#8E6F1D] hover:bg-[#785E18] text-white transition-colors shadow-sm disabled:opacity-60 disabled:cursor-wait"
+              >
+                <Download className="w-3.5 h-3.5" />
+                {isGeneratingPdf ? 'VALIDATING…' : 'DOWNLOAD PDF'}
+              </button>
+            </div>
           </div>
+        </main>
+      ) : activeTab === 'FOLIO' ? (
+        /* ================================================================ */
+        /* MODE A: 17-VOLUME ENCYCLOPEDIC FOLIO                             */
+        /* ================================================================ */
+                <main className="max-w-5xl mx-auto px-4 lg:px-8 py-8 space-y-3">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-[#78716C] px-1 pb-1">
+            The 17-Volume Kundli — tap a volume to open or close it
+          </div>
+
+          {book.volumes.map((vol, idx) => {
+            const isOpen = openVolumes.has(idx);
+            const hasCharts = idx === 0 || idx === 1 || idx === 3;
+            return (
+              <section
+                key={vol.volumeNumber}
+                className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-colors ${isOpen ? 'border-[#8E6F1D]/40' : 'border-[#E5D7BC]'}`}
+              >
+                {/* Accordion header — first volume open by default, rest collapsed */}
+                <button
+                  onClick={() => toggleVolume(idx)}
+                  aria-expanded={isOpen}
+                  className="w-full flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 text-left bg-gradient-to-r from-[#FAF6EF] via-white to-white hover:from-[#F5EFE6] transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center font-serif font-bold text-xs sm:text-sm shrink-0 border ${isOpen ? 'bg-[#8E6F1D] text-white border-[#8E6F1D]' : 'bg-[#F5EFE6] text-[#8E6F1D] border-[#E5D7BC]'}`}>
+                      {vol.volumeNumber}
+                    </span>
+                    <div className="min-w-0">
+                      <div className="text-sm sm:text-base font-serif font-bold text-[#1C1917] truncate">{vol.title}</div>
+                      <div className="text-[11px] font-serif italic text-[#8E6F1D] truncate">{vol.sanskritTitle}</div>
+                    </div>
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-[#8E6F1D] shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* Collapsible body */}
+                {isOpen && (
+                  <div className="px-4 sm:px-5 pb-6 pt-1 space-y-6 border-t border-[#F0E6D2]">
+                    <p className="text-xs sm:text-sm text-[#57534E] pt-3 leading-relaxed">{vol.description}</p>
+
+                    {hasCharts && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="bg-white p-4 rounded-2xl border border-[#E5D7BC] space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-bold font-serif text-[#1C1917]">D1 Lagna Rashi Chart</h3>
+                            <span className="text-[10px] font-mono-data text-[#8E6F1D] bg-[#8E6F1D]/10 px-2 py-0.5 rounded font-bold">Lagna: {snapshot.lagna.rashiName}</span>
+                          </div>
+                          <div className="max-w-[340px] mx-auto aspect-square">
+                            <NorthIndianChart
+                              kundali={chartD1Obj}
+                              onPlanetClick={(name: string, house: number) => setChartPlanet({ name, house })}
+                              selectedPlanet={chartPlanet?.name ?? undefined}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-2xl border border-[#E5D7BC] space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-bold font-serif text-[#1C1917]">D9 Navamsha Chart</h3>
+                            <span className="text-[10px] font-mono-data text-[#8E6F1D] bg-[#8E6F1D]/10 px-2 py-0.5 rounded font-bold">Dharmamsha</span>
+                          </div>
+                          <div className="max-w-[340px] mx-auto aspect-square">
+                            <NorthIndianChart kundali={chartD9Obj} />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Volume Content Sections */}
+                    <div className="space-y-5">
+                      {vol.sections.map((sec, sIdx) => (
+                        <div key={sIdx} className="rounded-2xl p-5 sm:p-6 border border-[#E5D7BC] bg-[#FDFBF7]/60 space-y-4">
+                          <div className="border-b border-[#F0E6D2] pb-3 flex items-center justify-between gap-2">
+                            <h2 className="text-base font-serif font-bold text-[#1C1917]">{sec.title}</h2>
+                            {sec.category && (
+                              <span className="text-[10px] font-mono-data uppercase tracking-wider text-[#8E6F1D] font-bold bg-[#8E6F1D]/10 px-2 py-0.5 rounded shrink-0">
+                                {sec.category}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Section Data Grid — full values, never clipped */}
+                          {sec.data && typeof sec.data === 'object' && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                              {Object.entries(sec.data).map(([key, val]) => {
+                                if (val === null || val === undefined) return null;
+                                const label = key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').trim();
+                                if (Array.isArray(val)) {
+                                  const items = val as any[];
+                                  if (items.length === 0) return null;
+                                  const text = items.map((it) => {
+                                    if (typeof it === 'object') {
+                                      const lord = it.lord ?? it.planet ?? it.name ?? '';
+                                      const start = it.startDate ? String(it.startDate).slice(0, 10) : '';
+                                      const end = it.endDate ? String(it.endDate).slice(0, 10) : '';
+                                      if (lord && start) return `${lord} · ${start}${end ? ` – ${end}` : ''}`;
+                                      return Object.values(it).filter((v) => typeof v === 'string' || typeof v === 'number').slice(0, 3).join(' · ');
+                                    }
+                                    return String(it);
+                                  });
+                                  const shown = text.slice(0, 12);
+                                  const more = text.length - shown.length;
+                                  return (
+                                    <div key={key} className="col-span-full p-3.5 rounded-xl bg-[#FAF6EF] border border-[#E5D7BC]/70 space-y-1">
+                                      <div className="text-[10px] font-bold text-[#8E6F1D] uppercase font-mono-data">{label}</div>
+                                      <div className="text-xs text-[#1C1917] font-mono-data leading-relaxed break-words">
+                                        {shown.join('  ·  ')}
+                                        {more > 0 && <span className="text-[#A8A29E]"> … +{more} more</span>}
+                                      </div>
+                                    </div>
+                                  );
+                                }
+                                if (typeof val === 'object') {
+                                  return (
+                                    <div key={key} className="col-span-full p-3.5 rounded-xl bg-[#FAF6EF] border border-[#E5D7BC]/70 space-y-1">
+                                      <div className="text-[10px] font-bold text-[#8E6F1D] uppercase font-mono-data">{label}</div>
+                                      <div className="text-xs text-[#1C1917] font-mono-data flex flex-wrap gap-x-4 gap-y-1">
+                                        {Object.entries(val as Record<string, unknown>).map(([subK, subV]) => (
+                                          <span key={subK}>
+                                            <strong className="text-[#78716C]">{subK.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').trim()}:</strong> {String(subV)}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  );
+                                }
+                                return (
+                                  <div key={key} className="p-3 rounded-xl bg-[#FAF6EF] border border-[#E5D7BC]/70 space-y-0.5">
+                                    <div className="text-[10px] font-mono-data text-[#78716C] uppercase">{label}</div>
+                                    <div className="text-xs sm:text-sm font-semibold text-[#1C1917] font-mono-data break-words whitespace-normal">
+                                      {String(val)}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </section>
+            );
+          })}
         </main>
       ) : (
         /* ================================================================ */
@@ -589,11 +1206,15 @@ export default function MasterKundliReportClient() {
               </div>
 
               <div className="max-w-[420px] mx-auto aspect-square py-2">
-                <NorthIndianChart kundali={activeChartData} />
+                <NorthIndianChart
+                  kundali={activeChartData}
+                  onPlanetClick={(name: string, house: number) => setChartPlanet({ name, house })}
+                  selectedPlanet={chartPlanet?.name ?? undefined}
+                />
               </div>
 
               <div className="text-center text-[11px] font-mono-data text-[#78716C] pt-2 border-t border-[#F0E6D2]">
-                Division Active: <strong>D{activeDivision}</strong> • Precision Lahiri Chitra Paksha • JPL Ephemeris Synchronized
+                North Indian style — D{activeDivision} · tap a planet for its details
               </div>
 
             </div>
@@ -720,14 +1341,14 @@ export default function MasterKundliReportClient() {
         </main>
       )}
 
-      {/* 4. Quick Edit Modal */}
+      {/* 4. Quick Edit Modal — city autocomplete, use-my-location, live validation */}
       {isEditModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white rounded-2xl border border-[#E5D7BC] p-6 max-w-md w-full shadow-2xl space-y-4 font-mono-data">
+          <div className="bg-white rounded-2xl border border-[#E5D7BC] p-6 max-w-md w-full shadow-2xl space-y-4 font-mono-data max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-2 border-b border-[#F0E6D2]">
               <h3 className="text-sm font-bold uppercase tracking-wider text-[#1C1917] flex items-center gap-1.5">
                 <Edit3 className="w-4 h-4 text-[#8E6F1D]" />
-                <span>Edit Birth Coordinates</span>
+                <span>Edit Birth Details</span>
               </h3>
               <button onClick={() => setIsEditModalOpen(false)} className="text-[#78716C] hover:text-[#1C1917]">
                 <X className="w-4 h-4" />
@@ -740,9 +1361,14 @@ export default function MasterKundliReportClient() {
                 <input
                   type="text"
                   value={birthState.name}
-                  onChange={(e) => setBirthState({ ...birthState, name: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-[#FAF7F2] border border-[#E5D7BC] text-xs font-semibold focus:outline-none focus:border-[#8E6F1D]"
+                  onChange={(e) => {
+                    const next = { ...birthState, name: e.target.value };
+                    setBirthState(next);
+                    setFieldErrors(validateLive(next));
+                  }}
+                  className={`w-full px-3 py-2 rounded-xl bg-[#FAF7F2] border text-xs font-semibold focus:outline-none focus:border-[#8E6F1D] ${fieldErrors.name ? 'border-rose-300 bg-rose-50' : 'border-[#E5D7BC]'}`}
                 />
+                {fieldErrors.name && <p className="text-[10px] text-rose-600 font-semibold">{fieldErrors.name}</p>}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -751,9 +1377,14 @@ export default function MasterKundliReportClient() {
                   <input
                     type="date"
                     value={birthState.birthDate}
-                    onChange={(e) => setBirthState({ ...birthState, birthDate: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-[#FAF7F2] border border-[#E5D7BC] text-xs font-semibold focus:outline-none focus:border-[#8E6F1D]"
+                    onChange={(e) => {
+                      const next = { ...birthState, birthDate: e.target.value };
+                      setBirthState(next);
+                      setFieldErrors(validateLive(next));
+                    }}
+                    className={`w-full px-3 py-2 rounded-xl bg-[#FAF7F2] border text-xs font-semibold focus:outline-none focus:border-[#8E6F1D] ${fieldErrors.birthDate ? 'border-rose-300 bg-rose-50' : 'border-[#E5D7BC]'}`}
                   />
+                  {fieldErrors.birthDate && <p className="text-[10px] text-rose-600 font-semibold">{fieldErrors.birthDate}</p>}
                 </div>
 
                 <div className="space-y-1">
@@ -761,21 +1392,118 @@ export default function MasterKundliReportClient() {
                   <input
                     type="time"
                     value={birthState.birthTime}
-                    onChange={(e) => setBirthState({ ...birthState, birthTime: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-[#FAF7F2] border border-[#E5D7BC] text-xs font-semibold focus:outline-none focus:border-[#8E6F1D]"
+                    onChange={(e) => {
+                      const next = { ...birthState, birthTime: e.target.value };
+                      setBirthState(next);
+                      setFieldErrors(validateLive(next));
+                    }}
+                    className={`w-full px-3 py-2 rounded-xl bg-[#FAF7F2] border text-xs font-semibold focus:outline-none focus:border-[#8E6F1D] ${fieldErrors.birthTime ? 'border-rose-300 bg-rose-50' : 'border-[#E5D7BC]'}`}
                   />
+                  {fieldErrors.birthTime && <p className="text-[10px] text-rose-600 font-semibold">{fieldErrors.birthTime}</p>}
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] text-[#78716C] font-bold uppercase">Location / City Name</label>
-                <input
-                  type="text"
-                  value={birthState.locationName}
-                  onChange={(e) => setBirthState({ ...birthState, locationName: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-[#FAF7F2] border border-[#E5D7BC] text-xs font-semibold focus:outline-none focus:border-[#8E6F1D]"
-                />
+                <label className="text-[10px] text-[#78716C] font-bold uppercase">Birth Place (start typing a city)</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={cityQuery}
+                    onChange={(e) => cityAutocomplete(e.target.value)}
+                    onFocus={() => cityQuery.trim() && setShowCitySuggestions(true)}
+                    placeholder={birthState.locationName || 'e.g. Patna, Varanasi, Mumbai…'}
+                    className="w-full px-3 py-2 rounded-xl bg-[#FAF7F2] border border-[#E5D7BC] text-xs font-semibold focus:outline-none focus:border-[#8E6F1D]"
+                  />
+                  <Search className="w-3.5 h-3.5 text-[#A8A29E] absolute right-3 top-2.5" />
+                  {showCitySuggestions && (
+                    <div className="absolute z-20 mt-1 w-full bg-white border border-[#E5D7BC] rounded-xl shadow-xl max-h-56 overflow-y-auto">
+                      {citySuggestions.map((c) => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => pickCity(c)}
+                          className="w-full text-left px-3 py-2 hover:bg-[#FAF6EF] flex items-center justify-between gap-2"
+                        >
+                          <span className="text-xs font-semibold text-[#1C1917]">{c.name}, {c.state}</span>
+                          <span className="text-[9px] font-mono-data text-[#78716C]">{c.lat.toFixed(2)}°, {c.lng.toFixed(2)}° · UTC{c.tz >= 0 ? '+' : ''}{c.tz}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[10px] text-[#78716C] leading-relaxed">
+                    Coordinates drive the calculation; the city name is used for display.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={useMyLocation}
+                    disabled={locating}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg border border-[#8E6F1D]/30 bg-white text-[#8E6F1D] text-[10px] font-bold hover:bg-[#F5EFE6] disabled:opacity-60 shrink-0"
+                  >
+                    <Navigation className="w-3 h-3" />
+                    {locating ? 'Locating…' : 'Use my location'}
+                  </button>
+                </div>
               </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-[#78716C] font-bold uppercase">Latitude</label>
+                  <input
+                    type="number"
+                    step="any"
+                    min={-90}
+                    max={90}
+                    value={Number.isFinite(birthState.latitude) ? birthState.latitude : ''}
+                    onChange={(e) => {
+                      const next = { ...birthState, latitude: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) };
+                      setBirthState(next);
+                      setFieldErrors(validateLive(next));
+                    }}
+                    className={`w-full px-3 py-2 rounded-xl bg-[#FAF7F2] border text-xs font-semibold focus:outline-none focus:border-[#8E6F1D] ${fieldErrors.lat ? 'border-rose-300 bg-rose-50' : 'border-[#E5D7BC]'}`}
+                  />
+                  {fieldErrors.lat && <p className="text-[10px] text-rose-600 font-semibold">{fieldErrors.lat}</p>}
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-[#78716C] font-bold uppercase">Longitude</label>
+                  <input
+                    type="number"
+                    step="any"
+                    min={-180}
+                    max={180}
+                    value={Number.isFinite(birthState.longitude) ? birthState.longitude : ''}
+                    onChange={(e) => {
+                      const next = { ...birthState, longitude: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) };
+                      setBirthState(next);
+                      setFieldErrors(validateLive(next));
+                    }}
+                    className={`w-full px-3 py-2 rounded-xl bg-[#FAF7F2] border text-xs font-semibold focus:outline-none focus:border-[#8E6F1D] ${fieldErrors.lng ? 'border-rose-300 bg-rose-50' : 'border-[#E5D7BC]'}`}
+                  />
+                  {fieldErrors.lng && <p className="text-[10px] text-rose-600 font-semibold">{fieldErrors.lng}</p>}
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-[#78716C] font-bold uppercase">UTC Offset</label>
+                  <input
+                    type="number"
+                    step="0.5"
+                    min={-14}
+                    max={14}
+                    value={Number.isFinite(birthState.timezone) ? birthState.timezone : ''}
+                    onChange={(e) => setBirthState({ ...birthState, timezone: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-xl bg-[#FAF7F2] border border-[#E5D7BC] text-xs font-semibold focus:outline-none focus:border-[#8E6F1D]"
+                  />
+                </div>
+              </div>
+              <p className="text-[10px] text-[#78716C] leading-relaxed">
+                {Number.isFinite(birthState.latitude) && Number.isFinite(birthState.longitude) ? (
+                  <span className="text-[#15803D] font-semibold">
+                    ✓ {birthState.locationName || 'Coordinates'} · {Math.abs(birthState.latitude).toFixed(4)}°{birthState.latitude >= 0 ? 'N' : 'S'}, {Math.abs(birthState.longitude).toFixed(4)}°{birthState.longitude >= 0 ? 'E' : 'W'} · UTC{Number.isFinite(birthState.timezone) && birthState.timezone >= 0 ? '+' : ''}{Number.isFinite(birthState.timezone) ? birthState.timezone : '—'}
+                  </span>
+                ) : (
+                  'Enter both latitude and longitude — they are required together.'
+                )}
+              </p>
             </div>
 
             <div className="pt-2 flex justify-end gap-2">
@@ -788,14 +1516,53 @@ export default function MasterKundliReportClient() {
               </button>
               <button
                 type="button"
+                disabled={Object.keys(fieldErrors).length > 0}
                 onClick={() => {
+                  const errs = validateLive(birthState);
+                  setFieldErrors(errs);
+                  if (Object.keys(errs).length > 0) return;
                   chitiSensory.playTick();
                   try {
                     localStorage.setItem('cosmictantra_active_kundli', JSON.stringify(birthState));
                   } catch {}
+                  // Rebuild RAW input from the modal's edited values and
+                  // dry-run the pipeline so validation failures surface NOW.
+                  const editedRaw: RawBirthInput = {
+                    name: birthState.name.trim() || undefined,
+                    birthDate: birthState.birthDate || undefined,
+                    birthTime: birthState.birthTime || undefined,
+                    locationName: birthState.locationName.trim() || undefined,
+                    latitude: Number.isFinite(birthState.latitude) ? birthState.latitude : undefined,
+                    longitude: Number.isFinite(birthState.longitude) ? birthState.longitude : undefined,
+                    utcOffsetHours: Number.isFinite(birthState.timezone) ? birthState.timezone : undefined,
+                    coordinateProvenance: 'MANUAL'
+                  };
+                  rawInputRef.current = editedRaw;
+                  setIsDemoProfile(false);
                   setIsEditModalOpen(false);
+                  setFailSafe(null);
+                  setLastPdfMeta(null);
+                  void (async () => {
+                    setIsGeneratingPdf(true);
+                    setPipelineState(null);
+                    try {
+                      const result = await generateKundliPdf(editedRaw, {
+                        locale: lang === 'hi' ? 'hi' : 'en',
+                        renderPdf: false
+                      });
+                      if (result.state !== 'REPORT_READY') {
+                        const code = result.errorCode ?? 'KUNDLI_INPUT_INVALID';
+                        setFailSafe({
+                          message: KUNDLI_SAFE_MESSAGES[code as keyof typeof KUNDLI_SAFE_MESSAGES] ?? KUNDLI_SAFE_MESSAGES.KUNDLI_INPUT_INVALID,
+                          code
+                        });
+                      }
+                    } finally {
+                      setIsGeneratingPdf(false);
+                    }
+                  })();
                 }}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-[#8E6F1D] text-white hover:bg-[#785E18] shadow-xs"
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-[#8E6F1D] text-white hover:bg-[#785E18] shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Recalculate Chart
               </button>
