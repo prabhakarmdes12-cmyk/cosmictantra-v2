@@ -225,7 +225,7 @@ export default function RemedyTracker() {
               ? `${devoteeName} जी — track your 40-day Sankalpa observances, daily mantra japa streaks, and remedy compliance.`
               : 'Track your 40-day Sankalpa observances, daily mantra japa streaks, and remedy compliance.'}
           </p>
-          <p className="mt-1 text-[10px] font-mono-data text-[#A8A29E]">
+          <p className="mt-1 text-[10px] font-mono-data text-[#78716C] dark:text-[#A8A29E]">
             All data stays on your device — private, no account needed.
           </p>
         </div>
@@ -247,7 +247,7 @@ export default function RemedyTracker() {
               <Flame className="w-3 h-3" /> Japa Streak
             </div>
             <div className="text-2xl font-bold text-[#1C1917] dark:text-white mt-1">
-              {totals.streak} <span className="text-sm font-semibold text-[#A8A29E]">day{totals.streak === 1 ? '' : 's'}</span>
+              {totals.streak} <span className="text-sm font-semibold text-[#78716C] dark:text-[#A8A29E]">day{totals.streak === 1 ? '' : 's'}</span>
             </div>
           </div>
           <div className="rounded-2xl border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 bg-white dark:bg-[#0E101D] p-4 text-center">
@@ -294,7 +294,7 @@ export default function RemedyTracker() {
                   <div key={w.date} className="flex-1 flex flex-col items-center gap-1">
                     <div className="w-full rounded-t-md bg-gradient-to-t from-[#8E6F1D]/70 to-[#D4AF37] transition-all"
                       style={{ height: `${Math.max(4, Math.round((w.count / weekMax) * 64))}px`, opacity: w.count ? 1 : 0.15 }} />
-                    <span className="text-[8px] font-mono-data text-[#A8A29E]">
+                    <span className="text-[8px] font-mono-data text-[#78716C] dark:text-[#A8A29E]">
                       {w.date.slice(5)} {w.count > 0 ? `·${w.count}` : ''}
                     </span>
                   </div>
@@ -305,9 +305,9 @@ export default function RemedyTracker() {
             <div className="sm:text-right">
               <div className="text-[10px] font-mono-data uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968] font-bold">Streak</div>
               <div className="text-3xl font-bold text-[#1C1917] dark:text-white mt-1">
-                {totals.streak} <span className="text-sm text-[#A8A29E]">day{totals.streak === 1 ? '' : 's'}</span>
+                {totals.streak} <span className="text-sm text-[#78716C] dark:text-[#A8A29E]">day{totals.streak === 1 ? '' : 's'}</span>
               </div>
-              <div className="text-[10px] font-mono-data text-[#A8A29E] mt-1">Best: {totals.best} days</div>
+              <div className="text-[10px] font-mono-data text-[#78716C] dark:text-[#A8A29E] mt-1">Best: {totals.best} days</div>
             </div>
           </div>
         </div>

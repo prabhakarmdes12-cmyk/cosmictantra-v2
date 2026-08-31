@@ -154,7 +154,7 @@ function DashaTimeline({ mahadashas, currentAD, selectedIndex, onSelect }: {
             })}
           </div>
           <div className="absolute top-0 bottom-0 w-0.5 bg-[#1C1917] rounded" style={{ left: `${nowPct}%` }}>
-            <span className="absolute -top-0.5 -translate-x-1/2 text-[8px] font-bold text-[#1C1917] whitespace-nowrap">● NOW</span>
+            <span className="absolute -top-0.5 -translate-x-1/2 text-[8px] font-bold text-[#1C1917] whitespace-nowrap bg-[#F5EFE6] px-1 rounded-full leading-none">● NOW</span>
           </div>
         </div>
         <div className="flex justify-between text-[9px] font-mono-data text-[#78716C] mt-1">
@@ -181,7 +181,7 @@ function DashaTimeline({ mahadashas, currentAD, selectedIndex, onSelect }: {
                 className={`px-2 py-1 rounded-lg text-[10px] font-semibold border ${isCur ? 'bg-[#8E6F1D] text-white border-[#8E6F1D]' : 'bg-white text-[#44403C] border-[#E5D7BC]'}`}
               >
                 {ad.lord}
-                <span className={`font-mono-data ${isCur ? 'text-amber-100' : 'text-[#A8A29E]'}`}> · {String(ad.startDate).slice(0, 10)}</span>
+                <span className={`font-mono-data ${isCur ? 'text-amber-100' : 'text-[#78716C]'}`}> · {String(ad.startDate).slice(0, 10)}</span>
                 {isCur && <span className="ml-1 text-[8px] font-bold uppercase">◀ current</span>}
               </span>
             );
@@ -754,7 +754,7 @@ export default function MasterKundliReportClient() {
                 const done = cur >= 0 && idx < cur;
                 const active = pipelineState === state || (state === 'PDF_VALIDATED' && pipelineState === 'READY_FOR_DELIVERY');
                 return (
-                  <span key={state} className={`flex items-center gap-1.5 text-[11px] ${done || active ? 'text-[#1C1917] font-semibold' : 'text-[#A8A29E]'}`}>
+                  <span key={state} className={`flex items-center gap-1.5 text-[11px] ${done || active ? 'text-[#1C1917] font-semibold' : 'text-[#78716C]'}`}>
                     <CheckCircle2 className={`w-3.5 h-3.5 ${done || active ? 'text-[#8E6F1D]' : ''}`} />
                     {label}
                   </span>
@@ -839,7 +839,7 @@ export default function MasterKundliReportClient() {
                 <span className={`text-[10px] font-mono-data ${isSelected ? 'text-amber-200' : 'text-[#78716C]'}`}>
                   {String(g.rashiName || g.rashiEn || '').slice(0, 3)} {Math.floor(g.degrees % 30)}°{Math.floor((g.degrees * 60) % 60)}'
                 </span>
-                {g.isRetrograde && <span className="text-[10px] font-bold text-rose-500">(R)</span>}
+                {g.isRetrograde && <span className={`text-[10px] font-bold ${isSelected ? 'text-amber-100' : 'text-rose-500'}`}>(R)</span>}
               </button>
             );
           })}
@@ -857,27 +857,27 @@ export default function MasterKundliReportClient() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 divide-x divide-y lg:divide-y-0 divide-[#F0E6D2]">
             <div className="px-4 py-3">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">{t('lagna')}</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C]">{t('lagna')}</div>
               <div className="text-sm font-bold text-[#1C1917] mt-0.5">{snapshot.lagna.rashiName}</div>
               <div className="text-[10px] text-[#78716C]">{snapshot.lagna.rashiEn} · {snapshot.lagna.degreeStr}</div>
             </div>
             <div className="px-4 py-3">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">{t('moonRashi')}</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C]">{t('moonRashi')}</div>
               <div className="text-sm font-bold text-[#1C1917] mt-0.5">{(snapshot.planets as any)?.Moon?.rashiName ?? '—'}</div>
               <div className="text-[10px] text-[#78716C]">{(snapshot.planets as any)?.Moon?.rashiEn ?? ''}</div>
             </div>
             <div className="px-4 py-3">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">{t('janmaNakshatra')}</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C]">{t('janmaNakshatra')}</div>
               <div className="text-sm font-bold text-[#1C1917] mt-0.5">{snapshot.birthPanchang.nakshatra?.name ?? '—'}</div>
               <div className="text-[10px] text-[#78716C]"> {t('pada')} {(snapshot.birthPanchang.nakshatra as any)?.pada ?? '—'}</div>
             </div>
             <div className="px-4 py-3">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">{t('tithi')}</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C]">{t('tithi')}</div>
               <div className="text-sm font-bold text-[#1C1917] mt-0.5">{snapshot.birthPanchang.udayaTithi?.fullName ?? '—'}</div>
               <div className="text-[10px] text-[#78716C]">{t('udayaTithi')}</div>
             </div>
             <div className="px-4 py-3">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">{t('manglik')}</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C]">{t('manglik')}</div>
               <div className="text-sm font-bold mt-0.5">
                 {snapshot.yogasAndDoshas.manglik.isManglik
                   ? <span className="text-[#B45309]">{snapshot.yogasAndDoshas.manglik.isCancelled ? t('cancelled') : `Yes · ${snapshot.yogasAndDoshas.manglik.severity}`}</span>
@@ -886,10 +886,10 @@ export default function MasterKundliReportClient() {
               <div className="text-[10px] text-[#78716C]">as per engine rules</div>
             </div>
             <div className="px-4 py-3">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">Current Dasha</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C]">Current Dasha</div>
               <div className="text-sm font-bold text-[#1C1917] mt-0.5">{snapshot.dasha.currentMahadasha}</div>
               <div className="text-[10px] text-[#78716C]">{snapshot.dasha.currentAntardasha} AD · {snapshot.dasha.currentDateRange}</div>
-              <div className="text-[9px] font-mono-data text-[#A8A29E] mt-0.5">Dasha balance at birth: {snapshot.dasha.startingBalance}</div>
+              <div className="text-[9px] font-mono-data text-[#78716C] mt-0.5">Dasha balance at birth: {snapshot.dasha.startingBalance}</div>
             </div>
           </div>
         </div>
@@ -916,7 +916,7 @@ export default function MasterKundliReportClient() {
                   onPlanetClick={(name: string, house: number) => setChartPlanet({ name, house })}
                   selectedPlanet={chartPlanet?.name ?? undefined}
                 />
-                <p className="text-[10px] text-[#A8A29E] font-mono-data -mt-1">Tap a planet for its details</p>
+                <p className="text-[10px] text-[#78716C] font-mono-data -mt-1">Tap a planet for its details</p>
               </div>
               {selectedPlanetInfo && (
                 <div className="rounded-xl border border-[#8E6F1D]/30 bg-amber-50/60 p-3 space-y-1.5">
@@ -968,12 +968,12 @@ export default function MasterKundliReportClient() {
               </h3>
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 rounded-xl bg-[#FAF6EF] border border-[#E5D7BC]/70">
-                  <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">Mahadasha</div>
+                  <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C]">Mahadasha</div>
                   <div className="text-base font-bold text-[#1C1917]">{snapshot.dasha.currentMahadasha}</div>
                   <div className="text-[10px] font-mono-data text-[#78716C]">{snapshot.dasha.currentDateRange}</div>
                 </div>
                 <div className="p-3 rounded-xl bg-[#FAF6EF] border border-[#E5D7BC]/70">
-                  <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">Antardasha</div>
+                  <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C]">Antardasha</div>
                   <div className="text-base font-bold text-[#1C1917]">{snapshot.dasha.currentAntardasha}</div>
                   <div className="text-[10px] font-mono-data text-[#78716C]">Pratyantardasha {snapshot.dasha.currentPratyantardasha || '—'}</div>
                 </div>
@@ -1030,12 +1030,12 @@ export default function MasterKundliReportClient() {
                         <ChevronDown className="w-3.5 h-3.5 text-[#8E6F1D] transition-transform group-open:rotate-180" />
                         {title}
                       </span>
-                      <span className="text-[9px] font-mono-data text-[#A8A29E] uppercase">tap to read</span>
+                      <span className="text-[9px] font-mono-data text-[#78716C] uppercase">tap to read</span>
                     </summary>
                     <div className="px-4 pb-3 pt-1">
                       <p className="text-xs leading-relaxed text-[#44403C]">{data[key] ?? 'Not available.'}</p>
                       {evidence.length > 0 && (
-                        <p className="text-[9px] font-mono-data text-[#A8A29E] mt-2">Evidence: {evidence.join(', ')}</p>
+                        <p className="text-[9px] font-mono-data text-[#78716C] mt-2">Evidence: {evidence.join(', ')}</p>
                       )}
                     </div>
                   </details>
@@ -1064,7 +1064,7 @@ export default function MasterKundliReportClient() {
                 ['Julian day', snapshot.meta.julianDay.toFixed(4)]
               ].map(([k, v]) => (
                 <div key={k} className="p-2.5 rounded-xl bg-[#FAF6EF] border border-[#E5D7BC]/70">
-                  <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">{k}</div>
+                  <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C]">{k}</div>
                   <div className="text-[11px] font-semibold text-[#1C1917] break-words">{v}</div>
                 </div>
               ))}
@@ -1211,7 +1211,7 @@ export default function MasterKundliReportClient() {
                                       <div className="text-[10px] font-bold text-[#8E6F1D] uppercase font-mono-data">{label}</div>
                                       <div className="text-xs text-[#1C1917] font-mono-data leading-relaxed break-words">
                                         {shown.join('  ·  ')}
-                                        {more > 0 && <span className="text-[#A8A29E]"> … +{more} more</span>}
+                                        {more > 0 && <span className="text-[#78716C]"> … +{more} more</span>}
                                       </div>
                                     </div>
                                   );
@@ -1498,7 +1498,7 @@ export default function MasterKundliReportClient() {
                     placeholder={birthState.locationName || 'e.g. Patna, Varanasi, Mumbai…'}
                     className="w-full px-3 py-2 rounded-xl bg-[#FAF7F2] border border-[#E5D7BC] text-xs font-semibold focus:outline-none focus:border-[#8E6F1D]"
                   />
-                  <Search className="w-3.5 h-3.5 text-[#A8A29E] absolute right-3 top-2.5" />
+                  <Search className="w-3.5 h-3.5 text-[#78716C] absolute right-3 top-2.5" />
                   {showCitySuggestions && (
                     <div className="absolute z-20 mt-1 w-full bg-white border border-[#E5D7BC] rounded-xl shadow-xl max-h-56 overflow-y-auto">
                       {citySuggestions.map((c) => (

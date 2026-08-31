@@ -76,7 +76,7 @@ export default function StoreComingSoon() {
               <BellRing className="w-4 h-4" />
               {notified ? '✓ WhatsApp opened — thank you!' : 'Notify me on launch (WhatsApp)'}
             </button>
-            <span className="text-[10px] font-mono-data text-[#A8A29E]">
+            <span className="text-[10px] font-mono-data text-[#78716C] dark:text-[#A8A29E]">
               No spam — one message when we open.
             </span>
           </div>
@@ -125,7 +125,7 @@ export default function StoreComingSoon() {
           </div>
         </div>
 
-        <p className="mt-12 text-[10px] font-mono-data text-[#A8A29E]">
+        <p className="mt-12 text-[10px] font-mono-data text-[#78716C] dark:text-[#A8A29E]">
           <Sparkles className="w-3 h-3 inline mr-1" />
           The full storefront (cart &amp; checkout) is preserved in our repository and returns the moment supplier partnerships are finalised.
         </p>

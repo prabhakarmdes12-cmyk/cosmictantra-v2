@@ -421,7 +421,7 @@ export default function ObservatoryPage() {
                 <div className="flex items-center justify-between gap-2 pt-1 text-[11px] font-mono-data">
                   <button
                     onClick={() => { chitiSensory.playTick(); setHourOffset(-6); }}
-                    className="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-300 hover:bg-amber-500/20 cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 cursor-pointer"
                   >
                     🌅 ब्रह्म मुहूर्त (Brahma Muhurat)
                   </button>
