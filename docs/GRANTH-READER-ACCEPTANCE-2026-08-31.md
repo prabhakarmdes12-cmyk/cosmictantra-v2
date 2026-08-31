@@ -216,5 +216,23 @@ Resume granularity is **passage-level, with chunk-level position inside the curr
 Work is on `arena/01a0593a-cosmictantra-v2` only. A local production server was started for
 verification (`npx next start -H 0.0.0.0 -p 3000`) and the live-route suite ran against it.
 
-Delivery commit: `ca5951c` → see §1; the exact SHA delivered is recorded in the commit that
-contains this file (`git log -1 --format=%H`).
+Delivery commit: **`3b81cd9`** on `arena/01a0593a-cosmictantra-v2` (parent `ca5951c`).
+Verify with:
+
+```
+git fetch origin arena/01a0593a-cosmictantra-v2
+git show --stat 3b81cd9
+```
+
+Reproduce the evidence on that commit:
+
+```
+npm install
+npx prisma generate            # needs network to binaries.prisma.sh
+npm run typecheck && npm run build
+npm run granth:audit
+npm run test:granth
+npx playwright test tests/kundli-pipeline tests/kashi-sahayak-corpus.spec.ts tests/kashi-patch-regression.spec.ts tests/astrology.spec.ts tests/features.spec.ts
+npx next start -H 0.0.0.0 -p 3000   # then, in another shell:
+npm run test:granth:http
+```
