@@ -329,3 +329,30 @@ html.light .observatory-varanasi-bg {
 .dark ::-webkit-scrollbar-thumb {
   background: rgba(212, 175, 55, 0.4);
 }
+
+/* Kundli report is a print-first paper document: even when the on-screen
+   theme is dark, browser-print must produce readable light paper. Scoped to
+   the report root (.kundli-paper) so nothing else is affected. */
+@media print {
+  .kundli-paper,
+  .kundli-paper * {
+    color: #1C1917 !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border-color: #E5D7BC !important;
+    box-shadow: none !important;
+  }
+  .kundli-paper {
+    background: #FFFFFF !important;
+  }
+  /* North Indian chart: CSS overrides SVG presentation attributes so the
+     chart prints in the light-theme palette regardless of on-screen theme. */
+  .kundli-paper svg text {
+    fill: #1C1917 !important;
+  }
+  .kundli-paper svg line,
+  .kundli-paper svg rect,
+  .kundli-paper svg circle {
+    stroke: #5B4636 !important;
+  }
+}

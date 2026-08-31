@@ -128,7 +128,7 @@ function DashaTimeline({ mahadashas, currentAD, selectedIndex, onSelect }: {
     <div className="space-y-3">
       <div>
         <div className="relative h-14">
-          <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-7 rounded-full bg-[#F5EFE6] border border-[#E5D7BC] overflow-hidden">
+          <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-7 rounded-full bg-[#F5EFE6] dark:bg-[#1C1E27] border border-[#E5D7BC] dark:border-white/10 overflow-hidden">
             {mahadashas.map((m: any, i: number) => {
               const ms = new Date(m.startDate).getTime();
               const me = new Date(m.endDate).getTime();
@@ -153,20 +153,20 @@ function DashaTimeline({ mahadashas, currentAD, selectedIndex, onSelect }: {
               );
             })}
           </div>
-          <div className="absolute top-0 bottom-0 w-0.5 bg-[#1C1917] rounded" style={{ left: `${nowPct}%` }}>
-            <span className="absolute -top-0.5 -translate-x-1/2 text-[8px] font-bold text-[#1C1917] whitespace-nowrap bg-[#F5EFE6] px-1 rounded-full leading-none">● NOW</span>
+          <div className="absolute top-0 bottom-0 w-0.5 bg-[#1C1917] dark:bg-[#EFECE6] rounded" style={{ left: `${nowPct}%` }}>
+            <span className="absolute -top-0.5 -translate-x-1/2 text-[8px] font-bold text-[#1C1917] dark:text-[#EFECE6] whitespace-nowrap bg-[#F5EFE6] dark:bg-[#1C1E27] px-1 rounded-full leading-none">● NOW</span>
           </div>
         </div>
-        <div className="flex justify-between text-[9px] font-mono-data text-[#78716C] mt-1">
+        <div className="flex justify-between text-[9px] font-mono-data text-[#78716C] dark:text-[#A8A29E] mt-1">
           <span>{String(mahadashas[0].startDate).slice(0, 4)}</span>
           <span>{String(mahadashas[mahadashas.length - 1].endDate).slice(0, 4)}</span>
         </div>
       </div>
       <div>
-        <div className="text-[10px] font-bold uppercase tracking-wider text-[#78716C] mb-1.5">
+        <div className="text-[10px] font-bold uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E] mb-1.5">
           {sel?.lord} Mahadasha — Antardashas
           {selectedIndex >= 0 && (
-            <button onClick={() => onSelect(-1)} className="ml-2 text-[9px] font-mono-data text-[#8E6F1D] underline underline-offset-2">
+            <button onClick={() => onSelect(-1)} className="ml-2 text-[9px] font-mono-data text-[#8E6F1D] dark:text-[#F0C968] underline underline-offset-2">
               back to current
             </button>
           )}
@@ -178,10 +178,10 @@ function DashaTimeline({ mahadashas, currentAD, selectedIndex, onSelect }: {
               <span
                 key={ad.lord}
                 title={`${ad.lord}: ${String(ad.startDate).slice(0, 10)} – ${String(ad.endDate).slice(0, 10)}`}
-                className={`px-2 py-1 rounded-lg text-[10px] font-semibold border ${isCur ? 'bg-[#8E6F1D] text-white border-[#8E6F1D]' : 'bg-white text-[#44403C] border-[#E5D7BC]'}`}
+                className={`px-2 py-1 rounded-lg text-[10px] font-semibold border ${isCur ? 'bg-[#8E6F1D] text-white border-[#8E6F1D]' : 'bg-white dark:bg-[#121422] text-[#44403C] dark:text-[#D1C9BF] border-[#E5D7BC] dark:border-white/10'}`}
               >
                 {ad.lord}
-                <span className={`font-mono-data ${isCur ? 'text-amber-100' : 'text-[#78716C]'}`}> · {String(ad.startDate).slice(0, 10)}</span>
+                <span className={`font-mono-data ${isCur ? 'text-amber-100' : 'text-[#78716C] dark:text-[#A8A29E]'}`}> · {String(ad.startDate).slice(0, 10)}</span>
                 {isCur && <span className="ml-1 text-[8px] font-bold uppercase">◀ current</span>}
               </span>
             );
@@ -209,6 +209,30 @@ export default function MasterKundliReportClient() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [lang, setLang] = useState('en');
   const [isLangModalOpen, setIsLangModalOpen] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  // Theme hydration: mirror the site-wide contract — read the persisted
+  // theme once on mount and mirror it onto <html> so Tailwind dark: variants
+  // (and the GlobalHeader Sun/Moon toggle) behave exactly like every other
+  // page. Persisting happens ONLY on explicit toggle, never on mount.
+  useEffect(() => {
+    try {
+      const savedTheme = localStorage.getItem('cosmictantra_theme') as 'light' | 'dark' | null;
+      if (savedTheme === 'dark' || savedTheme === 'light') {
+        setTheme(savedTheme);
+        if (savedTheme === 'dark') document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
+      }
+    } catch {}
+  }, []);
+
+  const handleThemeToggle = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    try { localStorage.setItem('cosmictantra_theme', nextTheme); } catch {}
+    if (nextTheme === 'dark') document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+  };
 
   // Selected-language surface: mirrors the home page contract — keep <html
   // lang> in sync and persist the choice. Persisting happens ONLY on explicit
@@ -613,11 +637,13 @@ export default function MasterKundliReportClient() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] text-[#1C1917] font-sans antialiased pb-24 selection:bg-[#E5D7BC]">
+    <div className="min-h-screen kundli-paper bg-[#FDFBF7] dark:bg-[#07080C] text-[#1C1917] dark:text-[#EFECE6] font-sans antialiased pb-24 selection:bg-[#E5D7BC] dark:selection:bg-[#D4AF37]/40">
 
-      {/* 0. Global site header (logo, navigation, language) */}
+      {/* 0. Global site header (logo, navigation, language, day/night) */}
       <GlobalHeader
         lang={lang}
+        theme={theme}
+        onThemeToggle={handleThemeToggle}
         onLangToggle={() => setIsLangModalOpen(true)}
       />
       <LanguageSelectorModal
@@ -628,25 +654,25 @@ export default function MasterKundliReportClient() {
       />
 
       {/* 1. Header Toolbar */}
-      <header className="sticky top-16 sm:top-20 z-40 bg-[#FDFBF7]/95 backdrop-blur-md border-b border-[#E5D7BC] px-4 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-4 print:hidden">
+      <header className="sticky top-16 sm:top-20 z-40 bg-[#FDFBF7]/95 dark:bg-[#07080C]/95 backdrop-blur-md border-b border-[#E5D7BC] dark:border-white/10 px-4 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-4 print:hidden">
         
         {/* Left: Branding & Subject Info */}
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push('/')}
-            className="w-8 h-8 rounded-full bg-[#8E6F1D]/10 border border-[#8E6F1D]/30 flex items-center justify-center text-[#8E6F1D] hover:bg-[#8E6F1D]/20 transition-all font-serif font-bold text-sm"
+            className="w-8 h-8 rounded-full bg-[#8E6F1D]/10 border border-[#8E6F1D]/30 flex items-center justify-center text-[#8E6F1D] dark:text-[#F0C968] hover:bg-[#8E6F1D] dark:hover:bg-[#D4AF37]/20 transition-all font-serif font-bold text-sm"
             title={t('backHome')}
           >
             ॐ
           </button>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-serif font-bold text-base lg:text-lg tracking-tight text-[#1C1917]">{t('title')}</span>
+              <span className="font-serif font-bold text-base lg:text-lg tracking-tight text-[#1C1917] dark:text-[#EFECE6]">{t('title')}</span>
             </div>
-            <p className="text-[11px] text-[#78716C] font-mono-data flex flex-wrap items-center gap-1.5">
+            <p className="text-[11px] text-[#78716C] dark:text-[#A8A29E] font-mono-data flex flex-wrap items-center gap-1.5">
               <strong>{birthState.name}</strong> • {birthState.birthDate}, {birthState.birthTime} • {birthState.locationName}
               {isDemoProfile && (
-                <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300 uppercase tracking-wide">
+                <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-[#D4AF37]/15 text-amber-800 dark:text-amber-300 border border-amber-300 uppercase tracking-wide">
                   <Sparkles className="w-2.5 h-2.5" /> {t('sample')}
                 </span>
               )}
@@ -655,13 +681,13 @@ export default function MasterKundliReportClient() {
         </div>
 
         {/* Center: Mode Switcher (Overview / Folio / Workbench) */}
-        <div className="flex items-center gap-1 bg-[#F5EFE6] p-1 rounded-xl border border-[#E5D7BC]">
+        <div className="flex items-center gap-1 bg-[#F5EFE6] dark:bg-[#1C1E27] p-1 rounded-xl border border-[#E5D7BC] dark:border-white/10">
           <button
             onClick={() => {
               chitiSensory.playTick();
               setActiveTab('OVERVIEW');
             }}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${activeTab === 'OVERVIEW' ? 'bg-[#1C1917] text-[#FDFBF7] shadow-sm' : 'text-[#78716C] hover:text-[#1C1917]'}`}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${activeTab === 'OVERVIEW' ? 'bg-[#1C1917] dark:bg-[#D4AF37] text-[#FDFBF7] dark:text-[#060709] shadow-sm' : 'text-[#78716C] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#EFECE6]'}`}
           >
             <LayoutDashboard className="w-3.5 h-3.5" />
             <span>{t('overview')}</span>
@@ -671,7 +697,7 @@ export default function MasterKundliReportClient() {
               chitiSensory.playTick();
               setActiveTab('FOLIO');
             }}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${activeTab === 'FOLIO' ? 'bg-[#1C1917] text-[#FDFBF7] shadow-sm' : 'text-[#78716C] hover:text-[#1C1917]'}`}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${activeTab === 'FOLIO' ? 'bg-[#1C1917] dark:bg-[#D4AF37] text-[#FDFBF7] dark:text-[#060709] shadow-sm' : 'text-[#78716C] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#EFECE6]'}`}
           >
             <BookOpen className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">{t('book17')}</span>
@@ -682,7 +708,7 @@ export default function MasterKundliReportClient() {
               chitiSensory.playTick();
               setActiveTab('WORKBENCH');
             }}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${activeTab === 'WORKBENCH' ? 'bg-[#1C1917] text-[#FDFBF7] shadow-sm' : 'text-[#78716C] hover:text-[#1C1917]'}`}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${activeTab === 'WORKBENCH' ? 'bg-[#1C1917] dark:bg-[#D4AF37] text-[#FDFBF7] dark:text-[#060709] shadow-sm' : 'text-[#78716C] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#EFECE6]'}`}
           >
             <Grid className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">{t('workbench')}</span>
@@ -693,12 +719,12 @@ export default function MasterKundliReportClient() {
         {/* Right: Actions (Depth, Print, Download, Edit) */}
         <div className="flex items-center gap-2">
           {activeTab === 'FOLIO' && (
-            <div className="hidden sm:flex items-center gap-1 bg-[#F5EFE6] p-1 rounded-lg border border-[#E5D7BC] text-xs">
+            <div className="hidden sm:flex items-center gap-1 bg-[#F5EFE6] dark:bg-[#1C1E27] p-1 rounded-lg border border-[#E5D7BC] dark:border-white/10 text-xs">
               {(['SIMPLE', 'DETAILED', 'PANDIT'] as const).map((depth) => (
                 <button
                   key={depth}
                   onClick={() => setReadingDepth(depth)}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${readingDepth === depth ? 'bg-[#8E6F1D] text-white shadow-xs' : 'text-[#78716C] hover:text-[#1C1917]'}`}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${readingDepth === depth ? 'bg-[#8E6F1D] text-white shadow-xs' : 'text-[#78716C] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#EFECE6]'}`}
                 >
                   {depth === 'SIMPLE' ? t('simple') : depth === 'DETAILED' ? t('detailed') : t('scholarly')}
                 </button>
@@ -708,16 +734,16 @@ export default function MasterKundliReportClient() {
 
           <button
             onClick={() => setIsEditModalOpen(true)}
-            className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-[#E5D7BC] bg-white hover:bg-[#F5EFE6] transition-colors"
+            className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-[#E5D7BC] dark:border-white/10 bg-white dark:bg-[#121422] hover:bg-[#F5EFE6] dark:bg-[#1C1E27] dark:hover:bg-[#1C1E27] transition-colors"
             title={t('editTitle')}
           >
-            <Edit3 className="w-3.5 h-3.5 text-[#8E6F1D]" />
+            <Edit3 className="w-3.5 h-3.5 text-[#8E6F1D] dark:text-[#F0C968]" />
             <span className="hidden sm:inline">{t('editDetails')}</span>
           </button>
 
           <button
             onClick={handlePrint}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-[#8E6F1D]/30 bg-white hover:bg-[#F5EFE6] text-[#8E6F1D] transition-colors shadow-xs"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-[#8E6F1D]/30 bg-white dark:bg-[#121422] hover:bg-[#F5EFE6] dark:bg-[#1C1E27] dark:hover:bg-[#1C1E27] text-[#8E6F1D] dark:text-[#F0C968] transition-colors shadow-xs"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>{t('print')}</span>
@@ -738,10 +764,10 @@ export default function MasterKundliReportClient() {
 
       {/* Generation progress / fail-safe strip (real backend states only) */}
       {(isGeneratingPdf || pipelineState || failSafe) && (
-        <div className="border-b border-[#E5D7BC] bg-[#FAF6EF] px-4 lg:px-8 py-3 print:hidden">
+        <div className="border-b border-[#E5D7BC] dark:border-white/10 bg-[#FAF6EF] dark:bg-[#161828] px-4 lg:px-8 py-3 print:hidden">
           {isGeneratingPdf ? (
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-              <span className="text-[11px] font-bold text-[#8E6F1D] uppercase tracking-wider">{t('gen')}</span>
+              <span className="text-[11px] font-bold text-[#8E6F1D] dark:text-[#F0C968] uppercase tracking-wider">{t('gen')}</span>
               {[
                 ['INPUT_VALIDATED', t('stInput')],
                 ['CALCULATION_COMPLETE', t('stCalc')],
@@ -754,14 +780,14 @@ export default function MasterKundliReportClient() {
                 const done = cur >= 0 && idx < cur;
                 const active = pipelineState === state || (state === 'PDF_VALIDATED' && pipelineState === 'READY_FOR_DELIVERY');
                 return (
-                  <span key={state} className={`flex items-center gap-1.5 text-[11px] ${done || active ? 'text-[#1C1917] font-semibold' : 'text-[#78716C]'}`}>
-                    <CheckCircle2 className={`w-3.5 h-3.5 ${done || active ? 'text-[#8E6F1D]' : ''}`} />
+                  <span key={state} className={`flex items-center gap-1.5 text-[11px] ${done || active ? 'text-[#1C1917] dark:text-[#EFECE6] font-semibold' : 'text-[#78716C] dark:text-[#A8A29E]'}`}>
+                    <CheckCircle2 className={`w-3.5 h-3.5 ${done || active ? 'text-[#8E6F1D] dark:text-[#F0C968]' : ''}`} />
                     {label}
                   </span>
                 );
               })}
               {lastPdfMeta && (
-                <span className="text-[10px] font-mono-data text-[#78716C]">
+                <span className="text-[10px] font-mono-data text-[#78716C] dark:text-[#A8A29E]">
                   ✓ {lastPdfMeta.pageCount} pages · {lastPdfMeta.fileSizeKB} KB · quality PASS
                 </span>
               )}
@@ -769,9 +795,9 @@ export default function MasterKundliReportClient() {
           ) : failSafe ? (
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-start gap-2.5 max-w-3xl">
-                <Shield className="w-4 h-4 text-[#B45309] mt-0.5 shrink-0" />
+                <Shield className="w-4 h-4 text-[#B45309] dark:text-amber-300 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-xs font-semibold text-[#1C1917]">
+                  <p className="text-xs font-semibold text-[#1C1917] dark:text-[#EFECE6]">
                     {lang === 'hi'
                       ? (failSafe.code === 'KUNDLI_INPUT_INVALID'
                           ? 'हम यह कुण्डली सही रूप से पूर्ण नहीं कर सके; रिपोर्ट जारी नहीं की गई। कृपया जन्म विवरण (नाम, तिथि, समय तथा दोनों निर्देशांक) जाँच कर पुनः प्रयास करें।'
@@ -780,7 +806,7 @@ export default function MasterKundliReportClient() {
                             : failSafe.message)
                       : failSafe.message}
                   </p>
-                  <p className="text-[10px] font-mono-data text-[#78716C] mt-0.5">
+                  <p className="text-[10px] font-mono-data text-[#78716C] dark:text-[#A8A29E] mt-0.5">
                     {lang === 'hi'
                       ? `तकनीकी कारण: ${failSafe.code} · कोई पीडीएफ़ जारी नहीं हुई।`
                       : `Engineering reason: ${failSafe.code} · No PDF was issued.`}
@@ -789,7 +815,7 @@ export default function MasterKundliReportClient() {
               </div>
               <button
                 onClick={() => setIsEditModalOpen(true)}
-                className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg border border-[#8E6F1D]/30 bg-white text-[#8E6F1D] hover:bg-[#F5EFE6] transition-colors"
+                className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg border border-[#8E6F1D]/30 bg-white dark:bg-[#121422] text-[#8E6F1D] dark:text-[#F0C968] hover:bg-[#F5EFE6] dark:bg-[#1C1E27] dark:hover:bg-[#1C1E27] transition-colors"
               >
                 <Edit3 className="w-3.5 h-3.5" /> {lang === 'hi' ? 'जन्म विवरण जाँचें' : 'Verify birth details'}
               </button>
@@ -802,15 +828,15 @@ export default function MasterKundliReportClient() {
           Layout: Ganesh emblem left, invocation centred, CosmicTantra symbol
           right — mirrored exactly on the PDF cover. */}
       <div className="max-w-7xl mx-auto px-4 lg:px-8 pt-5 print:hidden">
-        <div className="flex items-center justify-between gap-3 py-3 px-4 sm:px-8 rounded-2xl bg-gradient-to-r from-amber-50 via-white to-amber-50 border border-[#E5D7BC]">
+        <div className="flex items-center justify-between gap-3 py-3 px-4 sm:px-8 rounded-2xl bg-gradient-to-r from-amber-50 via-white to-amber-50 dark:from-[#241D10] dark:via-[#161828] dark:to-[#241D10] border border-[#E5D7BC] dark:border-white/10">
           <img
             src="/images/ganesh_vandana_256.png"
             alt="Shri Ganesh"
             className="w-12 h-12 sm:w-14 sm:h-14 rounded-full ring-1 ring-amber-200 object-cover shrink-0"
           />
           <div className="text-center min-w-0">
-            <p className="text-base lg:text-lg font-serif font-bold text-[#8E6F1D]">॥ श्री गणेशाय नमः ॥</p>
-            <p className="text-[10px] text-[#78716C] font-mono-data">
+            <p className="text-base lg:text-lg font-serif font-bold text-[#8E6F1D] dark:text-[#F0C968]">॥ श्री गणेशाय नमः ॥</p>
+            <p className="text-[10px] text-[#78716C] dark:text-[#A8A29E] font-mono-data">
               {t('ganeshSub')}
             </p>
           </div>
@@ -819,9 +845,9 @@ export default function MasterKundliReportClient() {
       </div>
 
       {/* 2. Graha Matrix Quick Bar */}
-      <div className="bg-[#FAF6EF] border-b border-[#E5D7BC] px-4 lg:px-8 py-2 overflow-x-auto scrollbar-thin print:hidden">
+      <div className="bg-[#FAF6EF] dark:bg-[#161828] border-b border-[#E5D7BC] dark:border-white/10 px-4 lg:px-8 py-2 overflow-x-auto scrollbar-thin print:hidden">
         <div className="flex items-center gap-2 min-w-max">
-          <span className="text-[11px] font-bold text-[#8E6F1D] uppercase tracking-wider flex items-center gap-1 mr-1">
+          <span className="text-[11px] font-bold text-[#8E6F1D] dark:text-[#F0C968] uppercase tracking-wider flex items-center gap-1 mr-1">
             <Activity className="w-3.5 h-3.5" /> {t('graha')}
           </span>
           {grahas.map((g) => {
@@ -833,13 +859,13 @@ export default function MasterKundliReportClient() {
                   chitiSensory.playTick();
                   setActiveGraha(g.name);
                 }}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 border ${isSelected ? 'bg-[#8E6F1D] text-white border-[#8E6F1D] shadow-xs' : 'bg-white text-[#44403C] border-[#E5D7BC] hover:border-[#8E6F1D]/50'}`}
+                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 border ${isSelected ? 'bg-[#8E6F1D] text-white border-[#8E6F1D] shadow-xs' : 'bg-white dark:bg-[#121422] text-[#44403C] dark:text-[#D1C9BF] border-[#E5D7BC] dark:border-white/10 hover:border-[#8E6F1D]/50'}`}
               >
                 <span>{g.name}</span>
-                <span className={`text-[10px] font-mono-data ${isSelected ? 'text-amber-200' : 'text-[#78716C]'}`}>
+                <span className={`text-[10px] font-mono-data ${isSelected ? 'text-amber-200' : 'text-[#78716C] dark:text-[#A8A29E]'}`}>
                   {String(g.rashiName || g.rashiEn || '').slice(0, 3)} {Math.floor(g.degrees % 30)}°{Math.floor((g.degrees * 60) % 60)}'
                 </span>
-                {g.isRetrograde && <span className={`text-[10px] font-bold ${isSelected ? 'text-amber-100' : 'text-rose-500'}`}>(R)</span>}
+                {g.isRetrograde && <span className={`text-[10px] font-bold ${isSelected ? 'text-amber-100' : 'text-rose-500 dark:text-rose-300'}`}>(R)</span>}
               </button>
             );
           })}
@@ -848,48 +874,48 @@ export default function MasterKundliReportClient() {
 
       {/* 2b. Kundli at a Glance — the Era-2/3 convention: summary before depth */}
       <section className="max-w-7xl mx-auto px-4 lg:px-8 pt-6 print:hidden">
-        <div className="rounded-2xl border border-[#E5D7BC] bg-white shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#F0E6D2] bg-[#FAF6EF]">
-            <h2 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] flex items-center gap-1.5">
+        <div className="rounded-2xl border border-[#E5D7BC] dark:border-white/10 bg-white dark:bg-[#121422] shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#F0E6D2] dark:border-white/5 bg-[#FAF6EF] dark:bg-[#161828]">
+            <h2 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968] flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5" /> {t('glance')}
             </h2>
-            <span className="text-[10px] font-mono-data text-[#78716C]">{snapshot.meta.engineVersion}</span>
+            <span className="text-[10px] font-mono-data text-[#78716C] dark:text-[#A8A29E]">{snapshot.meta.engineVersion}</span>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 divide-x divide-y lg:divide-y-0 divide-[#F0E6D2]">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 divide-x divide-y lg:divide-y-0 divide-[#F0E6D2] dark:divide-white/5">
             <div className="px-4 py-3">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C]">{t('lagna')}</div>
-              <div className="text-sm font-bold text-[#1C1917] mt-0.5">{snapshot.lagna.rashiName}</div>
-              <div className="text-[10px] text-[#78716C]">{snapshot.lagna.rashiEn} · {snapshot.lagna.degreeStr}</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E]">{t('lagna')}</div>
+              <div className="text-sm font-bold text-[#1C1917] dark:text-[#EFECE6] mt-0.5">{snapshot.lagna.rashiName}</div>
+              <div className="text-[10px] text-[#78716C] dark:text-[#A8A29E]">{snapshot.lagna.rashiEn} · {snapshot.lagna.degreeStr}</div>
             </div>
             <div className="px-4 py-3">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C]">{t('moonRashi')}</div>
-              <div className="text-sm font-bold text-[#1C1917] mt-0.5">{(snapshot.planets as any)?.Moon?.rashiName ?? '—'}</div>
-              <div className="text-[10px] text-[#78716C]">{(snapshot.planets as any)?.Moon?.rashiEn ?? ''}</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E]">{t('moonRashi')}</div>
+              <div className="text-sm font-bold text-[#1C1917] dark:text-[#EFECE6] mt-0.5">{(snapshot.planets as any)?.Moon?.rashiName ?? '—'}</div>
+              <div className="text-[10px] text-[#78716C] dark:text-[#A8A29E]">{(snapshot.planets as any)?.Moon?.rashiEn ?? ''}</div>
             </div>
             <div className="px-4 py-3">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C]">{t('janmaNakshatra')}</div>
-              <div className="text-sm font-bold text-[#1C1917] mt-0.5">{snapshot.birthPanchang.nakshatra?.name ?? '—'}</div>
-              <div className="text-[10px] text-[#78716C]"> {t('pada')} {(snapshot.birthPanchang.nakshatra as any)?.pada ?? '—'}</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E]">{t('janmaNakshatra')}</div>
+              <div className="text-sm font-bold text-[#1C1917] dark:text-[#EFECE6] mt-0.5">{snapshot.birthPanchang.nakshatra?.name ?? '—'}</div>
+              <div className="text-[10px] text-[#78716C] dark:text-[#A8A29E]"> {t('pada')} {(snapshot.birthPanchang.nakshatra as any)?.pada ?? '—'}</div>
             </div>
             <div className="px-4 py-3">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C]">{t('tithi')}</div>
-              <div className="text-sm font-bold text-[#1C1917] mt-0.5">{snapshot.birthPanchang.udayaTithi?.fullName ?? '—'}</div>
-              <div className="text-[10px] text-[#78716C]">{t('udayaTithi')}</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E]">{t('tithi')}</div>
+              <div className="text-sm font-bold text-[#1C1917] dark:text-[#EFECE6] mt-0.5">{snapshot.birthPanchang.udayaTithi?.fullName ?? '—'}</div>
+              <div className="text-[10px] text-[#78716C] dark:text-[#A8A29E]">{t('udayaTithi')}</div>
             </div>
             <div className="px-4 py-3">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C]">{t('manglik')}</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E]">{t('manglik')}</div>
               <div className="text-sm font-bold mt-0.5">
                 {snapshot.yogasAndDoshas.manglik.isManglik
-                  ? <span className="text-[#B45309]">{snapshot.yogasAndDoshas.manglik.isCancelled ? t('cancelled') : `Yes · ${snapshot.yogasAndDoshas.manglik.severity}`}</span>
-                  : <span className="text-[#15803D]">{t('notPresent')}</span>}
+                  ? <span className="text-[#B45309] dark:text-amber-300">{snapshot.yogasAndDoshas.manglik.isCancelled ? t('cancelled') : `Yes · ${snapshot.yogasAndDoshas.manglik.severity}`}</span>
+                  : <span className="text-[#15803D] dark:text-emerald-400">{t('notPresent')}</span>}
               </div>
-              <div className="text-[10px] text-[#78716C]">as per engine rules</div>
+              <div className="text-[10px] text-[#78716C] dark:text-[#A8A29E]">as per engine rules</div>
             </div>
             <div className="px-4 py-3">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C]">Current Dasha</div>
-              <div className="text-sm font-bold text-[#1C1917] mt-0.5">{snapshot.dasha.currentMahadasha}</div>
-              <div className="text-[10px] text-[#78716C]">{snapshot.dasha.currentAntardasha} AD · {snapshot.dasha.currentDateRange}</div>
-              <div className="text-[9px] font-mono-data text-[#78716C] mt-0.5">Dasha balance at birth: {snapshot.dasha.startingBalance}</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E]">Current Dasha</div>
+              <div className="text-sm font-bold text-[#1C1917] dark:text-[#EFECE6] mt-0.5">{snapshot.dasha.currentMahadasha}</div>
+              <div className="text-[10px] text-[#78716C] dark:text-[#A8A29E]">{snapshot.dasha.currentAntardasha} AD · {snapshot.dasha.currentDateRange}</div>
+              <div className="text-[9px] font-mono-data text-[#78716C] dark:text-[#A8A29E] mt-0.5">Dasha balance at birth: {snapshot.dasha.startingBalance}</div>
             </div>
           </div>
         </div>
@@ -903,58 +929,59 @@ export default function MasterKundliReportClient() {
         <main className="max-w-5xl mx-auto px-4 lg:px-8 py-8 space-y-6">
           {/* Row 1: D1 chart + current period */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-2xl p-5 border border-[#E5D7BC] shadow-sm space-y-3">
+            <div className="bg-white dark:bg-[#121422] rounded-2xl p-5 border border-[#E5D7BC] dark:border-white/10 shadow-sm space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] flex items-center gap-1.5">
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968] flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5" /> Rashi Chart (D1)
                 </h3>
-                <span className="text-[10px] font-mono-data text-[#78716C]">Lagna {snapshot.lagna.rashiName}</span>
+                <span className="text-[10px] font-mono-data text-[#78716C] dark:text-[#A8A29E]">Lagna {snapshot.lagna.rashiName}</span>
               </div>
               <div className="flex flex-col items-center gap-3">
                 <NorthIndianChart
                   kundali={chartD1Obj}
+                  theme={theme}
                   onPlanetClick={(name: string, house: number) => setChartPlanet({ name, house })}
                   selectedPlanet={chartPlanet?.name ?? undefined}
                 />
-                <p className="text-[10px] text-[#78716C] font-mono-data -mt-1">Tap a planet for its details</p>
+                <p className="text-[10px] text-[#78716C] dark:text-[#A8A29E] font-mono-data -mt-1">Tap a planet for its details</p>
               </div>
               {selectedPlanetInfo && (
-                <div className="rounded-xl border border-[#8E6F1D]/30 bg-amber-50/60 p-3 space-y-1.5">
+                <div className="rounded-xl border border-[#8E6F1D]/30 bg-amber-50/60 dark:bg-[#D4AF37]/10 p-3 space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-[#1C1917]">
+                    <span className="text-xs font-bold text-[#1C1917] dark:text-[#EFECE6]">
                       {selectedPlanetInfo.name}
                       {selectedPlanetInfo.sanskrit ? ` · ${selectedPlanetInfo.sanskrit}` : ''}
                     </span>
                     <button
                       onClick={() => setChartPlanet(null)}
-                      className="text-[9px] font-bold uppercase text-[#8E6F1D] hover:underline"
+                      className="text-[9px] font-bold uppercase text-[#8E6F1D] dark:text-[#F0C968] hover:underline"
                     >
                       ✕ close
                     </button>
                   </div>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
-                    <span className="text-[#78716C]">Rashi</span>
-                    <span className="font-semibold text-[#1C1917] text-right">{selectedPlanetInfo.rashiName} ({selectedPlanetInfo.rashiEn})</span>
-                    <span className="text-[#78716C]">Degree</span>
-                    <span className="font-semibold text-[#1C1917] text-right">{selectedPlanetInfo.degreeStr}</span>
-                    <span className="text-[#78716C]">Nakshatra</span>
-                    <span className="font-semibold text-[#1C1917] text-right">{selectedPlanetInfo.nakshatra} pada {selectedPlanetInfo.pada}</span>
-                    <span className="text-[#78716C]">House</span>
-                    <span className="font-semibold text-[#1C1917] text-right">{selectedPlanetInfo.house}</span>
-                    <span className="text-[#78716C]">Dignity</span>
-                    <span className="font-semibold text-[#1C1917] text-right">
+                    <span className="text-[#78716C] dark:text-[#A8A29E]">Rashi</span>
+                    <span className="font-semibold text-[#1C1917] dark:text-[#EFECE6] text-right">{selectedPlanetInfo.rashiName} ({selectedPlanetInfo.rashiEn})</span>
+                    <span className="text-[#78716C] dark:text-[#A8A29E]">Degree</span>
+                    <span className="font-semibold text-[#1C1917] dark:text-[#EFECE6] text-right">{selectedPlanetInfo.degreeStr}</span>
+                    <span className="text-[#78716C] dark:text-[#A8A29E]">Nakshatra</span>
+                    <span className="font-semibold text-[#1C1917] dark:text-[#EFECE6] text-right">{selectedPlanetInfo.nakshatra} pada {selectedPlanetInfo.pada}</span>
+                    <span className="text-[#78716C] dark:text-[#A8A29E]">House</span>
+                    <span className="font-semibold text-[#1C1917] dark:text-[#EFECE6] text-right">{selectedPlanetInfo.house}</span>
+                    <span className="text-[#78716C] dark:text-[#A8A29E]">Dignity</span>
+                    <span className="font-semibold text-[#1C1917] dark:text-[#EFECE6] text-right">
                       {selectedPlanetInfo.isRetrograde ? 'Retrograde · ' : ''}{selectedPlanetInfo.dignity}
                     </span>
                     {selectedPlanetInfo.karaka && (
                       <>
-                        <span className="text-[#78716C]">Karaka</span>
-                        <span className="font-semibold text-[#1C1917] text-right">{selectedPlanetInfo.karaka}</span>
+                        <span className="text-[#78716C] dark:text-[#A8A29E]">Karaka</span>
+                        <span className="font-semibold text-[#1C1917] dark:text-[#EFECE6] text-right">{selectedPlanetInfo.karaka}</span>
                       </>
                     )}
                     {selectedPlanetInfo.longitude !== null && (
                       <>
-                        <span className="text-[#78716C]">Sidereal longitude</span>
-                        <span className="font-mono-data text-[#1C1917] text-right">{selectedPlanetInfo.longitude.toFixed(4)}°</span>
+                        <span className="text-[#78716C] dark:text-[#A8A29E]">Sidereal longitude</span>
+                        <span className="font-mono-data text-[#1C1917] dark:text-[#EFECE6] text-right">{selectedPlanetInfo.longitude.toFixed(4)}°</span>
                       </>
                     )}
                   </div>
@@ -962,40 +989,40 @@ export default function MasterKundliReportClient() {
               )}
             </div>
 
-            <div className="bg-white rounded-2xl p-5 border border-[#E5D7BC] shadow-sm space-y-3">
-              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] flex items-center gap-1.5">
+            <div className="bg-white dark:bg-[#121422] rounded-2xl p-5 border border-[#E5D7BC] dark:border-white/10 shadow-sm space-y-3">
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968] flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5" /> Current Dasha Period
               </h3>
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 rounded-xl bg-[#FAF6EF] border border-[#E5D7BC]/70">
-                  <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C]">Mahadasha</div>
-                  <div className="text-base font-bold text-[#1C1917]">{snapshot.dasha.currentMahadasha}</div>
-                  <div className="text-[10px] font-mono-data text-[#78716C]">{snapshot.dasha.currentDateRange}</div>
+                <div className="p-3 rounded-xl bg-[#FAF6EF] dark:bg-[#161828] border border-[#E5D7BC]/70 dark:border-white/10">
+                  <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E]">Mahadasha</div>
+                  <div className="text-base font-bold text-[#1C1917] dark:text-[#EFECE6]">{snapshot.dasha.currentMahadasha}</div>
+                  <div className="text-[10px] font-mono-data text-[#78716C] dark:text-[#A8A29E]">{snapshot.dasha.currentDateRange}</div>
                 </div>
-                <div className="p-3 rounded-xl bg-[#FAF6EF] border border-[#E5D7BC]/70">
-                  <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C]">Antardasha</div>
-                  <div className="text-base font-bold text-[#1C1917]">{snapshot.dasha.currentAntardasha}</div>
-                  <div className="text-[10px] font-mono-data text-[#78716C]">Pratyantardasha {snapshot.dasha.currentPratyantardasha || '—'}</div>
+                <div className="p-3 rounded-xl bg-[#FAF6EF] dark:bg-[#161828] border border-[#E5D7BC]/70 dark:border-white/10">
+                  <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E]">Antardasha</div>
+                  <div className="text-base font-bold text-[#1C1917] dark:text-[#EFECE6]">{snapshot.dasha.currentAntardasha}</div>
+                  <div className="text-[10px] font-mono-data text-[#78716C] dark:text-[#A8A29E]">Pratyantardasha {snapshot.dasha.currentPratyantardasha || '—'}</div>
                 </div>
               </div>
-              <p className="text-[11px] leading-relaxed text-[#44403C]">
+              <p className="text-[11px] leading-relaxed text-[#44403C] dark:text-[#D1C9BF]">
                 {snapshot.dasha.currentPeriodString}
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {(snapshot.yogasAndDoshas.rajYogas ?? []).slice(0, 3).map((y: string) => (
-                  <span key={y} className="px-2 py-1 rounded-lg text-[10px] font-semibold bg-amber-50 text-[#8E6F1D] border border-amber-200">{y}</span>
+                  <span key={y} className="px-2 py-1 rounded-lg text-[10px] font-semibold bg-amber-50 dark:bg-[#D4AF37]/10 text-[#8E6F1D] dark:text-[#F0C968] border border-amber-200">{y}</span>
                 ))}
               </div>
             </div>
           </div>
 
           {/* Row 2: Vimshottari timeline (tap a period for antardashas) */}
-          <div className="bg-white rounded-2xl p-5 border border-[#E5D7BC] shadow-sm space-y-3">
+          <div className="bg-white dark:bg-[#121422] rounded-2xl p-5 border border-[#E5D7BC] dark:border-white/10 shadow-sm space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] flex items-center gap-1.5">
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968] flex items-center gap-1.5">
                 <Activity className="w-3.5 h-3.5" /> {t('dasha')}
               </h3>
-              <span className="text-[10px] font-mono-data text-[#78716C]">Dasha balance at birth: {snapshot.dasha.startingBalance}</span>
+              <span className="text-[10px] font-mono-data text-[#78716C] dark:text-[#A8A29E]">Dasha balance at birth: {snapshot.dasha.startingBalance}</span>
             </div>
             <DashaTimeline
               mahadashas={snapshot.dasha.mahadashas}
@@ -1006,8 +1033,8 @@ export default function MasterKundliReportClient() {
           </div>
 
           {/* Row 3: Interpretation highlights (progressive disclosure) */}
-          <div className="bg-white rounded-2xl p-5 border border-[#E5D7BC] shadow-sm space-y-3">
-            <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] flex items-center gap-1.5">
+          <div className="bg-white dark:bg-[#121422] rounded-2xl p-5 border border-[#E5D7BC] dark:border-white/10 shadow-sm space-y-3">
+            <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968] flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5" /> Interpretation Highlights
             </h3>
             <div className="space-y-2">
@@ -1024,18 +1051,18 @@ export default function MasterKundliReportClient() {
                   ['currentPeriod', 'Current Period']
                 ];
                 return items.map(([key, title]) => (
-                  <details key={key} className="group rounded-xl border border-[#E5D7BC]/80 bg-[#FAF6EF]/60 open:bg-white">
-                    <summary className="flex items-center justify-between px-3 py-2.5 cursor-pointer select-none text-xs font-bold text-[#1C1917]">
+                  <details key={key} className="group rounded-xl border border-[#E5D7BC]/80 dark:border-white/10 bg-[#FAF6EF]/60 dark:bg-[#161828]/60 open:bg-white dark:open:bg-[#121422]">
+                    <summary className="flex items-center justify-between px-3 py-2.5 cursor-pointer select-none text-xs font-bold text-[#1C1917] dark:text-[#EFECE6]">
                       <span className="flex items-center gap-2">
-                        <ChevronDown className="w-3.5 h-3.5 text-[#8E6F1D] transition-transform group-open:rotate-180" />
+                        <ChevronDown className="w-3.5 h-3.5 text-[#8E6F1D] dark:text-[#F0C968] transition-transform group-open:rotate-180" />
                         {title}
                       </span>
-                      <span className="text-[9px] font-mono-data text-[#78716C] uppercase">tap to read</span>
+                      <span className="text-[9px] font-mono-data text-[#78716C] dark:text-[#A8A29E] uppercase">tap to read</span>
                     </summary>
                     <div className="px-4 pb-3 pt-1">
-                      <p className="text-xs leading-relaxed text-[#44403C]">{data[key] ?? 'Not available.'}</p>
+                      <p className="text-xs leading-relaxed text-[#44403C] dark:text-[#D1C9BF]">{data[key] ?? 'Not available.'}</p>
                       {evidence.length > 0 && (
-                        <p className="text-[9px] font-mono-data text-[#78716C] mt-2">Evidence: {evidence.join(', ')}</p>
+                        <p className="text-[9px] font-mono-data text-[#78716C] dark:text-[#A8A29E] mt-2">Evidence: {evidence.join(', ')}</p>
                       )}
                     </div>
                   </details>
@@ -1045,12 +1072,12 @@ export default function MasterKundliReportClient() {
           </div>
 
           {/* Row 4: Calculation standard (method transparency on screen) */}
-          <details className="bg-white rounded-2xl p-5 border border-[#E5D7BC] shadow-sm group">
+          <details className="bg-white dark:bg-[#121422] rounded-2xl p-5 border border-[#E5D7BC] dark:border-white/10 shadow-sm group">
             <summary className="flex items-center justify-between cursor-pointer select-none">
-              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] flex items-center gap-1.5">
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968] flex items-center gap-1.5">
                 <Telescope className="w-3.5 h-3.5" /> How this Kundli was calculated
               </h3>
-              <ChevronDown className="w-4 h-4 text-[#8E6F1D] transition-transform group-open:rotate-180" />
+              <ChevronDown className="w-4 h-4 text-[#8E6F1D] dark:text-[#F0C968] transition-transform group-open:rotate-180" />
             </summary>
             <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
@@ -1063,33 +1090,33 @@ export default function MasterKundliReportClient() {
                 ['Engine', snapshot.meta.engineVersion],
                 ['Julian day', snapshot.meta.julianDay.toFixed(4)]
               ].map(([k, v]) => (
-                <div key={k} className="p-2.5 rounded-xl bg-[#FAF6EF] border border-[#E5D7BC]/70">
-                  <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C]">{k}</div>
-                  <div className="text-[11px] font-semibold text-[#1C1917] break-words">{v}</div>
+                <div key={k} className="p-2.5 rounded-xl bg-[#FAF6EF] dark:bg-[#161828] border border-[#E5D7BC]/70 dark:border-white/10">
+                  <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E]">{k}</div>
+                  <div className="text-[11px] font-semibold text-[#1C1917] dark:text-[#EFECE6] break-words">{v}</div>
                 </div>
               ))}
             </div>
           </details>
 
           {/* Row 5: PDF actions */}
-          <div className="bg-white rounded-2xl p-5 border border-[#E5D7BC] shadow-sm flex flex-wrap items-center justify-between gap-3">
+          <div className="bg-white dark:bg-[#121422] rounded-2xl p-5 border border-[#E5D7BC] dark:border-white/10 shadow-sm flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D]">Your Kundli PDF</h3>
-              <p className="text-[11px] text-[#78716C] mt-0.5">
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968]">Your Kundli PDF</h3>
+              <p className="text-[11px] text-[#78716C] dark:text-[#A8A29E] mt-0.5">
                 Validated, deterministic and bilingual — generated only when every quality gate passes.
-                {lastPdfMeta && <span className="text-[#15803D] font-semibold"> Last: {lastPdfMeta.pageCount} pages · {lastPdfMeta.fileSizeKB} KB · PASS</span>}
+                {lastPdfMeta && <span className="text-[#15803D] dark:text-emerald-400 font-semibold"> Last: {lastPdfMeta.pageCount} pages · {lastPdfMeta.fileSizeKB} KB · PASS</span>}
               </p>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={handlePrint}
-                className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-[#8E6F1D]/30 bg-white hover:bg-[#F5EFE6] text-[#8E6F1D] transition-colors"
+                className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-[#8E6F1D]/30 bg-white dark:bg-[#121422] hover:bg-[#F5EFE6] dark:bg-[#1C1E27] dark:hover:bg-[#1C1E27] text-[#8E6F1D] dark:text-[#F0C968] transition-colors"
               >
                 <Printer className="w-3.5 h-3.5" /> Print
               </button>
               <button
                 onClick={() => setActiveTab('FOLIO')}
-                className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-[#E5D7BC] bg-white hover:bg-[#F5EFE6] text-[#1C1917] transition-colors"
+                className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-[#E5D7BC] dark:border-white/10 bg-white dark:bg-[#121422] hover:bg-[#F5EFE6] dark:bg-[#1C1E27] dark:hover:bg-[#1C1E27] text-[#1C1917] dark:text-[#EFECE6] transition-colors"
               >
                 <BookOpen className="w-3.5 h-3.5" /> Explore 17-Volume Book
               </button>
@@ -1109,7 +1136,7 @@ export default function MasterKundliReportClient() {
         /* MODE A: 17-VOLUME ENCYCLOPEDIC FOLIO                             */
         /* ================================================================ */
                 <main className="max-w-5xl mx-auto px-4 lg:px-8 py-8 space-y-3">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-[#78716C] px-1 pb-1">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E] px-1 pb-1">
             {t('volumes')}
           </div>
 
@@ -1119,37 +1146,37 @@ export default function MasterKundliReportClient() {
             return (
               <section
                 key={vol.volumeNumber}
-                className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-colors ${isOpen ? 'border-[#8E6F1D]/40' : 'border-[#E5D7BC]'}`}
+                className={`bg-white dark:bg-[#121422] rounded-2xl border shadow-sm overflow-hidden transition-colors ${isOpen ? 'border-[#8E6F1D]/40' : 'border-[#E5D7BC] dark:border-white/10'}`}
               >
                 {/* Accordion header — first volume open by default, rest collapsed */}
                 <button
                   onClick={() => toggleVolume(idx)}
                   aria-expanded={isOpen}
-                  className="w-full flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 text-left bg-gradient-to-r from-[#FAF6EF] via-white to-white hover:from-[#F5EFE6] transition-colors cursor-pointer"
+                  className="w-full flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 text-left bg-gradient-to-r from-[#FAF6EF] via-white to-white dark:from-[#161828] dark:via-[#121422] dark:to-[#121422] hover:from-[#F5EFE6] dark:hover:from-[#1C1E27] transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center font-serif font-bold text-xs sm:text-sm shrink-0 border ${isOpen ? 'bg-[#8E6F1D] text-white border-[#8E6F1D]' : 'bg-[#F5EFE6] text-[#8E6F1D] border-[#E5D7BC]'}`}>
+                    <span className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center font-serif font-bold text-xs sm:text-sm shrink-0 border ${isOpen ? 'bg-[#8E6F1D] text-white border-[#8E6F1D]' : 'bg-[#F5EFE6] dark:bg-[#1C1E27] text-[#8E6F1D] dark:text-[#F0C968] border-[#E5D7BC] dark:border-white/10'}`}>
                       {vol.volumeNumber}
                     </span>
                     <div className="min-w-0">
-                      <div className="text-sm sm:text-base font-serif font-bold text-[#1C1917] truncate">{vol.title}</div>
-                      <div className="text-[11px] font-serif italic text-[#8E6F1D] truncate">{vol.sanskritTitle}</div>
+                      <div className="text-sm sm:text-base font-serif font-bold text-[#1C1917] dark:text-[#EFECE6] truncate">{vol.title}</div>
+                      <div className="text-[11px] font-serif italic text-[#8E6F1D] dark:text-[#F0C968] truncate">{vol.sanskritTitle}</div>
                     </div>
                   </div>
-                  <ChevronDown className={`w-4 h-4 text-[#8E6F1D] shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-4 h-4 text-[#8E6F1D] dark:text-[#F0C968] shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                 </button>
 
                 {/* Collapsible body */}
                 {isOpen && (
-                  <div className="px-4 sm:px-5 pb-6 pt-1 space-y-6 border-t border-[#F0E6D2]">
-                    <p className="text-xs sm:text-sm text-[#57534E] pt-3 leading-relaxed">{vol.description}</p>
+                  <div className="px-4 sm:px-5 pb-6 pt-1 space-y-6 border-t border-[#F0E6D2] dark:border-white/5">
+                    <p className="text-xs sm:text-sm text-[#57534E] dark:text-[#D1C9BF] pt-3 leading-relaxed">{vol.description}</p>
 
                     {hasCharts && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="bg-white p-4 rounded-2xl border border-[#E5D7BC] space-y-3">
+                        <div className="bg-white dark:bg-[#121422] p-4 rounded-2xl border border-[#E5D7BC] dark:border-white/10 space-y-3">
                           <div className="flex items-center justify-between">
-                            <h3 className="text-sm font-bold font-serif text-[#1C1917]">D1 Lagna Rashi Chart</h3>
-                            <span className="text-[10px] font-mono-data text-[#8E6F1D] bg-[#8E6F1D]/10 px-2 py-0.5 rounded font-bold">Lagna: {snapshot.lagna.rashiName}</span>
+                            <h3 className="text-sm font-bold font-serif text-[#1C1917] dark:text-[#EFECE6]">D1 Lagna Rashi Chart</h3>
+                            <span className="text-[10px] font-mono-data text-[#8E6F1D] dark:text-[#F0C968] bg-[#8E6F1D]/10 px-2 py-0.5 rounded font-bold">Lagna: {snapshot.lagna.rashiName}</span>
                           </div>
                           <div className="max-w-[340px] mx-auto aspect-square">
                             <NorthIndianChart
@@ -1160,13 +1187,13 @@ export default function MasterKundliReportClient() {
                           </div>
                         </div>
 
-                        <div className="bg-white p-4 rounded-2xl border border-[#E5D7BC] space-y-3">
+                        <div className="bg-white dark:bg-[#121422] p-4 rounded-2xl border border-[#E5D7BC] dark:border-white/10 space-y-3">
                           <div className="flex items-center justify-between">
-                            <h3 className="text-sm font-bold font-serif text-[#1C1917]">D9 Navamsha Chart</h3>
-                            <span className="text-[10px] font-mono-data text-[#8E6F1D] bg-[#8E6F1D]/10 px-2 py-0.5 rounded font-bold">Dharmamsha</span>
+                            <h3 className="text-sm font-bold font-serif text-[#1C1917] dark:text-[#EFECE6]">D9 Navamsha Chart</h3>
+                            <span className="text-[10px] font-mono-data text-[#8E6F1D] dark:text-[#F0C968] bg-[#8E6F1D]/10 px-2 py-0.5 rounded font-bold">Dharmamsha</span>
                           </div>
                           <div className="max-w-[340px] mx-auto aspect-square">
-                            <NorthIndianChart kundali={chartD9Obj} />
+                            <NorthIndianChart kundali={chartD9Obj} theme={theme} />
                           </div>
                         </div>
                       </div>
@@ -1175,11 +1202,11 @@ export default function MasterKundliReportClient() {
                     {/* Volume Content Sections */}
                     <div className="space-y-5">
                       {vol.sections.map((sec, sIdx) => (
-                        <div key={sIdx} className="rounded-2xl p-5 sm:p-6 border border-[#E5D7BC] bg-[#FDFBF7]/60 space-y-4">
-                          <div className="border-b border-[#F0E6D2] pb-3 flex items-center justify-between gap-2">
-                            <h2 className="text-base font-serif font-bold text-[#1C1917]">{sec.title}</h2>
+                        <div key={sIdx} className="rounded-2xl p-5 sm:p-6 border border-[#E5D7BC] dark:border-white/10 bg-[#FDFBF7]/60 dark:bg-[#121422]/60 space-y-4">
+                          <div className="border-b border-[#F0E6D2] dark:border-white/5 pb-3 flex items-center justify-between gap-2">
+                            <h2 className="text-base font-serif font-bold text-[#1C1917] dark:text-[#EFECE6]">{sec.title}</h2>
                             {sec.category && (
-                              <span className="text-[10px] font-mono-data uppercase tracking-wider text-[#8E6F1D] font-bold bg-[#8E6F1D]/10 px-2 py-0.5 rounded shrink-0">
+                              <span className="text-[10px] font-mono-data uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968] font-bold bg-[#8E6F1D]/10 px-2 py-0.5 rounded shrink-0">
                                 {sec.category}
                               </span>
                             )}
@@ -1207,23 +1234,23 @@ export default function MasterKundliReportClient() {
                                   const shown = text.slice(0, 12);
                                   const more = text.length - shown.length;
                                   return (
-                                    <div key={key} className="col-span-full p-3.5 rounded-xl bg-[#FAF6EF] border border-[#E5D7BC]/70 space-y-1">
-                                      <div className="text-[10px] font-bold text-[#8E6F1D] uppercase font-mono-data">{label}</div>
-                                      <div className="text-xs text-[#1C1917] font-mono-data leading-relaxed break-words">
+                                    <div key={key} className="col-span-full p-3.5 rounded-xl bg-[#FAF6EF] dark:bg-[#161828] border border-[#E5D7BC]/70 dark:border-white/10 space-y-1">
+                                      <div className="text-[10px] font-bold text-[#8E6F1D] dark:text-[#F0C968] uppercase font-mono-data">{label}</div>
+                                      <div className="text-xs text-[#1C1917] dark:text-[#EFECE6] font-mono-data leading-relaxed break-words">
                                         {shown.join('  ·  ')}
-                                        {more > 0 && <span className="text-[#78716C]"> … +{more} more</span>}
+                                        {more > 0 && <span className="text-[#78716C] dark:text-[#A8A29E]"> … +{more} more</span>}
                                       </div>
                                     </div>
                                   );
                                 }
                                 if (typeof val === 'object') {
                                   return (
-                                    <div key={key} className="col-span-full p-3.5 rounded-xl bg-[#FAF6EF] border border-[#E5D7BC]/70 space-y-1">
-                                      <div className="text-[10px] font-bold text-[#8E6F1D] uppercase font-mono-data">{label}</div>
-                                      <div className="text-xs text-[#1C1917] font-mono-data flex flex-wrap gap-x-4 gap-y-1">
+                                    <div key={key} className="col-span-full p-3.5 rounded-xl bg-[#FAF6EF] dark:bg-[#161828] border border-[#E5D7BC]/70 dark:border-white/10 space-y-1">
+                                      <div className="text-[10px] font-bold text-[#8E6F1D] dark:text-[#F0C968] uppercase font-mono-data">{label}</div>
+                                      <div className="text-xs text-[#1C1917] dark:text-[#EFECE6] font-mono-data flex flex-wrap gap-x-4 gap-y-1">
                                         {Object.entries(val as Record<string, unknown>).map(([subK, subV]) => (
                                           <span key={subK}>
-                                            <strong className="text-[#78716C]">{subK.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').trim()}:</strong> {String(subV)}
+                                            <strong className="text-[#78716C] dark:text-[#A8A29E]">{subK.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').trim()}:</strong> {String(subV)}
                                           </span>
                                         ))}
                                       </div>
@@ -1231,9 +1258,9 @@ export default function MasterKundliReportClient() {
                                   );
                                 }
                                 return (
-                                  <div key={key} className="p-3 rounded-xl bg-[#FAF6EF] border border-[#E5D7BC]/70 space-y-0.5">
-                                    <div className="text-[10px] font-mono-data text-[#78716C] uppercase">{label}</div>
-                                    <div className="text-xs sm:text-sm font-semibold text-[#1C1917] font-mono-data break-words whitespace-normal">
+                                  <div key={key} className="p-3 rounded-xl bg-[#FAF6EF] dark:bg-[#161828] border border-[#E5D7BC]/70 dark:border-white/10 space-y-0.5">
+                                    <div className="text-[10px] font-mono-data text-[#78716C] dark:text-[#A8A29E] uppercase">{label}</div>
+                                    <div className="text-xs sm:text-sm font-semibold text-[#1C1917] dark:text-[#EFECE6] font-mono-data break-words whitespace-normal">
                                       {String(val)}
                                     </div>
                                   </div>
@@ -1260,15 +1287,15 @@ export default function MasterKundliReportClient() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             
             {/* Left: Chart Selection & SVG North Indian Chart */}
-            <div className="lg:col-span-7 bg-white rounded-2xl p-6 border border-[#E5D7BC] shadow-sm space-y-4">
+            <div className="lg:col-span-7 bg-white dark:bg-[#121422] rounded-2xl p-6 border border-[#E5D7BC] dark:border-white/10 shadow-sm space-y-4">
               
-              <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#F0E6D2]">
+              <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#F0E6D2] dark:border-white/5">
                 <div>
-                  <h2 className="text-base font-serif font-bold text-[#1C1917]">Divisional Shodashavarga Chart</h2>
-                  <p className="text-[11px] font-mono-data text-[#78716C]">Lagna: {snapshot.lagna.rashiName} ({snapshot.lagna.degreeStr})</p>
+                  <h2 className="text-base font-serif font-bold text-[#1C1917] dark:text-[#EFECE6]">Divisional Shodashavarga Chart</h2>
+                  <p className="text-[11px] font-mono-data text-[#78716C] dark:text-[#A8A29E]">Lagna: {snapshot.lagna.rashiName} ({snapshot.lagna.degreeStr})</p>
                 </div>
 
-                <div className="flex items-center gap-1 bg-[#F5EFE6] p-1 rounded-xl border border-[#E5D7BC]">
+                <div className="flex items-center gap-1 bg-[#F5EFE6] dark:bg-[#1C1E27] p-1 rounded-xl border border-[#E5D7BC] dark:border-white/10">
                   {[
                     { id: 1, label: 'D1 Rashi' },
                     { id: 9, label: 'D9 Navamsha' },
@@ -1281,7 +1308,7 @@ export default function MasterKundliReportClient() {
                         chitiSensory.playTick();
                         setActiveDivision(div.id);
                       }}
-                      className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all ${activeDivision === div.id ? 'bg-[#8E6F1D] text-white shadow-xs' : 'text-[#78716C] hover:text-[#1C1917]'}`}
+                      className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all ${activeDivision === div.id ? 'bg-[#8E6F1D] text-white shadow-xs' : 'text-[#78716C] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#EFECE6]'}`}
                     >
                       {div.label}
                     </button>
@@ -1292,25 +1319,26 @@ export default function MasterKundliReportClient() {
               <div className="max-w-[420px] mx-auto aspect-square py-2">
                 <NorthIndianChart
                   kundali={activeChartData}
+                  theme={theme}
                   onPlanetClick={(name: string, house: number) => setChartPlanet({ name, house })}
                   selectedPlanet={chartPlanet?.name ?? undefined}
                 />
               </div>
 
-              <div className="text-center text-[11px] font-mono-data text-[#78716C] pt-2 border-t border-[#F0E6D2]">
+              <div className="text-center text-[11px] font-mono-data text-[#78716C] dark:text-[#A8A29E] pt-2 border-t border-[#F0E6D2] dark:border-white/5">
                 North Indian style — D{activeDivision} · tap a planet for its details
               </div>
 
             </div>
 
             {/* Right: Connected Graha Inspector */}
-            <div className="lg:col-span-5 bg-white rounded-2xl p-6 border border-[#E5D7BC] shadow-sm space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-[#F0E6D2]">
-                <h2 className="text-base font-serif font-bold text-[#1C1917] flex items-center gap-1.5">
-                  <Activity className="w-4 h-4 text-[#8E6F1D]" />
+            <div className="lg:col-span-5 bg-white dark:bg-[#121422] rounded-2xl p-6 border border-[#E5D7BC] dark:border-white/10 shadow-sm space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-[#F0E6D2] dark:border-white/5">
+                <h2 className="text-base font-serif font-bold text-[#1C1917] dark:text-[#EFECE6] flex items-center gap-1.5">
+                  <Activity className="w-4 h-4 text-[#8E6F1D] dark:text-[#F0C968]" />
                   <span>Graha Balas & Dignities</span>
                 </h2>
-                <span className="text-[10px] font-mono-data bg-[#8E6F1D]/10 text-[#8E6F1D] px-2 py-0.5 rounded font-bold">
+                <span className="text-[10px] font-mono-data bg-[#8E6F1D]/10 text-[#8E6F1D] dark:text-[#F0C968] px-2 py-0.5 rounded font-bold">
                   9 GRAHAS
                 </span>
               </div>
@@ -1326,25 +1354,25 @@ export default function MasterKundliReportClient() {
                         chitiSensory.playTick();
                         setActiveGraha(p.name);
                       }}
-                      className={`p-3 rounded-xl border transition-all cursor-pointer ${isSelected ? 'bg-[#FAF6EF] border-[#8E6F1D] shadow-xs' : 'bg-[#FDFBF7] border-[#E5D7BC] hover:border-[#8E6F1D]/50'}`}
+                      className={`p-3 rounded-xl border transition-all cursor-pointer ${isSelected ? 'bg-[#FAF6EF] dark:bg-[#161828] border-[#8E6F1D] shadow-xs' : 'bg-[#FDFBF7] dark:bg-[#121422] border-[#E5D7BC] dark:border-white/10 hover:border-[#8E6F1D]/50'}`}
                     >
                       <div className="flex items-center justify-between">
-                        <div className="font-bold text-xs text-[#1C1917] flex items-center gap-1.5">
+                        <div className="font-bold text-xs text-[#1C1917] dark:text-[#EFECE6] flex items-center gap-1.5">
                           <span>{p.name}</span>
-                          {p.isRetrograde && <span className="text-[10px] text-rose-500 font-bold">(R)</span>}
+                          {p.isRetrograde && <span className="text-[10px] text-rose-500 dark:text-rose-300 font-bold">(R)</span>}
                         </div>
-                        <span className="text-[11px] font-mono-data text-[#8E6F1D] font-bold">House {p.house}</span>
+                        <span className="text-[11px] font-mono-data text-[#8E6F1D] dark:text-[#F0C968] font-bold">House {p.house}</span>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-2 mt-2 text-[10px] font-mono-data text-[#78716C]">
+                      <div className="grid grid-cols-3 gap-2 mt-2 text-[10px] font-mono-data text-[#78716C] dark:text-[#A8A29E]">
                         <div>
-                          <span className="text-[#1C1917] font-semibold">{p.rashiName}</span> ({p.degreeStr})
+                          <span className="text-[#1C1917] dark:text-[#EFECE6] font-semibold">{p.rashiName}</span> ({p.degreeStr})
                         </div>
                         <div>
-                          Dignity: <strong className="text-[#1C1917]">{p.dignity || p.status}</strong>
+                          Dignity: <strong className="text-[#1C1917] dark:text-[#EFECE6]">{p.dignity || p.status}</strong>
                         </div>
                         <div>
-                          Shadbala: <strong className="text-[#8E6F1D]">{shadbala ? `${shadbala.toFixed(2)} R` : 'N/A'}</strong>
+                          Shadbala: <strong className="text-[#8E6F1D] dark:text-[#F0C968]">{shadbala ? `${shadbala.toFixed(2)} R` : 'N/A'}</strong>
                         </div>
                       </div>
                     </div>
@@ -1360,33 +1388,33 @@ export default function MasterKundliReportClient() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             
             {/* Dasha Card */}
-            <div className="bg-white rounded-2xl p-6 border border-[#E5D7BC] shadow-sm space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-[#F0E6D2]">
-                <h3 className="text-sm font-serif font-bold text-[#1C1917] flex items-center gap-1.5">
-                  <Clock className="w-4 h-4 text-[#8E6F1D]" />
+            <div className="bg-white dark:bg-[#121422] rounded-2xl p-6 border border-[#E5D7BC] dark:border-white/10 shadow-sm space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-[#F0E6D2] dark:border-white/5">
+                <h3 className="text-sm font-serif font-bold text-[#1C1917] dark:text-[#EFECE6] flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-[#8E6F1D] dark:text-[#F0C968]" />
                   <span>Vimshottari Dasha Timeline</span>
                 </h3>
-                <span className="text-[10px] font-mono-data text-[#8E6F1D] bg-[#8E6F1D]/10 px-2 py-0.5 rounded font-bold">
+                <span className="text-[10px] font-mono-data text-[#8E6F1D] dark:text-[#F0C968] bg-[#8E6F1D]/10 px-2 py-0.5 rounded font-bold">
                   {snapshot.dasha.currentPeriodString}
                 </span>
               </div>
 
-              <div className="p-4 rounded-xl bg-[#FAF6EF] border border-[#E5D7BC] space-y-1.5 font-mono-data text-xs">
-                <div className="text-[10px] uppercase text-[#78716C]">Active Mahadasha Window</div>
-                <div className="text-sm font-bold text-[#1C1917]">{snapshot.dasha.currentPeriodString}</div>
-                <div className="text-[11px] text-[#78716C]">{snapshot.dasha.currentDateRange}</div>
+              <div className="p-4 rounded-xl bg-[#FAF6EF] dark:bg-[#161828] border border-[#E5D7BC] dark:border-white/10 space-y-1.5 font-mono-data text-xs">
+                <div className="text-[10px] uppercase text-[#78716C] dark:text-[#A8A29E]">Active Mahadasha Window</div>
+                <div className="text-sm font-bold text-[#1C1917] dark:text-[#EFECE6]">{snapshot.dasha.currentPeriodString}</div>
+                <div className="text-[11px] text-[#78716C] dark:text-[#A8A29E]">{snapshot.dasha.currentDateRange}</div>
               </div>
 
               <div className="space-y-2">
-                <div className="text-[11px] font-bold text-[#78716C] uppercase font-mono-data">All 9 Mahadasha Cycles:</div>
+                <div className="text-[11px] font-bold text-[#78716C] dark:text-[#A8A29E] uppercase font-mono-data">All 9 Mahadasha Cycles:</div>
                 <div className="space-y-1.5 font-mono-data text-xs max-h-56 overflow-y-auto pr-1 scrollbar-thin">
                   {snapshot.dasha.mahadashas?.map((md: any, idx: number) => {
                     const sStr = md.startDate ? (md.startDate instanceof Date ? md.startDate.toISOString().slice(0, 10) : String(md.startDate).slice(0, 10)) : '';
                     const eStr = md.endDate ? (md.endDate instanceof Date ? md.endDate.toISOString().slice(0, 10) : String(md.endDate).slice(0, 10)) : '';
                     return (
-                      <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-[#FDFBF7] border border-[#E5D7BC]/70 text-[11px]">
-                        <span className="font-bold text-[#1C1917]">{md.planet} Mahadasha ({typeof md.durationYears === 'number' ? md.durationYears.toFixed(1) : md.durationYears}y)</span>
-                        <span className="text-[#78716C]">{sStr} → {eStr}</span>
+                      <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-[#FDFBF7] dark:bg-[#121422] border border-[#E5D7BC]/70 dark:border-white/10 text-[11px]">
+                        <span className="font-bold text-[#1C1917] dark:text-[#EFECE6]">{md.planet} Mahadasha ({typeof md.durationYears === 'number' ? md.durationYears.toFixed(1) : md.durationYears}y)</span>
+                        <span className="text-[#78716C] dark:text-[#A8A29E]">{sStr} → {eStr}</span>
                       </div>
                     );
                   })}
@@ -1395,13 +1423,13 @@ export default function MasterKundliReportClient() {
             </div>
 
             {/* Ashtakavarga Card */}
-            <div className="bg-white rounded-2xl p-6 border border-[#E5D7BC] shadow-sm space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-[#F0E6D2]">
-                <h3 className="text-sm font-serif font-bold text-[#1C1917] flex items-center gap-1.5">
-                  <Grid className="w-4 h-4 text-[#8E6F1D]" />
+            <div className="bg-white dark:bg-[#121422] rounded-2xl p-6 border border-[#E5D7BC] dark:border-white/10 shadow-sm space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-[#F0E6D2] dark:border-white/5">
+                <h3 className="text-sm font-serif font-bold text-[#1C1917] dark:text-[#EFECE6] flex items-center gap-1.5">
+                  <Grid className="w-4 h-4 text-[#8E6F1D] dark:text-[#F0C968]" />
                   <span>Sarvashtakavarga (SAV) Matrix</span>
                 </h3>
-                <span className="text-[10px] font-mono-data text-[#8E6F1D] bg-[#8E6F1D]/10 px-2 py-0.5 rounded font-bold">
+                <span className="text-[10px] font-mono-data text-[#8E6F1D] dark:text-[#F0C968] bg-[#8E6F1D]/10 px-2 py-0.5 rounded font-bold">
                   337 TOTAL BINDUS
                 </span>
               </div>
@@ -1411,8 +1439,8 @@ export default function MasterKundliReportClient() {
                   const rashiNames = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
                   const isHigh = bindus >= 30;
                   return (
-                    <div key={rIdx} className={`p-3 rounded-xl border ${isHigh ? 'bg-[#8E6F1D]/10 border-[#8E6F1D]/30 text-[#8E6F1D]' : 'bg-[#FAF6EF] border-[#E5D7BC] text-[#1C1917]'}`}>
-                      <div className="text-[10px] text-[#78716C]">{rashiNames[rIdx]}</div>
+                    <div key={rIdx} className={`p-3 rounded-xl border ${isHigh ? 'bg-[#8E6F1D]/10 border-[#8E6F1D]/30 text-[#8E6F1D] dark:text-[#F0C968]' : 'bg-[#FAF6EF] dark:bg-[#161828] border-[#E5D7BC] dark:border-white/10 text-[#1C1917] dark:text-[#EFECE6]'}`}>
+                      <div className="text-[10px] text-[#78716C] dark:text-[#A8A29E]">{rashiNames[rIdx]}</div>
                       <div className="text-base font-bold mt-1">{bindus}</div>
                     </div>
                   );
@@ -1428,20 +1456,20 @@ export default function MasterKundliReportClient() {
       {/* 4. Quick Edit Modal — city autocomplete, use-my-location, live validation */}
       {isEditModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white rounded-2xl border border-[#E5D7BC] p-6 max-w-md w-full shadow-2xl space-y-4 font-mono-data max-h-[92vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-2 border-b border-[#F0E6D2]">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-[#1C1917] flex items-center gap-1.5">
-                <Edit3 className="w-4 h-4 text-[#8E6F1D]" />
+          <div className="bg-white dark:bg-[#121422] rounded-2xl border border-[#E5D7BC] dark:border-white/10 p-6 max-w-md w-full shadow-2xl space-y-4 font-mono-data max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-2 border-b border-[#F0E6D2] dark:border-white/5">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-[#1C1917] dark:text-[#EFECE6] flex items-center gap-1.5">
+                <Edit3 className="w-4 h-4 text-[#8E6F1D] dark:text-[#F0C968]" />
                 <span>{t('editBirthDetails')}</span>
               </h3>
-              <button onClick={() => setIsEditModalOpen(false)} className="text-[#78716C] hover:text-[#1C1917]">
+              <button onClick={() => setIsEditModalOpen(false)} className="text-[#78716C] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#EFECE6]">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="space-y-3 text-xs">
               <div className="space-y-1">
-                <label className="text-[10px] text-[#78716C] font-bold uppercase">Name</label>
+                <label className="text-[10px] text-[#78716C] dark:text-[#A8A29E] font-bold uppercase">Name</label>
                 <input
                   type="text"
                   value={birthState.name}
@@ -1450,14 +1478,14 @@ export default function MasterKundliReportClient() {
                     setBirthState(next);
                     setFieldErrors(validateLive(next));
                   }}
-                  className={`w-full px-3 py-2 rounded-xl bg-[#FAF7F2] border text-xs font-semibold focus:outline-none focus:border-[#8E6F1D] ${fieldErrors.name ? 'border-rose-300 bg-rose-50' : 'border-[#E5D7BC]'}`}
+                  className={`w-full px-3 py-2 rounded-xl bg-[#FAF7F2] dark:bg-[#0E101D] border text-xs font-semibold focus:outline-none focus:border-[#8E6F1D] ${fieldErrors.name ? 'border-rose-300 bg-rose-50 dark:bg-rose-500/10' : 'border-[#E5D7BC] dark:border-white/10'}`}
                 />
-                {fieldErrors.name && <p className="text-[10px] text-rose-600 font-semibold">{fieldErrors.name}</p>}
+                {fieldErrors.name && <p className="text-[10px] text-rose-600 dark:text-rose-300 font-semibold">{fieldErrors.name}</p>}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-[10px] text-[#78716C] font-bold uppercase">Birth Date</label>
+                  <label className="text-[10px] text-[#78716C] dark:text-[#A8A29E] font-bold uppercase">Birth Date</label>
                   <input
                     type="date"
                     value={birthState.birthDate}
@@ -1466,13 +1494,13 @@ export default function MasterKundliReportClient() {
                       setBirthState(next);
                       setFieldErrors(validateLive(next));
                     }}
-                    className={`w-full px-3 py-2 rounded-xl bg-[#FAF7F2] border text-xs font-semibold focus:outline-none focus:border-[#8E6F1D] ${fieldErrors.birthDate ? 'border-rose-300 bg-rose-50' : 'border-[#E5D7BC]'}`}
+                    className={`w-full px-3 py-2 rounded-xl bg-[#FAF7F2] dark:bg-[#0E101D] border text-xs font-semibold focus:outline-none focus:border-[#8E6F1D] ${fieldErrors.birthDate ? 'border-rose-300 bg-rose-50 dark:bg-rose-500/10' : 'border-[#E5D7BC] dark:border-white/10'}`}
                   />
-                  {fieldErrors.birthDate && <p className="text-[10px] text-rose-600 font-semibold">{fieldErrors.birthDate}</p>}
+                  {fieldErrors.birthDate && <p className="text-[10px] text-rose-600 dark:text-rose-300 font-semibold">{fieldErrors.birthDate}</p>}
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] text-[#78716C] font-bold uppercase">Birth Time</label>
+                  <label className="text-[10px] text-[#78716C] dark:text-[#A8A29E] font-bold uppercase">Birth Time</label>
                   <input
                     type="time"
                     value={birthState.birthTime}
@@ -1481,14 +1509,14 @@ export default function MasterKundliReportClient() {
                       setBirthState(next);
                       setFieldErrors(validateLive(next));
                     }}
-                    className={`w-full px-3 py-2 rounded-xl bg-[#FAF7F2] border text-xs font-semibold focus:outline-none focus:border-[#8E6F1D] ${fieldErrors.birthTime ? 'border-rose-300 bg-rose-50' : 'border-[#E5D7BC]'}`}
+                    className={`w-full px-3 py-2 rounded-xl bg-[#FAF7F2] dark:bg-[#0E101D] border text-xs font-semibold focus:outline-none focus:border-[#8E6F1D] ${fieldErrors.birthTime ? 'border-rose-300 bg-rose-50 dark:bg-rose-500/10' : 'border-[#E5D7BC] dark:border-white/10'}`}
                   />
-                  {fieldErrors.birthTime && <p className="text-[10px] text-rose-600 font-semibold">{fieldErrors.birthTime}</p>}
+                  {fieldErrors.birthTime && <p className="text-[10px] text-rose-600 dark:text-rose-300 font-semibold">{fieldErrors.birthTime}</p>}
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] text-[#78716C] font-bold uppercase">Birth Place (start typing a city)</label>
+                <label className="text-[10px] text-[#78716C] dark:text-[#A8A29E] font-bold uppercase">Birth Place (start typing a city)</label>
                 <div className="relative">
                   <input
                     type="text"
@@ -1496,34 +1524,34 @@ export default function MasterKundliReportClient() {
                     onChange={(e) => cityAutocomplete(e.target.value)}
                     onFocus={() => cityQuery.trim() && setShowCitySuggestions(true)}
                     placeholder={birthState.locationName || 'e.g. Patna, Varanasi, Mumbai…'}
-                    className="w-full px-3 py-2 rounded-xl bg-[#FAF7F2] border border-[#E5D7BC] text-xs font-semibold focus:outline-none focus:border-[#8E6F1D]"
+                    className="w-full px-3 py-2 rounded-xl bg-[#FAF7F2] dark:bg-[#0E101D] border border-[#E5D7BC] dark:border-white/10 text-xs font-semibold focus:outline-none focus:border-[#8E6F1D]"
                   />
-                  <Search className="w-3.5 h-3.5 text-[#78716C] absolute right-3 top-2.5" />
+                  <Search className="w-3.5 h-3.5 text-[#78716C] dark:text-[#A8A29E] absolute right-3 top-2.5" />
                   {showCitySuggestions && (
-                    <div className="absolute z-20 mt-1 w-full bg-white border border-[#E5D7BC] rounded-xl shadow-xl max-h-56 overflow-y-auto">
+                    <div className="absolute z-20 mt-1 w-full bg-white dark:bg-[#121422] border border-[#E5D7BC] dark:border-white/10 rounded-xl shadow-xl max-h-56 overflow-y-auto">
                       {citySuggestions.map((c) => (
                         <button
                           key={c.id}
                           type="button"
                           onClick={() => pickCity(c)}
-                          className="w-full text-left px-3 py-2 hover:bg-[#FAF6EF] flex items-center justify-between gap-2"
+                          className="w-full text-left px-3 py-2 hover:bg-[#FAF6EF] dark:bg-[#161828] flex items-center justify-between gap-2"
                         >
-                          <span className="text-xs font-semibold text-[#1C1917]">{c.name}, {c.state}</span>
-                          <span className="text-[9px] font-mono-data text-[#78716C]">{c.lat.toFixed(2)}°, {c.lng.toFixed(2)}° · UTC{c.tz >= 0 ? '+' : ''}{c.tz}</span>
+                          <span className="text-xs font-semibold text-[#1C1917] dark:text-[#EFECE6]">{c.name}, {c.state}</span>
+                          <span className="text-[9px] font-mono-data text-[#78716C] dark:text-[#A8A29E]">{c.lat.toFixed(2)}°, {c.lng.toFixed(2)}° · UTC{c.tz >= 0 ? '+' : ''}{c.tz}</span>
                         </button>
                       ))}
                     </div>
                   )}
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-[10px] text-[#78716C] leading-relaxed">
+                  <p className="text-[10px] text-[#78716C] dark:text-[#A8A29E] leading-relaxed">
                     Coordinates drive the calculation; the city name is used for display.
                   </p>
                   <button
                     type="button"
                     onClick={useMyLocation}
                     disabled={locating}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg border border-[#8E6F1D]/30 bg-white text-[#8E6F1D] text-[10px] font-bold hover:bg-[#F5EFE6] disabled:opacity-60 shrink-0"
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg border border-[#8E6F1D]/30 bg-white dark:bg-[#121422] text-[#8E6F1D] dark:text-[#F0C968] text-[10px] font-bold hover:bg-[#F5EFE6] dark:bg-[#1C1E27] dark:hover:bg-[#1C1E27] disabled:opacity-60 shrink-0"
                   >
                     <Navigation className="w-3 h-3" />
                     {locating ? 'Locating…' : 'Use my location'}
@@ -1533,7 +1561,7 @@ export default function MasterKundliReportClient() {
 
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <label className="text-[10px] text-[#78716C] font-bold uppercase">{t('latitude')}</label>
+                  <label className="text-[10px] text-[#78716C] dark:text-[#A8A29E] font-bold uppercase">{t('latitude')}</label>
                   <input
                     type="number"
                     step="any"
@@ -1545,12 +1573,12 @@ export default function MasterKundliReportClient() {
                       setBirthState(next);
                       setFieldErrors(validateLive(next));
                     }}
-                    className={`w-full px-3 py-2 rounded-xl bg-[#FAF7F2] border text-xs font-semibold focus:outline-none focus:border-[#8E6F1D] ${fieldErrors.lat ? 'border-rose-300 bg-rose-50' : 'border-[#E5D7BC]'}`}
+                    className={`w-full px-3 py-2 rounded-xl bg-[#FAF7F2] dark:bg-[#0E101D] border text-xs font-semibold focus:outline-none focus:border-[#8E6F1D] ${fieldErrors.lat ? 'border-rose-300 bg-rose-50 dark:bg-rose-500/10' : 'border-[#E5D7BC] dark:border-white/10'}`}
                   />
-                  {fieldErrors.lat && <p className="text-[10px] text-rose-600 font-semibold">{fieldErrors.lat}</p>}
+                  {fieldErrors.lat && <p className="text-[10px] text-rose-600 dark:text-rose-300 font-semibold">{fieldErrors.lat}</p>}
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] text-[#78716C] font-bold uppercase">{t('longitude')}</label>
+                  <label className="text-[10px] text-[#78716C] dark:text-[#A8A29E] font-bold uppercase">{t('longitude')}</label>
                   <input
                     type="number"
                     step="any"
@@ -1562,12 +1590,12 @@ export default function MasterKundliReportClient() {
                       setBirthState(next);
                       setFieldErrors(validateLive(next));
                     }}
-                    className={`w-full px-3 py-2 rounded-xl bg-[#FAF7F2] border text-xs font-semibold focus:outline-none focus:border-[#8E6F1D] ${fieldErrors.lng ? 'border-rose-300 bg-rose-50' : 'border-[#E5D7BC]'}`}
+                    className={`w-full px-3 py-2 rounded-xl bg-[#FAF7F2] dark:bg-[#0E101D] border text-xs font-semibold focus:outline-none focus:border-[#8E6F1D] ${fieldErrors.lng ? 'border-rose-300 bg-rose-50 dark:bg-rose-500/10' : 'border-[#E5D7BC] dark:border-white/10'}`}
                   />
-                  {fieldErrors.lng && <p className="text-[10px] text-rose-600 font-semibold">{fieldErrors.lng}</p>}
+                  {fieldErrors.lng && <p className="text-[10px] text-rose-600 dark:text-rose-300 font-semibold">{fieldErrors.lng}</p>}
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] text-[#78716C] font-bold uppercase">{t('utcOffset')}</label>
+                  <label className="text-[10px] text-[#78716C] dark:text-[#A8A29E] font-bold uppercase">{t('utcOffset')}</label>
                   <input
                     type="number"
                     step="0.5"
@@ -1575,13 +1603,13 @@ export default function MasterKundliReportClient() {
                     max={14}
                     value={Number.isFinite(birthState.timezone) ? birthState.timezone : ''}
                     onChange={(e) => setBirthState({ ...birthState, timezone: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) })}
-                    className="w-full px-3 py-2 rounded-xl bg-[#FAF7F2] border border-[#E5D7BC] text-xs font-semibold focus:outline-none focus:border-[#8E6F1D]"
+                    className="w-full px-3 py-2 rounded-xl bg-[#FAF7F2] dark:bg-[#0E101D] border border-[#E5D7BC] dark:border-white/10 text-xs font-semibold focus:outline-none focus:border-[#8E6F1D]"
                   />
                 </div>
               </div>
-              <p className="text-[10px] text-[#78716C] leading-relaxed">
+              <p className="text-[10px] text-[#78716C] dark:text-[#A8A29E] leading-relaxed">
                 {Number.isFinite(birthState.latitude) && Number.isFinite(birthState.longitude) ? (
-                  <span className="text-[#15803D] font-semibold">
+                  <span className="text-[#15803D] dark:text-emerald-400 font-semibold">
                     ✓ {birthState.locationName || 'Coordinates'} · {Math.abs(birthState.latitude).toFixed(4)}°{birthState.latitude >= 0 ? 'N' : 'S'}, {Math.abs(birthState.longitude).toFixed(4)}°{birthState.longitude >= 0 ? 'E' : 'W'} · UTC{Number.isFinite(birthState.timezone) && birthState.timezone >= 0 ? '+' : ''}{Number.isFinite(birthState.timezone) ? birthState.timezone : '—'}
                   </span>
                 ) : (
@@ -1594,7 +1622,7 @@ export default function MasterKundliReportClient() {
               <button
                 type="button"
                 onClick={() => setIsEditModalOpen(false)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold border border-[#E5D7BC] hover:bg-[#FAF7F2]"
+                className="px-4 py-2 rounded-xl text-xs font-semibold border border-[#E5D7BC] dark:border-white/10 hover:bg-[#FAF7F2] dark:bg-[#0E101D]"
               >
                 {t('cancel')}
               </button>

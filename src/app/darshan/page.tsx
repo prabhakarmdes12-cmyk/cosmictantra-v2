@@ -1835,7 +1835,7 @@ export default function DarshanPage() {
                       </div>
 
                       {isCurrent ? (
-                        <span className="text-[9px] font-mono-data font-bold px-1.5 py-0.5 rounded bg-black/20 text-white">
+                        <span className="text-[9px] font-mono-data font-bold px-1.5 py-0.5 rounded bg-black/20 text-white dark:text-[#060709]">
                           सक्रिय
                         </span>
                       ) : (

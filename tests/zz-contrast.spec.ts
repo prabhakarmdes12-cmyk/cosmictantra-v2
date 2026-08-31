@@ -1,15 +1,21 @@
 import { test } from '@playwright/test';
 const PAGES = ['/', '/report', '/darshan', '/aarti-stotra', '/store', '/remedy-tracker', '/calendar', '/upaya', '/observatory', '/ask', '/profile', '/panchang'];
+const THEME = process.env.CT_AUDIT_THEME || 'light'; // 'light' | 'dark'
 for (const path of PAGES) {
   test(`LIGHT v3 ${path}`, async ({ page }) => {
-    await page.addInitScript(() => {
-      localStorage.setItem('cosmictantra_theme', 'light');
+    await page.addInitScript((t) => {
+      localStorage.setItem('cosmictantra_theme', t);
       localStorage.setItem('cosmictantra_lang', 'en');
-    });
+    }, THEME);
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto(`http://localhost:3000${path}`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(4500);
-    await page.evaluate(() => document.documentElement.classList.remove('dark'));
+    // The app applies the theme class during hydration; for the LIGHT audit
+    // force it off so no stale dark: variant can linger. For DARK audits keep
+    // the class the app set (html.dark + theme state must agree).
+    await page.evaluate((t) => {
+      if (t === 'light') document.documentElement.classList.remove('dark');
+    }, THEME);
     await page.waitForTimeout(400);
     const issues = await page.evaluate(() => {
       const rgbMatch = (s: string) => {
