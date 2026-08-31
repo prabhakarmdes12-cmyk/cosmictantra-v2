@@ -1,34 +1,121 @@
-// Structural inventory only; row counts do not establish edition completeness.
+/**
+ * Structural inventory of the scripture collections.
+ *
+ * Historical note: this used to parse the TypeScript literals inside
+ * `src/app/aarti-stotra/page.tsx`. Those literals have been extracted into
+ * generated data modules under `src/lib/granth/data/`, so the inventory now
+ * reads the generated metadata index (`data/index.ts`) and cross-checks it
+ * against the extraction manifest checksums.
+ *
+ * It is a STRUCTURAL count of storage rows (verses, speaker labels,
+ * invocation/paratext and grouped material). Row counts are NOT verse counts
+ * and are NOT evidence of edition completeness — see
+ * `docs/granth/COVERAGE-REPORT.md` for per-edition coverage.
+ *
+ * Run: node scripts/audit-granth-inventory.cjs
+ */
 const fs = require('node:fs');
-const ts = require('typescript');
 const path = require('node:path');
-const file = path.resolve(__dirname, '../src/app/aarti-stotra/page.tsx');
-const tree = ts.createSourceFile(file, fs.readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+const ts = require('typescript');
+
+const ROOT = path.resolve(__dirname, '..');
+const INDEX_FILE = path.resolve(ROOT, 'src/lib/granth/data/index.ts');
+const MANIFEST_FILE = path.resolve(ROOT, 'src/lib/granth/data/manifest.ts');
+
 function literal(node) {
   if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return node.text;
   if (ts.isNumericLiteral(node)) return Number(node.text);
   if (node.kind === ts.SyntaxKind.TrueKeyword) return true;
   if (node.kind === ts.SyntaxKind.FalseKeyword) return false;
+  if (node.kind === ts.SyntaxKind.NullKeyword) return null;
   if (ts.isArrayLiteralExpression(node)) return node.elements.map(literal);
-  if (ts.isObjectLiteralExpression(node)) return Object.fromEntries(node.properties.map(p => {
-    if (!ts.isPropertyAssignment(p)) throw new Error('Non-literal scripture data');
-    return [p.name.text, literal(p.initializer)];
-  }));
-  throw new Error('Unsupported scripture initializer; audit manually');
-}
-const names = ['granthsData', 'stotrasData', 'aartisData', 'siddhaStutiData'];
-const collections = [];
-for (const statement of tree.statements) {
-  if (!ts.isVariableStatement(statement)) continue;
-  for (const d of statement.declarationList.declarations) {
-    if (!names.includes(d.name.getText(tree))) continue;
-    const data = literal(d.initializer);
-    collections.push({ name: d.name.getText(tree), count: data.length, items: data.map(item => ({
-      slug: item.slug, sourceLabel: item.source,
-      sections: item.sections.map(section => ({ id: section.id, rows: section.verses.length })),
-      rows: item.sections.reduce((n, section) => n + section.verses.length, 0),
-    })) });
+  if (ts.isObjectLiteralExpression(node)) {
+    const out = {};
+    for (const p of node.properties) {
+      if (!ts.isPropertyAssignment(p)) throw new Error('Non-literal data in generated index');
+      out[p.name.text] = literal(p.initializer);
+    }
+    return out;
   }
+  throw new Error('Unsupported initializer in generated data; audit manually');
 }
-if (collections.length !== names.length) throw new Error('A collection was not located');
-console.log(JSON.stringify({ note: 'Structural inventory, not edition/verse verification', collections }, null, 2));
+
+function parseLiteralModule(file) {
+  const source = fs.readFileSync(file, 'utf8');
+  const tree = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  for (const statement of tree.statements) {
+    if (!ts.isVariableStatement(statement)) continue;
+    for (const d of statement.declarationList.declarations) {
+      if (d.initializer && ts.isObjectLiteralExpression(d.initializer)) return literal(d.initializer);
+    }
+  }
+  throw new Error(`No object literal found in ${file}`);
+}
+
+const index = parseLiteralModule(INDEX_FILE);
+const manifest = parseLiteralModule(MANIFEST_FILE);
+
+const collections = [
+  {
+    name: 'granthsData',
+    count: index.granths.length,
+    items: index.granths.map((item) => ({
+      slug: item.slug,
+      sourceLabel: item.source,
+      sections: item.sections.map((section) => ({ id: section.id, rows: section.rows })),
+      rows: item.rows,
+    })),
+  },
+  {
+    name: 'stotrasData',
+    count: index.collections.stotras.items.length,
+    items: index.collections.stotras.items.map((item) => ({
+      slug: item.slug,
+      sourceLabel: item.source,
+      sections: item.sections.map((section) => ({ id: section.id, rows: section.rows })),
+      rows: item.rows,
+    })),
+  },
+  {
+    name: 'aartisData',
+    count: index.collections.aartis.items.length,
+    items: index.collections.aartis.items.map((item) => ({
+      slug: item.slug,
+      sourceLabel: item.source,
+      sections: item.sections.map((section) => ({ id: section.id, rows: section.rows })),
+      rows: item.rows,
+    })),
+  },
+  {
+    name: 'siddhaStutiData',
+    count: index.collections['siddha-stuti'].items.length,
+    items: index.collections['siddha-stuti'].items.map((item) => ({
+      slug: item.slug,
+      sourceLabel: item.source,
+      sections: item.sections.map((section) => ({ id: section.id, rows: section.rows })),
+      rows: item.rows,
+    })),
+  },
+];
+
+console.log(
+  JSON.stringify(
+    {
+      note: 'Structural inventory, not edition/verse verification. Row counts include speaker/invocation/grouped rows.',
+      source: {
+        index: path.relative(ROOT, INDEX_FILE).split(path.sep).join('/'),
+        generatedAt: index.generatedAt,
+        generatedBy: index.generatedBy,
+        sourceOfTruth: index.sourceOfTruth,
+      },
+      integrity: {
+        manifestGeneratedAt: manifest.generatedAt,
+        dataFiles: manifest.files.length,
+        checksums: manifest.files.map((f) => `${f.file} ${f.sha256.slice(0, 12)}`),
+      },
+      collections,
+    },
+    null,
+    2,
+  ),
+);

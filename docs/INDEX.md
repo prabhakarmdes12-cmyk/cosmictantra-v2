@@ -43,6 +43,10 @@ All institutional, strategic, design, growth, engineering, and scholar documenta
 * **[`PANDIT_READY_POLISH_AND_BEAUTIFICATION_GUIDE.md`](./PANDIT_READY_POLISH_AND_BEAUTIFICATION_GUIDE.md)** — Presentation deck and demo walkthrough tailored for traditional Vedic scholars.
 * **[`REVIEW_GUIDE_FOR_AGENT.md`](./REVIEW_GUIDE_FOR_AGENT.md)** — Agent verification checklist and invariant review guide for subagents.
 * **[`WILD_EXPLORATION_IDEAS.md`](./WILD_EXPLORATION_IDEAS.md)** — Future exploratory horizons (3D celestial sphere, interactive temple audio, AI-assisted scholar drafting).
+* **[`GRANTH-READER-ACCEPTANCE-2026-08-31.md`](./GRANTH-READER-ACCEPTANCE-2026-08-31.md)** — Current dated acceptance report for the shared Granth library, per-edition coverage and reading session (scope, evidence, requirement matrix, known gaps).
+* **[`AGENT-NEXT-WORK-2026-09-01.md`](./AGENT-NEXT-WORK-2026-09-01.md)** — Ordered next-agent mission (Phase 1–6) that the report above reports progress against.
+* **[`granth/COVERAGE-REPORT.md`](./granth/COVERAGE-REPORT.md)** — Generated per-edition coverage (regenerate: `npx playwright test tests/granth-coverage.spec.ts`).
+* **[`RELEASE-REVIEW-2026-09-01.md`](./RELEASE-REVIEW-2026-09-01.md)** — Review of the previous Arena integration; still the authority on that change set.
 
 ---
 

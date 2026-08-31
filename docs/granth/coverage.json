@@ -1,0 +1,570 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-31T20:24:44.579Z",
+  "generator": "src/lib/granth/coverage.ts",
+  "books": [
+    {
+      "bookId": "bhagavad-gita",
+      "title": "श्रीमद्भगवद्गीता (Shrimad Bhagavad Gita)",
+      "editionId": "ct-gita-bundled-devanagari-hi-2026-08-31",
+      "editionLabel": "श्रीमद्भगवद्गीता — bundled Devanagari mūla + Hindi anuvāda snapshot (gita_raw/)",
+      "hasEditionManifest": true,
+      "provenance": {
+        "kind": "REPOSITORY_BUNDLED_SNAPSHOT",
+        "sourceFiles": [
+          {
+            "path": "gita_raw/gita.json",
+            "role": "SANSKRIT_MULA_AND_SPEAKER_STRUCTURE",
+            "bytes": 213537,
+            "sha256": "6c3a69318146c012b1cb57d1a420f00f88a15385cf994f0bea589ae8d8e741de"
+          },
+          {
+            "path": "gita_raw/hi/01.txt",
+            "role": "HINDI_ANUVADA_CHAPTER_1",
+            "bytes": 12310,
+            "sha256": "d36e289b519f2d210fdc0db8fba952cfd2d81e820265f4c5463861eb78b814a2"
+          },
+          {
+            "path": "gita_raw/hi/02.txt",
+            "role": "HINDI_ANUVADA_CHAPTER_2",
+            "bytes": 20716,
+            "sha256": "49d96311fe8ab60038286bda6e9a8d786eb3fb2437ea098135249308ff4318ce"
+          },
+          {
+            "path": "gita_raw/hi/03.txt",
+            "role": "HINDI_ANUVADA_CHAPTER_3",
+            "bytes": 12133,
+            "sha256": "09de8fa25df348686476edce573248130574809f772ba659e8bce116bf5f4fec"
+          },
+          {
+            "path": "gita_raw/hi/04.txt",
+            "role": "HINDI_ANUVADA_CHAPTER_4",
+            "bytes": 11378,
+            "sha256": "caf494f9f03fde68ec98a165a694413c57772dd8bded0100bd004e2f311e59c4"
+          },
+          {
+            "path": "gita_raw/hi/05.txt",
+            "role": "HINDI_ANUVADA_CHAPTER_5",
+            "bytes": 9433,
+            "sha256": "6c1fe7bfc2ee019551f396f06abadee1ab2aa4d436fc2d31f488ce8e802e5a4a"
+          },
+          {
+            "path": "gita_raw/hi/06.txt",
+            "role": "HINDI_ANUVADA_CHAPTER_6",
+            "bytes": 13073,
+            "sha256": "32996e8dc17ad3e21509ad7cdee3d1caea21db9aa81dd3a844c1cf5f0a25d15f"
+          },
+          {
+            "path": "gita_raw/hi/07.txt",
+            "role": "HINDI_ANUVADA_CHAPTER_7",
+            "bytes": 8290,
+            "sha256": "c4e495312a314393ff2b3d3a3e8712245de48e2876f65e65c03547a15a0d8b87"
+          },
+          {
+            "path": "gita_raw/hi/08.txt",
+            "role": "HINDI_ANUVADA_CHAPTER_8",
+            "bytes": 8750,
+            "sha256": "f885f6751aef3710126b874004454ca90a06752a8ff322d83e439364e82bdbd3"
+          },
+          {
+            "path": "gita_raw/hi/09.txt",
+            "role": "HINDI_ANUVADA_CHAPTER_9",
+            "bytes": 10145,
+            "sha256": "4b474beb4acffc3a3992d8935bb6e9b1dd98a1051fa87a181d67e89797a9d349"
+          },
+          {
+            "path": "gita_raw/hi/10.txt",
+            "role": "HINDI_ANUVADA_CHAPTER_10",
+            "bytes": 10572,
+            "sha256": "26d5a38590577d1b5756fa9f3abc1ec1356d32f573b57410a93f04478b7f2f9d"
+          },
+          {
+            "path": "gita_raw/hi/11.txt",
+            "role": "HINDI_ANUVADA_CHAPTER_11",
+            "bytes": 18138,
+            "sha256": "3a03f2d743905bbc2a9311854593ae5a795067abd4164ea9e147625dd96ce66a"
+          },
+          {
+            "path": "gita_raw/hi/12.txt",
+            "role": "HINDI_ANUVADA_CHAPTER_12",
+            "bytes": 5728,
+            "sha256": "f67045b0151aa248851ac5a0995c94e4793b68656de6fe8686be737ade8f0399"
+          },
+          {
+            "path": "gita_raw/hi/13.txt",
+            "role": "HINDI_ANUVADA_CHAPTER_13",
+            "bytes": 9881,
+            "sha256": "e0065558a2182c7207567d8012e848a5ffa4bff959586df37e1481ea857b8dff"
+          },
+          {
+            "path": "gita_raw/hi/14.txt",
+            "role": "HINDI_ANUVADA_CHAPTER_14",
+            "bytes": 7503,
+            "sha256": "ff3e18cc73a05cb4d9a935baea6bc895de13ce3a34f430a9908de5d720dd85d2"
+          },
+          {
+            "path": "gita_raw/hi/15.txt",
+            "role": "HINDI_ANUVADA_CHAPTER_15",
+            "bytes": 6335,
+            "sha256": "db9cdbcf44809e4e55bb5bb13b6edf42e7c64a8ce45916f52d9c3cf54edf9d89"
+          },
+          {
+            "path": "gita_raw/hi/16.txt",
+            "role": "HINDI_ANUVADA_CHAPTER_16",
+            "bytes": 6686,
+            "sha256": "4822a9e03bf54ec5b980958c5e3947a40f05735a1882333bcc83eb6f55e142d7"
+          },
+          {
+            "path": "gita_raw/hi/17.txt",
+            "role": "HINDI_ANUVADA_CHAPTER_17",
+            "bytes": 8003,
+            "sha256": "22836700d79068f4aee9bdc116aa3dd5d455c6ddf8f10260cb5d5786f5d07aff"
+          },
+          {
+            "path": "gita_raw/hi/18.txt",
+            "role": "HINDI_ANUVADA_CHAPTER_18",
+            "bytes": 21999,
+            "sha256": "288ceb5b60b56c1933b99fd7686859f52fac68d7a478822c12e4639fe873c362"
+          }
+        ],
+        "publisher": null,
+        "printedEdition": null,
+        "editorOrTranslator": null,
+        "independentCollation": false,
+        "rightsStatus": "UNKNOWN",
+        "notes": [
+          "gita_raw/ contains no publisher, editor, edition-year or licence statement.",
+          "Coverage against this manifest proves the stored corpus matches the bundled snapshot, not a printed edition.",
+          "A printed/critical edition with clear display and audio rights is still required before claiming edition completeness."
+        ]
+      },
+      "numbering": {
+        "convention": "adhyāya + śloka number as numbered inside the bundled snapshot",
+        "chapters": 18,
+        "numberedVerses": 701,
+        "recensionNote": "This snapshot numbers 701 ślokas (chapter 13 = 35, chapter 18 = 78). Recensions differ (commonly cited totals: 700). Do not force a universal count.",
+        "dhyanamNote": "The 9-row Gita Dhyanam in the library UI is paratext/invocation material and is NOT part of this snapshot; it is reported separately and remains unverified."
+      },
+      "stored": {
+        "rows": 770,
+        "verses": 701,
+        "groupedVerses": 0,
+        "speakers": 60,
+        "invocations": 9,
+        "unclassified": 0,
+        "sections": 19
+      },
+      "expected": {
+        "verses": 701,
+        "rows": 770
+      },
+      "missingVerses": [],
+      "missingRanges": [],
+      "extraVerses": [],
+      "duplicatePassageIds": [],
+      "duplicateTexts": [],
+      "repeatedParatext": [
+        {
+          "textChecksum": "1dad346e00b99cd81506b22c526e5e5ff685849f46f0819b8ee479d352c08758",
+          "kind": "speaker",
+          "count": 9,
+          "passageIds": [
+            "bhagavad-gita:gita-ch-1:2",
+            "bhagavad-gita:gita-ch-1:26",
+            "bhagavad-gita:gita-ch-1:51",
+            "bhagavad-gita:gita-ch-2:0",
+            "bhagavad-gita:gita-ch-2:11",
+            "bhagavad-gita:gita-ch-11:10",
+            "bhagavad-gita:gita-ch-11:39",
+            "bhagavad-gita:gita-ch-11:57",
+            "bhagavad-gita:gita-ch-18:76"
+          ]
+        },
+        {
+          "textChecksum": "8c56e7407b7024e9e017bd9c28633f5bc72f3d58017c29b5d6868ce8d4dd5b30",
+          "kind": "speaker",
+          "count": 22,
+          "passageIds": [
+            "bhagavad-gita:gita-ch-1:22",
+            "bhagavad-gita:gita-ch-1:31",
+            "bhagavad-gita:gita-ch-2:5",
+            "bhagavad-gita:gita-ch-2:58",
+            "bhagavad-gita:gita-ch-3:0",
+            "bhagavad-gita:gita-ch-3:37",
+            "bhagavad-gita:gita-ch-4:4",
+            "bhagavad-gita:gita-ch-5:0",
+            "bhagavad-gita:gita-ch-6:33",
+            "bhagavad-gita:gita-ch-6:39",
+            "bhagavad-gita:gita-ch-8:0",
+            "bhagavad-gita:gita-ch-10:12",
+            "bhagavad-gita:gita-ch-11:0",
+            "bhagavad-gita:gita-ch-11:17",
+            "bhagavad-gita:gita-ch-11:41",
+            "bhagavad-gita:gita-ch-11:59",
+            "bhagavad-gita:gita-ch-12:0",
+            "bhagavad-gita:gita-ch-13:0",
+            "bhagavad-gita:gita-ch-14:21",
+            "bhagavad-gita:gita-ch-17:0",
+            "bhagavad-gita:gita-ch-18:0",
+            "bhagavad-gita:gita-ch-18:74"
+          ]
+        },
+        {
+          "textChecksum": "6db60cd07d42db875baf69cf5ecbf8313a5f45c8122149936637884824d8df21",
+          "kind": "speaker",
+          "count": 28,
+          "passageIds": [
+            "bhagavad-gita:gita-ch-2:2",
+            "bhagavad-gita:gita-ch-2:14",
+            "bhagavad-gita:gita-ch-2:60",
+            "bhagavad-gita:gita-ch-3:3",
+            "bhagavad-gita:gita-ch-3:39",
+            "bhagavad-gita:gita-ch-4:0",
+            "bhagavad-gita:gita-ch-4:6",
+            "bhagavad-gita:gita-ch-5:2",
+            "bhagavad-gita:gita-ch-6:0",
+            "bhagavad-gita:gita-ch-6:36",
+            "bhagavad-gita:gita-ch-6:43",
+            "bhagavad-gita:gita-ch-7:0",
+            "bhagavad-gita:gita-ch-8:3",
+            "bhagavad-gita:gita-ch-9:0",
+            "bhagavad-gita:gita-ch-10:0",
+            "bhagavad-gita:gita-ch-10:20",
+            "bhagavad-gita:gita-ch-11:5",
+            "bhagavad-gita:gita-ch-11:35",
+            "bhagavad-gita:gita-ch-11:53",
+            "bhagavad-gita:gita-ch-11:61",
+            "bhagavad-gita:gita-ch-12:2",
+            "bhagavad-gita:gita-ch-13:2",
+            "bhagavad-gita:gita-ch-14:0",
+            "bhagavad-gita:gita-ch-14:23",
+            "bhagavad-gita:gita-ch-15:0",
+            "bhagavad-gita:gita-ch-16:0",
+            "bhagavad-gita:gita-ch-17:2",
+            "bhagavad-gita:gita-ch-18:2"
+          ]
+        }
+      ],
+      "corrupted": [],
+      "chapters": [
+        {
+          "chapter": 1,
+          "sectionId": "gita-ch-1",
+          "englishName": "Arjuna Vishada Yoga",
+          "expectedVerses": 47,
+          "storedVerses": 47,
+          "storedRows": 53,
+          "missingVerseNumbers": [],
+          "extraVerseNumbers": [],
+          "complete": true
+        },
+        {
+          "chapter": 2,
+          "sectionId": "gita-ch-2",
+          "englishName": "Sankhya Yoga",
+          "expectedVerses": 72,
+          "storedVerses": 72,
+          "storedRows": 79,
+          "missingVerseNumbers": [],
+          "extraVerseNumbers": [],
+          "complete": true
+        },
+        {
+          "chapter": 3,
+          "sectionId": "gita-ch-3",
+          "englishName": "Karma Yoga",
+          "expectedVerses": 43,
+          "storedVerses": 43,
+          "storedRows": 47,
+          "missingVerseNumbers": [],
+          "extraVerseNumbers": [],
+          "complete": true
+        },
+        {
+          "chapter": 4,
+          "sectionId": "gita-ch-4",
+          "englishName": "Jnana Karma Sanyasa Yoga",
+          "expectedVerses": 42,
+          "storedVerses": 42,
+          "storedRows": 45,
+          "missingVerseNumbers": [],
+          "extraVerseNumbers": [],
+          "complete": true
+        },
+        {
+          "chapter": 5,
+          "sectionId": "gita-ch-5",
+          "englishName": "Karma Sanyasa Yoga",
+          "expectedVerses": 29,
+          "storedVerses": 29,
+          "storedRows": 31,
+          "missingVerseNumbers": [],
+          "extraVerseNumbers": [],
+          "complete": true
+        },
+        {
+          "chapter": 6,
+          "sectionId": "gita-ch-6",
+          "englishName": "Dhyana Yoga",
+          "expectedVerses": 47,
+          "storedVerses": 47,
+          "storedRows": 52,
+          "missingVerseNumbers": [],
+          "extraVerseNumbers": [],
+          "complete": true
+        },
+        {
+          "chapter": 7,
+          "sectionId": "gita-ch-7",
+          "englishName": "Jnana Vijnana Yoga",
+          "expectedVerses": 30,
+          "storedVerses": 30,
+          "storedRows": 31,
+          "missingVerseNumbers": [],
+          "extraVerseNumbers": [],
+          "complete": true
+        },
+        {
+          "chapter": 8,
+          "sectionId": "gita-ch-8",
+          "englishName": "Akshara Brahma Yoga",
+          "expectedVerses": 28,
+          "storedVerses": 28,
+          "storedRows": 30,
+          "missingVerseNumbers": [],
+          "extraVerseNumbers": [],
+          "complete": true
+        },
+        {
+          "chapter": 9,
+          "sectionId": "gita-ch-9",
+          "englishName": "Raja Vidya Raja Guhya Yoga",
+          "expectedVerses": 34,
+          "storedVerses": 34,
+          "storedRows": 35,
+          "missingVerseNumbers": [],
+          "extraVerseNumbers": [],
+          "complete": true
+        },
+        {
+          "chapter": 10,
+          "sectionId": "gita-ch-10",
+          "englishName": "Vibhuti Yoga",
+          "expectedVerses": 42,
+          "storedVerses": 42,
+          "storedRows": 45,
+          "missingVerseNumbers": [],
+          "extraVerseNumbers": [],
+          "complete": true
+        },
+        {
+          "chapter": 11,
+          "sectionId": "gita-ch-11",
+          "englishName": "Vishvarupa Darshana Yoga",
+          "expectedVerses": 55,
+          "storedVerses": 55,
+          "storedRows": 66,
+          "missingVerseNumbers": [],
+          "extraVerseNumbers": [],
+          "complete": true
+        },
+        {
+          "chapter": 12,
+          "sectionId": "gita-ch-12",
+          "englishName": "Bhakti Yoga",
+          "expectedVerses": 20,
+          "storedVerses": 20,
+          "storedRows": 22,
+          "missingVerseNumbers": [],
+          "extraVerseNumbers": [],
+          "complete": true
+        },
+        {
+          "chapter": 13,
+          "sectionId": "gita-ch-13",
+          "englishName": "Kshetra Kshetrajna Vibhaga Yoga",
+          "expectedVerses": 35,
+          "storedVerses": 35,
+          "storedRows": 37,
+          "missingVerseNumbers": [],
+          "extraVerseNumbers": [],
+          "complete": true
+        },
+        {
+          "chapter": 14,
+          "sectionId": "gita-ch-14",
+          "englishName": "Guna Traya Vibhaga Yoga",
+          "expectedVerses": 27,
+          "storedVerses": 27,
+          "storedRows": 30,
+          "missingVerseNumbers": [],
+          "extraVerseNumbers": [],
+          "complete": true
+        },
+        {
+          "chapter": 15,
+          "sectionId": "gita-ch-15",
+          "englishName": "Purushottama Yoga",
+          "expectedVerses": 20,
+          "storedVerses": 20,
+          "storedRows": 21,
+          "missingVerseNumbers": [],
+          "extraVerseNumbers": [],
+          "complete": true
+        },
+        {
+          "chapter": 16,
+          "sectionId": "gita-ch-16",
+          "englishName": "Daivasura Sampad Vibhaga Yoga",
+          "expectedVerses": 24,
+          "storedVerses": 24,
+          "storedRows": 25,
+          "missingVerseNumbers": [],
+          "extraVerseNumbers": [],
+          "complete": true
+        },
+        {
+          "chapter": 17,
+          "sectionId": "gita-ch-17",
+          "englishName": "Shraddha Traya Vibhaga Yoga",
+          "expectedVerses": 28,
+          "storedVerses": 28,
+          "storedRows": 30,
+          "missingVerseNumbers": [],
+          "extraVerseNumbers": [],
+          "complete": true
+        },
+        {
+          "chapter": 18,
+          "sectionId": "gita-ch-18",
+          "englishName": "Moksha Sanyasa Yoga",
+          "expectedVerses": 78,
+          "storedVerses": 78,
+          "storedRows": 82,
+          "missingVerseNumbers": [],
+          "extraVerseNumbers": [],
+          "complete": true
+        }
+      ],
+      "status": "COMPLETE_FOR_EDITION",
+      "verificationNotes": [
+        "Invocation block \"gita-dhyanam\" (9 rows) is stored but is not part of the reference snapshot: PRESENT_NOT_IN_REFERENCE.",
+        "Coverage is measured against the bundled repository snapshot, not against a printed/critical edition.",
+        "3 repeated speaker/invocation text group(s) — expected paratext repetition, not a numbering defect.",
+        "Display/audio rights for the stored text are UNKNOWN; publishing modern translations needs a permission record."
+      ]
+    },
+    {
+      "bookId": "ramcharitmanas",
+      "title": "श्री रामचरितमानस (Shri Ramcharitmanas)",
+      "editionId": "unversioned:ramcharitmanas",
+      "editionLabel": "Unversioned stored text (Goswami Tulsidas (Sanatan Awadhi & Sanskrit Mangalacharan))",
+      "hasEditionManifest": false,
+      "provenance": null,
+      "numbering": null,
+      "stored": {
+        "rows": 14,
+        "verses": 0,
+        "groupedVerses": 0,
+        "speakers": 0,
+        "invocations": 9,
+        "unclassified": 5,
+        "sections": 3
+      },
+      "expected": {
+        "verses": null,
+        "rows": null
+      },
+      "missingVerses": [],
+      "missingRanges": [],
+      "extraVerses": [],
+      "duplicatePassageIds": [],
+      "duplicateTexts": [],
+      "repeatedParatext": [],
+      "corrupted": [],
+      "chapters": [],
+      "status": "NO_EDITION_MANIFEST",
+      "verificationNotes": [
+        "No edition manifest: expected units are unknown, so this book cannot be reported as complete. Stored fragments only.",
+        "Coverage is measured against the bundled repository snapshot, not against a printed/critical edition."
+      ]
+    },
+    {
+      "bookId": "shiva-mahapuran",
+      "title": "श्री शिव महापुराण (Shri Shiva Mahapuran)",
+      "editionId": "unversioned:shiva-mahapuran",
+      "editionLabel": "Unversioned stored text (Maharshi Krishna Dwaipayana Ved Vyasa (Eighteen Mahapuranas))",
+      "hasEditionManifest": false,
+      "provenance": null,
+      "numbering": null,
+      "stored": {
+        "rows": 11,
+        "verses": 1,
+        "groupedVerses": 0,
+        "speakers": 0,
+        "invocations": 1,
+        "unclassified": 9,
+        "sections": 4
+      },
+      "expected": {
+        "verses": null,
+        "rows": null
+      },
+      "missingVerses": [],
+      "missingRanges": [],
+      "extraVerses": [],
+      "duplicatePassageIds": [],
+      "duplicateTexts": [],
+      "repeatedParatext": [],
+      "corrupted": [],
+      "chapters": [],
+      "status": "NO_EDITION_MANIFEST",
+      "verificationNotes": [
+        "No edition manifest: expected units are unknown, so this book cannot be reported as complete. Stored fragments only.",
+        "Coverage is measured against the bundled repository snapshot, not against a printed/critical edition."
+      ]
+    },
+    {
+      "bookId": "devi-bhagavata",
+      "title": "श्रीमद् देवी भागवत महापुराण (Shrimad Devi Bhagavata Mahapuran)",
+      "editionId": "unversioned:devi-bhagavata",
+      "editionLabel": "Unversioned stored text (Maharshi Krishna Dwaipayana Ved Vyasa (Eighteen Mahapuranas))",
+      "hasEditionManifest": false,
+      "provenance": null,
+      "numbering": null,
+      "stored": {
+        "rows": 6,
+        "verses": 0,
+        "groupedVerses": 0,
+        "speakers": 0,
+        "invocations": 5,
+        "unclassified": 1,
+        "sections": 3
+      },
+      "expected": {
+        "verses": null,
+        "rows": null
+      },
+      "missingVerses": [],
+      "missingRanges": [],
+      "extraVerses": [],
+      "duplicatePassageIds": [],
+      "duplicateTexts": [],
+      "repeatedParatext": [],
+      "corrupted": [],
+      "chapters": [],
+      "status": "NO_EDITION_MANIFEST",
+      "verificationNotes": [
+        "No edition manifest: expected units are unknown, so this book cannot be reported as complete. Stored fragments only.",
+        "Coverage is measured against the bundled repository snapshot, not against a printed/critical edition."
+      ]
+    }
+  ],
+  "totals": {
+    "books": 4,
+    "booksWithEditionManifest": 1,
+    "storedRows": 801,
+    "missingVerses": 0,
+    "corruptedRows": 0
+  }
+}

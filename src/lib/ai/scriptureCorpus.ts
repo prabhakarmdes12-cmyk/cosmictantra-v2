@@ -9,6 +9,14 @@ export interface ValidatedScriptureEntry {
   englishMeaning: string;
 }
 
+/**
+ * Small chat-facing excerpt collection.
+ *
+ * IMPORTANT: this is NOT the reading corpus. Conversational reading resolves
+ * passages through `src/lib/granth` (the shared, edition-aware library).
+ * These records remain only for legacy callers and are marked with the
+ * `verifiedBy` field below so their status is explicit rather than implied.
+ */
 export const VERIFIED_SCRIPTURE_CORPUS: Record<string, ValidatedScriptureEntry> = {
   'BG_2_47': {
     grantha: 'श्रीमद्भगवद्गीता',
@@ -40,27 +48,55 @@ export const VERIFIED_SCRIPTURE_CORPUS: Record<string, ValidatedScriptureEntry> 
     hindiMeaning: 'सभी धर्मों के आश्रय को छोड़कर केवल मेरी शरण में आओ; मैं तुम्हें सभी बन्धनों से मुक्त कर दूंगा, शोक मत करो।',
     englishMeaning: 'Abandon all varieties of dharmas and simply surrender unto Me alone. I shall liberate you from all reactions; do not grieve.'
   },
+  /**
+   * Correction 2026-08-31: the stored Sanskrit contained the corruption
+   * `मृत्यsourceर्मुक्षीय`. It is corrected to `मृत्योर्मुक्षीय` against the
+   * transliteration field stored in the SAME record ("mṛtyormukṣīya") — not
+   * from model memory. Still pending human review against a printed Rigveda
+   * edition before any "verified scripture" claim is made about this entry.
+   */
   'RV_7_59_12': {
     grantha: 'ऋग्वेद (महामृत्युंजय मन्त्र)',
     chapter: 7,
     verse: 59,
     totalVersesInChapter: 104,
-    sanskrit: 'त्र्यम्बकं यजामहे सुगन्धिं पुष्टिवर्धनम्।\nउर्वारुकमिव बन्धनान्मृत्यsourceर्मुक्षीय माऽमृतात्॥',
+    sanskrit: 'त्र्यम्बकं यजामहे सुगन्धिं पुष्टिवर्धनम्।\nउर्वारुकमिव बन्धनान्मृत्योर्मुक्षीय माऽमृतात्॥',
     transliteration: 'tryambakaṃ yajāmahe sugandhiṃ puṣṭivardhanam | urvārukamiva bandhanānmṛtyormukṣīya māmṛtāt ||',
     hindiMeaning: 'हम त्रिनेत्रधारी सुगन्धित और पुष्टिदाता भगवान शिव की उपासना करते हैं। जिस प्रकार पका हुआ खरबूजा बेल के बन्धन से मुक्त हो जाता है, उसी प्रकार हम मृत्यु के बन्धन से मुक्त होकर अमृतत्व को प्राप्त हों।',
     englishMeaning: 'We worship the Three-Eyed One, fragrant and nourishing all beings. As a ripe cucumber is severed from its bondage to the creeper, may we be liberated from death unto immortality.'
   }
 };
 
+export type ScriptureReferenceStatus =
+  | 'STORED'
+  | 'INVALID_CHAPTER'
+  | 'INVALID_VERSE'
+  | 'NOT_STORED'
+  | 'UNKNOWN_GRANTHA';
+
+/**
+ * Legacy reference validator.
+ *
+ * Correction (2026-08-31): this function used to MANUFACTURE a placeholder
+ * record (e.g. "[श्रीमद्भगवद्गीता अध्याय 5, श्लोक 3]") for any valid-but-absent
+ * reference, which made fabricated text look like retrieval. It now returns
+ * `isValid: false` with reason `NOT_STORED`. Reading must go through
+ * `src/lib/granth`, which has the full stored corpus.
+ */
 export function validateAndRetrieveScripture(grantha: string, chapter: number, verse: number): {
   isValid: boolean;
   entry?: ValidatedScriptureEntry;
   errorReason?: string;
+  status?: ScriptureReferenceStatus;
 } {
   // Gita has 18 chapters. Chapter 18 has exactly 78 verses.
   if (grantha.toLowerCase().includes('gita') || grantha.includes('गीता')) {
     if (chapter < 1 || chapter > 18) {
-      return { isValid: false, errorReason: `श्रीमद्भगवद्गीता में केवल १८ अध्याय हैं (अध्याय ${chapter} उपलब्ध नहीं है)।` };
+      return {
+        isValid: false,
+        status: 'INVALID_CHAPTER',
+        errorReason: `श्रीमद्भगवद्गीता में केवल १८ अध्याय हैं (अध्याय ${chapter} उपलब्ध नहीं है)।`,
+      };
     }
     const maxVersesPerChapter: Record<number, number> = {
       1: 47, 2: 72, 3: 43, 4: 42, 5: 29, 6: 47, 7: 30, 8: 28, 9: 34, 10: 42,
@@ -68,26 +104,26 @@ export function validateAndRetrieveScripture(grantha: string, chapter: number, v
     };
     const maxV = maxVersesPerChapter[chapter] || 78;
     if (verse < 1 || verse > maxV) {
-      return { isValid: false, errorReason: `श्रीमद्भगवद्गीता अध्याय ${chapter} में कुल ${maxV} श्लोक हैं (श्लोक ${verse} अस्तित्व में नहीं है)।` };
+      return {
+        isValid: false,
+        status: 'INVALID_VERSE',
+        errorReason: `श्रीमद्भगवद्गीता अध्याय ${chapter} में कुल ${maxV} श्लोक हैं (श्लोक ${verse} अस्तित्व में नहीं है)।`,
+      };
     }
     const key = `BG_${chapter}_${verse}`;
     if (VERIFIED_SCRIPTURE_CORPUS[key]) {
-      return { isValid: true, entry: VERIFIED_SCRIPTURE_CORPUS[key] };
+      return { isValid: true, status: 'STORED', entry: VERIFIED_SCRIPTURE_CORPUS[key] };
     }
     return {
-      isValid: true,
-      entry: {
-        grantha: 'श्रीमद्भगवद्गीता',
-        chapter,
-        verse,
-        totalVersesInChapter: maxV,
-        sanskrit: `[श्रीमद्भगवद्गीता अध्याय ${chapter}, श्लोक ${verse}]`,
-        transliteration: `[Bhagavad Gita ${chapter}.${verse}]`,
-        hindiMeaning: `भगवद्गीता अध्याय ${chapter} श्लोक ${verse} का वैदिक संदर्भ।`,
-        englishMeaning: `Bhagavad Gita Chapter ${chapter}, Verse ${verse}.`
-      }
+      isValid: false,
+      status: 'NOT_STORED',
+      errorReason: `श्रीमद्भगवद्गीता ${chapter}.${verse} इस संस्करण में विद्यमान है, पर यह पाठ इस छोटे चैट-संग्रह में सुरक्षित नहीं है। कृपया पुस्तकालय/रीडर से पढ़ें — मैं अनुमान से पाठ नहीं दूँगी।`,
     };
   }
 
-  return { isValid: false, errorReason: 'अपुष्ट या अनिर्दिष्ट ग्रन्थ संदर्भ।' };
+  return {
+    isValid: false,
+    status: 'UNKNOWN_GRANTHA',
+    errorReason: 'अपुष्ट या अनिर्दिष्ट ग्रन्थ संदर्भ।',
+  };
 }

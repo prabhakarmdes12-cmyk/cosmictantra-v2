@@ -274,6 +274,26 @@ export default function FloatingAIGuruAvatar() {
    */
 
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  // -----------------------------------------------------------------
+  // Granth reading session (device-local).
+  //
+  // The chat route returns an updated reading session and the cancellation
+  // tokens it invalidated. We persist the session in localStorage so a reader
+  // can continue after a refresh — this is DEVICE-LOCAL ONLY: it is not an
+  // account-backed, cross-device sync.
+  // -----------------------------------------------------------------
+  const READING_SESSION_KEY = 'cosmictantra_granth_reading_session_v1';
+  const readingSessionRef = useRef<any>(null);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(READING_SESSION_KEY);
+      if (saved) readingSessionRef.current = JSON.parse(saved);
+    } catch {
+      // Storage unavailable or corrupt: start without a saved position.
+    }
+  }, []);
+
   const voice = useKashiVoice();
   const [inputVal, setInputVal] = useState('');
   const chatScrollRef = useRef<HTMLDivElement>(null);
@@ -1007,6 +1027,21 @@ export default function FloatingAIGuruAvatar() {
       return;
     }
 
+    // Granth reader controls: reuse the same conversational commands the
+    // gateway understands, so the chips and free text behave identically.
+    if (chip.action.startsWith('READER_')) {
+      const phrase =
+        chip.action === 'READER_CONTINUE' ? 'आगे पढ़ो'
+          : chip.action === 'READER_PAUSE' ? 'रुको'
+            : chip.action === 'READER_EXPLAIN' ? 'यह समझाओ'
+              : null;
+      if (phrase) {
+        setInputVal(phrase);
+        setTimeout(() => handleSendMessage(), 0);
+      }
+      return;
+    }
+
     if (chip.action === 'SELECT_DATE_SAMPLE') {
       if (intakeStep !== 'ASK_BIRTH_DATE') return;
       processDateInput(chip.label, true); // explicit tap = already confirmed
@@ -1493,13 +1528,29 @@ export default function FloatingAIGuruAvatar() {
             })),
             context: {
               city: seekerData.birthCity || 'Varanasi',
-              profileName: seekerData.name
+              profileName: seekerData.name,
+              readingSession: readingSessionRef.current
             }
           })
         });
 
         if (res.ok) {
           const data = await res.json();
+
+          // Stale-audio guard: any token the server invalidated must not keep
+          // playing, so outstanding speech for the previous turn is stopped.
+          if (Array.isArray(data.cancelledReadingTokens) && data.cancelledReadingTokens.length > 0) {
+            voice.stop();
+          }
+          if (data.readingSession) {
+            readingSessionRef.current = data.readingSession;
+            try {
+              localStorage.setItem(READING_SESSION_KEY, JSON.stringify(data.readingSession));
+            } catch {
+              // Storage full or blocked: the in-memory session still works.
+            }
+          }
+
           setChatMessages(prev => [
             ...prev,
             {

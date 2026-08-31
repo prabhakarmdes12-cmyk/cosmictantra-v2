@@ -7,13 +7,15 @@ import {
   createAIExplanationProvenance, 
   createScholarReviewedProvenance 
 } from './provenance';
-import { validateAndRetrieveScripture } from './scriptureCorpus';
+import { validateReference } from './granthReader';
 import { LANGUAGE_QUALIFICATION_MATRIX } from './languages';
 import { KashiSahayakTelemetry } from './telemetry';
 import { executeVedicTool } from './tools/executor';
 import { findScriptureInsight } from './scriptureMap';
 import { retrieveDurableConsultationMemory } from '../sabha/orchestrator';
-import { readScriptureText, parseScriptureReadRequest } from './granthReader';
+import { readScriptureText, parseScriptureReadRequest, handleReaderCommand } from './granthReader';
+import { reviveSession, saveServerSession } from '@/lib/granth/session';
+import type { ReadingSession } from '@/lib/granth/session';
 
 export interface KashiSahayakResponse {
   text: string;
@@ -24,16 +26,27 @@ export interface KashiSahayakResponse {
   toolCallsExecuted: string[];
   quickChips?: Array<{ label: string; action: string; href?: string }>;
   isSafetyCritical?: boolean;
+  /** Updated reading session for the client to persist (device-local). */
+  readingSession?: ReadingSession | null;
+  /** Cancellation tokens the client must use to drop stale audio/results. */
+  cancelledReadingTokens?: string[];
 }
 
 export async function processKashiSahayakQuery(
   userQuery: string,
   history: Array<{ role: string; content: string }> = [],
-  userContext: { city?: string; profileName?: string; cosmicId?: string; lang?: string } = {}
+  userContext: {
+    city?: string;
+    profileName?: string;
+    cosmicId?: string;
+    lang?: string;
+    /** Serialized reading session from the client (device-local). */
+    readingSession?: unknown;
+  } = {}
 ): Promise<KashiSahayakResponse> {
   const query = (userQuery || '').trim();
   const city = userContext.city || 'Varanasi';
-  const lang = userContext.lang || 'hi';
+  const lang = (userContext.lang === 'en' ? 'en' : 'hi') as 'hi' | 'en';
   const sessionId = `sess_${Date.now()}`;
 
   KashiSahayakTelemetry.log('CHAT_OPENED', sessionId, { query });
@@ -65,14 +78,17 @@ export async function processKashiSahayakQuery(
   // =========================================================================
   // 2. ADVERSARIAL SCRIPTURE INTEGRITY CHECK (e.g. Gita 18.93)
   // =========================================================================
+  // Only a reference that the edition itself does not contain is an integrity
+  // error. A valid-but-unstored reference is NOT an error: it falls through to
+  // the reader, which says honestly that the passage is not in our corpus.
   const gitaMatch = query.match(/gita\s*(\d+)[.:](\d+)|गीता\s*(\d+)[.:](\d+)/i);
   if (gitaMatch) {
     const chapter = parseInt(gitaMatch[1] || gitaMatch[3], 10);
     const verse = parseInt(gitaMatch[2] || gitaMatch[4], 10);
-    const scriptCheck = validateAndRetrieveScripture('gita', chapter, verse);
-    if (!scriptCheck.isValid) {
+    const scriptCheck = await validateReference('gita', chapter, verse);
+    if (!scriptCheck.found && (scriptCheck.code === 'INVALID_CHAPTER' || scriptCheck.code === 'INVALID_VERSE')) {
       return {
-        text: `शास्त्र प्रामाणिक सूचना: ${scriptCheck.errorReason} कृपया प्रामाणिक अध्याय व श्लोक संख्या बताएं।`,
+        text: `शास्त्र प्रामाणिक सूचना: ${scriptCheck.text} कृपया प्रामाणिक अध्याय व श्लोक संख्या बताएं।`,
         intent: 'AARTI_STOTRA',
         confidence: 0.98,
         provenance: createDocumentedProvenance('श्रीमद्भगवद्गीता (मूल ग्रन्थ संहिता)'),
@@ -114,6 +130,74 @@ export async function processKashiSahayakQuery(
         { label: '📖 गीता २.४७ कर्म सिद्धान्त', action: 'INTENT_SCRIPTURE' },
         { label: '📿 मन्त्र जप संग्रह', action: 'INTENT_MANTRA' }
       ]
+    };
+  }
+
+  // =========================================================================
+  // 3.5 GRANTH READING SESSION (explicit reader commands only)
+  // =========================================================================
+  // An explicit "read <book> <reference>" or a control command (continue /
+  // pause / repeat / next / previous / explain / source / speed / language)
+  // is handled here, against the shared reading session, before generic
+  // intent routing. Nothing here generates scripture text.
+  const incomingSession = reviveSession(userContext.readingSession);
+  const reader = await handleReaderCommand(query, lang, incomingSession);
+  if (reader.handled) {
+    const updatedSession = reader.session ? saveServerSession(reader.session) : null;
+    KashiSahayakTelemetry.log('TOOL_USED', sessionId, { toolName: 'granth_reader_session' });
+    return {
+      text: reader.text,
+      intent: 'GRANTH_READ',
+      confidence: reader.found ? 0.93 : 0.8,
+      provenance: reader.found
+        ? createDocumentedProvenance(
+            reader.passages?.[0]?.bookId ?? 'stored granth corpus',
+            reader.passages?.[0]
+              ? `${reader.passages[0].locator.chapter ?? ''}.${reader.passages[0].locator.verse ?? ''}`
+              : undefined,
+            'DIRECT_QUOTE',
+          )
+        : createAIExplanationProvenance(),
+      structuredCard: {
+        granthReadCard: {
+          found: reader.found,
+          code: reader.code ?? (reader.found ? 'FOUND' : 'UNRESOLVED'),
+          passages: (reader.passages ?? []).map((p) => ({
+            passageId: p.passageId,
+            label:
+              typeof p.locator.chapter === 'number' && typeof p.locator.verse === 'number'
+                ? `${p.locator.chapter}.${p.locator.verse}`
+                : p.locator.label ?? p.sectionId,
+            kind: p.kind,
+            original: p.original,
+            meaning: p.meaning ?? null,
+            checksum: p.checksum,
+            editionId: p.editionId,
+          })),
+          session: updatedSession
+            ? {
+                sessionId: updatedSession.sessionId,
+                state: updatedSession.state,
+                bookId: updatedSession.bookId,
+                cursorIndex: updatedSession.cursorIndex,
+                queueLength: updatedSession.queue.length,
+                language: updatedSession.language,
+                includeMeaning: updatedSession.includeMeaning,
+                speed: updatedSession.speed,
+              }
+            : null,
+        },
+      },
+      toolCallsExecuted: ['granth_reader_session'],
+      quickChips: reader.found
+        ? [
+            { label: '▶️ आगे पढ़ो', action: 'READER_CONTINUE' },
+            { label: '⏸️ रोकें', action: 'READER_PAUSE' },
+            { label: '💡 यह समझाएं', action: 'READER_EXPLAIN' },
+          ]
+        : [{ label: '📖 आरती एवं ग्रन्थ पुस्तकालय', action: 'OPEN_LIBRARY', href: '/aarti-stotra' }],
+      readingSession: updatedSession,
+      cancelledReadingTokens: reader.cancelledTokens,
     };
   }
 
@@ -327,16 +411,36 @@ export async function processKashiSahayakQuery(
   }
 
   // Exact stored passages only; unavailable content is not a documented quote.
+  // (Most explicit read requests are handled by the session block above; this
+  // is the conservative fallback for phrasings the command parser declines.)
   const readingRequest = parseScriptureReadRequest(query);
   if (readingRequest) {
-    const response = readScriptureText(readingRequest);
+    const response = await readScriptureText(readingRequest);
     return {
-      text: response.found ? `${response.sourceName} ${response.chapter}.${response.verse}\n\n${response.text}` : response.text,
+      text: response.found ? `${response.sourceName} ${response.chapter ?? ''}.${response.verse ?? ''}\n\n${response.text}` : response.text,
       intent: 'GRANTH_READ', confidence: 0.92,
       provenance: response.found
         ? createDocumentedProvenance(response.sourceName, `${response.chapter}.${response.verse}`, 'DIRECT_QUOTE')
         : createAIExplanationProvenance(),
-      structuredCard: { granthReadCard: response }, toolCallsExecuted: ['granth_reader'],
+      structuredCard: {
+        granthReadCard: {
+          found: response.found,
+          code: response.code ?? (response.found ? 'FOUND' : 'UNRESOLVED'),
+          passages: (response.passages ?? []).map((p) => ({
+            passageId: p.passageId,
+            label:
+              typeof p.locator.chapter === 'number' && typeof p.locator.verse === 'number'
+                ? `${p.locator.chapter}.${p.locator.verse}`
+                : p.locator.label ?? p.sectionId,
+            kind: p.kind,
+            original: p.original,
+            meaning: p.meaning ?? null,
+            checksum: p.checksum,
+            editionId: p.editionId,
+          })),
+        },
+      },
+      toolCallsExecuted: ['granth_reader'],
       quickChips: [{ label: '📖 आरती एवं ग्रन्थ पुस्तकालय', action: 'OPEN_LIBRARY', href: '/aarti-stotra' }],
     };
   }
