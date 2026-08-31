@@ -252,7 +252,32 @@ export function classifyUserIntent(rawQuery: string): IntentResolution {
     query.includes('कलह') || query.includes('anxious') || query.includes('बदलेगा') ||
     query.includes('peace') || query.includes('निराशा') || query.includes('will i die') ||
     query.includes('rahu mahadasha') || query.includes('कठिन') || query.includes('overwhelmed') ||
-    query.includes('समय') || query.includes('why')
+    query.includes('समय') || query.includes('why') ||
+    // Multilingual / romanized distress & emotion signals (Hinglish, Devanagari, English)
+    query.includes('dar lag') || query.includes('darr') || query.includes('dar se') ||
+    query.includes('darta') || query.includes('darti') || query.includes('darte') ||
+    query.includes('डर') || query.includes('bhay') || query.includes('khauf') ||
+    query.includes('chinta') || query.includes('fikr') || query.includes('fikar') ||
+    query.includes('tension') || query.includes('pareshan') || query.includes('pareshaan') ||
+    query.includes('udaas') || query.includes('udasi') || query.includes('dukhi') ||
+    query.includes('dukh') || query.includes('gum hai') || query.includes('gham') ||
+    query.includes('ro raha') || query.includes('ro rahi') || query.includes('gussa') ||
+    query.includes('krodh') || query.includes('akela') || query.includes('akeli') ||
+    query.includes('tanha') || query.includes('tanhai') || query.includes('koi nahi') ||
+    query.includes('dhokha') || query.includes('dhoka') || query.includes('bewafa') ||
+    query.includes('dil toota') || query.includes('dil tuta') || query.includes('breakup') ||
+    query.includes('himmat nahi') || query.includes('haunsla') || query.includes('hausla') ||
+    query.includes('confidence nahi') || query.includes('galti') || query.includes('pachtava') ||
+    query.includes('pachhtava') || query.includes('afsos') || query.includes('sharm') ||
+    query.includes('guilt') || query.includes('regret') || query.includes('bojh') ||
+    query.includes('thak gaya') || query.includes('thak gayi') || query.includes('pressure') ||
+    query.includes('burnout') || query.includes('overwhelmed') || query.includes('exhausted') ||
+    query.includes('bimar') || query.includes('bimari') || query.includes('taklif') ||
+    query.includes('dard') || query.includes('dushman') || query.includes('sazish') ||
+    query.includes('nazar lag') || query.includes('nasha') || query.includes('sharab') ||
+    query.includes('lat lag') || query.includes('aalsi') || query.includes('susti') ||
+    query.includes('man nahi lagta') || query.includes('uljhan') || query.includes('sanshay') ||
+    query.includes('sandeh') || query.includes('kya karu') || query.includes('samajh nahi')
   ) {
     return {
       intent: 'LIFE_QUESTION',

@@ -211,7 +211,7 @@ const JYOTIRLINGA_DATA: ShrineItem[] = [
     angaOrSignificance: 'भीमासुर का वध करने हेतु भगवान शिव ने यहाँ रुद्र रूप धारण किया। भीमा नदी का उद्गम स्थल।',
     bhairavOrLord: 'भीम भैरव',
     imageUrl: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=1400&q=85',
-    videoId: 'e_0dY52R54c',
+    videoId: '92EtGplwANI',
     liveUrl: 'https://www.youtube.com/@bhimashankartemple/live',
     trustUrl: 'https://bhimashankar.in',
     helpline: '+91 2135 273 244',
@@ -331,7 +331,7 @@ const JYOTIRLINGA_DATA: ShrineItem[] = [
     angaOrSignificance: 'लंका विजय से पूर्व श्रीराम द्वारा माता सीता सहित स्थापित लिंग। यहाँ के २२ पावन तीर्थ कुण्ड प्रसिद्ध हैं।',
     bhairavOrLord: 'रुरु भैरव',
     imageUrl: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=1400&q=85',
-    videoId: 'jW7eS3rV24o',
+    videoId: 'ax6ZjJJvnpw',
     liveUrl: 'https://www.youtube.com/@rameshwaramtemple/live',
     trustUrl: 'https://rameswaramtemple.tnhrce.in',
     helpline: '+91 4573 221 223',
@@ -407,7 +407,7 @@ const SHAKTI_PEETH_DATA: ShrineItem[] = [
     angaOrSignificance: 'दक्षिण पादांगुष्ठ — सती के दाहिने पैर का अंगूठा यहाँ गिरा था।',
     bhairavOrLord: 'नकुलेश भैरव',
     imageUrl: 'https://images.unsplash.com/photo-1561361513-2d000a50f0dc?auto=format&fit=crop&w=1400&q=85',
-    videoId: '9g0H4Yv6v9o',
+    videoId: 'SMSmqORPJVI',
     liveUrl: 'https://www.youtube.com/@kalighattemple/live',
     trustUrl: 'https://kalighattemple.com',
     helpline: '+91 33 2455 2236',
@@ -431,7 +431,7 @@ const SHAKTI_PEETH_DATA: ShrineItem[] = [
     angaOrSignificance: 'नयन पीठ — सती का तीसरा नेत्र (नयन) यहाँ गिरा था। वामाखेपा की सिद्ध साधना भूमि।',
     bhairavOrLord: 'चन्द्रचूड़ भैरव',
     imageUrl: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1400&q=85',
-    videoId: 's5R-tG0l6-Q',
+    videoId: 'm1aUnxC42zw',
     liveUrl: 'https://www.youtube.com/@tarapithmandir/live',
     trustUrl: 'https://tarapithtemple.org',
     helpline: '+91 3461 253 288',
@@ -455,7 +455,7 @@ const SHAKTI_PEETH_DATA: ShrineItem[] = [
     angaOrSignificance: 'जिह्वा पीठ — सती की जीभ यहाँ गिरी। यहाँ कोई मूर्ति नहीं, ९ पावन ज्वालाओं की पूजा होती है।',
     bhairavOrLord: 'उन्मत्त भैरव',
     imageUrl: 'https://images.unsplash.com/photo-1605649487212-47bdab064df7?auto=format&fit=crop&w=1400&q=85',
-    videoId: '8W8I0uVjJ1U',
+    videoId: 'koyAfEG9uTw',
     liveUrl: 'https://www.youtube.com/@jwalajitemple/live',
     trustUrl: 'https://jwalajitemple.org',
     helpline: '+91 1970 222 226',
@@ -479,7 +479,7 @@ const SHAKTI_PEETH_DATA: ShrineItem[] = [
     angaOrSignificance: 'कर्ण कुण्डल / नयन — सती के कान की मणियाँ यहाँ गिरीं। काशी यात्रा विशालाक्षी दर्शन बिना अधूरी है।',
     bhairavOrLord: 'काल भैरव',
     imageUrl: 'https://images.unsplash.com/photo-1571536802807-30451e3955d8?auto=format&fit=crop&w=1400&q=85',
-    videoId: 'H7-bL2Yp4j8',
+    videoId: '3AMlrP90zSA',
     liveUrl: 'https://www.youtube.com/@vishalakshitemple/live',
     trustUrl: 'https://varanasi.nic.in',
     helpline: '+91 542 222 0001',
@@ -503,7 +503,7 @@ const SHAKTI_PEETH_DATA: ShrineItem[] = [
     angaOrSignificance: 'पवित्र गुफा — त्रिकूटा पर्वत पर प्राकृतिक तीन पिण्डियों के रूप में माँ साक्षात् विराजित हैं।',
     bhairavOrLord: 'बाबा भैरवनाथ',
     imageUrl: 'https://images.unsplash.com/photo-1609766857041-ed402ea8069a?auto=format&fit=crop&w=1400&q=85',
-    videoId: 'hZgP-Y4YJ8w',
+    videoId: 'E6ZVvGUV_-s',
     liveUrl: 'https://www.youtube.com/@maavaishnodevibhojan/live',
     trustUrl: 'https://www.maavaishnodevi.org',
     helpline: '+91 1991 232 029',
@@ -527,7 +527,7 @@ const SHAKTI_PEETH_DATA: ShrineItem[] = [
     angaOrSignificance: 'केश पीठ — सती के केश (बाल) यहाँ गिरे थे। मैसूर का प्रसिद्ध दशहरा उत्सव यहीं से सम्बद्ध है।',
     bhairavOrLord: 'कपाल भैरव',
     imageUrl: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=1400&q=85',
-    videoId: 'FqS5f1y_z4w',
+    videoId: 'mfw-r5YSWC0',
     liveUrl: 'https://www.youtube.com/@chamundeshwaritemple/live',
     trustUrl: 'https://chamundeshwaritemple.in',
     helpline: '+91 821 259 0027',
@@ -551,7 +551,7 @@ const SHAKTI_PEETH_DATA: ShrineItem[] = [
     angaOrSignificance: 'हृदय पीठ — सती का हृदय यहाँ गिरा था। यहाँ मूर्ति नहीं, गुप्त "विशो यंत्र" की पूजा होती है।',
     bhairavOrLord: 'बटुक भैरव',
     imageUrl: 'https://images.unsplash.com/photo-1609766857041-ed402ea8069a?auto=format&fit=crop&w=1400&q=85',
-    videoId: 'n5l7t1w8Q_c',
+    videoId: '9If_8ALNWnE',
     liveUrl: 'https://www.youtube.com/@ambajitempleofficial/live',
     trustUrl: 'https://ambajitemple.in',
     helpline: '+91 2749 262 136',
@@ -578,7 +578,7 @@ const CHAR_DHAM_DATA: ShrineItem[] = [
     shlokaMeaning: 'मर्यादा पुरुषोत्तम प्रभु श्रीराम साक्षात् धर्म एवं सत्य के विग्रह हैं।',
     angaOrSignificance: 'प्रभु श्रीराम की पावन जन्मस्थली — करोड़ों सनातनियों की आस्था का नव-निर्मित भव्य मन्दिर।',
     imageUrl: '/images/darshan/ram-mandir.jpg',
-    videoId: 'kY-F3j_G-k0',
+    videoId: 'Mlfq_C-5SUI',
     liveUrl: 'https://www.youtube.com/@DoordarshanNational/live',
     trustUrl: 'https://srjbtkshetra.org',
     helpline: '+91 5278 297 800',
@@ -647,7 +647,7 @@ const CHAR_DHAM_DATA: ShrineItem[] = [
     shlokaMeaning: 'सम्पूर्ण ब्रह्माण्ड में वेंकटाद्रि के समान कोई तीर्थ नहीं और वेंकटेश के समान कोई देव नहीं।',
     angaOrSignificance: 'सप्तगिरि अधिपति — कलिकाल में भक्तों की रक्षा करने वाले साक्षात् भगवान विष्णु।',
     imageUrl: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=1400&q=85',
-    videoId: 'hZgP-Y4YJ8w',
+    videoId: 'XxdarKTmJ8c',
     liveUrl: 'https://www.youtube.com/@svbcttd/live',
     trustUrl: 'https://tirumala.org',
     helpline: '+91 877 227 7777',
@@ -674,7 +674,7 @@ const GANGA_AARTI_DATA: ShrineItem[] = [
     shlokaMeaning: 'समस्त पावन नदियां इस जल में उपस्थित होकर भक्तों को पावन करें।',
     angaOrSignificance: 'काशी के घाटों पर वैदिक ब्राह्मणों द्वारा पीतल के भव्य दीपों से की जाने वाली अलौकिक महाआरती।',
     imageUrl: '/images/darshan/ganga-aarti.jpg',
-    videoId: '9g0H4Yv6v9o',
+    videoId: 'C7-ZfMLPX_s',
     liveUrl: 'https://www.youtube.com/@gangaaartivaranasi/live',
     trustUrl: 'https://varanasi.nic.in',
     helpline: '+91 542 222 0001',
@@ -839,6 +839,7 @@ export default function DarshanPage() {
   const [progressSec, setProgressSec] = useState<number>(0);
   const [displayMode, setDisplayMode] = useState<'IMAGE' | 'VIDEO'>('IMAGE');
   const [videoStreamSource, setVideoStreamSource] = useState<'LOCAL' | 'YOUTUBE'>('YOUTUBE');
+  const [videoSoundOn, setVideoSoundOn] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [flowers, setFlowers] = useState<Array<{ id: number; x: number; icon: string; size: number; duration?: string; delay?: string; rot?: number }>>([]);
@@ -1444,6 +1445,17 @@ export default function DarshanPage() {
                         >
                           🔴 यूट्यूब
                         </button>
+                        {videoStreamSource === 'YOUTUBE' && (
+                          <button
+                            onClick={() => { playTick(); setVideoSoundOn((s) => !s); }}
+                            className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                              videoSoundOn ? 'bg-emerald-600 text-white' : 'text-white/70 hover:text-white'
+                            }`}
+                            title={videoSoundOn ? 'ध्वनि बंद करें (Mute)' : 'ध्वनि चालू करें (Unmute)'}
+                          >
+                            {videoSoundOn ? '🔊 ध्वनि' : '🔇 मूक'}
+                          </button>
+                        )}
                       </div>
                     )}
 
@@ -1532,8 +1544,8 @@ export default function DarshanPage() {
                       ) : (
                         <div className="relative w-full h-full bg-black flex items-center justify-center">
                           <iframe
-                            key={`video-yt-${activeShrine.id}`}
-                            src={`https://www.youtube-nocookie.com/embed/${activeShrine.videoId || 'kY-F3j_G-k0'}?autoplay=1&mute=0&rel=0&playsinline=1&modestbranding=1`}
+                            key={`video-yt-${activeShrine.id}-${videoSoundOn ? 'sound' : 'muted'}`}
+                            src={`https://www.youtube-nocookie.com/embed/${activeShrine.videoId || 'Wu321m2SUKY'}?autoplay=1&mute=${videoSoundOn ? 0 : 1}&rel=0&playsinline=1&modestbranding=1`}
                             className="w-full h-full border-0 absolute inset-0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                             allowFullScreen

@@ -36,6 +36,7 @@ import { calculateKundali } from '@/lib/astrologyEngine';
 import { calculatePanchang } from '@/engines/panchang.js';
 import { chitiSensory } from '@/lib/chitiAudio';
 import { ScriptureInsight, findScriptureInsight } from '@/lib/ai/scriptureMap';
+import { useKashiVoice } from '@/lib/ai/useKashiVoice';
 
 // Provenance Metadata Schema
 interface ProvenanceMeta {
@@ -243,6 +244,7 @@ export default function FloatingAIGuruAvatar() {
   });
 
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const voice = useKashiVoice();
   const [inputVal, setInputVal] = useState('');
   const chatScrollRef = useRef<HTMLDivElement>(null);
 
@@ -288,6 +290,17 @@ export default function FloatingAIGuruAvatar() {
       chatScrollRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [chatMessages, isOpen]);
+
+  // Kashi Sahayak reads his new replies aloud (voice toggle in header)
+  const lastSpokenIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!isOpen || chatMessages.length === 0) return;
+    const last = chatMessages[chatMessages.length - 1];
+    if (last && last.sender === 'GURU' && last.text && last.id !== lastSpokenIdRef.current) {
+      lastSpokenIdRef.current = last.id;
+      voice.speak(last.text);
+    }
+  }, [chatMessages, isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Standard tactile clicks
   const playClick = () => {
@@ -1240,6 +1253,21 @@ export default function FloatingAIGuruAvatar() {
                 title={soundEnabled ? 'Mute Chimes' : 'Unmute Chimes'}
               >
                 {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5 text-rose-400" />}
+              </button>
+
+              {/* Kashi Sahayak Voice (TTS) Toggle */}
+              <button
+                onClick={() => { playClick(); voice.toggleVoice(); }}
+                className={`p-1.5 rounded-xl cursor-pointer transition-colors ${
+                  voice.voiceEnabled
+                    ? 'bg-[#8E6F1D]/15 dark:bg-[#D4AF37]/15 text-[#8E6F1D] dark:text-[#F0C968]'
+                    : 'bg-black/5 dark:bg-white/5 text-[#696256] dark:text-[#9E988D] hover:text-[#1C1917] dark:hover:text-white'
+                }`}
+                title={voice.voiceEnabled ? 'काशी सहायक वाणी बंद करें (Mute Voice)' : 'काशी सहायक वाणी चालू करें (Enable Voice)'}
+              >
+                {voice.voiceEnabled
+                  ? <Volume2 className="w-3.5 h-3.5" />
+                  : <VolumeX className="w-3.5 h-3.5 text-rose-400" />}
               </button>
 
               <button

@@ -7135,7 +7135,7 @@ export default function AartiStotraLibrary() {
                 </div>
                 <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-inner bg-black border border-white/10">
                   <iframe
-                    src={`https://www.youtube-nocookie.com/embed/${activeItem.videoId}?autoplay=0&rel=0&playsinline=1&modestbranding=1`}
+                    src={`https://www.youtube-nocookie.com/embed/${activeItem.videoId}?autoplay=1&mute=1&rel=0&playsinline=1&modestbranding=1`}
                     className="w-full h-full border-0 absolute inset-0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     allowFullScreen

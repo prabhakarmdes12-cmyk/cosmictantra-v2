@@ -2,6 +2,7 @@
  * SACRED SCRIPTURE WISDOM MAP (श्रीमद्भगवद्गीता, श्रीरामचरितमानस, उपनिषद्, चाणक्य नीति एवं वैदिक संहिता)
  * Matches seeker life situations, dilemmas, and emotional states with authentic shlokas and chaupais.
  */
+import { EMOTION_KEYWORD_MAP } from './emotionKeywords';
 
 export interface ScriptureInsight {
   id: string;
@@ -357,17 +358,105 @@ export const SCRIPTURE_WISDOM_REGISTRY: ScriptureInsight[] = [
       { label: '📿 शिव ताण्डव स्तोत्रम्', action: 'INTENT_MANTRA_SHIVATANDAV' },
       { label: '📜 आगामी जीवन दशा व वार्षिक विवेचना', action: 'INTENT_SCHOLAR' }
     ]
+  },
+
+  // 18. Overwhelm, Exhaustion & Mental Burden (अति भार / थकान / मानसिक दबाव)
+  {
+    id: 'OVERWHELM_STRESS',
+    situation: 'मानसिक भार, थकान व अत्यधिक दबाव',
+    keywords: ['overwhelmed', 'overload', 'burnout', 'exhausted', 'pressure', 'burden', 'too much', 'थकान', 'बोझ', 'दबाव', 'अति', 'थका'],
+    sourceGrantha: 'श्रीमद्भगवद्गीता (अध्याय ६, श्लोक ३५)',
+    sourceType: 'GITA',
+    verse: 'असंशयं महाबाहो मनो दुर्निग्रहं चलम् ।\nअभ्यासेन तु कौन्तेय वैराग्येण च गृह्यते ॥',
+    transliteration: 'asaṁśayaṁ mahā-bāho mano durnigrahaṁ calam ।\nabhyāsena tu kaunteya vairāgyeṇa ca gṛhyate ॥',
+    meaningHi: 'हे महाबाहो! निस्संदेह मन चंचल है और उसे वश में करना अत्यंत कठिन है; परन्तु हे कुन्तीपुत्र! निरंतर अभ्यास (साधना) और अनासक्ति (वैराग्य) द्वारा उसे वश में किया जा सकता है।',
+    meaningEn: 'O mighty-armed one, the mind is indeed restless and very difficult to subdue, but by constant practice and detachment it can be brought under control.',
+    kashiSahayakBridge: 'हर हर महादेव! 🙏 जब सब कुछ एक साथ बहुत अधिक लगने लगे — कार्य, जिम्मेदारियां, अपेक्षाएं — तो समझिए कि मन गति तो बहुत करता है, पर उसे लगाम की आवश्यकता है। गीता का यह वचन बताता है कि चंचल मन भी नियमित अभ्यास और आसक्ति-मुक्त दृष्टि से शांत और स्थिर हो जाता है। एक समय में एक ही कार्य करें, शेष को भगवान विश्वनाथ को समर्पित कर दें।',
+    suggestedAction: 'प्रतिदिन प्रातः पाँच मिनट श्वास-ध्यान करें तथा कार्य-सूची को छोटे-छोटे भागों में बाँटकर प्रारम्भ करें।',
+    quickChips: [
+      { label: '🕉️ आज का पञ्चाङ्ग व राहुकाल', action: 'INTENT_PANCHANG' },
+      { label: '🪔 दशाश्वमेध गंगा आरती दर्शन', action: 'INTENT_DARSHAN_GANGA' },
+      { label: '📜 मानसिक शान्ति हेतु विद्वान् परामर्श', action: 'INTENT_SCHOLAR' }
+    ]
+  },
+
+  // 19. Guilt, Regret & Self-Blame (पछतावा / अपराधबोध / ग्लानि)
+  {
+    id: 'GUILT_REGRET',
+    situation: 'पछतावा, अपराधबोध व आत्म-ग्लानि',
+    keywords: ['guilt', 'guilty', 'regret', 'ashamed', 'shame', 'sin', 'mistake', 'forgive', 'ग्लानि', 'पछतावा', 'अपराधबोध', 'कसूर', 'शर्म', 'पाप'],
+    sourceGrantha: 'श्रीमद्भगवद्गीता (अध्याय ४, श्लोक ३६)',
+    sourceType: 'GITA',
+    verse: 'अपि चेदसि पापेभ्यः सर्वेभ्यः पापकृत्तमः ।\nसर्वं ज्ञानप्लवेनैव वृजिनं सन्तरिष्यसि ॥',
+    transliteration: 'api ced asi pāpebhyaḥ sarvebhyaḥ pāpa-kṛt-tamaḥ ।\nsarvaṁ jñāna-plavenaiva vṛjinaṁ santariṣyasi ॥',
+    meaningHi: 'यदि तुम समस्त पापियों में भी सबसे अधिक पापी हो, तो भी ज्ञानरूपी नौका के द्वारा तुम समस्त पाप-सागर को सहज ही पार कर जाओगे।',
+    meaningEn: 'Even if you are considered the most sinful of all sinners, you shall still cross all sin by the boat of divine knowledge.',
+    kashiSahayakBridge: 'हर हर महादेव! 🙏 पछतावा हृदय को भारी कर देता है, परन्तु वैदिक दृष्टि में अतीत को नष्ट करने की शक्ति ज्ञान और प्रायश्चित्त में है। जिस प्रकार गंगा स्नान पाप-ताप हर लेता है, उसी प्रकार सच्चा संकल्प और विवेक-ज्ञान आत्म-ग्लानि को शुद्ध कर देता है। आप अपनी गलती से बड़े नहीं हैं — उठिए, सीखिए, और संकल्प कीजिए।',
+    suggestedAction: 'माँ गंगा अथवा किसी पवित्र जल से स्नान-संकल्प करें, प्रभु से क्षमा-प्रार्थना करें और भविष्य हेतु एक स्पष्ट संकल्प लिखकर धारण करें।',
+    quickChips: [
+      { label: '🪔 दशाश्वमेध गंगा आरती दर्शन', action: 'INTENT_DARSHAN_GANGA' },
+      { label: '📿 महामृत्युंजय मन्त्र जप', action: 'INTENT_MANTRA_MRITYUNJAYA' },
+      { label: '📜 विद्वान् ज्योतिषी मार्गदर्शन', action: 'INTENT_SCHOLAR', href: '/ask' }
+    ]
   }
 ];
 
+/**
+ * Lightweight multilingual normalizer used by the emotion engine.
+ * Lowercases, strips diacritics, maps punctuation to spaces and collapses
+ * whitespace so that romanized/Hinglish and Devanagari queries are compared
+ * on a clean token stream (e.g. "mujhe dar lag raha hai?" → "mujhe dar lag raha hai").
+ */
+export function normalizeSeekerQuery(query: string): string {
+  return (query || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[.,!?;:'"()\[\]{}<>|~`^_+=*@#$%&/\\-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export function findScriptureInsight(query: string): ScriptureInsight | null {
-  const q = query.toLowerCase();
+  const q = normalizeSeekerQuery(query);
+  const tokens = q.split(' ').filter(Boolean);
+
+  // ------------------------------------------------------------------
+  // Pass 1 — substring keywords: the classic registry keywords (English +
+  // Devanagari) plus supplementary multilingual *phrases* (Hinglish /
+  // romanized sentence patterns like "dar lag raha"). Phrase matching is
+  // order-safe: a phrase can never false-positive inside an unrelated word.
+  // ------------------------------------------------------------------
   for (const item of SCRIPTURE_WISDOM_REGISTRY) {
     for (const kw of item.keywords) {
       if (q.includes(kw.toLowerCase())) {
         return item;
       }
     }
+    const supp = EMOTION_KEYWORD_MAP[item.id];
+    if (supp) {
+      for (const phrase of supp.phrases) {
+        if (q.includes(phrase)) {
+          return item;
+        }
+      }
+    }
   }
+
+  // ------------------------------------------------------------------
+  // Pass 2 — exact word-boundary tokens. Safe for short romanized words
+  // such as "dar", "gum", "dil" that would otherwise false-positive inside
+  // "darshan", "gumsum", "dilip", etc.
+  // ------------------------------------------------------------------
+  for (const item of SCRIPTURE_WISDOM_REGISTRY) {
+    const supp = EMOTION_KEYWORD_MAP[item.id];
+    if (!supp || supp.tokens.length === 0) continue;
+    for (const t of tokens) {
+      if (supp.tokens.includes(t)) {
+        return item;
+      }
+    }
+  }
+
   return null;
 }

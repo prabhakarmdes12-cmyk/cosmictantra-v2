@@ -21,11 +21,14 @@ import {
   Zap,
   Flame,
   Award,
-  ChevronRight
+  ChevronRight,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { getActiveProfile, getProfiles } from '@/lib/profileStore';
 import { chitiSensory } from '@/lib/chitiAudio';
 import { calculateKundali } from '@/lib/astrologyEngine';
+import { useKashiVoice } from '@/lib/ai/useKashiVoice';
 
 // Loads Razorpay Checkout dynamically
 let rzpScriptPromise: Promise<any> | null = null;
@@ -76,6 +79,7 @@ export default function AIGuruChatbotModal({
   onConsultationBooked
 }: AIGuruChatbotModalProps) {
   const [messages, setMessages] = useState<Message[]>([]);
+  const voice = useKashiVoice();
   const [step, setStep] = useState<'WELCOME' | 'NAME' | 'BIRTH_DATE' | 'BIRTH_TIME' | 'BIRTH_PLACE' | 'DOMAIN' | 'QUESTION' | 'CALCULATING' | 'PULSE_READY' | 'PACKAGE_SELECT' | 'PAYMENT_PENDING' | 'CONFIRMED'>('WELCOME');
   
   const [userData, setUserData] = useState({
@@ -106,6 +110,17 @@ export default function AIGuruChatbotModal({
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping, step]);
+
+  // Kashi Sahayak reads new replies aloud (voice toggle in header)
+  const lastSpokenIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!isOpen || messages.length === 0) return;
+    const last = messages[messages.length - 1];
+    if (last && last.sender === 'GURU_AI' && last.text && last.id !== lastSpokenIdRef.current) {
+      lastSpokenIdRef.current = last.id;
+      voice.speak(last.text);
+    }
+  }, [messages]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Initialize Guru AI greeting
   useEffect(() => {
@@ -529,6 +544,17 @@ export default function AIGuruChatbotModal({
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => { chitiSensory.playTick(); voice.toggleVoice(); }}
+              className={`p-2 rounded-xl transition-colors cursor-pointer ${
+                voice.voiceEnabled
+                  ? 'text-[#8E6F1D] dark:text-[#F0C968] hover:bg-black/5 dark:hover:bg-white/5'
+                  : 'text-[#696256] dark:text-[#9E988D] hover:bg-black/5 dark:hover:bg-white/5'
+              }`}
+              title={voice.voiceEnabled ? 'काशी सहायक वाणी बंद करें (Mute Voice)' : 'काशी सहायक वाणी चालू करें (Enable Voice)'}
+            >
+              {voice.voiceEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+            </button>
             <button
               onClick={() => { chitiSensory.playTick(); onClose(); }}
               className="p-2 rounded-xl text-[#696256] dark:text-[#9E988D] hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
