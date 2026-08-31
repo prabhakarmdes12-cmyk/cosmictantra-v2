@@ -64,13 +64,50 @@ async function savedSession(page: any): Promise<any> {
   }, SESSION_KEY);
 }
 
-async function waitForCursor(page: any, cursor: number) {
+/**
+ * Wait until the NEXT turn has actually been persisted.
+ *
+ * Cursor alone is NOT enough: after a resume the cursor is unchanged, so
+ * waiting on it returns immediately and the test can read the PREVIOUS state
+ * (the race that made this flow fail intermittently). A completed turn is
+ * therefore proved three ways:
+ *   1. the session state is the expected one,
+ *   2. the cursor is the expected one, and
+ *   3. the session was REVISED by a new response — a fresh cancellation token
+ *      (rotated on every mutating turn) and a newer updatedAt than the
+ *      snapshot taken before the click.
+ *
+ * Polling only — no arbitrary sleeps.
+ */
+async function waitForTurn(
+  page: any,
+  opts: { state: string; cursor: number; changedFrom?: any },
+): Promise<any> {
+  const previousToken = opts.changedFrom?.cancellationToken;
+  const previousUpdatedAt = opts.changedFrom?.updatedAt ?? 0;
   await expect
-    .poll(async () => (await savedSession(page))?.cursorIndex, {
-      message: `reading cursor should reach ${cursor}`,
-      timeout: 30_000,
-    })
-    .toBe(cursor);
+    .poll(
+      async () => {
+        const session = await savedSession(page);
+        if (!session) return 'waiting: no session yet';
+        if (session.state !== opts.state) return `waiting: state=${session.state}`;
+        if (session.cursorIndex !== opts.cursor) return `waiting: cursor=${session.cursorIndex}`;
+        if (previousToken && session.cancellationToken === previousToken) {
+          return 'waiting: session not revised yet (same cancellation token)';
+        }
+        if (previousToken && !(session.updatedAt > previousUpdatedAt)) {
+          return 'waiting: session not revised yet (updatedAt did not advance)';
+        }
+        return `done: state=${session.state} cursor=${session.cursorIndex} token=${session.cancellationToken}`;
+      },
+      {
+        message: `next turn should be persisted (state=${opts.state}, cursor=${opts.cursor}, revised from ${previousToken ?? 'none'})`,
+        timeout: 30_000,
+        intervals: [50, 100, 200, 500],
+      },
+    )
+    .toContain('done:');
+  return savedSession(page);
 }
 
 test('browser: read → pause → explain → resume, then continue reads the next passage', async ({ page }) => {
@@ -80,9 +117,7 @@ test('browser: read → pause → explain → resume, then continue reads the ne
   // 1. READ — a stored chapter, quoted from the edition.
   await send(page, 'गीता अध्याय १२ पढ़ो');
   await expect(page.getByText('अध्याय पंक्ति तैयार', { exact: false })).toBeVisible({ timeout: 30_000 });
-  const started = await savedSession(page);
-  expect(started?.state).toBe('reading');
-  expect(started?.cursorIndex).toBe(0);
+  const started = await waitForTurn(page, { state: 'reading', cursor: 0 });
   expect(started?.queue?.length).toBeGreaterThan(10);
 
   // 2. PAUSE — and prove the chip sends its own command even though the input
@@ -95,28 +130,25 @@ test('browser: read → pause → explain → resume, then continue reads the ne
   await expect(page.getByText('रोका गया', { exact: false })).toBeVisible({ timeout: 30_000 });
   // The typed text must never have been sent as a user message.
   await expect(page.getByText('यह पाठ मत भेजना', { exact: true })).toHaveCount(0);
-  const paused = await savedSession(page);
-  expect(paused?.state).toBe('paused');
-  expect(paused?.cursorIndex).toBe(0);
+  const paused = await waitForTurn(page, { state: 'paused', cursor: 0, changedFrom: started });
+  expect(paused?.cancellationToken).not.toBe(started?.cancellationToken);
 
   // 3. EXPLAIN — stored meaning plus the assistant's own explanation.
   await page.locator('button:has-text("समझाएं")').last().click();
   await expect(page.getByText('संग्रहीत भावार्थ', { exact: false })).toBeVisible({ timeout: 30_000 });
-  const explained = await savedSession(page);
-  expect(explained?.cursorIndex).toBe(0);
+  const explained = await waitForTurn(page, { state: 'paused', cursor: 0, changedFrom: paused });
+  expect(explained?.cancellationToken).not.toBe(paused?.cancellationToken);
 
-  // 4. RESUME — the interrupted passage is read again, cursor unchanged.
+  // 4. RESUME — the interrupted passage is read again: cursor stays 0, so the
+  //    wait must prove a NEW turn (revised token), not just cursor === 0.
   await page.locator('button:has-text("आगे पढ़ो")').last().click();
-  await waitForCursor(page, 0);
-  const resumed = await savedSession(page);
-  expect(resumed?.state).toBe('reading');
+  const resumed = await waitForTurn(page, { state: 'reading', cursor: 0, changedFrom: explained });
+  expect(resumed?.cancellationToken).not.toBe(explained?.cancellationToken);
 
   // 5. CONTINUE while reading — the NEXT stored passage, not a repeat.
   await page.locator('button:has-text("आगे पढ़ो")').last().click();
-  await waitForCursor(page, 1);
-  const advanced = await savedSession(page);
-  expect(advanced?.state).toBe('reading');
-  expect(advanced?.cursorIndex).toBe(1);
+  const advanced = await waitForTurn(page, { state: 'reading', cursor: 1, changedFrom: resumed });
+  expect(advanced?.cancellationToken).not.toBe(resumed?.cancellationToken);
   // The passage now on screen is different from the one that was resumed.
   await expect(page.getByText('भावार्थ', { exact: false }).last()).toBeVisible();
 });
@@ -127,16 +159,14 @@ test('browser: the reading position survives a reload (device-local)', async ({ 
 
   await send(page, 'गीता अध्याय १२ पढ़ो');
   await expect(page.getByText('अध्याय पंक्ति तैयार', { exact: false })).toBeVisible({ timeout: 30_000 });
-  const started = await savedSession(page);
-  expect(started?.cursorIndex).toBe(0);
+  const started = await waitForTurn(page, { state: 'reading', cursor: 0 });
 
   // "आगे पढ़ो" while reading advances one stored passage at a time.
   await page.locator('button:has-text("आगे पढ़ो")').last().click();
-  await waitForCursor(page, 1);
+  const first = await waitForTurn(page, { state: 'reading', cursor: 1, changedFrom: started });
   await page.locator('button:has-text("आगे पढ़ो")').last().click();
-  await waitForCursor(page, 2);
+  const before = await waitForTurn(page, { state: 'reading', cursor: 2, changedFrom: first });
 
-  const before = await savedSession(page);
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.locator('button:has(img[alt="Kashi Sahayak Avatar"])').first().click();
   await expect(page.getByPlaceholder('मन की बात')).toBeVisible({ timeout: 15_000 });
@@ -147,5 +177,6 @@ test('browser: the reading position survives a reload (device-local)', async ({ 
 
   // And the server still accepts the restored session for the next passage.
   await page.locator('button:has-text("आगे पढ़ो")').last().click();
-  await waitForCursor(page, 3);
+  const afterReload = await waitForTurn(page, { state: 'reading', cursor: 3, changedFrom: before });
+  expect(afterReload?.cancellationToken).not.toBe(before?.cancellationToken);
 });
