@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Download } from '@playwright/test';
 import * as fs from 'fs';
 
 const BASE = process.env.BASE_URL ?? 'http://localhost:3000';
@@ -21,10 +21,20 @@ test.describe('REPORT PAGE (qualified client)', () => {
     }
     await expect(page.getByText('● NOW').first()).toBeVisible();
 
-    // Client-side pipeline: download a validated PDF
-    const downloadPromise = page.waitForEvent('download', { timeout: 120000 });
-    await page.getByRole('button', { name: /DOWNLOAD PDF/i }).first().click();
-    const download = await downloadPromise;
+    // Client-side pipeline: download a validated PDF.
+    // Hydration-safe: under worker contention React's onClick may not be
+    // attached when the first click lands (the DOM is server-rendered and
+    // looks fully interactive). Retry the click — a swallowed pre-hydration
+    // click is a harness race, not a pipeline defect.
+    const downloadBtn = page.getByRole('button', { name: /DOWNLOAD PDF/i }).first();
+    let download: Download | null = null;
+    const clickDeadline = Date.now() + 60000;
+    while (!download && Date.now() < clickDeadline) {
+      const attempt = page.waitForEvent('download', { timeout: 8000 }).then(d => d).catch(() => null);
+      await downloadBtn.click();
+      download = await attempt;
+    }
+    if (!download) throw new Error('PDF download never fired — pipeline or hydration stalled');
     const path = await download.path();
     expect(download.suggestedFilename()).toMatch(/Kundli_.*\.pdf$/);
     const size = fs.statSync(path).size;

@@ -18,6 +18,7 @@ import HeroSection from '@/components/HeroSection';
 import TodayAtAGlance from '@/components/TodayAtAGlance';
 import FestivalStrip from '@/components/FestivalStrip';
 import GlobalFooter from '@/components/layout/GlobalFooter';
+import FloatingAIGuruAvatar from '@/components/consultation/FloatingAIGuruAvatar';
 
 import { getPersistedLocation, LOCATION_CHANGE_EVENT, LocationAnchor } from '@/lib/location';
 // Dynamic Load for Modals
@@ -224,6 +225,9 @@ export default function AppLandingPage() {
       </main>
 
       <GlobalFooter lang={lang} />
+
+      {/* AI Guru Chatbot — floating on every platform surface */}
+      <FloatingAIGuruAvatar />
 
       {/* Modals & Dialogs */}
       <LanguageSelectorModal

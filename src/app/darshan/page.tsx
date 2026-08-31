@@ -46,6 +46,7 @@ import {
 import CosmicTantraShell from '@/components/layout/CosmicTantraShell';
 import { playBell, playTick, playConch, playFlowerDrop, playDiya } from '@/lib/chitiAudio';
 import { getProfiles } from '@/lib/profileStore';
+import { logJapa } from '@/lib/remedyStore';
 
 interface ShrineItem {
   id: string;
@@ -1116,8 +1117,12 @@ export default function DarshanPage() {
   };
 
   // Mantra Japa Increment Trigger
+  // Every tap is one mantra — logged to the shared japa store so the
+  // Remedy Tracker's daily streak and totals stay consistent with the
+  // darshan page (same localStorage, zero PII off-device).
   const handleJapaIncrement = () => {
     playTick();
+    logJapa(1);
     if (japaCount + 1 === 108) {
       playBell();
       setJapaCount(108);
