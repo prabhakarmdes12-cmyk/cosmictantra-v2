@@ -209,7 +209,7 @@ export async function processKashiSahayakQuery(
       intent: 'DARSHAN',
       confidence: intentRes.confidence,
       provenance: createDocumentedProvenance(shrineData.templeName + ' Official Trust Feed'),
-      structuredCard: { inChatDarshan: shrineData },
+      structuredCard: { inChatDarshan: shrineData, sounds: { ghanti: '/audio/ghanti.wav', sankh: '/audio/sankh.wav' } },
       toolCallsExecuted: ['get_temple_darshan'],
       quickChips: [
         { label: '🪔 दीप दान करें', action: 'OFFER_DIYA' },
