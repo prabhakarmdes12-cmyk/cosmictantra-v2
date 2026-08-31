@@ -101,7 +101,7 @@ test.describe('FAILURE INJECTION — fail-closed delivery', () => {
     }
   });
 
-  test('GATE 2 contradiction guard verified: any non-READY state must have null PDF (fail-closed)', async () => {
+  test('GATE 1b invalid timezone blocks delivery before calculation', async () => {
     // This verifies Requirement 26: if GATE 2 (calculation) or any later gate fails,
     // the pipeline must NOT deliver a PDF (contradiction: PDF exists without READY_FOR_DELIVERY).
     const broken = await generateKundliPdf({
@@ -135,8 +135,20 @@ test.describe('FAILURE INJECTION — fail-closed delivery', () => {
     expect(r.state).toBe('READY_FOR_DELIVERY');
     // GATE 2 executed (not bypassed): the report model lineage proves calculation-complete stage.
     const reportLineage = r.report?.lineage;
-    if (reportLineage && reportLineage.stages) {
-      expect(reportLineage.stages.map((s: any) => s.stage)).toContain('calculation-complete');
-    }
+    expect(reportLineage).toBeDefined();
+    expect(reportLineage!.stages.map(s => s.stage)).toContain('calculation-complete');
+  });
+
+  test('GATE 2 engine exception returns CALCULATION_FAILED without PDF or report', async () => {
+    const { createKundliPdfGenerator } = await import('../../src/lib/kundli/pipeline');
+    let called = false;
+    const generate = createKundliPdfGenerator(() => { called = true; throw new Error('injected engine failure'); });
+    const r = await generate({ name: 'Engine failure fixture', birthDate: '1995-06-15', birthTime: '10:30', latitude: 25.5941, longitude: 85.1376, timezoneId: 'Asia/Kolkata', coordinateProvenance: 'MANUAL' });
+    expect(called).toBe(true);
+    expect(r.state).toBe('CALCULATION_FAILED');
+    expect(r.ok).toBe(false);
+    expect(r.pdfBuffer).toBeNull();
+    expect(r.report).toBeNull();
+    expect(r.pdfQuality).toBeNull();
   });
 });

@@ -13,7 +13,7 @@ import { KashiSahayakTelemetry } from './telemetry';
 import { executeVedicTool } from './tools/executor';
 import { findScriptureInsight } from './scriptureMap';
 import { retrieveDurableConsultationMemory } from '../sabha/orchestrator';
-import { readScriptureText } from './granthReader';
+import { readScriptureText, parseScriptureReadRequest } from './granthReader';
 
 export interface KashiSahayakResponse {
   text: string;
@@ -326,46 +326,18 @@ export async function processKashiSahayakQuery(
     };
   }
 
-  // 4.9 GRANH READER (Full / Partial / Conditional text upon request or condition)
-  // Detects requests like "read full Gita chapter 2", "read verse 47", "read partial text on sadness"
-  const readPattern = query.match(/(?:read|पढ़ो|पढ़ें|सुनाओ)\s+(?:full|partial|full partial|पूरी|आंशिक|भाग)?\s*(.+?)(?:chapter|अध्याय)?\s*(\d+)?(?:verse|श्लोक)?\s*(\d+)?/i);
-  if (readPattern || query.toLowerCase().includes('full text') || query.toLowerCase().includes('partial text') || qLower.includes('पूरा पाठ') || qLower.includes('आंशिक')) {
-    const rawRequest = readPattern ? (readPattern[1] || query) : query;
-    const ch = readPattern ? (readPattern[2] ? parseInt(readPattern[2]) : undefined) : undefined;
-    const v = readPattern ? (readPattern[3] ? parseInt(readPattern[3]) : undefined) : undefined;
-
-    // Determine mode from query keywords
-    let mode: 'full' | 'chapter' | 'verse' | 'section' | 'condition' = 'full';
-    if (v !== undefined) mode = 'verse';
-    else if (ch !== undefined && v === undefined) mode = 'chapter';
-    else if (qLower.includes('partial') || qLower.includes('आंशिक') || qLower.includes('भाग')) mode = 'section';
-    else if (qLower.includes('sad') || qLower.includes('anxiety') || qLower.includes('fear') || qLower.includes('उदास') || qLower.includes('चिन्ता')) mode = 'condition';
-
-    const sectionId = (qLower.includes('devi-suktam') || qLower.includes('ऋग्वेद') ? 'devi-suktam-full' : undefined);
-    const response = readScriptureText({
-      grantha: rawRequest.includes('gita') || rawRequest.includes('गीता') ? 'gita' : 'granth',
-      mode,
-      chapter: ch,
-      verse: v,
-      sectionId,
-      condition: mode === 'condition' ? rawRequest : undefined
-    });
-
-    KashiSahayakTelemetry.log('TOOL_USED', sessionId, { toolName: 'granth_reader' });
+  // Exact stored passages only; unavailable content is not a documented quote.
+  const readingRequest = parseScriptureReadRequest(query);
+  if (readingRequest) {
+    const response = readScriptureText(readingRequest);
     return {
-      text: (response.isFull ? 'पूर्ण पाठ (' : response.isPartial ? 'आंशिक पाठ (' : 'पाठ (' ) +
-        response.sourceName + (response.chapter ? ' • अध्याय ' + response.chapter : '') +
-        (response.verse ? ' • श्लोक ' + response.verse : '') + '):\n\n' + response.text +
-        '\n\n' + response.note,
-      intent: 'GRANTH_READ',
-      confidence: 0.92,
-      provenance: createDocumentedProvenance(response.sourceName, undefined, 'DIRECT_QUOTE'),
-      structuredCard: { granthReadCard: response },
-      toolCallsExecuted: ['granth_reader'],
-      quickChips: [
-        { label: '📖 पूर्ण गीता पढ़ें', action: 'INTENT_GRANTH_GITA_FULL' },
-        { label: '📜 विद्वान् ज्योतिषी परामर्श', action: 'INTENT_SCHOLAR', href: '/ask' }
-      ]
+      text: response.found ? `${response.sourceName} ${response.chapter}.${response.verse}\n\n${response.text}` : response.text,
+      intent: 'GRANTH_READ', confidence: 0.92,
+      provenance: response.found
+        ? createDocumentedProvenance(response.sourceName, `${response.chapter}.${response.verse}`, 'DIRECT_QUOTE')
+        : createAIExplanationProvenance(),
+      structuredCard: { granthReadCard: response }, toolCallsExecuted: ['granth_reader'],
+      quickChips: [{ label: '📖 आरती एवं ग्रन्थ पुस्तकालय', action: 'OPEN_LIBRARY', href: '/aarti-stotra' }],
     };
   }
 

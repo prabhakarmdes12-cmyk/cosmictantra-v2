@@ -1,5 +1,7 @@
 # NEXT IMPROVEMENT PROPOSAL — arena/01a05842-cosmictantra-v2
 
+> Historical agent report. Current-status and completion claims are superseded by [the independent 1 September review](RELEASE-REVIEW-2026-09-01.md). Do not use this report or its self-attested artifacts as a release gate. Next implementation: [agent mission](AGENT-NEXT-WORK-2026-09-01.md).
+
 Commit reference: `65792e8` (post-audit, post-mechanism implementation)
 Prepared: 2026-08-31
 Method: Honest assessment based ONLY on workspace-verified evidence (no model fabrication, no false claims).

@@ -1,5 +1,7 @@
 # GRANH COVERAGE AUDIT — arena/01a05842-cosmictantra-v2
 
+> Historical agent report. Current-status and completion claims are superseded by [the independent 1 September review](RELEASE-REVIEW-2026-09-01.md). Do not use this report or its self-attested artifacts as a release gate. Next implementation: [agent mission](AGENT-NEXT-WORK-2026-09-01.md).
+
 Audit date: 2026-08-31 (after user correction: "clear definition of 100% complete")
 Audit method: Workspace file inspection ONLY (`src/app/aarti-stotra/page.tsx`, `src/lib/ai/scriptureMap.ts`, `src/lib/ai/scriptureCorpus.ts`, `src/lib/ai/granthReader.ts`, `src/lib/ai/gateway.ts`).
 No model-generated text accepted as evidence.

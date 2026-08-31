@@ -86,7 +86,7 @@ test.describe('CONTRADICTION DETECTOR — canonical truth preserved through PDF'
     expect(currentPeriodSection!.status).toBe('READY');
   });
 
-  test('Contradiction: canonical Moon sign must match interpretation claim', async () => {
+  test('Canonical ascendant sign appears in the required lagna interpretation', async () => {
     const snap = getCanonicalJyotishSnapshot({
       birthDate: GOLDEN.birthDate,
       birthTime: GOLDEN.birthTime,
@@ -98,23 +98,11 @@ test.describe('CONTRADICTION DETECTOR — canonical truth preserved through PDF'
     const canonical = buildCanonicalModel({ profile: { ...GOLDEN, name: GOLDEN.name, birthDate: GOLDEN.birthDate, birthTime: GOLDEN.birthTime, locationName: 'Patna, Bihar, India', coordinates: { latitude: GOLDEN.latitude, longitude: GOLDEN.longitude, provenance: 'MANUAL' }, timezone: { timezoneId: 'Asia/Kolkata', utcOffsetAtBirth: 5.5, localDateTime: '1995-06-15T10:30:00', utcDateTime: '1995-06-15T05:00:00.000Z', offsetProvenance: 'IANA_HISTORICAL' as const }, fingerprint: 'test' }, snapshot: snap, config: { zodiac: 'SIDEREAL', ayanamsha: 'LAHIRI_CHITRA_PAKSHA', ayanamshaName: 'Lahiri (Chitra Paksha)', houseSystem: 'EQUAL_SIGN', nodeMode: 'MEAN_NODE', ephemerisProvider: 'ASTRONOMY_ENGINE_VSOP87_ELP2000', engineVersion: 'V36.0', calculationVersion: 'kundli-calc-v1', reportVersion: 'kundli-report-v1' } });
     const report = buildKundliReportModel(canonical, 'en');
 
-    // Find the lagna-analysis section and verify it references the actual ascendant
     const lagnaAnalysis = report.sections.find(s => s.id === 'lagna-analysis');
-    if (lagnaAnalysis && lagnaAnalysis.status === 'READY') {
-      const contentString = lagnaAnalysis.blocks.map(b => (b as any).text || '').join(' ');
-    // Verify the lagna-analysis content references the actual canonical ascendant sign and does not invent contradictory data.
-    if (lagnaAnalysis && lagnaAnalysis.status === 'READY') {
-      const contentString = lagnaAnalysis.blocks.map(b => (b as any).text || '').join(' ');
-      // The canonical ascendant sign must be referenced; no contradictory sign should appear.
-      expect(contentString.length).toBeGreaterThan(0);
-      const canonicalAscendantSign = canonical.ascendant.sign.en; // 'Leo'
-      const contentLower = contentString.toLowerCase();
-      // The interpretation must reference the canonical ascendant sign (Leo/Simha per fixtures).
-      // If the sign is not found, it indicates the interpretation invented a different sign (contradiction).
-      const hasCanonicalSign = contentLower.includes('leo') || contentLower.includes('simha') || contentLower.includes(canonicalAscendantSign.toLowerCase());
-      expect(hasCanonicalSign, `Lagna analysis does not reference canonical ascendant sign (${canonicalAscendantSign}, Leo/Simha). Content: ${contentString}`).toBe(true);
-    }
-    }
+    expect(lagnaAnalysis).toBeDefined();
+    expect(lagnaAnalysis!.status).toBe('READY');
+    const content = lagnaAnalysis!.blocks.map(b => b.kind === 'paragraph' ? b.text : '').join(' ').toLowerCase();
+    expect(content).toContain(canonical.ascendant.sign.en.toLowerCase());
   });
 
   test('Contradiction: current dasha must not reference future/nonexistent period', async () => {

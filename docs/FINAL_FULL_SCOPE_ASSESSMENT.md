@@ -1,5 +1,7 @@
 # FINAL ENGINEERING ASSESSMENT — FULL INSTRUCTION 64-101 + KASHI SAHAYAK
 
+> Historical agent report. Current-status and completion claims are superseded by [the independent 1 September review](RELEASE-REVIEW-2026-09-01.md). Do not use this report or its self-attested artifacts as a release gate. Next implementation: [agent mission](AGENT-NEXT-WORK-2026-09-01.md).
+
 Branch: arena/01a05842-cosmictantra-v2  |  Commit: 7682b3a  |  Date: 2026-08-31
 Auditor: Independent review (sandbox environment, TypeScript binary unavailable)
 Engineering language: Neutral. No invented engineering persona.
