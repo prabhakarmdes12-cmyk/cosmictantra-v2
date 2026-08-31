@@ -1,0 +1,13 @@
+{
+  "artifactId": "13-report-model.json",
+  "fixture": "Priya Sharma — Report Model (assembled from canonical model + interpretations)",
+  "modelBuilt": true,
+  "sectionsBuilt": 27,
+  "allMandatorySectionsPresent": true,
+  "noUndefinedSections": true,
+  "noEmptyMandatorySections": true,
+  "lineageFingerprintMatchesCanonical": true,
+  "subjectDataMatchesInput": true,
+  "calculationConfigTraceable": true,
+  "status": "READY"
+}

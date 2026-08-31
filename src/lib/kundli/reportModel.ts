@@ -38,6 +38,11 @@ const divider = (): ReportBlock => ({ kind: 'divider' });
 /* ------------------------------------------------------------------ */
 
 function buildCover(m: KundliCanonicalModel): ReportSection {
+  // Never render empty mandatory values; if name is missing, throw KUNDLI_REPORT_INCOMPLETE.
+  const name = m.subject.name?.trim();
+  if (!name) {
+    throw new KundliError('KUNDLI_REPORT_INCOMPLETE', 'subject name is missing in canonical model', { field: 'subject.name' });
+  }
   return {
     id: 'cover',
     title: 'Cover',
@@ -45,7 +50,7 @@ function buildCover(m: KundliCanonicalModel): ReportSection {
     blocks: [
       para('॥ श्री गणेशाय नमः ॥'),
       heading('CosmicTantra Master Kundli', 1),
-      kv('Prepared for', m.subject.name),
+      kv('Prepared for', name),
       kv('Birth', `${m.subject.birthDate} at ${m.subject.birthTime}`),
       kv('Birth place', m.subject.locationName),
       kv('Report ID', deriveReportId(m.subject.fingerprint)),
@@ -55,17 +60,25 @@ function buildCover(m: KundliCanonicalModel): ReportSection {
 
 function buildBirthSummary(m: KundliCanonicalModel): ReportSection {
   const s = m.subject;
+  // Never render blank mandatory values; throw KUNDLI_REPORT_INCOMPLETE if coordinates incomplete.
+  const lat = s.coordinates.latitude;
+  const lng = s.coordinates.longitude;
+  if (lat === undefined || lng === undefined || lat === null || lng === null) {
+    throw new KundliError('KUNDLI_REPORT_INCOMPLETE', 'coordinates incomplete in canonical model', {
+      latitude: lat, longitude: lng, provenance: s.coordinates.provenance,
+    });
+  }
   return {
     id: 'birth-summary',
     title: 'Birth Summary',
     status: 'READY',
     blocks: [
-      kv('Name', s.name),
+      kv('Name', s.name || '—'),
       kv('Birth date', s.birthDate),
       kv('Birth time', s.birthTime),
       kv('Birth place', s.locationName),
-      kv('Latitude', `${s.coordinates.latitude.toFixed(4)}°`),
-      kv('Longitude', `${s.coordinates.longitude.toFixed(4)}°`),
+      kv('Latitude', `${lat.toFixed(4)}°`),
+      kv('Longitude', `${lng.toFixed(4)}°`),
       kv('Coordinate provenance', s.coordinates.provenance),
       kv('Timezone', `${s.timezone.timezoneId} (UTC${s.timezone.utcOffsetAtBirth >= 0 ? '+' : ''}${s.timezone.utcOffsetAtBirth})`),
       kv('UTC birth instant', s.timezone.utcDateTime),
@@ -340,18 +353,30 @@ export function buildKundliReportModel(
     ...buildDashaTables(canonical),
   ];
 
-  // Lagna/Moon/Nakshatra analyses
+  // Lagna/Moon/Nakshatra analyses — guard against missing interpretation entries
   for (const id of ['lagna-analysis', 'moon-analysis', 'nakshatra-analysis'] as const) {
-    sections.push(buildInterpretationSections([bySection.get(id)!])[0]);
+    const entry = bySection.get(id);
+    if (!entry) {
+      throw new KundliError('KUNDLI_INTERPRETATION_INCOMPLETE', `required interpretation section missing: ${id}`, { sectionId: id });
+    }
+    sections.push(buildInterpretationSections([entry])[0]);
   }
   sections.push(buildYogaSections(canonical)[0]);
   sections.push(buildDoshaSection(canonical));
 
   for (const id of ['career', 'finance', 'relationships', 'family', 'health', 'education', 'spiritual-tendencies'] as const) {
-    sections.push(buildInterpretationSections([bySection.get(id)!])[0]);
+    const entry = bySection.get(id);
+    if (!entry) {
+      throw new KundliError('KUNDLI_INTERPRETATION_INCOMPLETE', `required interpretation section missing: ${id}`, { sectionId: id });
+    }
+    sections.push(buildInterpretationSections([entry])[0]);
   }
   for (const id of ['current-period', 'near-term-themes', 'remedies'] as const) {
-    sections.push(buildInterpretationSections([bySection.get(id)!])[0]);
+    const entry = bySection.get(id);
+    if (!entry) {
+      throw new KundliError('KUNDLI_INTERPRETATION_INCOMPLETE', `required interpretation section missing: ${id}`, { sectionId: id });
+    }
+    sections.push(buildInterpretationSections([entry])[0]);
   }
 
   sections.push(buildCalculationMethod(canonical));

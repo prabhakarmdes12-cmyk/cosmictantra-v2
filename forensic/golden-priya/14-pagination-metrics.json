@@ -1,0 +1,13 @@
+{
+  "artifactId": "14-pagination-metrics.json",
+  "fixture": "Priya Sharma — Pagination Metrics (repaired controller)",
+  "pageCount": 6,
+  "maxPagesEnforced": 40,
+  "controllerUsed": true,
+  "newPageCalledWithPhysicalPage": true,
+  "blankPages": 0,
+  "contentDensity": 1.0,
+  "consecutiveBlankPages": 0,
+  "averageCharsPerPageApproximate": 1400,
+  "status": "PASSED — no 454-page runaway; pagination controlled"
+}

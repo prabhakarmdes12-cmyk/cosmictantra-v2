@@ -1,0 +1,74 @@
+{
+  "artifactId": "06_report_model_state.json",
+  "incidentId": "KUNDLI-INCIDENT-454",
+  "timestamp": "2026-08-31T10:30:00+05:30",
+  "description": "Report model state for the incident. The legacy report model pushed undefined sections (due to non-null assertions) and built sections from an empty data source, resulting in empty blocks.",
+  "data": {
+    "reportId": null,
+    "generatedAt": null,
+    "locale": "en",
+    "calculationConfig": null,
+    "subject": {
+      "name": "",
+      "birthDate": "1995-06-15",
+      "birthTime": "10:30",
+      "locationName": "",
+      "coordinates": {
+        "latitude": 25.5941,
+        "longitude": null,
+        "provenance": null,
+        "timezoneId": null
+      },
+      "timezone": {
+        "timezoneId": null,
+        "utcOffsetAtBirth": null,
+        "localDateTime": null,
+        "utcDateTime": null
+      }
+    },
+    "lineage": {
+      "reportId": null,
+      "fingerprint": null,
+      "stages": []
+    },
+    "sectionsBuilt": [
+      {
+        "id": "cover",
+        "title": "Cover",
+        "status": "READY",
+        "blocks": [
+          { "kind": "heading", "level": 1, "text": "COSMICTANTRA MASTER KUNDLI" },
+          { "kind": "paragraph", "text": "" }
+        ],
+        "note": "Cover section present but missing subject name and invocation details"
+      },
+      {
+        "id": "disclaimer",
+        "title": "Disclaimer",
+        "status": "READY",
+        "blocks": [
+          { "kind": "paragraph", "text": "This Kundli is for educational and personal reflection purposes only." }
+        ],
+        "note": "Disclaimer section is the ONLY section that has content when data is empty. This is the critical issue: a document with only a disclaimer passes the renderer but fails the integrity validator."
+      }
+    ],
+    "missingMandatorySections": [
+      "birth-summary",
+      "planetary-positions",
+      "current-dasha",
+      "disclaimer"
+    ],
+    "sectionsWithEmptyBlocks": [
+      "birth-summary (name missing, coordinates incomplete)",
+      "planetary-positions (planets array empty or undefined)",
+      "current-dasha (current period string empty)"
+    ],
+    "undefinedSectionsPushed": [
+      "lagna-analysis (bySection.get('lagna-analysis') is undefined)",
+      "moon-analysis (bySection.get('moon-analysis') is undefined)",
+      "current-period (bySection.get('current-period') is undefined)",
+      "remedies (bySection.get('remedies') is undefined)"
+    ],
+    "note": "When bySection.get(id) returns undefined, the non-null assertion pushes undefined into sections. The renderer then tries to render undefined sections, which either skips them or produces empty pages."
+  }
+}

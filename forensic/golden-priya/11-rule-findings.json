@@ -1,0 +1,17 @@
+{
+  "artifactId": "11-rule-findings.json",
+  "fixture": "Priya Sharma — Rule-Derived Findings (deterministic only, no LLM invention)",
+  "engineVersion": "V36.0",
+  "generatorVersion": "deterministic-rules-v1",
+  "findingsVerified": [
+    "Lagna Analysis — based on ascendant sign and lord position",
+    "Moon Analysis — based on Moon sign, nakshatra, house",
+    "Career — based on 10th house sign and lord",
+    "Finance — based on 2nd house sign and lord",
+    "Relationships — based on 7th house sign and lord",
+    "Spiritual — based on 9th and 12th houses, Ketu/Jupiter positions",
+    "Current Period — based on current Mahadasha/Antardasha from canonical dasha timeline"
+  ],
+  "noInventionVerified": true,
+  "notes": "No planet, house, yoga, dasha, or nakshatra invented. Every reference exists in canonical model."
+}

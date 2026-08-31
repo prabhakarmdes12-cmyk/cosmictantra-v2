@@ -1,0 +1,37 @@
+{
+  "artifactId": "01_raw_user_input.json",
+  "incidentId": "KUNDLI-INCIDENT-454",
+  "timestamp": "2026-08-31T10:30:00+05:30",
+  "description": "Partial user input that triggered the 454-page runaway. Latitude present; longitude, name, timezone, and full coordinates missing. This is the exact incident input profile.",
+  "sourceFile": "tests/incident/legacy-render-sim.spec.ts",
+  "data": {
+    "rawBirthInput": {
+      "name": null,
+      "birthDate": "1995-06-15",
+      "birthTime": "10:30",
+      "locationName": null,
+      "latitude": 25.5941,
+      "longitude": null,
+      "timezoneId": null,
+      "utcOffsetHours": null,
+      "coordinateProvenance": null
+    },
+    "pipelineCalledWith": {
+      "function": "generateKundliPdf",
+      "file": "src/lib/kundli/pipeline.ts",
+      "inputObject": {
+        "birthDate": "1995-06-15",
+        "birthTime": "10:30",
+        "latitude": 25.5941,
+        "longitude": undefined,
+        "timezoneId": undefined,
+        "name": undefined,
+        "locationName": undefined
+      }
+    },
+    "notes": "Latitude 25.5941 (Bilaspur area) without longitude creates an incomplete coordinate pair. No timezone resolution possible without longitude. The pipeline should have thrown KUNDLI_COORDINATES_INVALID at GATE 2, but the legacy path bypassed this check.",
+    "lineageFingerprint": null,
+    "expectedState": "INPUT_FAILED / KUNDLI_COORDINATES_INVALID",
+    "actualLegacyState": "RENDER_STARTED (no gate enforced)"
+  }
+}

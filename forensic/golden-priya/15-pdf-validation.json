@@ -1,0 +1,21 @@
+{
+  "artifactId": "15-pdf-validation.json",
+  "fixture": "Priya Sharma — PDF Post-Generation Integrity Validation (GATE 4)",
+  "validationStatus": "PASSED",
+  "statusCode": "PASS",
+  "reasons": [],
+  "pageCountVerifiedByPdfParser": 6,
+  "blankPagesVerifiedByParser": 0,
+  "mandatorySectionTitlesFoundInText": [
+    "Birth Summary",
+    "Calculation Standard",
+    "Panchanga",
+    "Planetary Positions",
+    "Vimshottari Dasha",
+    "Current Dasha Period",
+    "Disclaimer"
+  ],
+  "contentDensityFromParser": 1.0,
+  "noContradictionDetected": true,
+  "notes": "Real pdfjs extraction used (base-14 standard fonts + embedded Devanagari). Not instrumented metrics as silent fallback."
+}

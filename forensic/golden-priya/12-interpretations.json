@@ -1,0 +1,24 @@
+{
+  "artifactId": "12-interpretations.json",
+  "fixture": "Priya Sharma — Interpretation Evidence Mapping",
+  "interpretationEvidenceSample": {
+    "sectionId": "lagna-analysis",
+    "sourceFacts": ["ascendant.sign", "ascendant.sign.lord", "planets.Mars.house", "planets.Mars.sign"],
+    "ruleIds": ["interpretLagna"],
+    "generatedTextExists": true,
+    "evidenceInCanonical": true,
+    "noLLMInvention": true
+  },
+  "currentPeriodEvidence": {
+    "sectionId": "current-period",
+    "sourceFactsIncludesCurrentDasha": true,
+    "startEndDatesVerifiedInCanonical": true
+  },
+  "remediesEvidence": {
+    "sectionId": "remedies",
+    "doshaReferencesVerified": true,
+    "traditionalRemedyOnly": true,
+    "noMedicalClaimMade": true
+  },
+  "interpretationStatus": "PASSED — all major sections have deterministic evidence mappings"
+}

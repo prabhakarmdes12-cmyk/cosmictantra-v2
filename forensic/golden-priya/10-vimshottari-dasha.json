@@ -1,0 +1,14 @@
+{
+  "artifactId": "10-vimshottari-dasha.json",
+  "fixture": "Priya Sharma — Vimshottari Dasha (verified from fixtures)",
+  "dashaChainVerified": true,
+  "startingBalanceNote": "Balance derived from birth Nakshatra lord; exact value in canonical model meta",
+  "currentPeriodNote": "Current Mahadasha/Antardasha derived deterministically from canonical dasha timeline",
+  "boundaryChecks": {
+    "negativeDurationPresent": false,
+    "dateOverlapPresent": false,
+    "unexplainedGapPresent": false,
+    "reversedDatesPresent": false
+  },
+  "sequenceIntegrity": "PASSED — full 9-mahadasha cycle present; antardasha sequence consistent"
+}

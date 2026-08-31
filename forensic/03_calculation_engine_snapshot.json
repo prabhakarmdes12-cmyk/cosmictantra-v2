@@ -1,0 +1,30 @@
+{
+  "artifactId": "03_calculation_engine_snapshot.json",
+  "incidentId": "KUNDLI-INCIDENT-454",
+  "timestamp": "2026-08-31T10:30:00+05:30",
+  "description": "Calculation engine state when called with an incomplete profile. The engine must never run without a complete profile (validated input + resolved geo/timezone).",
+  "data": {
+    "engineCalled": false,
+    "reasonEngineNotCalled": "GATE 1b (geo/timezone) never passed; profile missing longitude, timezone, and full birth details",
+    "canonicalSnapshotAttempted": false,
+    "canonicalModelBuilt": false,
+    "calculationConfigLoaded": {
+      "fromFile": "src/lib/kundli/config.ts",
+      "config": {
+        "zodiac": "SIDEREAL",
+        "ayanamsha": "LAHIRI_CHITRA_PAKSHA",
+        "ayanamshaName": "Lahiri (Chitra Paksha)",
+        "houseSystem": "EQUAL_SIGN",
+        "nodeMode": "MEAN_NODE",
+        "ephemerisProvider": "ASTRONOMY_ENGINE_VSOP87_ELP2000",
+        "engineVersion": "V36.0",
+        "calculationVersion": "kundli-calc-v1",
+        "reportVersion": "kundli-report-v1"
+      },
+      "status": "CONFIG_LOADED_BUT_NOT_USED"
+    },
+    "expectedEngineState": "NOT_RUN / INCOMPLETE_INPUT",
+    "actualLegacyState": "ENGINE_BYPASSED / DIRECT_SNAPSHOT_USED",
+    "notes": "The legacy renderer called getCanonicalJyotishSnapshot() directly without running through the canonical model adapter. This bypassed all validation gates."
+  }
+}

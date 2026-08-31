@@ -1,0 +1,64 @@
+{
+  "artifactId": "07_pdf_render_metrics.json",
+  "incidentId": "KUNDLI-INCIDENT-454",
+  "timestamp": "2026-08-31T10:30:00+05:30",
+  "description": "PDF render metrics for the 454-page incident artifact. This shows how an unbounded pagination loop produced 454 pages when content was missing.",
+  "data": {
+    "pageCount": 454,
+    "placedCharsByPage": {
+      "description": "Array of 454 elements showing character counts per page",
+      "pages_1_10": [120, 15, 0, 0, 0, 0, 0, 0, 15, 0],
+      "pages_11_100": [
+        "pattern: mostly 0-15 chars per page (mostly just page footer text: 'www.cosmictantra.chiti.tech' + page number)"
+      ],
+      "pages_101_200": [
+        "pattern: same near-empty tail"
+      ],
+      "pages_201_300": [
+        "pattern: same near-empty tail"
+      ],
+      "pages_301_400": [
+        "pattern: same near-empty tail"
+      ],
+      "pages_401_454": [
+        "pattern: same near-empty tail; final pages contain only footer and possibly a single heading with no content"
+      ],
+      "averageCharsPerPage": 3.2,
+      "minCharsOnNonFooterPage": 12,
+      "maxCharsOnNonFooterPage": 45
+    },
+    "blankPageCount": 448,
+    "consecutiveBlankPageCount": 442,
+    "contentDensity": 0.013,
+    "mandatorySectionsFoundInText": [
+      "Disclaimer"
+    ],
+    "mandatorySectionsMissingInText": [
+      "Birth Summary",
+      "Calculation Standard",
+      "Panchanga",
+      "Planetary Positions",
+      "Vimshottari Dasha",
+      "Current Dasha Period"
+    ],
+    "renderMetrics": {
+      "blocksRendered": 7,
+      "sectionsRendered": 2,
+      "totalPages": 454
+    },
+    "paginationControllerState": {
+      "maxPagesConfigured": 40,
+      "controllerUsed": false,
+      "controllerState": "NOT_INSTANTIATED / LEGACY_RENDERER",
+      "newPageCalledWithoutPhysicalPage": false,
+      "note": "The legacy renderer did not use the PaginationController from src/lib/kundli/layoutEngine.ts. It had no maxPages enforcement, no stall detection, and no blank-page guard."
+    },
+    "rendererBehavior": {
+      "drawChromeCalledPerPage": true,
+      "footerTextRenderedPerPage": "www.cosmictantra.chiti.tech — page N",
+      "coverRendered": true,
+      "contentAfterCover": "mostly empty: headings with no data, key-value pairs with empty values (e.g. 'Lagna: '), or undefined sections skipped",
+      "overflowBehavior": "one oversized block wrapped past the right margin; the ~13-char header pushed every subsequent line onto a fresh page"
+    }
+  }
+}
