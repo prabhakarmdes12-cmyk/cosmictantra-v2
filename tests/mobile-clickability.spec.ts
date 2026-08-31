@@ -26,46 +26,34 @@ test.describe('CosmicTantra — Deep QA & Mobile Clickability Suite', () => {
     await expect(page.getByRole('heading', { name: /Pooja Store & Sacred Samagri/i })).toBeVisible();
   });
 
-  // Test 2: Mobile 390px: Pooja Store Catalog, Filter Tabs, Add to Cart, Cart Drawer & Checkout
-  test('Mobile (390px): Store category filtering, add to cart, cart drawer and checkout are clickable', async ({ page }) => {
+  // Test 2: Mobile 390px: Pooja Store is a "Coming Soon" landing — notify-me
+  // works, no cart / checkout is exposed (storefront reopens when supplier
+  // partnerships are finalised; full code preserved in git history).
+  test('Mobile (390px): Store shows Coming Soon with notify CTA and live alternatives, no checkout', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('http://localhost:3000/store', { waitUntil: 'domcontentloaded' });
-    await page.waitForLoadState('load'); // 'networkidle' never settles on home: the autoplay hero video streams for tens of seconds. Explicit element waits below give real readiness.
+    await page.waitForLoadState('load');
 
-    // Category pills horizontal scroll and click
-    const dhoopTab = page.getByRole('button', { name: /धूप, अगरबत्ती व कपूर/i }).first();
-    await expect(dhoopTab).toBeVisible();
-    await dhoopTab.click();
+    // Coming-soon promise + heading preserved (nav test relies on it)
+    await expect(page.getByRole('heading', { name: /Vedic Pooja Store & Sacred Samagri/i }).first()).toBeVisible();
+    await expect(page.getByText(/Coming Soon/i).first()).toBeVisible();
 
-    // Verify Camphor item is visible
-    const camphorTitle = page.getByText(/भीमसेनी/i).first();
-    await expect(camphorTitle).toBeVisible();
+    // No commerce surface is exposed
+    expect(await page.locator('button').filter({ hasText: /जोड़ें|Add to Cart|कार्ट|Checkout|चेकआउट/i }).count()).toBe(0);
 
-    // Add to cart directly
-    const addBtn = page.getByRole('button', { name: /जोड़ें|Add/i }).first();
-    await expect(addBtn).toBeVisible();
-    await addBtn.click();
+    // Notify-me CTA opens WhatsApp intent
+    const notifyBtn = page.getByRole('button', { name: /Notify me on launch \(WhatsApp\)/i }).first();
+    await expect(notifyBtn).toBeVisible();
+    const [popup] = await Promise.all([
+      page.waitForEvent('popup').catch(() => null),
+      notifyBtn.click(),
+    ]);
+    if (popup) await popup.close().catch(() => {});
 
-    // Open Cart Drawer via hero floating cart button
-    const cartFloatingBtn = page.locator('button').filter({ hasText: /कार्ट/i }).first();
-    await expect(cartFloatingBtn).toBeVisible();
-    await cartFloatingBtn.scrollIntoViewIfNeeded();
-    await cartFloatingBtn.click();
-    await page.waitForTimeout(400);
-
-    // Verify Cart Drawer is open with item
-    await expect(page.getByText(/आपकी पूजा सामग्री कार्ट|पूजा सामग्री/i).first()).toBeVisible();
-    await expect(page.getByText(/भीमसेनी/i).first()).toBeVisible();
-
-    // Click Direct Checkout button (सीधे चेकआउट →)
-    const directCheckoutBtn = page.locator('button').filter({ hasText: /सीधे चेकआउट/i }).first();
-    await expect(directCheckoutBtn).toBeVisible();
-    await directCheckoutBtn.scrollIntoViewIfNeeded();
-    await directCheckoutBtn.click();
-    await page.waitForTimeout(300);
-
-    // Verify Checkout Modal
-    await expect(page.getByText(/सुरक्षित चेकआउट • Delivery Address|चेकआउट/i).first()).toBeVisible();
+    // Live alternatives are linked
+    await expect(page.getByText(/Live Darshan/i).first()).toBeVisible();
+    await expect(page.getByText(/Sankalpa & Japa Tracker/i).first()).toBeVisible();
+    await expect(page.getByText(/Ask a Jyotishi/i).first()).toBeVisible();
   });
 
   // Test 3: Mobile 390px: Live Darshan Category Switcher, Diya Lighting, Flowers & Japa

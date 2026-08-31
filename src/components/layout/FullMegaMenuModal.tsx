@@ -105,8 +105,8 @@ const MEGA_MENU_TILES: NavTile[] = [
     titleHi: 'वैदिक पूजा सामग्री प्रतिष्ठान',
     href: '/store',
     icon: '🛍️',
-    badge: '100% PURE',
-    description: 'Solid brass Akhand Diyas, Bhimseni camphor, A2 Bilona ghee, idol dresses, and festive puja kits.',
+    badge: 'COMING SOON',
+    description: 'Authentic puja samagri storefront — opening after supplier partnerships are finalised.',
     category: 'STORE'
   },
   {
