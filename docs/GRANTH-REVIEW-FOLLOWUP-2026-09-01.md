@@ -55,6 +55,26 @@ Browser flow actually executed (`granth-reader-browser.spec.ts`):
 5. **continue chip** again → cursor **1** (the next stored passage, not a repeat)
 6. reload → same `sessionId`, cursor 1→(2), and the server accepts the restored session for the next passage
 
+**Correction (commit `5b6d191`).** Step 4 above was not proved reliably. The test waited on the
+cursor alone after clicking “आगे पढ़ो”:
+
+```ts
+await page.locator('button:has-text("आगे पढ़ो")').last().click();
+await waitForCursor(page, 0);          // cursor is ALREADY 0 before the click
+```
+
+so the wait returned immediately and the assertion could read the previous `paused` state instead
+of the `reading` state the response was about to persist. It passed on a fast run and failed on a
+slow one — the result carried no information about the application.
+
+`waitForTurn` now waits for the whole post-action condition: expected **state**, expected
+**cursor**, and proof the session was **revised** by a new response (fresh `cancellationToken`,
+rotated on every mutating turn, and an `updatedAt` strictly newer than the pre-click snapshot).
+Polling only, no sleeps. Demonstrated with a temporary spec that delayed every `/api/guru/chat`
+response by 1.5 s: the old wait provably observed the stale `paused` state, the new wait was
+correct under the same delay. Re-verified with **3 consecutive runs** on a clean build
+(`rm -rf .next && npx next build`) and a freshly restarted server — 2 passed each time.
+
 ## 3. Correction to an earlier claim, and the pre-existing failures
 
 In a previous hand-off I reported the whole suite as “526 passed / 0 failed”. **That was wrong** —
