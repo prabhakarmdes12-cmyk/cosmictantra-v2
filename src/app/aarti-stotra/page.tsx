@@ -20,7 +20,7 @@ import {
   X
 } from 'lucide-react';
 import CosmicTantraShell from '@/components/layout/CosmicTantraShell';
-import { playBell } from '@/lib/chitiAudio';
+import { playTick } from '@/lib/chitiAudio';
 
 interface VerseItem {
   shlokaNo?: string;
@@ -1965,7 +1965,7 @@ export default function AartiStotraLibrary() {
 
   // Category switch handler
   const handleCategoryChange = (cat: 'aarti' | 'stotra' | 'granth' | 'siddha-stuti') => {
-    playBell();
+    playTick();
     setActiveCategory(cat);
     const targetDataset = cat === 'aarti' ? aartisData : cat === 'stotra' ? stotrasData : cat === 'siddha-stuti' ? siddhaStutiData : granthsData;
     setSelectedId(targetDataset[0]?.id || 1);
@@ -1975,7 +1975,7 @@ export default function AartiStotraLibrary() {
 
   // Item select handler
   const handleItemSelect = (id: number) => {
-    playBell();
+    playTick();
     setSelectedId(id);
     setActiveSectionIndex(0);
   };
@@ -1983,7 +1983,7 @@ export default function AartiStotraLibrary() {
   // Resume Reading Handler
   const handleResumeReading = () => {
     if (!lastReadBookmark) return;
-    playBell();
+    playTick();
     setActiveCategory(lastReadBookmark.category);
     setSelectedId(lastReadBookmark.id);
     setActiveSectionIndex(lastReadBookmark.sectionIndex);
@@ -1992,7 +1992,7 @@ export default function AartiStotraLibrary() {
 
   // Bookmark Verse Toggle
   const handleToggleBookmark = (key: string) => {
-    playBell();
+    playTick();
     setBookmarkedKeys(prev => {
       const exists = prev.includes(key);
       const updated = exists ? prev.filter(k => k !== key) : [...prev, key];
@@ -2005,7 +2005,7 @@ export default function AartiStotraLibrary() {
 
   // Copy handler
   const handleCopy = (textKey: string, textToCopy: string) => {
-    playBell();
+    playTick();
     navigator.clipboard.writeText(textToCopy);
     setCopiedKey(textKey);
     setTimeout(() => setCopiedKey(null), 2500);
@@ -2254,7 +2254,7 @@ export default function AartiStotraLibrary() {
                 {/* View Mode Toggle: Paginated vs Continuous Scroll */}
                 <div className="inline-flex items-center rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#161826] p-0.5">
                   <button
-                    onClick={() => { playBell(); setReadingMode('paginated'); }}
+                    onClick={() => { playTick(); setReadingMode('paginated'); }}
                     className={`px-2.5 py-1 rounded-lg text-xs font-mono-data font-bold flex items-center gap-1 transition-all ${
                       readingMode === 'paginated'
                         ? 'bg-[#8E6F1D] text-white dark:bg-[#D4AF37] dark:text-[#060709]'
@@ -2266,7 +2266,7 @@ export default function AartiStotraLibrary() {
                     <span>खण्ड-वार</span>
                   </button>
                   <button
-                    onClick={() => { playBell(); setReadingMode('full'); }}
+                    onClick={() => { playTick(); setReadingMode('full'); }}
                     className={`px-2.5 py-1 rounded-lg text-xs font-mono-data font-bold flex items-center gap-1 transition-all ${
                       readingMode === 'full'
                         ? 'bg-[#8E6F1D] text-white dark:bg-[#D4AF37] dark:text-[#060709]'
@@ -2281,7 +2281,7 @@ export default function AartiStotraLibrary() {
 
                 {/* Translation Toggle */}
                 <button
-                  onClick={() => { playBell(); setShowHindi(!showHindi); }}
+                  onClick={() => { playTick(); setShowHindi(!showHindi); }}
                   className={`px-3 py-1.5 rounded-xl text-xs font-mono-data font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
                     showHindi
                       ? 'bg-[#8E6F1D] text-white dark:bg-[#D4AF37] dark:text-[#060709] border-[#8E6F1D]'
@@ -2370,7 +2370,7 @@ export default function AartiStotraLibrary() {
                     return (
                       <button
                         key={sec.id}
-                        onClick={() => { playBell(); setActiveSectionIndex(idx); }}
+                        onClick={() => { playTick(); setActiveSectionIndex(idx); }}
                         className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-mono-data font-bold transition-all cursor-pointer border ${
                           isSecActive
                             ? 'bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#060709] border-[#8E6F1D] shadow-sm'
@@ -2604,7 +2604,7 @@ export default function AartiStotraLibrary() {
             <div className="bg-[#FAF7F2] dark:bg-[#121422] p-4 border-t border-black/10 dark:border-white/10 flex items-center justify-between">
               <button
                 disabled={activeSectionIndex === 0}
-                onClick={() => { playBell(); setActiveSectionIndex(prev => Math.max(0, prev - 1)); }}
+                onClick={() => { playTick(); setActiveSectionIndex(prev => Math.max(0, prev - 1)); }}
                 className={`inline-flex items-center gap-1 px-4 py-2 rounded-xl text-xs font-mono-data font-bold transition-all border ${
                   activeSectionIndex === 0
                     ? 'opacity-40 cursor-not-allowed bg-transparent border-black/5 dark:border-white/5'
@@ -2621,7 +2621,7 @@ export default function AartiStotraLibrary() {
 
               <button
                 disabled={activeSectionIndex === activeItem.sections.length - 1}
-                onClick={() => { playBell(); setActiveSectionIndex(prev => Math.min(activeItem.sections.length - 1, prev + 1)); }}
+                onClick={() => { playTick(); setActiveSectionIndex(prev => Math.min(activeItem.sections.length - 1, prev + 1)); }}
                 className={`inline-flex items-center gap-1 px-4 py-2 rounded-xl text-xs font-mono-data font-bold transition-all border ${
                   activeSectionIndex === activeItem.sections.length - 1
                     ? 'opacity-40 cursor-not-allowed bg-transparent border-black/5 dark:border-white/5'

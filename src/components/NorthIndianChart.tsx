@@ -134,8 +134,17 @@ export default function NorthIndianChart({
               {house.planets?.map((planet: any, pi: number) => {
                 const planetName = typeof planet === 'string' ? planet : (planet?.name || '');
                 const isSelected = selectedPlanet === planetName;
-                const dx = (pi % 3 - 1) * 3.5;
-                const dy = cell.cy + 5.5 + Math.floor(pi / 3) * 3.5;
+                // Overlap-safe planet grid: two-char monospace glyphs are
+                // ~1.2em wide, so columns are 5.5 apart and rows 4.5 apart;
+                // font size steps down as the house gets crowded.
+                const count = house.planets?.length ?? 0;
+                const fontSize = count > 6 ? 3.0 : count > 3 ? 3.4 : 3.9;
+                const colStep = 5.5;
+                const rowStep = count > 6 ? 3.9 : 4.5;
+                const col = pi % 3;
+                const row = Math.floor(pi / 3);
+                const dx = (col - 1) * colStep;
+                const dy = cell.cy + 5.5 + row * rowStep;
                 return (
                   <g
                     key={typeof planet === 'string' ? `${planet}-${pi}` : `${planetName}-${pi}`}
@@ -154,7 +163,7 @@ export default function NorthIndianChart({
                       x={cell.cx + dx}
                       y={dy}
                       textAnchor="middle"
-                      fontSize={isDark ? 3.2 : 3.9}
+                      fontSize={isDark ? fontSize - 0.7 : fontSize}
                       fill={(PLANET_COLOR as Record<string, string>)[planetName] || (isDark ? '#ccc' : '#7C3AED')}
                       fontFamily="monospace"
                       fontWeight="bold"

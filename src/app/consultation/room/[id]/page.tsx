@@ -83,7 +83,7 @@ export default function EncryptedConsultationRoom() {
   useEffect(() => {
     const t = setTimeout(() => {
       setCallStatus('CONNECTED');
-      chitiSensory.playBell();
+      chitiSensory.playTick();
     }, 1500);
     return () => clearTimeout(t);
   }, []);

@@ -185,7 +185,7 @@ export default function SabhaOperationsConsole() {
   };
 
   const handlePstnFallback = (s: ConsultationSession) => {
-    chitiSensory.playBell();
+    chitiSensory.playTick();
     const res = SabhaTelephonyHandoverEngine.initiatePstnHandover({
       sessionId: s.sessionId,
       reason: 'Manual Admin Trigger (Poor Network Fallback)',
@@ -207,7 +207,7 @@ export default function SabhaOperationsConsole() {
   };
 
   const handleRefund = (s: ConsultationSession) => {
-    chitiSensory.playBell();
+    chitiSensory.playTick();
     const res = SabhaStateMachine.transition(s, 'EXECUTE_REFUND', {
       sessionId: s.sessionId,
       actor: 'ADMIN',

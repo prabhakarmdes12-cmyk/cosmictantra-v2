@@ -42,7 +42,7 @@ export default function PwaRegister() {
   }, []);
 
   const handleInstall = async () => {
-    chitiSensory.playBell();
+    chitiSensory.playTick();
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;

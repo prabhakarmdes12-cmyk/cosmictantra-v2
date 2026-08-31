@@ -28,7 +28,7 @@ import {
 } from '@/engines/monthlyPanchangEngine';
 import { getProfiles } from '@/lib/profileStore';
 import { CITIES } from '@/lib/cities.js';
-import { playBell, playTick } from '@/lib/chitiAudio';
+import { playTick } from '@/lib/chitiAudio';
 
 const HINDI_DIGITS = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९'];
 function toHindiDigits(str: string | number): string {
@@ -184,7 +184,7 @@ export default function AuraMonthlyCalendar({ initialLang }: AuraMonthlyCalendar
   };
 
   const handleJumpToToday = () => {
-    playBell();
+    playTick();
     const t = new Date();
     setCurrentYear(t.getFullYear());
     setCurrentMonth(t.getMonth());
@@ -192,7 +192,7 @@ export default function AuraMonthlyCalendar({ initialLang }: AuraMonthlyCalendar
 
   // Inspect day handler
   const handleOpenDayInspector = (day: PanchangDayData) => {
-    playBell();
+    playTick();
     setInspectedDay(day);
   };
 
@@ -209,7 +209,7 @@ export default function AuraMonthlyCalendar({ initialLang }: AuraMonthlyCalendar
 
   // Google Calendar Export Handler
   const handleAddToGoogleCalendar = (day: PanchangDayData) => {
-    playBell();
+    playTick();
     const cleanDate = day.dateString.replace(/-/g, '');
     const startTimeIso = `${cleanDate}T060000`;
     const endTimeIso = `${cleanDate}T073000`;
@@ -229,7 +229,7 @@ export default function AuraMonthlyCalendar({ initialLang }: AuraMonthlyCalendar
 
   // iCal (.ics) File Export Handler
   const handleDownloadIcs = (day: PanchangDayData) => {
-    playBell();
+    playTick();
     const cleanDate = day.dateString.replace(/-/g, '');
     const festName = day.festivals.length > 0 ? (isHi ? day.festivals[0].nameHi : day.festivals[0].name) : (isHi ? day.nakshatra.nameHi : day.nakshatra.name);
     const abhijitStr = day.timings.abhijitMuhurat 

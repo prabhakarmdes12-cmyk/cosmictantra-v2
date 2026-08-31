@@ -122,7 +122,7 @@ export default function ProfilePage() {
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
-    chitiSensory.playBell();
+    chitiSensory.playTick();
 
     const saved = upsertProfile({
       id: editingProfile?.id,
@@ -156,14 +156,14 @@ export default function ProfilePage() {
   };
 
   const handleSelectActive = (id: string) => {
-    chitiSensory.playBell();
+    chitiSensory.playTick();
     setActiveProfileId(id);
     setActiveId(id);
   };
 
   // Export JSON Vault
   const handleExportVault = () => {
-    chitiSensory.playBell();
+    chitiSensory.playTick();
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(profiles, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute("href", dataStr);

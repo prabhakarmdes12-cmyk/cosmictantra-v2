@@ -104,10 +104,10 @@ export default function PanditOnboardPage() {
       });
 
       // Show success
-      chitiSensory.playBell();
+      chitiSensory.playTick();
       setSubmitted(true);
     } catch (err) {
-      chitiSensory.playBell();
+      chitiSensory.playTick();
       setSubmitted(true);
     } finally {
       setSubmitting(false);

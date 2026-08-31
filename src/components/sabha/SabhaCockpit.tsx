@@ -81,7 +81,7 @@ export default function SabhaCockpit({ session, role, onComplete }: SabhaCockpit
   };
 
   const handleSwitchToPstn = () => {
-    chitiSensory.playBell();
+    chitiSensory.playTick();
     setActiveChannel('PSTN_PHONE');
     setShowPstnNotice(true);
     setCurrentSession(prev => ({
@@ -92,7 +92,7 @@ export default function SabhaCockpit({ session, role, onComplete }: SabhaCockpit
   };
 
   const handleExtendTenMinutes = () => {
-    chitiSensory.playBell();
+    chitiSensory.playTick();
     setCurrentSession(prev => {
       const updated = { ...prev, extensionSeconds: (prev.extensionSeconds || 0) + 600 };
       saveConsultationRecord(updated);
@@ -101,7 +101,7 @@ export default function SabhaCockpit({ session, role, onComplete }: SabhaCockpit
   };
 
   const handleFinalApprove = () => {
-    chitiSensory.playBell();
+    chitiSensory.playTick();
     const updated: ConsultationSession = {
       ...currentSession,
       state: 'COMPLETED',

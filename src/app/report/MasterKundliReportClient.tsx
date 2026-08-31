@@ -35,12 +35,65 @@ import { getCanonicalJyotishSnapshot } from '@/lib/jyotish/canonicalSnapshot';
 import { generateKundliBookModel, BookVolume } from '@/lib/jyotish/kundliBookModel';
 import NorthIndianChart from '@/components/NorthIndianChart';
 import GlobalHeader from '@/components/layout/GlobalHeader';
+import LanguageSelectorModal from '@/components/layout/LanguageSelectorModal';
 import { CosmicTantraEmblem } from '@/components/visual/CosmicTantraLogo';
 import { chitiSensory } from '@/lib/chitiAudio';
 import { generateKundliPdf } from '@/lib/kundli/pipeline';
 import { KUNDLI_SAFE_MESSAGES } from '@/lib/kundli/errors';
 import { searchCities } from '@/lib/cities';
 import type { KundliPipelineResult, PipelineState, RawBirthInput } from '@/lib/kundli/types';
+
+/**
+ * Kundli UI chrome localization — the selected language drives the report
+ * surface (header, toolbar, section headings, progress strip). The astral
+ * content itself stays in its canonical English/Sanskrit form; the PDF
+ * pipeline additionally receives the locale for its own rendering.
+ */
+const KUNDLI_UI: Record<string, { en: string; hi: string }> = {
+  title: { en: 'COSMICTANTRA MASTER KUNDLI', hi: 'कॉस्मिकटंत्र मास्टर कुण्डली' },
+  sample: { en: 'Sample data — edit to yours', hi: 'नमूना डेटा — अपना विवरण दर्ज करें' },
+  overview: { en: 'Overview', hi: 'अवलोकन' },
+  book17: { en: '17-Volume Book', hi: '१७-खण्ड पुस्तक' },
+  book: { en: 'Book', hi: 'पुस्तक' },
+  workbench: { en: 'Workbench', hi: 'कार्यक्षेत्र' },
+  charts: { en: 'Charts', hi: 'चार्ट' },
+  simple: { en: 'Simple', hi: 'सरल' },
+  detailed: { en: 'Detailed', hi: 'विस्तृत' },
+  scholarly: { en: 'Scholarly', hi: 'विद्वत्' },
+  editDetails: { en: 'Edit Details', hi: 'विवरण बदलें' },
+  editTitle: { en: 'Edit Birth Details', hi: 'जन्म विवरण बदलें' },
+  print: { en: 'PRINT / SAVE PDF', hi: 'प्रिंट / पीडीएफ़ सेव करें' },
+  download: { en: 'DOWNLOAD PDF', hi: 'पीडीएफ़ डाउनलोड' },
+  validating: { en: 'VALIDATING…', hi: 'जाँच हो रही है…' },
+  gen: { en: 'Kundli generation', hi: 'कुण्डली निर्माण' },
+  stInput: { en: 'Birth details validated', hi: 'जन्म विवरण सत्यापित' },
+  stCalc: { en: 'Chart calculated', hi: 'चार्ट गणना पूर्ण' },
+  stReport: { en: 'Report assembled', hi: 'रिपोर्ट तैयार' },
+  stRendered: { en: 'PDF rendered', hi: 'पीडीएफ़ निर्मित' },
+  stValidated: { en: 'Quality checked', hi: 'गुणवत्ता जाँच' },
+  glance: { en: 'Kundli at a Glance', hi: 'कुण्डली एक दृष्टि में' },
+  graha: { en: 'Graha Positions:', hi: 'ग्रह स्थितियाँ:' },
+  dasha: { en: 'Vimshottari Dasha — 120-year cycle', hi: 'विंशोत्तरी दशा — १२० वर्षीय चक्र' },
+  volumes: { en: 'The 17-Volume Kundli — tap a volume to open or close it', hi: '१७-खण्ड कुण्डली ग्रन्थ — खोलने हेतु किसी खण्ड पर टैप करें' },
+  ganeshSub: { en: 'Shri Ganeshaya Namah — may this Kundli be auspicious', hi: 'श्री गणेशाय नमः — यह कुण्डली शुभ हो' },
+  backHome: { en: 'Back to Home', hi: 'होम पर वापस' },
+  lagna: { en: 'Lagna', hi: 'लग्न' },
+  moonRashi: { en: 'Moon Rashi', hi: 'चन्द्र राशि' },
+  janmaNakshatra: { en: 'Janma Nakshatra', hi: 'जन्म नक्षत्र' },
+  tithi: { en: 'Tithi', hi: 'तिथि' },
+  manglik: { en: 'Manglik', hi: 'मांगलिक' },
+  udayaTithi: { en: 'Udaya Tithi', hi: 'उदया तिथि' },
+  pada: { en: 'pada', hi: 'चरण' },
+  notPresent: { en: 'Not present', hi: 'नहीं है' },
+  cancelled: { en: 'Cancelled', hi: 'रद्द' },
+  cancel: { en: 'Cancel', hi: 'रद्द करें' },
+  recalc: { en: 'Recalculate Chart', hi: 'चार्ट पुनः गणना करें' },
+  latitude: { en: 'Latitude', hi: 'अक्षांश' },
+  longitude: { en: 'Longitude', hi: 'देशांतर' },
+  utcOffset: { en: 'UTC Offset', hi: 'यूटीसी अंतर' },
+  editBirthDetails: { en: 'Edit Birth Details', hi: 'जन्म विवरण संपादित करें' },
+  enterBoth: { en: 'Enter both latitude and longitude — they are required together.', hi: 'अक्षांश और देशांतर दोनों दर्ज करें — दोनों आवश्यक हैं।' },
+};
 
 /**
  * Vimshottari 120-year timeline: one segment per Mahadasha, a "now" marker,
@@ -155,6 +208,18 @@ export default function MasterKundliReportClient() {
   const [activeDivision, setActiveDivision] = useState<number>(1); // 1 = D1, 9 = D9, 10 = D10, 60 = D60
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [lang, setLang] = useState('en');
+  const [isLangModalOpen, setIsLangModalOpen] = useState(false);
+
+  // Selected-language surface: mirrors the home page contract — keep <html
+  // lang> in sync and persist the choice. Persisting happens ONLY on explicit
+  // user selection (never on mount) so a saved language is never clobbered
+  // by the initial 'en' state — even under StrictMode's double effect pass.
+  const t = (key: keyof typeof KUNDLI_UI) => KUNDLI_UI[key][lang === 'hi' ? 'hi' : 'en'];
+  const handleSelectLang = (code: string) => {
+    setLang(code);
+    document.documentElement.lang = code;
+    try { localStorage.setItem('cosmictantra_lang', code); } catch {}
+  };
 
   // P0 UX: demo chip, city autocomplete, live validation, geolocation
   const [isDemoProfile, setIsDemoProfile] = useState(true);
@@ -551,7 +616,16 @@ export default function MasterKundliReportClient() {
     <div className="min-h-screen bg-[#FDFBF7] text-[#1C1917] font-sans antialiased pb-24 selection:bg-[#E5D7BC]">
 
       {/* 0. Global site header (logo, navigation, language) */}
-      <GlobalHeader />
+      <GlobalHeader
+        lang={lang}
+        onLangToggle={() => setIsLangModalOpen(true)}
+      />
+      <LanguageSelectorModal
+        isOpen={isLangModalOpen}
+        currentLang={lang}
+        onClose={() => setIsLangModalOpen(false)}
+        onSelectLang={handleSelectLang}
+      />
 
       {/* 1. Header Toolbar */}
       <header className="sticky top-16 sm:top-20 z-40 bg-[#FDFBF7]/95 backdrop-blur-md border-b border-[#E5D7BC] px-4 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-4 print:hidden">
@@ -561,19 +635,19 @@ export default function MasterKundliReportClient() {
           <button
             onClick={() => router.push('/')}
             className="w-8 h-8 rounded-full bg-[#8E6F1D]/10 border border-[#8E6F1D]/30 flex items-center justify-center text-[#8E6F1D] hover:bg-[#8E6F1D]/20 transition-all font-serif font-bold text-sm"
-            title="Back to Home"
+            title={t('backHome')}
           >
             ॐ
           </button>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-serif font-bold text-base lg:text-lg tracking-tight text-[#1C1917]">COSMICTANTRA MASTER KUNDLI</span>
+              <span className="font-serif font-bold text-base lg:text-lg tracking-tight text-[#1C1917]">{t('title')}</span>
             </div>
             <p className="text-[11px] text-[#78716C] font-mono-data flex flex-wrap items-center gap-1.5">
               <strong>{birthState.name}</strong> • {birthState.birthDate}, {birthState.birthTime} • {birthState.locationName}
               {isDemoProfile && (
                 <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300 uppercase tracking-wide">
-                  <Sparkles className="w-2.5 h-2.5" /> Sample data — edit to yours
+                  <Sparkles className="w-2.5 h-2.5" /> {t('sample')}
                 </span>
               )}
             </p>
@@ -590,7 +664,7 @@ export default function MasterKundliReportClient() {
             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${activeTab === 'OVERVIEW' ? 'bg-[#1C1917] text-[#FDFBF7] shadow-sm' : 'text-[#78716C] hover:text-[#1C1917]'}`}
           >
             <LayoutDashboard className="w-3.5 h-3.5" />
-            <span>Overview</span>
+            <span>{t('overview')}</span>
           </button>
           <button
             onClick={() => {
@@ -600,8 +674,8 @@ export default function MasterKundliReportClient() {
             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${activeTab === 'FOLIO' ? 'bg-[#1C1917] text-[#FDFBF7] shadow-sm' : 'text-[#78716C] hover:text-[#1C1917]'}`}
           >
             <BookOpen className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">17-Volume Book</span>
-            <span className="sm:hidden">Book</span>
+            <span className="hidden sm:inline">{t('book17')}</span>
+            <span className="sm:hidden">{t('book')}</span>
           </button>
           <button
             onClick={() => {
@@ -611,8 +685,8 @@ export default function MasterKundliReportClient() {
             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${activeTab === 'WORKBENCH' ? 'bg-[#1C1917] text-[#FDFBF7] shadow-sm' : 'text-[#78716C] hover:text-[#1C1917]'}`}
           >
             <Grid className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Workbench</span>
-            <span className="sm:hidden">Charts</span>
+            <span className="hidden sm:inline">{t('workbench')}</span>
+            <span className="sm:hidden">{t('charts')}</span>
           </button>
         </div>
 
@@ -626,7 +700,7 @@ export default function MasterKundliReportClient() {
                   onClick={() => setReadingDepth(depth)}
                   className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${readingDepth === depth ? 'bg-[#8E6F1D] text-white shadow-xs' : 'text-[#78716C] hover:text-[#1C1917]'}`}
                 >
-                  {depth === 'SIMPLE' ? 'Simple' : depth === 'DETAILED' ? 'Detailed' : 'Scholarly'}
+                  {depth === 'SIMPLE' ? t('simple') : depth === 'DETAILED' ? t('detailed') : t('scholarly')}
                 </button>
               ))}
             </div>
@@ -635,10 +709,10 @@ export default function MasterKundliReportClient() {
           <button
             onClick={() => setIsEditModalOpen(true)}
             className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-[#E5D7BC] bg-white hover:bg-[#F5EFE6] transition-colors"
-            title="Edit Birth Details"
+            title={t('editTitle')}
           >
             <Edit3 className="w-3.5 h-3.5 text-[#8E6F1D]" />
-            <span className="hidden sm:inline">Edit Details</span>
+            <span className="hidden sm:inline">{t('editDetails')}</span>
           </button>
 
           <button
@@ -646,7 +720,7 @@ export default function MasterKundliReportClient() {
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-[#8E6F1D]/30 bg-white hover:bg-[#F5EFE6] text-[#8E6F1D] transition-colors shadow-xs"
           >
             <Printer className="w-3.5 h-3.5" />
-            <span>PRINT / SAVE PDF</span>
+            <span>{t('print')}</span>
           </button>
 
           <button
@@ -655,8 +729,8 @@ export default function MasterKundliReportClient() {
             className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#8E6F1D] hover:bg-[#785E18] text-white transition-colors shadow-sm disabled:opacity-60 disabled:cursor-wait"
           >
             <Download className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{isGeneratingPdf ? 'VALIDATING…' : 'DOWNLOAD PDF'}</span>
-            <span className="sr-only">DOWNLOAD PDF</span>
+            <span className="hidden sm:inline">{isGeneratingPdf ? t('validating') : t('download')}</span>
+            <span className="sr-only">{t('download')}</span>
           </button>
         </div>
 
@@ -667,13 +741,13 @@ export default function MasterKundliReportClient() {
         <div className="border-b border-[#E5D7BC] bg-[#FAF6EF] px-4 lg:px-8 py-3 print:hidden">
           {isGeneratingPdf ? (
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-              <span className="text-[11px] font-bold text-[#8E6F1D] uppercase tracking-wider">Kundli generation</span>
+              <span className="text-[11px] font-bold text-[#8E6F1D] uppercase tracking-wider">{t('gen')}</span>
               {[
-                ['INPUT_VALIDATED', 'Birth details validated'],
-                ['CALCULATION_COMPLETE', 'Chart calculated'],
-                ['REPORT_READY', 'Report assembled'],
-                ['PDF_RENDERED', 'PDF rendered'],
-                ['PDF_VALIDATED', 'Quality checked']
+                ['INPUT_VALIDATED', t('stInput')],
+                ['CALCULATION_COMPLETE', t('stCalc')],
+                ['REPORT_READY', t('stReport')],
+                ['PDF_RENDERED', t('stRendered')],
+                ['PDF_VALIDATED', t('stValidated')]
               ].map(([state, label]) => {
                 const idx = ['INPUT_VALIDATED', 'CALCULATION_COMPLETE', 'REPORT_READY', 'PDF_RENDERED', 'PDF_VALIDATED', 'READY_FOR_DELIVERY'].indexOf(state);
                 const cur = ['INPUT_VALIDATED', 'CALCULATION_COMPLETE', 'REPORT_READY', 'PDF_RENDERED', 'PDF_VALIDATED', 'READY_FOR_DELIVERY'].indexOf(pipelineState ?? '');
@@ -697,9 +771,19 @@ export default function MasterKundliReportClient() {
               <div className="flex items-start gap-2.5 max-w-3xl">
                 <Shield className="w-4 h-4 text-[#B45309] mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-xs font-semibold text-[#1C1917]">{failSafe.message}</p>
+                  <p className="text-xs font-semibold text-[#1C1917]">
+                    {lang === 'hi'
+                      ? (failSafe.code === 'KUNDLI_INPUT_INVALID'
+                          ? 'हम यह कुण्डली सही रूप से पूर्ण नहीं कर सके; रिपोर्ट जारी नहीं की गई। कृपया जन्म विवरण (नाम, तिथि, समय तथा दोनों निर्देशांक) जाँच कर पुनः प्रयास करें।'
+                          : failSafe.code === 'KUNDLI_PDF_RENDER_FAILED' || failSafe.code === 'KUNDLI_PDF_QUALITY_FAILED'
+                            ? 'पीडीएफ़ दस्तावेज़ तैयार नहीं हो सका। कृपया पुनः प्रयास करें।'
+                            : failSafe.message)
+                      : failSafe.message}
+                  </p>
                   <p className="text-[10px] font-mono-data text-[#78716C] mt-0.5">
-                    Engineering reason: {failSafe.code} · No PDF was issued.
+                    {lang === 'hi'
+                      ? `तकनीकी कारण: ${failSafe.code} · कोई पीडीएफ़ जारी नहीं हुई।`
+                      : `Engineering reason: ${failSafe.code} · No PDF was issued.`}
                   </p>
                 </div>
               </div>
@@ -707,7 +791,7 @@ export default function MasterKundliReportClient() {
                 onClick={() => setIsEditModalOpen(true)}
                 className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg border border-[#8E6F1D]/30 bg-white text-[#8E6F1D] hover:bg-[#F5EFE6] transition-colors"
               >
-                <Edit3 className="w-3.5 h-3.5" /> Verify birth details
+                <Edit3 className="w-3.5 h-3.5" /> {lang === 'hi' ? 'जन्म विवरण जाँचें' : 'Verify birth details'}
               </button>
             </div>
           ) : null}
@@ -727,7 +811,7 @@ export default function MasterKundliReportClient() {
           <div className="text-center min-w-0">
             <p className="text-base lg:text-lg font-serif font-bold text-[#8E6F1D]">॥ श्री गणेशाय नमः ॥</p>
             <p className="text-[10px] text-[#78716C] font-mono-data">
-              Shri Ganeshaya Namah — may this Kundli be auspicious
+              {t('ganeshSub')}
             </p>
           </div>
           <CosmicTantraEmblem className="w-12 h-12 sm:w-14 sm:h-14 shrink-0" />
@@ -738,7 +822,7 @@ export default function MasterKundliReportClient() {
       <div className="bg-[#FAF6EF] border-b border-[#E5D7BC] px-4 lg:px-8 py-2 overflow-x-auto scrollbar-thin print:hidden">
         <div className="flex items-center gap-2 min-w-max">
           <span className="text-[11px] font-bold text-[#8E6F1D] uppercase tracking-wider flex items-center gap-1 mr-1">
-            <Activity className="w-3.5 h-3.5" /> Graha Positions:
+            <Activity className="w-3.5 h-3.5" /> {t('graha')}
           </span>
           {grahas.map((g) => {
             const isSelected = activeGraha === g.name;
@@ -767,37 +851,37 @@ export default function MasterKundliReportClient() {
         <div className="rounded-2xl border border-[#E5D7BC] bg-white shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#F0E6D2] bg-[#FAF6EF]">
             <h2 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5" /> Kundli at a Glance
+              <Sparkles className="w-3.5 h-3.5" /> {t('glance')}
             </h2>
             <span className="text-[10px] font-mono-data text-[#78716C]">{snapshot.meta.engineVersion}</span>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 divide-x divide-y lg:divide-y-0 divide-[#F0E6D2]">
             <div className="px-4 py-3">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">Lagna</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">{t('lagna')}</div>
               <div className="text-sm font-bold text-[#1C1917] mt-0.5">{snapshot.lagna.rashiName}</div>
               <div className="text-[10px] text-[#78716C]">{snapshot.lagna.rashiEn} · {snapshot.lagna.degreeStr}</div>
             </div>
             <div className="px-4 py-3">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">Moon Rashi</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">{t('moonRashi')}</div>
               <div className="text-sm font-bold text-[#1C1917] mt-0.5">{(snapshot.planets as any)?.Moon?.rashiName ?? '—'}</div>
               <div className="text-[10px] text-[#78716C]">{(snapshot.planets as any)?.Moon?.rashiEn ?? ''}</div>
             </div>
             <div className="px-4 py-3">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">Janma Nakshatra</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">{t('janmaNakshatra')}</div>
               <div className="text-sm font-bold text-[#1C1917] mt-0.5">{snapshot.birthPanchang.nakshatra?.name ?? '—'}</div>
-              <div className="text-[10px] text-[#78716C]">pada {(snapshot.birthPanchang.nakshatra as any)?.pada ?? '—'}</div>
+              <div className="text-[10px] text-[#78716C]"> {t('pada')} {(snapshot.birthPanchang.nakshatra as any)?.pada ?? '—'}</div>
             </div>
             <div className="px-4 py-3">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">Tithi</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">{t('tithi')}</div>
               <div className="text-sm font-bold text-[#1C1917] mt-0.5">{snapshot.birthPanchang.udayaTithi?.fullName ?? '—'}</div>
-              <div className="text-[10px] text-[#78716C]">Udaya Tithi</div>
+              <div className="text-[10px] text-[#78716C]">{t('udayaTithi')}</div>
             </div>
             <div className="px-4 py-3">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">Manglik</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#A8A29E]">{t('manglik')}</div>
               <div className="text-sm font-bold mt-0.5">
                 {snapshot.yogasAndDoshas.manglik.isManglik
-                  ? <span className="text-[#B45309]">{snapshot.yogasAndDoshas.manglik.isCancelled ? 'Cancelled' : `Yes · ${snapshot.yogasAndDoshas.manglik.severity}`}</span>
-                  : <span className="text-[#15803D]">Not present</span>}
+                  ? <span className="text-[#B45309]">{snapshot.yogasAndDoshas.manglik.isCancelled ? t('cancelled') : `Yes · ${snapshot.yogasAndDoshas.manglik.severity}`}</span>
+                  : <span className="text-[#15803D]">{t('notPresent')}</span>}
               </div>
               <div className="text-[10px] text-[#78716C]">as per engine rules</div>
             </div>
@@ -909,7 +993,7 @@ export default function MasterKundliReportClient() {
           <div className="bg-white rounded-2xl p-5 border border-[#E5D7BC] shadow-sm space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] flex items-center gap-1.5">
-                <Activity className="w-3.5 h-3.5" /> Vimshottari Dasha — 120-year cycle
+                <Activity className="w-3.5 h-3.5" /> {t('dasha')}
               </h3>
               <span className="text-[10px] font-mono-data text-[#78716C]">Dasha balance at birth: {snapshot.dasha.startingBalance}</span>
             </div>
@@ -1015,7 +1099,7 @@ export default function MasterKundliReportClient() {
                 className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg bg-[#8E6F1D] hover:bg-[#785E18] text-white transition-colors shadow-sm disabled:opacity-60 disabled:cursor-wait"
               >
                 <Download className="w-3.5 h-3.5" />
-                {isGeneratingPdf ? 'VALIDATING…' : 'DOWNLOAD PDF'}
+                {isGeneratingPdf ? t('validating') : t('download')}
               </button>
             </div>
           </div>
@@ -1026,7 +1110,7 @@ export default function MasterKundliReportClient() {
         /* ================================================================ */
                 <main className="max-w-5xl mx-auto px-4 lg:px-8 py-8 space-y-3">
           <div className="text-[11px] font-bold uppercase tracking-wider text-[#78716C] px-1 pb-1">
-            The 17-Volume Kundli — tap a volume to open or close it
+            {t('volumes')}
           </div>
 
           {book.volumes.map((vol, idx) => {
@@ -1348,7 +1432,7 @@ export default function MasterKundliReportClient() {
             <div className="flex items-center justify-between pb-2 border-b border-[#F0E6D2]">
               <h3 className="text-sm font-bold uppercase tracking-wider text-[#1C1917] flex items-center gap-1.5">
                 <Edit3 className="w-4 h-4 text-[#8E6F1D]" />
-                <span>Edit Birth Details</span>
+                <span>{t('editBirthDetails')}</span>
               </h3>
               <button onClick={() => setIsEditModalOpen(false)} className="text-[#78716C] hover:text-[#1C1917]">
                 <X className="w-4 h-4" />
@@ -1449,7 +1533,7 @@ export default function MasterKundliReportClient() {
 
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <label className="text-[10px] text-[#78716C] font-bold uppercase">Latitude</label>
+                  <label className="text-[10px] text-[#78716C] font-bold uppercase">{t('latitude')}</label>
                   <input
                     type="number"
                     step="any"
@@ -1466,7 +1550,7 @@ export default function MasterKundliReportClient() {
                   {fieldErrors.lat && <p className="text-[10px] text-rose-600 font-semibold">{fieldErrors.lat}</p>}
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] text-[#78716C] font-bold uppercase">Longitude</label>
+                  <label className="text-[10px] text-[#78716C] font-bold uppercase">{t('longitude')}</label>
                   <input
                     type="number"
                     step="any"
@@ -1483,7 +1567,7 @@ export default function MasterKundliReportClient() {
                   {fieldErrors.lng && <p className="text-[10px] text-rose-600 font-semibold">{fieldErrors.lng}</p>}
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] text-[#78716C] font-bold uppercase">UTC Offset</label>
+                  <label className="text-[10px] text-[#78716C] font-bold uppercase">{t('utcOffset')}</label>
                   <input
                     type="number"
                     step="0.5"
@@ -1501,7 +1585,7 @@ export default function MasterKundliReportClient() {
                     ✓ {birthState.locationName || 'Coordinates'} · {Math.abs(birthState.latitude).toFixed(4)}°{birthState.latitude >= 0 ? 'N' : 'S'}, {Math.abs(birthState.longitude).toFixed(4)}°{birthState.longitude >= 0 ? 'E' : 'W'} · UTC{Number.isFinite(birthState.timezone) && birthState.timezone >= 0 ? '+' : ''}{Number.isFinite(birthState.timezone) ? birthState.timezone : '—'}
                   </span>
                 ) : (
-                  'Enter both latitude and longitude — they are required together.'
+                  t('enterBoth')
                 )}
               </p>
             </div>
@@ -1512,7 +1596,7 @@ export default function MasterKundliReportClient() {
                 onClick={() => setIsEditModalOpen(false)}
                 className="px-4 py-2 rounded-xl text-xs font-semibold border border-[#E5D7BC] hover:bg-[#FAF7F2]"
               >
-                Cancel
+                {t('cancel')}
               </button>
               <button
                 type="button"
@@ -1564,7 +1648,7 @@ export default function MasterKundliReportClient() {
                 }}
                 className="px-4 py-2 rounded-xl text-xs font-bold bg-[#8E6F1D] text-white hover:bg-[#785E18] shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Recalculate Chart
+                {t('recalc')}
               </button>
             </div>
 

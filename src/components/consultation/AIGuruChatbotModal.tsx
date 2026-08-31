@@ -480,7 +480,7 @@ export default function AIGuruChatbotModal({
   };
 
   const completeConsultationBooking = (caseId: string, tier: 'WRITTEN' | 'VOICE' | 'VIDEO' | 'PARIVAAR') => {
-    chitiSensory.playBell();
+    chitiSensory.playTick();
     setStep('CONFIRMED');
 
     const confirmationText = lang === 'hi'

@@ -6,7 +6,7 @@ test.describe('CosmicTantra — Deep QA & Mobile Clickability Suite', () => {
   test('Mobile (390px): Hamburger Menu opens full-screen mega menu and navigates cleanly', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('http://localhost:3000/', { waitUntil: 'domcontentloaded' });
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load'); // 'networkidle' never settles on home: the autoplay hero video streams for tens of seconds. Explicit element waits below give real readiness.
 
     // Open mega menu
     const menuBtn = page.getByRole('button', { name: /Open Full Navigation Menu|Open navigation menu|Menu/i }).first();
@@ -30,7 +30,7 @@ test.describe('CosmicTantra — Deep QA & Mobile Clickability Suite', () => {
   test('Mobile (390px): Store category filtering, add to cart, cart drawer and checkout are clickable', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('http://localhost:3000/store', { waitUntil: 'domcontentloaded' });
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load'); // 'networkidle' never settles on home: the autoplay hero video streams for tens of seconds. Explicit element waits below give real readiness.
 
     // Category pills horizontal scroll and click
     const dhoopTab = page.getByRole('button', { name: /धूप, अगरबत्ती व कपूर/i }).first();
@@ -72,7 +72,7 @@ test.describe('CosmicTantra — Deep QA & Mobile Clickability Suite', () => {
   test('Mobile (390px): Live Darshan Category Switcher, Diya Lighting and Shrine Navigation', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('http://localhost:3000/darshan', { waitUntil: 'domcontentloaded' });
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load'); // 'networkidle' never settles on home: the autoplay hero video streams for tens of seconds. Explicit element waits below give real readiness.
 
     // Switch to Char Dham category
     const charDhamTab = page.locator('button').filter({ hasText: /चार धाम/i }).first();
@@ -153,7 +153,7 @@ test.describe('CosmicTantra — Deep QA & Mobile Clickability Suite', () => {
   test('Desktop (1440px): Mega Menu direct navigation to all platform hubs', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('http://localhost:3000/', { waitUntil: 'domcontentloaded' });
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load'); // 'networkidle' never settles on home: the autoplay hero video streams for tens of seconds. Explicit element waits below give real readiness.
 
     // Open mega menu modal
     const menuBtn = page.getByRole('button', { name: /Open Full Navigation Menu|Menu/i }).first();

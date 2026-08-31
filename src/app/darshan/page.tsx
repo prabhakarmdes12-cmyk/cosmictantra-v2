@@ -44,7 +44,7 @@ import {
   X
 } from 'lucide-react';
 import CosmicTantraShell from '@/components/layout/CosmicTantraShell';
-import { playBell, playTick, playConch, playFlowerDrop } from '@/lib/chitiAudio';
+import { playBell, playTick, playConch, playFlowerDrop, playDiya } from '@/lib/chitiAudio';
 import { getProfiles } from '@/lib/profileStore';
 
 interface ShrineItem {
@@ -1027,7 +1027,7 @@ export default function DarshanPage() {
 
   // Category switch
   const handleCategorySwitch = (cat: 'JYOTIRLINGA' | 'SHAKTI_PEETH' | 'CHAR_DHAM' | 'GANGA_AARTI' | 'SIDDHA_STUTI') => {
-    playBell();
+    playTick();
     setActiveCategory(cat);
     setCurrentIndex(0);
     setProgressSec(0);
@@ -1040,20 +1040,20 @@ export default function DarshanPage() {
 
   // Direct step jump
   const handleStepJump = (idx: number) => {
-    playBell();
+    playTick();
     setCurrentIndex(idx);
     setProgressSec(0);
   };
 
   // Prev / Next controls
   const handleNextShrine = () => {
-    playBell();
+    playTick();
     setCurrentIndex(prev => (prev + 1) % currentDataset.length);
     setProgressSec(0);
   };
 
   const handlePrevShrine = () => {
-    playBell();
+    playTick();
     setCurrentIndex(prev => (prev === 0 ? currentDataset.length - 1 : prev - 1));
     setProgressSec(0);
   };
@@ -1099,7 +1099,7 @@ export default function DarshanPage() {
 
   // Light Diya Trigger (Toggles Screen Border Diya Illumination)
   const handleLightDiya = () => {
-    playBell();
+    playDiya();
     setHasLitDiya(prev => {
       const nextState = !prev;
       if (nextState) {
@@ -1130,7 +1130,7 @@ export default function DarshanPage() {
 
   // 1-Click WhatsApp Sankalpa Share
   const handleShareWhatsApp = () => {
-    playBell();
+    playTick();
     const today = new Date().toLocaleDateString('hi-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     const nameStr = devoteeName.trim() ? devoteeName.trim() : 'भक्त';
     const text = `🕉️ साक्षात् पावन दर्शन व तीर्थ परिक्रमा • ${today}\n\n🌸 ${nameStr} द्वारा आज का पावन दर्शन:\n📍 मन्दिर: ${activeShrine.nameHi}\n🏛️ धाम: ${activeShrine.locationHi}, ${activeShrine.state}\n📜 मन्त्र: "${activeShrine.shloka}"\n\n🙏 ३०-सेकेण्ड अखण्ड परिक्रमा मोड में घर बैठे समस्त १२ ज्योतिर्लिंगों, ५२ शक्तिपीठों एवं धामों के साक्षात् दर्शन करें:\n🔗 https://cosmictantra.chiti.tech/darshan\n\n(हर हर महादेव • ॐ नमो भगवते वासुदेवाय 🌺)`;
@@ -1139,7 +1139,7 @@ export default function DarshanPage() {
 
   // Copy Share Text
   const handleCopyShare = () => {
-    playBell();
+    playTick();
     const today = new Date().toLocaleDateString('hi-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     const nameStr = devoteeName.trim() ? devoteeName.trim() : 'भक्त';
     const text = `🕉️ साक्षात् पावन दर्शन • ${today}\n\n🌸 ${nameStr} द्वारा दर्शन: ${activeShrine.nameHi} (${activeShrine.locationHi})\nघर बैठे समस्त पावन तीर्थों के दर्शन करें:\nhttps://cosmictantra.chiti.tech/darshan`;
@@ -1448,7 +1448,7 @@ export default function DarshanPage() {
                         href={activeShrine.liveUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        onClick={() => playBell()}
+                        onClick={() => playTick()}
                         className="p-1.5 rounded-xl bg-black/70 hover:bg-red-600 backdrop-blur-md border border-white/20 hover:border-red-400 text-white transition-all cursor-pointer hidden md:flex items-center gap-1 text-[10px] font-mono-data font-bold"
                         title="Open Official Live Channel on YouTube"
                       >
@@ -1781,7 +1781,7 @@ export default function DarshanPage() {
                 href={activeShrine.liveUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => playBell()}
+                onClick={() => playTick()}
                 className="p-2.5 rounded-xl bg-white dark:bg-[#121422] border border-black/10 dark:border-white/10 hover:border-red-500 transition-all flex flex-col items-center justify-center text-center gap-0.5 cursor-pointer group shadow-xs"
               >
                 <Radio className="w-4 h-4 text-red-600 animate-pulse group-hover:scale-110 transition-transform" />

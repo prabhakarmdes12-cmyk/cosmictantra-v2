@@ -233,6 +233,74 @@ class ChitiSensory {
       // Gracefully ignore
     }
   }
+
+  playDiya() {
+    try {
+      this.initAudio();
+      if (!this.audioCtx) return;
+
+      if (this.audioCtx.state === 'suspended') {
+        this.audioCtx.resume();
+      }
+
+      const now = this.audioCtx.currentTime;
+
+      // A diya is lit with a soft breath of flame: a quiet filtered noise
+      // "whoosh" (ignition) plus a warm A/E shimmer that gently flickers
+      // three times before settling — bright but never harsh.
+      const duration = 0.9;
+
+      // 1) Ignition whoosh — short noise burst through a closing low-pass.
+      const noiseLen = Math.max(1, Math.floor(this.audioCtx.sampleRate * 0.18));
+      const noiseBuf = this.audioCtx.createBuffer(1, noiseLen, this.audioCtx.sampleRate);
+      const data = noiseBuf.getChannelData(0);
+      for (let i = 0; i < noiseLen; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / noiseLen);
+
+      const noiseSrc = this.audioCtx.createBufferSource();
+      noiseSrc.buffer = noiseBuf;
+      const noiseFilter = this.audioCtx.createBiquadFilter();
+      noiseFilter.type = 'lowpass';
+      noiseFilter.frequency.setValueAtTime(900, now);
+      noiseFilter.frequency.exponentialRampToValueAtTime(250, now + 0.18);
+      const noiseGain = this.audioCtx.createGain();
+      noiseGain.gain.setValueAtTime(0.001, now);
+      noiseGain.gain.linearRampToValueAtTime(0.035, now + 0.05);
+      noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+      noiseSrc.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+      noiseGain.connect(this.audioCtx.destination);
+      noiseSrc.start(now);
+      noiseSrc.stop(now + 0.2);
+
+      // 2) Flame shimmer — warm sine with three gentle flicker pulses.
+      const osc = this.audioCtx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(330, now); // E4
+      osc.frequency.linearRampToValueAtTime(349, now + 0.15);
+      osc.frequency.linearRampToValueAtTime(330, now + duration);
+
+      const gain = this.audioCtx.createGain();
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.linearRampToValueAtTime(0.05, now + 0.06);
+      // Flicker pulses at ~4 Hz — like a lamp catching the breeze.
+      gain.gain.linearRampToValueAtTime(0.018, now + 0.25);
+      gain.gain.linearRampToValueAtTime(0.045, now + 0.38);
+      gain.gain.linearRampToValueAtTime(0.015, now + 0.55);
+      gain.gain.linearRampToValueAtTime(0.04, now + 0.68);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      osc.connect(gain);
+      gain.connect(this.audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + duration);
+
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate([8, 40, 8]);
+      }
+    } catch {
+      // Gracefully ignore
+    }
+  }
 }
 
 export const chitiSensory = new ChitiSensory();
@@ -242,3 +310,4 @@ export const playConch = () => chitiSensory.playConch();
 export const playSacredGong = () => chitiSensory.playSacredGong();
 export const playOmChant = () => chitiSensory.playOmChant();
 export const playFlowerDrop = () => chitiSensory.playFlowerDrop();
+export const playDiya = () => chitiSensory.playDiya();

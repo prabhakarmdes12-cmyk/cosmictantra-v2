@@ -30,7 +30,7 @@ import {
   Info
 } from 'lucide-react';
 import CosmicTantraShell from '@/components/layout/CosmicTantraShell';
-import { playBell, playTick, playFlowerDrop } from '@/lib/chitiAudio';
+import { playTick } from '@/lib/chitiAudio';
 import { getProfiles } from '@/lib/profileStore';
 
 export interface ProductItem {
@@ -409,8 +409,7 @@ export default function StorePage() {
 
   // Add to cart handler
   const handleAddToCart = (product: ProductItem) => {
-    playBell();
-    playFlowerDrop();
+    playTick();
     const existingIndex = cart.findIndex(item => item.product.id === product.id);
     if (existingIndex > -1) {
       const updated = [...cart];
@@ -475,7 +474,7 @@ export default function StorePage() {
 
   // 1-Click WhatsApp Order Generation
   const handleWhatsAppCheckout = () => {
-    playBell();
+    playTick();
     if (cart.length === 0) return;
 
     const itemList = cart.map((item, idx) => 
@@ -497,8 +496,7 @@ export default function StorePage() {
 
   // Submit In-App Order
   const handleConfirmOrder = () => {
-    playBell();
-    playFlowerDrop();
+    playTick();
     setOrderSuccess(true);
     saveCart([]);
     setTimeout(() => {

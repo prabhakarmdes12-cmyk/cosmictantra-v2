@@ -316,7 +316,7 @@ export default function PanditWorkspace() {
 
       const data = await res.json();
       if (data.success) {
-        chitiSensory.playBell();
+        chitiSensory.playTick();
         await fetchLiveCases();
         setSelectedCase(prev => prev ? { ...prev, status: 'PAYMENT_VERIFIED' } : null);
       } else {
@@ -361,7 +361,7 @@ export default function PanditWorkspace() {
   // Scholar Connected - Start Session (Explicit Server Transition)
   const handleStartConsultation = async () => {
     if (!selectedCase) return;
-    chitiSensory.playBell();
+    chitiSensory.playTick();
 
     try {
       const res = await fetch(`/api/astrology/consultations/${selectedCase.id}/transition`, {
@@ -415,7 +415,7 @@ export default function PanditWorkspace() {
   // Save 4-Quadrant Notes & Complete Session (Server State Machine)
   const handleSaveNotes = async () => {
     if (!selectedCase) return;
-    chitiSensory.playBell();
+    chitiSensory.playTick();
 
     try {
       const durationSec = (selectedCase.serviceId === 'CONSULT_30' ? 30 * 60 : 15 * 60) - secondsRemaining;

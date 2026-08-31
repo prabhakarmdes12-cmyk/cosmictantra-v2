@@ -349,7 +349,7 @@ export default function FloatingAIGuruAvatar() {
   };
 
   const handlePlayDiyaBell = () => {
-    if (soundEnabled) chitiSensory.playBell();
+    if (soundEnabled) chitiSensory.playTick();
   };
 
   const handleOfferDiya = (msgId: string) => {
@@ -358,7 +358,7 @@ export default function FloatingAIGuruAvatar() {
   };
 
   const handleOfferFlowers = (msgId: string) => {
-    if (soundEnabled) chitiSensory.playFlowerDrop();
+    if (soundEnabled) chitiSensory.playTick();
     setOfferedFlowersMsgIds(prev => ({ ...prev, [msgId]: true }));
   };
 
