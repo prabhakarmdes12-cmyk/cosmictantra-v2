@@ -194,12 +194,12 @@ function buildDashaTables(m: KundliCanonicalModel): ReportSection[] {
     md.startDate,
     md.endDate,
     `${md.durationYears.toFixed(1)} yrs`,
-    md.isCurrent ? '◀ current' : '',
+    md.isCurrent ? 'Current' : '',
   ]);
   const cur = m.dashas.current;
   const currentMd = m.dashas.mahadashas.find((x) => x.isCurrent);
   const adRows = (currentMd?.antardashas ?? []).map((ad) => [
-    ad.planet, ad.startDate, ad.endDate, ad.planet === cur.antardasha ? '◀ current' : '',
+    ad.planet, ad.startDate, ad.endDate, ad.planet === cur.antardasha ? 'Current' : '',
   ]);
   return [
     {

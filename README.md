@@ -5,7 +5,19 @@
 
 ---
 
-## Current Release — 30 August 2026
+## Current Release — 31 August 2026
+
+The reviewed agent release adds the validated Kundli PDF pipeline, report day/night mode,
+remedy tracking, a coming-soon store, expanded devotional texts, and Kashi Sahayak voice
+and multilingual intent handling. Review fixes correct chart geometry, PDF table backgrounds,
+page-break font preservation, Windows PDF worker URLs, and the strict build command.
+
+See [31 August release review](docs/RELEASE-REVIEW-2026-08-31.md) for checks and known limitations.
+The current home first-load bundle is approximately 222 KB. Hindi names and invocation render
+in PDFs, but the new pipeline's narrative remains predominantly English; full Hindi translation
+is not yet verified or complete.
+
+### Previous release — 30 August 2026
 
 The current release focuses the public experience around three clear user intents:
 
@@ -51,7 +63,7 @@ CosmicTantra is an atmospheric digital observatory and vertical consultation ope
 | **Pandit Workspace & Cockpit** | Scholar workbench with live chart sync, AI Copilot, and Upaya prescribing | `/pandit/workspace` |
 | **Live Temple Darshan** | 12 Jyotirlingas, 52 Shakti Peeths, Char Dham & Dashashwamedh Ganga Aarti | `/darshan` |
 | **Stellarium Observatory** | Celestial canvas with Local Sidereal Time (LST) & Graha Sphuta | `/observatory` |
-| **Vedic Pooja Store** | Consecrated A2 Ghee, Camphor, Samidha & Rudraksha | `/store` |
+| **Vedic Pooja Store** | Coming soon; no live checkout until suppliers are finalized | `/store` |
 | **Aarti & Stotra Library** | 50 Verified Classical Sanskrit Mahagranthas, Aartis, and Stotras | `/aarti-stotra` |
 | **Devotee & Parivaar Vault** | Multi-profile management, DPDP compliance, and consultation history | `/profile` |
 

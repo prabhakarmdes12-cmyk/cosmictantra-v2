@@ -43,7 +43,8 @@ function configureNodeWorker(): void {
     const pkgPath = nodeRequire.resolve('pdfjs-dist/package.json');
     const workerUrl = pathMod.join(pathMod.dirname(pkgPath), 'legacy', 'build', 'pdf.worker.mjs');
     const pdfjs = nodeRequire('pdfjs-dist/legacy/build/pdf.mjs') as typeof import('pdfjs-dist/legacy/build/pdf.mjs');
-    pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+    const urlMod = nodeRequire('ur' + 'l') as typeof import('url');
+    pdfjs.GlobalWorkerOptions.workerSrc = urlMod.pathToFileURL(workerUrl).href;
     workerConfigured = true;
   } catch {
     workerConfigured = true; // browsers: workerSrc not needed

@@ -1,4 +1,7 @@
 # ✅ Production Hardening — Independent Verification Report
+
+Latest review: [31 August 2026 release review](RELEASE-REVIEW-2026-08-31.md).
+Use that addendum for the current pipeline, test results, dependency risks, and translation limitations.
 **Date:** 24 Aug 2026 · **Verified against:** origin/main `7f29fd8` (+ `0589b94`), live https://cosmictantra.chiti.tech
 **Method:** fetched exact committed tree into isolated checkout, ran the agent's own test suite, ran independent (Meeus-formula, non-derivative) astronomical verification, simulated React rendering, and probed the live production endpoints.
 

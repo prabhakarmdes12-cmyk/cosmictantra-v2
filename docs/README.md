@@ -7,6 +7,9 @@
 
 ## 🗂️ Startup Documentation Directory
 
+Latest engineering status: [31 August 2026 release review](RELEASE-REVIEW-2026-08-31.md).
+Older audits below remain historical evidence, not current release guarantees.
+
 All institutional, strategic, design, growth, engineering, and scholar documentation is organized into 5 operational pillars:
 
 ### 🌟 1. Executive & Strategy

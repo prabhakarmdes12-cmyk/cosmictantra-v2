@@ -156,11 +156,17 @@ export async function renderKundliReportPdf(
   const hasDev = (text: string) => /[\u0900-\u097F]/.test(text);
 
   const drawChrome = (page: number) => {
+    const font = doc.getFont();
+    const fontSize = doc.getFontSize();
+    const textColor = doc.getTextColor();
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7.5);
     doc.setTextColor(120);
     doc.text(FOOTER_TEXT, MARGIN, PAGE_HEIGHT - 8);
     doc.text(`${report.reportId} — page ${page}`, PAGE_WIDTH - MARGIN, PAGE_HEIGHT - 8, { align: 'right' });
+    doc.setFont(font.fontName, font.fontStyle);
+    doc.setFontSize(fontSize);
+    doc.setTextColor(textColor);
   };
 
   const textFont = (text: string, bold: boolean) => {
@@ -245,7 +251,7 @@ export async function renderKundliReportPdf(
       }
       if (fill) {
         doc.setFillColor(...fill);
-        doc.rect(MARGIN, y - 3.4, PAGE_WIDTH - 2 * MARGIN, rowH, 'F');
+        doc.rect(MARGIN, y, PAGE_WIDTH - 2 * MARGIN, rowH, 'F');
       }
       cells.forEach((cell, i) => {
         textFont(cell, bold);
@@ -269,35 +275,43 @@ export async function renderKundliReportPdf(
   };
 
   const renderChart = (b: Extract<ReportBlock, { kind: 'chart' }>): number => {
-    const h = 78;
+    const h = 108;
     controller.ensureFits(h, () => doc.addPage(), drawChrome);
-    const cx = MARGIN + 55;
-    const cy = controller.cursorY + h / 2;
-    // North-Indian diamond chart: 12 houses clockwise from the top
+    const left = MARGIN + 40;
+    const top = controller.cursorY + 4;
+    const side = 96;
+    // North-Indian chart: four diamonds and eight disjoint triangles.
     const data = (b.data as { lagna: string; houses: { number: number; sign: string; planets: string[] }[] });
-    const slots: { x: number; y: number; house: number }[] = [
-      { x: cx, y: cy - 16, house: 1 }, { x: cx + 16, y: cy - 16, house: 2 }, { x: cx + 32, y: cy - 16, house: 3 }, { x: cx + 32, y: cy, house: 4 },
-      { x: cx + 32, y: cy + 16, house: 5 }, { x: cx + 16, y: cy + 16, house: 6 }, { x: cx, y: cy + 16, house: 7 }, { x: cx - 16, y: cy + 16, house: 8 },
-      { x: cx - 32, y: cy + 16, house: 9 }, { x: cx - 32, y: cy, house: 10 }, { x: cx - 32, y: cy - 16, house: 11 }, { x: cx - 16, y: cy - 16, house: 12 },
-    ];
-    // center box
+    const slots = [[50,25], [25,8], [8,25], [25,50], [8,75], [25,92],
+      [50,75], [75,92], [92,75], [75,50], [92,25], [75,8]];
+    const abbreviations: Record<string, string> = {
+      Sun: 'Su', Moon: 'Mo', Mars: 'Ma', Mercury: 'Me', Jupiter: 'Ju',
+      Venus: 'Ve', Saturn: 'Sa', Rahu: 'Ra', Ketu: 'Ke',
+    };
     doc.setDrawColor(80);
-    doc.rect(cx - 16, cy - 16, 32, 32);
-    doc.setFontSize(7);
-    doc.text('Lagna', cx, cy - 2, { align: 'center' });
-    doc.text(data.lagna, cx, cy + 6, { align: 'center' });
-    // 12 small cells
-    data.houses.forEach((h) => {
-      const s = slots.find((x) => x.house === h.number) ?? slots[(h.number - 1) % 12];
-      doc.setDrawColor(120);
-      doc.rect(s.x - 14, s.y - 14, 28, 28);
+    doc.rect(left, top, side, side);
+    const line = (x1: number, y1: number, x2: number, y2: number) =>
+      doc.line(left + x1 * side / 100, top + y1 * side / 100,
+        left + x2 * side / 100, top + y2 * side / 100);
+    line(0, 0, 100, 100); line(100, 0, 0, 100);
+    line(50, 0, 100, 50); line(100, 50, 50, 100);
+    line(50, 100, 0, 50); line(0, 50, 50, 0);
+    data.houses.forEach((house) => {
+      const s = slots[(house.number - 1) % 12];
+      const x = left + s[0] * side / 100;
+      const y = top + s[1] * side / 100;
+      textFont(house.sign, false);
       doc.setFontSize(5.5);
       doc.setTextColor(100);
-      doc.text(String(h.number), s.x - 11, s.y - 10);
+      doc.text(String(house.number), x, y - 4, { align: 'center' });
       doc.setTextColor(40);
-      doc.text(h.sign, s.x, s.y - 3, { align: 'center' });
-      doc.text(h.planets.join(' '), s.x, s.y + 4, { align: 'center' });
-      controller.recordChars(h.sign.length + h.planets.join('').length);
+      doc.text(house.sign.split(' ')[0].slice(0, 4), x, y - 1, { align: 'center' });
+      doc.setFontSize(house.planets.length > 3 ? 4 : 5.5);
+      const planets = house.planets.map(p => abbreviations[p] ?? p.slice(0, 2));
+      for (let i = 0; i < planets.length; i += 3) {
+        doc.text(planets.slice(i, i + 3).join(' '), x, y + 2 + Math.floor(i / 3) * 2, { align: 'center' });
+      }
+      controller.recordChars(house.sign.slice(0, 4).length + planets.join('').length);
     });
     controller.advance(h);
     return h;

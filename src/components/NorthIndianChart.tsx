@@ -37,18 +37,18 @@ const RASHI_TINT = [
 ];
 
 const HOUSE_CELLS = [
-  { id: 1,  path: 'M 50 0 L 100 50 L 50 100 L 0 50 Z',         cx: 50,  cy: 50  },
-  { id: 2,  path: 'M 0 0 L 50 0 L 0 50 Z',                     cx: 15,  cy: 18  },
-  { id: 3,  path: 'M 0 50 L 50 0 L 50 50 Z',                   cx: 28,  cy: 35  },
-  { id: 4,  path: 'M 0 50 L 0 100 L 50 100 Z',                 cx: 15,  cy: 82  },
-  { id: 5,  path: 'M 0 50 L 50 100 L 50 50 Z',                 cx: 28,  cy: 65  },
-  { id: 6,  path: 'M 50 100 L 100 100 L 50 50 Z',              cx: 65,  cy: 82  },
-  { id: 7,  path: 'M 50 50 L 100 50 L 50 100 Z',               cx: 72,  cy: 65  },
-  { id: 8,  path: 'M 100 50 L 100 100 L 50 100 Z',             cx: 85,  cy: 82  },
-  { id: 9,  path: 'M 50 50 L 100 50 L 100 0 Z',                cx: 72,  cy: 35  },
-  { id: 10, path: 'M 50 0 L 100 0 L 100 50 Z',                 cx: 85,  cy: 18  },
-  { id: 11, path: 'M 0 0 L 50 0 L 50 50 Z',                   cx: 28,  cy: 18  },
-  { id: 12, path: 'M 50 0 L 100 0 L 50 50 Z',                 cx: 65,  cy: 18  },
+  { id: 1, path: 'M 50 0 L 75 25 L 50 50 L 25 25 Z', cx: 50, cy: 23 },
+  { id: 2, path: 'M 0 0 L 50 0 L 25 25 Z', cx: 25, cy: 8 },
+  { id: 3, path: 'M 0 0 L 25 25 L 0 50 Z', cx: 8, cy: 23 },
+  { id: 4, path: 'M 0 50 L 25 25 L 50 50 L 25 75 Z', cx: 25, cy: 48 },
+  { id: 5, path: 'M 0 50 L 25 75 L 0 100 Z', cx: 8, cy: 73 },
+  { id: 6, path: 'M 0 100 L 25 75 L 50 100 Z', cx: 25, cy: 90 },
+  { id: 7, path: 'M 50 50 L 75 75 L 50 100 L 25 75 Z', cx: 50, cy: 73 },
+  { id: 8, path: 'M 50 100 L 75 75 L 100 100 Z', cx: 75, cy: 90 },
+  { id: 9, path: 'M 100 100 L 75 75 L 100 50 Z', cx: 92, cy: 73 },
+  { id: 10, path: 'M 50 50 L 75 25 L 100 50 L 75 75 Z', cx: 75, cy: 48 },
+  { id: 11, path: 'M 100 0 L 100 50 L 75 25 Z', cx: 92, cy: 23 },
+  { id: 12, path: 'M 50 0 L 100 0 L 75 25 Z', cx: 75, cy: 8 },
 ];
 
 /**

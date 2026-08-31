@@ -22,11 +22,15 @@ test('hindi locale artifact delivers with Devanagari rendering', async () => {
   expect(r.pdfQuality?.blankPageCount).toBe(0);
 
   const out = path.join(process.cwd(), 'scratch', 'forensics', 'hindi_pipeline.pdf');
+  fs.mkdirSync(path.dirname(out), { recursive: true });
   fs.writeFileSync(out, r.pdfBuffer!);
 
   // Rasterizes (glyph rendering works in Node via @napi-rs/canvas)
   const info = await renderPdfPageToPng(out, 2, path.join(process.cwd(), 'scratch', 'forensics', 'hindi_p2.png'), 1.5);
   expect(info.width).toBeGreaterThan(500);
+  for (let page = 1; page <= r.pdfQuality!.pageCount; page++) {
+    await renderPdfPageToPng(out, page, path.join(path.dirname(out), `hindi_p${page}.png`), 1.5);
+  }
 
   // Devanagari chars present in extracted text (cover invocation + name)
   const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');

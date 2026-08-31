@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate || true && next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "test": "playwright test",
     "test:engines": "playwright test tests/astrology.spec.ts tests/features.spec.ts",

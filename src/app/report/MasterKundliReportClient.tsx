@@ -1103,7 +1103,7 @@ export default function MasterKundliReportClient() {
             <div>
               <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968]">Your Kundli PDF</h3>
               <p className="text-[11px] text-[#78716C] dark:text-[#A8A29E] mt-0.5">
-                Validated, deterministic and bilingual — generated only when every quality gate passes.
+                Validated report with Hindi-name support. Narrative sections are currently in English.
                 {lastPdfMeta && <span className="text-[#15803D] dark:text-emerald-400 font-semibold"> Last: {lastPdfMeta.pageCount} pages · {lastPdfMeta.fileSizeKB} KB · PASS</span>}
               </p>
             </div>
