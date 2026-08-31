@@ -88,6 +88,7 @@ function buildCalculationMethod(m: KundliCanonicalModel): ReportSection {
       kv('Ephemeris', c.ephemerisProvider),
       kv('Engine version', c.engineVersion),
       kv('Calculation version', c.calculationVersion),
+      kv('Ephemeris precision', 'minute (recorded seconds retained in the record)'),
       kv('Julian day', D2(m.calculationMetadata.julianDay)),
       kv('Calculation instant', m.calculationMetadata.generatedAt),
     ],

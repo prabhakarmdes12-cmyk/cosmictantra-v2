@@ -39,7 +39,8 @@ export function normalizeTimeStr(timeStr: string): string {
   const m = TIME_RE.exec(timeStr.trim());
   if (!m) throw new KundliError('KUNDLI_INPUT_INVALID', 'birth time must be HH:mm(:ss)', { birthTime: timeStr });
   const [h, min] = m[0].split(':').map(Number);
-  const sec = m[2] !== undefined ? Number(m[2]) : 0;
+  // The regex captures seconds in group 1 as ":ss" (m[1]); m[2] never exists.
+  const sec = m[1] !== undefined ? Number(m[1].slice(1)) : 0;
   if (h > 23 || min > 59 || sec > 59) {
     throw new KundliError('KUNDLI_INPUT_INVALID', 'birth time out of range', { birthTime: timeStr });
   }
