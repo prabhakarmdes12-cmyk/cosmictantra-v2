@@ -216,12 +216,12 @@ Resume granularity is **passage-level, with chunk-level position inside the curr
 Work is on `arena/01a0593a-cosmictantra-v2` only. A local production server was started for
 verification (`npx next start -H 0.0.0.0 -p 3000`) and the live-route suite ran against it.
 
-Delivery commit: **`3b81cd9`** on `arena/01a0593a-cosmictantra-v2` (parent `ca5951c`).
+Delivery commit: **`801a1f3`** on `arena/01a0593a-cosmictantra-v2` (parent `ca5951c`; `3b81cd9` is the main implementation commit).
 Verify with:
 
 ```
 git fetch origin arena/01a0593a-cosmictantra-v2
-git show --stat 3b81cd9
+git show --stat 801a1f3
 ```
 
 Reproduce the evidence on that commit:
