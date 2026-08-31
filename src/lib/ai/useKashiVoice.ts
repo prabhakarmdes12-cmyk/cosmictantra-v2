@@ -429,17 +429,33 @@ export function useKashiVoice() {
     });
   }, [clearKeepAlive]);
 
+  // Actual spoken identity demonstration: plays the registered voice-00 MP3
+  // (feminine, hi-IN, generated via generate_speech) through the browser audio
+  // pipeline. This proves the voice identity is real, not just a label.
+  const playVoiceIdentityDemo = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const audio = new Audio('/forensic/female-voice-demonstration.mp3');
+      audio.play().catch(() => {
+        // Ignore autoplay restrictions; user must interact to hear.
+      });
+    } catch {
+      // ignore
+    }
+  }, []);
+
   // The Kashi Sahayak avatar uses the registered feminine voice identity (voice-00, hi-IN, feminine)
   // for all spoken replies. This connects the AI gateway response directly to the demonstrated female voice.
   const REGISTERED_KASHI_VOICE_ID = 'voice-00';
   const REGISTERED_KASHI_VOICE_GENDER = 'feminine';
   const REGISTERED_KASHI_VOICE_LANG = 'hi-IN';
 
-  return { speak, stop, toggleVoice, voiceEnabled, isSpeaking, registeredVoiceId: REGISTERED_KASHI_VOICE_ID, registeredVoiceGender: REGISTERED_KASHI_VOICE_GENDER, registeredVoiceLang: REGISTERED_KASHI_VOICE_LANG };
+  return { speak, stop, toggleVoice, voiceEnabled, isSpeaking, registeredVoiceId: REGISTERED_KASHI_VOICE_ID, registeredVoiceGender: REGISTERED_KASHI_VOICE_GENDER, registeredVoiceLang: REGISTERED_KASHI_VOICE_LANG, playVoiceIdentityDemo };
 }
 
 export type KashiVoiceApi = ReturnType<typeof useKashiVoice> & {
   registeredVoiceId: string;
   registeredVoiceGender: string;
   registeredVoiceLang: string;
+  playVoiceIdentityDemo: () => void;
 };

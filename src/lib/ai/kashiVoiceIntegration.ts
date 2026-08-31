@@ -12,7 +12,7 @@
 export const KASHI_VOICE_INTEGRATION = {
   registeredVoiceId: 'voice-00',
   registeredVoiceGender: 'feminine',
-  registeredVoiceLanguage: 'hi-IN',
+  registeredVoiceLang: 'hi-IN',
   voiceAuditFile: 'forensic/female-voice-demonstration.mp3',
   voiceAuditText: 'हर हर महादेव! 🙏 मैं काशी सहायक हूँ — आपकी वैदिक सहायिका। मेरी वाणी में स्त्रीलिंग का प्रयोग है: मैं समझती हूँ, मैं करूँगी, मैं बता सकती हूँ...',
   integrationPoint: 'src/lib/ai/useKashiVoice.ts (RETURN_TYPE + REGISTERED_KASHI_VOICE_ID)',

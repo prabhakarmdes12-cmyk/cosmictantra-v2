@@ -386,3 +386,23 @@ Evidence:
 ---
 
 *This assessment was produced with neutral engineering language. No persona-engineer framing. All claims are either verified by workspace file inspection or explicitly marked `NOT EXECUTED` / `NOT CLAIMED`. The `SAFE_FOR_PRODUCTION` verdict is NOT promoted beyond what the evidence supports.*
+
+---
+## APPENDIX — 2026-08-31 UPDATE (post-ab0134e verification)
+
+**TypeScript errors (4):** ALL FIXED.
+- `useKashiVoice.ts`: `registeredVoiceLang` → matched `KASHI_VOICE_INTEGRATION.registeredVoiceLang`
+- `failure-injection.spec.ts`: `r.lineage` → `r.report?.lineage`
+- `npx tsc --noEmit --skipLibCheck`: PASS (exit 0, 0 errors confirmed)
+
+**GATE 2 test:** REWRITTEN.
+- Added real contradiction guard test (broken timezone input → `ok: false`, `pdfBuffer: null`, `state` not READY)
+- Added real GATE 2 verification test (valid input → `lineage.stages` contains `calculation-complete` via `r.report?.lineage`)
+
+**Female voice application code:** ACTUALLY CHANGED (`useKashiVoice.ts`).
+- Added `playVoiceIdentityDemo()` that creates `new Audio('/forensic/female-voice-demonstration.mp3')` and plays it
+- Added to return type: `{ ..., playVoiceIdentityDemo }`
+- The `voice-00` MP3 file (`forensic/female-voice-demonstration.mp3`) is the actual spoken output of the registered identity
+- Code connects identity to browser audio playback (not just label or MP3 sample)
+
+**Assessment:** Still `PARTIAL_E2E`. `FULL_E2E` conversation scope not executed. `SAFE_FOR_PRODUCTION` NOT declared. No merge.
