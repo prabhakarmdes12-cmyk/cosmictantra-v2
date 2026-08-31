@@ -31,7 +31,7 @@ function safeParse(raw, fallback) {
 /* ----------------------------- Remedies ------------------------------ */
 
 export function loadRemedies() {
-  return safeParse(localStorage.getItem(REMEDIES_KEY), null);
+  try { return safeParse(localStorage.getItem(REMEDIES_KEY), null); } catch { return null; }
 }
 
 export function saveRemedies(remedies) {
@@ -81,7 +81,7 @@ export function seedRemediesIfEmpty() {
 
 /** { 'YYYY-MM-DD': totalMantras } */
 export function loadJapaLog() {
-  return safeParse(localStorage.getItem(JAPA_LOG_KEY), {});
+  try { return safeParse(localStorage.getItem(JAPA_LOG_KEY), {}); } catch { return {}; }
 }
 
 export function saveJapaLog(log) {
@@ -140,7 +140,7 @@ export function japaTotals() {
 /* ------------------------- Sandhya reminder -------------------------- */
 
 export function loadReminder() {
-  return safeParse(localStorage.getItem(REMINDER_KEY), null); // { time: '18:30' }
+  try { return safeParse(localStorage.getItem(REMINDER_KEY), null); } catch { return null; } // { time: '18:30' }
 }
 
 export function saveReminder(reminder) {
@@ -152,7 +152,7 @@ export function clearReminder() {
 }
 
 export function loadReminderFiredDate() {
-  return localStorage.getItem(REMINDER_FIRED_KEY) ?? '';
+  try { return localStorage.getItem(REMINDER_FIRED_KEY) ?? ''; } catch { return ''; }
 }
 
 export function saveReminderFiredDate(dateISO) {
