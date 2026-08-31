@@ -11,6 +11,11 @@
     "start": "next start",
     "test": "playwright test",
     "test:engines": "playwright test tests/astrology.spec.ts tests/features.spec.ts",
+    "granth:extract": "node scripts/extract-granth-library.cjs",
+    "granth:edition-manifest": "node scripts/build-gita-edition-manifest.cjs",
+    "granth:audit": "node scripts/audit-granth-inventory.cjs",
+    "test:granth": "playwright test tests/granth-canonical-library.spec.ts tests/granth-coverage.spec.ts tests/granth-reading-session.spec.ts tests/granth-interactive-flow.spec.ts",
+    "test:granth:http": "playwright test tests/granth-reader-http.spec.ts",
     "typecheck": "tsc --noEmit",
     "postinstall": "prisma generate"
   },
@@ -35,10 +40,12 @@
     "@types/node": "^20.17.6",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
+    "@types/react-test-renderer": "^18.3.0",
     "autoprefixer": "^10.4.20",
     "playwright": "^1.62.1",
     "postcss": "^8.4.49",
     "prisma": "^5.22.0",
+    "react-test-renderer": "^18.3.1",
     "tailwindcss": "^3.4.15",
     "typescript": "^5.9.3"
   }

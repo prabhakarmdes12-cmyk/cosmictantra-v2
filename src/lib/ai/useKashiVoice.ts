@@ -95,6 +95,29 @@ export function cleanForSpeech(raw: string): string {
 
 /** Hard upper bound per utterance — also keeps Chrome from choking. */
 const MAX_CHUNK_LENGTH = 260;
+
+// ---------------------------------------------------------------------------
+// Delivery guard
+// ---------------------------------------------------------------------------
+/**
+ * Some engines (notably a desktop with no installed voice) fire `onend`
+ * immediately without producing any audio. Treating that as "finished
+ * speaking" would let a reading race ahead through a whole chapter while the
+ * user hears nothing, so completion only counts when the utterance plausibly
+ * took as long as its text requires.
+ */
+/** Rough speaking speed for the languages we serve, characters per second. */
+const CHARS_PER_SECOND = 14;
+/** Absolute floor: no utterance shorter than this counts as delivered. */
+const MIN_DELIVERY_MS = 1_200;
+/** Fraction of the expected duration that must actually elapse. */
+const MIN_DELIVERY_RATIO = 0.2;
+
+function deliveryLooksReal(startedAt: number, charCount: number, rate: number): boolean {
+  const expectedMs = (charCount / Math.max(1, CHARS_PER_SECOND * rate)) * 1000;
+  const elapsedMs = Date.now() - startedAt;
+  return elapsedMs >= MIN_DELIVERY_MS && elapsedMs >= expectedMs * MIN_DELIVERY_RATIO;
+}
 /** Short fragments get merged forward into flowing sentences. */
 const MIN_CHUNK_LENGTH = 45;
 
@@ -337,8 +360,16 @@ export function useKashiVoice() {
     setIsSpeaking(false);
   }, [clearKeepAlive]);
 
+  /**
+   * Speak `text`.
+   *
+   * `options.rate` scales the per-sentence prosody (the reading session's
+   * speed, e.g. 0.9× for "धीरे पढ़ो"). `options.onDone` fires once the whole
+   * queue has finished speaking, and NEVER after stop()/toggle-off — that is
+   * what makes it safe to hook reading progression to it.
+   */
   const speak = useCallback(
-    (text: string) => {
+    (text: string, options?: { rate?: number; onDone?: () => void }) => {
       if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
       if (!enabledRef.current || !text) return;
 
@@ -347,6 +378,10 @@ export function useKashiVoice() {
 
       const chunks = chunkTextForSpeech(clean);
       if (chunks.length === 0) return;
+      const onDone = options?.onDone;
+      // Reading-session speed multiplier (default 1×), clamped to what an
+      // engine can actually do: Web Speech accepts 0.1–10.
+      const rateMultiplier = Math.min(2, Math.max(0.5, options?.rate ?? 1));
 
       // Interrupt anything currently speaking and open a fresh session.
       window.speechSynthesis.cancel();
@@ -356,6 +391,8 @@ export function useKashiVoice() {
       const speakChunk = (index: number) => {
         if (session !== sessionRef.current) return; // stale queue, abandoned
         if (index >= chunks.length) {
+          // Safety guard only: normal completion is handled in `advance`, which
+          // knows whether the last utterance ENDED or merely errored.
           clearKeepAlive();
           setIsSpeaking(false);
           return;
@@ -372,7 +409,7 @@ export function useKashiVoice() {
         }
 
         const { rate, pitch } = prosodyFor(chunk);
-        utterance.rate = rate;
+        utterance.rate = Math.min(10, Math.max(0.1, rate * rateMultiplier));
         utterance.pitch = pitch;
         // A hair of extra presence on supported engines
         utterance.volume = 1;
@@ -382,17 +419,36 @@ export function useKashiVoice() {
             if (session === sessionRef.current) setIsSpeaking(true);
           };
         }
-        const advance = () => {
+        // `finished` is false when the engine reported an ERROR instead of
+        // ending normally: a failed utterance did not deliver the text, so it
+        // must not be treated as "this passage has been read" — otherwise a
+        // device with no working voice would race ahead through the reading.
+        const advance = (finished: boolean) => {
           if (session !== sessionRef.current) return;
+          if (index + 1 >= chunks.length) {
+            clearKeepAlive();
+            setIsSpeaking(false);
+            // Only a delivery that plausibly took the time its text needs may
+            // advance a reading: an instant "end" means nothing was heard.
+            if (
+              finished &&
+              onDone &&
+              deliveryLooksReal(startedAt, clean.length, rateMultiplier)
+            ) {
+              onDone();
+            }
+            return;
+          }
           // ~140 ms breath between sentences — the biggest naturalness win
           window.setTimeout(() => speakChunk(index + 1), 140);
         };
-        utterance.onend = advance;
-        utterance.onerror = advance;
+        utterance.onend = () => advance(true);
+        utterance.onerror = () => advance(false);
 
         window.speechSynthesis.speak(utterance);
       };
 
+      const startedAt = Date.now();
       startKeepAlive();
       speakChunk(0);
     },
