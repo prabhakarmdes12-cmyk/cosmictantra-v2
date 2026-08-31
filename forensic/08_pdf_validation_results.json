@@ -1,0 +1,57 @@
+{
+  "artifactId": "08_pdf_validation_results.json",
+  "incidentId": "KUNDLI-INCIDENT-454",
+  "timestamp": "2026-08-31T10:30:00+05:30",
+  "description": "PDF validation results for the 454-page incident artifact. The validator correctly identifies the failure (blank pages exceed limit, mandatory sections missing, content density too low) but the legacy pipeline delivered the PDF anyway because validation was not enforced before delivery.",
+  "data": {
+    "validatorCalled": false,
+    "validatorStateInLegacyPipeline": "NOT_ENFORCED / POST-GENERATION_ONLY",
+    "expectedValidationState": {
+      "status": "FAIL",
+      "reasons": [
+        "page count 454 exceeds ceiling 40",
+        "consecutive blank pages 442 exceeds limit 2",
+        "content density 0.013 below minimum 0.5",
+        "mandatory section titles not found in extracted text: Birth Summary, Calculation Standard, Panchanga, Planetary Positions, Vimshottari Dasha, Current Dasha Period"
+      ],
+      "pageCount": 454,
+      "blankPageCount": 448,
+      "consecutiveBlankPageCount": 442,
+      "contentDensity": 0.013,
+      "mandatorySectionsFound": ["Disclaimer"],
+      "mandatorySectionsMissing": [
+        "Birth Summary",
+        "Calculation Standard",
+        "Panchanga",
+        "Planetary Positions",
+        "Vimshottari Dasha",
+        "Current Dasha Period"
+      ]
+    },
+    "actualLegacyDeliveryState": {
+      "pdfBufferDelivered": true,
+      "pdfBufferLengthBytes": 124780,
+      "pageCountInFile": 454,
+      "deliveryState": "READY_FOR_DELIVERY (WRONG - VALIDATION BYPASSED)",
+      "failSafeMessageShownToUser": false,
+      "errorCodeReturned": null
+    },
+    "postFixExpectedState": {
+      "pdfBufferDelivered": false,
+      "deliveryState": "PDF_VALIDATION_FAILED",
+      "failSafeMessage": "The generated PDF failed quality checks and was not delivered. Please try again.",
+      "errorCode": "KUNDLI_PDF_QUALITY_FAILED",
+      "userSees": "We could not complete this Kundli correctly. Your report has not been issued. Please verify the birth details (name, date, time and both coordinates) or contact CosmicTantra support.",
+      "technicalReason": "page count 454 exceeds ceiling 40, consecutive blank pages 442 exceeds limit 2, content density 0.013 below minimum 0.5, mandatory section titles missing"
+    },
+    "validationConfigUsed": {
+      "maxPages": 40,
+      "blankPageCharThreshold": 20,
+      "maxConsecutiveBlankPages": 2,
+      "minContentDensity": 0.5,
+      "minAvgCharsPerPage": 50,
+      "sourceFile": "src/lib/kundli/config.ts"
+    },
+    "notes": "The new pipeline fixes this by enforcing GATE 4 (validatePdfIntegrity) before delivering any PDF. The validator throws KUNDLI_PDF_QUALITY_FAILED, which is caught by the pipeline and mapped to the safe user-facing message. The PDF is never delivered if validation fails."
+  }
+}

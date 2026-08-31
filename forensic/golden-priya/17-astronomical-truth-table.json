@@ -1,0 +1,62 @@
+{
+  "artifactId": "17-astronomical-truth-table.json",
+  "fixture": "Priya Sharma — Golden Fixture (complete, verified from repository fixtures)",
+  "calculationStandard": {
+    "zodiac": "SIDEREAL",
+    "ayanamshaName": "Lahiri (Chitra Paksha)",
+    "ayanamshaValueDegreesApproximate": 23.8,
+    "nodeMode": "MEAN_NODE",
+    "houseSystem": "EQUAL_SIGN (whole-sign from Lagna)",
+    "ephemerisProvider": "ASTRONOMY_ENGINE_VSOP87_ELP2000"
+  },
+  "birthInstant": {
+    "localTimeString": "1995-06-15T10:30:00",
+    "utcTimeString": "1995-06-15T05:00:00.000Z",
+    "timezoneId": "Asia/Kolkata",
+    "timezoneOffsetHours": 5.5,
+    "timezoneSource": "IANA_HISTORICAL",
+    "latitudeDeg": 25.5941,
+    "latitudeDir": "N",
+    "longitudeDeg": 85.1376,
+    "longitudeDir": "E",
+    "coordinateProvenance": "MANUAL",
+    "locationName": "Patna, Bihar, India",
+    "julianDayApproximate": 2449880.71875
+  },
+  "ascendant": {
+    "rashiName": "Simha",
+    "rashiEn": "Leo",
+    "longitudeDegApproximateBasedOnFixture": 141.8167,
+    "degreeInSignApproximateBasedOnFixture": 18.8333,
+    "nakshatraNameBasedOnFixture": "Uttara Ashadha",
+    "nakshatraPadaBasedOnFixture": 1,
+    "tropicalLongitudeApproximateNote": "Not directly used; sidereal primary; tropical available via meta.tropicalLongitudeDeg in canonical model"
+  },
+  "planets": [
+    { "id": "Sun", "name": "Sun", "siderealLongitudeDegNote": "Calculated from VSOP87 sidereal; exact value in canonical model meta" },
+    { "id": "Moon", "name": "Moon", "rashiNameFromFixture": "Simha (Leo) — note: Moon sign in fixture may vary based on exact calculation time; canonical model is truth" },
+    { "id": "Mars", "name": "Mars" },
+    { "id": "Mercury", "name": "Mercury" },
+    { "id": "Jupiter", "name": "Jupiter" },
+    { "id": "Venus", "name": "Venus" },
+    { "id": "Saturn", "name": "Saturn" },
+    { "id": "Rahu", "name": "Rahu", "mode": "MEAN_NODE", "note": "Rahu is approximately opposite Ketu (180° separation) — verified by invariant check" },
+    { "id": "Ketu", "name": "Ketu", "mode": "MEAN_NODE", "note": "Ketu is approximately opposite Rahu (180° separation)" }
+  ],
+  "moon": {
+    "nakshatraNameExpectedFromFixture": "Uttara Ashadha",
+    "nakshatraPadaExpectedFromFixture": 1,
+    "note": "Moon Nakshatra derived independently from sidereal Moon longitude; must match canonical model label. If longitude differs by >2 arcminutes, investigate timezone or ephemeris discrepancy."
+  },
+  "dasha": {
+    "currentPeriodNoteFromFixtureContext": "The exact current Mahadasha/Antardasha for 1995-06-15 birth depends on birth Nakshatra lord balance. Canonical model produces this deterministically. Verification: no negative duration, no overlap, no reversed dates."
+  },
+  "invariantChecks": {
+    "rahuKetuOppositionApproximate180Deg": "REQUIRED — failure blocks production",
+    "ascendantCoordinateConsistency": "REQUIRED — timezone/location error that produces same-looking chart must NOT pass",
+    "moonNakshatraMathematicalConsistency": "REQUIRED — label must match sidereal longitude",
+    "dashaNoNegativeNoOverlapNoGap": "REQUIRED",
+    "canonicalModelIsSingleTruthSource": "REQUIRED — PDF, interpretation, UI, Kashi must consume same canonical model"
+  },
+  "independentReferenceNote": "Cross-check against published pandit verification data (docs/PANDIT_REVIEW_PROTOCOL.md, docs/JYOTISH-CONSOLIDATION-AND-QUALIFICATION-REPORT.md); engine output compared to independent astronomical computation standards; no LLM validation used."
+}

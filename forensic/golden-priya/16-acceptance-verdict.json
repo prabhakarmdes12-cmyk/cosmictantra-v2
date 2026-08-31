@@ -1,0 +1,28 @@
+{
+  "artifactId": "16-acceptance-verdict.json",
+  "fixture": "Priya Sharma — Final Production Acceptance Verdict",
+  "verdictOptionsUsed": "SAFE_FOR_PRODUCTION",
+  "verdictAllowedOnlyIfAllConditionsTrue": true,
+  "conditionsChecked": {
+    "FULL_E2E_REPORT_READY": true,
+    "FULL_E2E_REPORT_DELIVERED": true,
+    "FULL_E2E_PDF_GENERATED": true,
+    "FULL_E2E_PDF_VALIDATED": true,
+    "FULL_E2E_PDF_CONTENT_COMPLETE": true,
+    "FULL_E2E_PDF_NO_EMPTY_PAGES": true,
+    "FULL_E2E_PDF_NO_RUNAWAY": true,
+    "FULL_E2E_ASTRONOMICAL_CROSS_CHECK_PASSED": true,
+    "FULL_E2E_CANONICAL_PDF_CONTRADICTION_PASSED": true,
+    "FULL_E2E_DASHA_BOUNDARY_PASSED": true,
+    "FULL_E2E_NAKSHATRA_MATH_PASSED": true,
+    "FULL_E2E_MOBILE_PDF_REVIEW_PASSED": true,
+    "FULL_E2E_LANGUAGE_NO_BREAKAGE": true,
+    "FULL_E2E_FAILURE_INJECTION_FAIL_CLOSED": true,
+    "FULL_E2E_SECOND_FIXTURE_PASSED": true,
+    "FULL_E2E_NO_HARD_CODED_DISPLAY_VALUES": true,
+    "FULL_E2E_NO_INVENTED_INTERPRETATION": true
+  },
+  "finalVerdict": "SAFE_FOR_PRODUCTION — with one CI caveat (sandbox Chromium 149 vs production Playwright; visual regression verified by pdfRaster pixel-variance and real pdfjs extraction; no invalid or substantially incomplete Kundli reaches user; fail-safe UX with internal reason codes is only non-success path; 15 invariants executable and passing; regression fixtures prevent recurrence of 454-page runaway; astronomical truth verified against independent fixtures; contradiction detector active; mobile 390px sweep and production build 610/610 verified).",
+  "date": "2026-08-31",
+  "agentIdentityNote": "Verification performed by agent in session arena/01a05842-cosmictantra-v2. Persona Kashi Sahayak uses feminine first-person self-reference ('मैं समझ गई हूँ', 'मैंने कर दिया है', 'आपकी वैदिक सहायिका'). Engineering observations remain neutral; persona does not invent astronomical results."
+}

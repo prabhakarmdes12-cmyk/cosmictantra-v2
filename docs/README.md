@@ -7,7 +7,9 @@
 
 ## 🗂️ Startup Documentation Directory
 
-Latest engineering status: [31 August 2026 release review](RELEASE-REVIEW-2026-08-31.md).
+Latest engineering status: [1 September 2026 independent integration review](RELEASE-REVIEW-2026-09-01.md).
+Next implementation: [detailed next-agent mission](AGENT-NEXT-WORK-2026-09-01.md).
+Previous baseline: [31 August 2026 release review](RELEASE-REVIEW-2026-08-31.md).
 Local follow-up: [Kashi Sahayak patch integration](KASHI-PATCH-INTEGRATION.md), including avatar, intake corrections and test coverage.
 Older audits below remain historical evidence, not current release guarantees.
 

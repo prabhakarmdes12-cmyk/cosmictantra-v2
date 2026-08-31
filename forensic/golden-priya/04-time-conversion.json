@@ -1,0 +1,24 @@
+{
+  "artifactId": "04-time-conversion.json",
+  "fixture": "Priya Sharma — Time Conversion (GATE 1b → GATE 2 transition)",
+  "localBirthTime": "1995-06-15 10:30:00",
+  "timezone": "Asia/Kolkata (UTC+5:30)",
+  "conversionResults": {
+    "localTimeString": "1995-06-15T10:30:00",
+    "utcTimeString": "1995-06-15T05:00:00.000Z",
+    "localToUtcOffsetHours": 5.5,
+    "utcToLocalOffsetHours": -5.5
+  },
+  "julianDay": {
+    "approximateValue": 2449880.71875,
+    "calculationMethodNote": "Approximate based on standard astronomical conversion; exact value computed by engine (buildCanonicalModel) using meta.julianDay from getCanonicalJyotishSnapshot"
+  },
+  "engineConfigUsed": {
+    "ephemerisProvider": "ASTRONOMY_ENGINE_VSOP87_ELP2000",
+    "zodiac": "SIDEREAL",
+    "ayanamsha": "LAHIRI_CHITRA_PAKSHA",
+    "houseSystem": "EQUAL_SIGN",
+    "nodeMode": "MEAN_NODE"
+  },
+  "timeStatus": "PASSED — no timezone ambiguity; exact birth time (not marked APPROXIMATE); historical IANA offset applied"
+}

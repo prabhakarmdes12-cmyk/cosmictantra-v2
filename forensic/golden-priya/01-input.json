@@ -1,0 +1,27 @@
+{
+  "artifactId": "01-input.json",
+  "fixture": "Priya Sharma — Complete Golden Fixture (recovered from original repository evidence)",
+  "incidentReference": "KUNDLI-INCIDENT-454 — original complete profile from tests/kundli-pipeline/invariants.spec.ts and docs/PANDIT_REVIEW_PROTOCOL.md",
+  "birthData": {
+    "name": "Priya Sharma",
+    "birthDate": "1995-06-15",
+    "birthTime": "10:30",
+    "locationName": "Patna, Bihar, India",
+    "latitude": 25.5941,
+    "latitudeDirection": "N",
+    "longitude": 85.1376,
+    "longitudeDirection": "E",
+    "coordinateProvenance": "MANUAL",
+    "timezoneId": "Asia/Kolkata",
+    "utcOffsetAtBirth": 5.5,
+    "timezoneSource": "IANA_HISTORICAL"
+  },
+  "inputValidationResult": {
+    "gate": "GATE 1 + GATE 1b",
+    "status": "PASSED",
+    "code": null,
+    "details": "All required fields present; coordinates complete (lat + lng); timezone resolved from IANA"
+  },
+  "evidenceSource": "tests/kundli-pipeline/invariants.spec.ts (COMPLETE fixture), docs/PANDIT_REVIEW_PROTOCOL.md (line 10: 'Priya Sharma (Consumer Benchmark) | 1995-06-15 10:30:00 | 25.5941° N, 85.1376° E (Patna, BR)')",
+  "notes": "This is the ORIGINAL complete fixture — NOT invented. The incident used a partial version (latitude only, no longitude/name/timezone) which must not be confused with this golden fixture."
+}

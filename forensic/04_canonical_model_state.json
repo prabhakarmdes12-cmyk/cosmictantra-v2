@@ -1,0 +1,39 @@
+{
+  "artifactId": "04_canonical_model_state.json",
+  "incidentId": "KUNDLI-INCIDENT-454",
+  "timestamp": "2026-08-31T10:30:00+05:30",
+  "description": "Canonical model state for the incident. Without a complete profile, the canonical model adapter (buildCanonicalModel) throws KUNDLI_CALCULATION_INCOMPLETE rather than producing an empty model.",
+  "data": {
+    "profilePassedToAdapter": {
+      "name": null,
+      "birthDate": "1995-06-15",
+      "birthTime": "10:30",
+      "locationName": null,
+      "coordinates": {
+        "latitude": 25.5941,
+        "longitude": null,
+        "provenance": null
+      },
+      "timezone": {
+        "timezoneId": null,
+        "utcOffsetAtBirth": null,
+        "localDateTime": null,
+        "utcDateTime": null
+      },
+      "fingerprint": null
+    },
+    "adapterCalled": false,
+    "adapterState": "BLOCKED_AT_INPUT",
+    "canonicalModelState": "NOT_BUILT",
+    "expectedThrowCode": "KUNDLI_CALCULATION_INCOMPLETE",
+    "expectedThrowReason": "profile.coordinates.longitude is missing; profile.coordinates.provenance is missing; timezone not resolved",
+    "modelFieldsThatWouldBeEmpty": [
+      "subject.name",
+      "subject.coordinates.longitude",
+      "subject.timezone.timezoneId",
+      "calculationMetadata.localDateTime",
+      "calculationMetadata.utcDateTime"
+    ],
+    "notes": "The adapter (buildCanonicalModel in src/lib/kundli/canonicalModel.ts) requires a complete NormalizedBirthProfile. It never produces an empty canonical model. The legacy pipeline skipped this adapter entirely."
+  }
+}

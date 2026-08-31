@@ -1,0 +1,56 @@
+{
+  "artifactId": "09-pre-repair-baseline.json",
+  "incidentId": "KUNDLI-INCIDENT-454",
+  "timestamp": "2026-08-31T10:30:00+05:30",
+  "description": "Historical baseline of the 454-page runaway artifact before pipeline repair. This documents the catastrophic failure state for comparison with the repaired pipeline.",
+  "data": {
+    "pageCount": 454,
+    "blankPages": 448,
+    "contentDensity": 0.013,
+    "consecutiveBlankPages": 442,
+    "extractedTextDensity": 3.2,
+    "mandatorySectionsFound": ["Disclaimer"],
+    "mandatorySectionsMissing": [
+      "Birth Summary",
+      "Calculation Standard",
+      "Panchanga",
+      "Planetary Positions",
+      "Vimshottari Dasha",
+      "Current Dasha Period"
+    ],
+    "inputUsed": {
+      "name": null,
+      "birthDate": "1995-06-15",
+      "birthTime": "10:30",
+      "latitude": 25.5941,
+      "longitude": null,
+      "timezoneId": null,
+      "locationName": null,
+      "coordinateProvenance": null
+    },
+    "pipelineResult": {
+      "state": "READY_FOR_DELIVERY",
+      "ok": true,
+      "pdfBufferLengthBytes": 124780,
+      "errorCode": null,
+      "pdfQuality": null,
+      "metrics": {
+        "pageCount": 454,
+        "placedCharsByPage": [120, 15, 0, 0, 0, 0, 0, 0, 15, 0],
+        "blocksRendered": 7,
+        "sectionsRendered": 2
+      }
+    },
+    "rootCauseSummary": "Legacy renderer bypassed pagination controller; used snapshot directly instead of canonical adapter; non-null assertions pushed undefined sections; validation not enforced before delivery.",
+    "postRepairResult": {
+      "state": "INPUT_FAILED",
+      "ok": false,
+      "pdfBuffer": null,
+      "pdfQuality": null,
+      "errorCode": "KUNDLI_COORDINATES_INVALID",
+      "pagesProduced": 0,
+      "blankPages": 0,
+      "notes": "Repaired pipeline rejects incomplete input at GATE 1/2; no PDF produced."
+    }
+  }
+}

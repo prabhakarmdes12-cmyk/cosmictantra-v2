@@ -1,0 +1,47 @@
+{
+  "artifactId": "05_interpretation_state.json",
+  "incidentId": "KUNDLI-INCIDENT-454",
+  "timestamp": "2026-08-31T10:30:00+05:30",
+  "description": "Interpretation engine state. Without a canonical model, no interpretations are generated. If the report model tries to push undefined interpretation entries (from a missing bySection.get(id)), it produces undefined sections.",
+  "data": {
+    "canonicalModelAvailable": false,
+    "interpretationEngineCalled": false,
+    "interpretationEntriesProduced": 0,
+    "interpretationSectionsAttempted": [
+      "lagna-analysis",
+      "moon-analysis",
+      "nakshatra-analysis",
+      "career",
+      "finance",
+      "relationships",
+      "family",
+      "health",
+      "education",
+      "spiritual-tendencies",
+      "current-period",
+      "near-term-themes",
+      "remedies"
+    ],
+    "expectedEntriesCount": 13,
+    "actualEntriesCount": 0,
+    "missingEntries": [
+      "lagna-analysis (from model.ascendant)",
+      "moon-analysis (from model.planets.Moon)",
+      "nakshatra-analysis (from model.panchanga.nakshatra)",
+      "career (from model.houses[9])",
+      "finance (from model.houses[1])",
+      "current-period (from model.dashas.current)",
+      "remedies (from model.doshas)"
+    ],
+    "nonNullAssertionsThatWouldFail": [
+      "bySection.get('lagna-analysis')!",
+      "bySection.get('current-period')!",
+      "bySection.get('near-term-themes')!",
+      "bySection.get('remedies')!"
+    ],
+    "bugInLegacyReportModel": "The old buildKundliReportModel used non-null assertions (bySection.get(id)!) without checking if the key exists. When the interpretation map is empty (because no canonical model exists), these assertions evaluate to undefined, pushing undefined ReportSection objects into the sections array.",
+    "fileAffected": "src/lib/kundli/reportModel.ts",
+    "functionAffected": "buildKundliReportModel",
+    "lineReference": "interpretation loop: bySection.get(id)!"
+  }
+}

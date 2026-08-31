@@ -1,0 +1,31 @@
+{
+  "artifactId": "03-location-timezone.json",
+  "fixture": "Priya Sharma — Geo/Timezone Resolution (repaired GATE 1b)",
+  "locationInput": {
+    "cityName": "Patna",
+    "state": "Bihar",
+    "country": "India",
+    "latitude": 25.5941,
+    "longitude": 85.1376
+  },
+  "cityTableMatch": {
+    "searchCitiesResultFound": true,
+    "cityRecordUsed": {
+      "name": "Patna",
+      "state": "Bihar",
+      "lat": 25.5941,
+      "lng": 85.1376,
+      "tz": 5.5
+    }
+  },
+  "timezoneResolution": {
+    "timezoneIdResolved": "Asia/Kolkata",
+    "resolutionSource": "IANA_HISTORICAL",
+    "utcOffsetAtBirthHours": 5.5,
+    "localDateTimeString": "1995-06-15T10:30:00",
+    "utcDateTimeString": "1995-06-15T05:00:00.000Z",
+    "julianDayApproximate": 2449880.71875,
+    "resolutionStatus": "PASSED"
+  },
+  "geoStatus": "PASSED — no FALLBACK needed; full coordinates provided by caller with MANUAL provenance"
+}

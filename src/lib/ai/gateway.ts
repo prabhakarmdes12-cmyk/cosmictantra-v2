@@ -13,6 +13,7 @@ import { KashiSahayakTelemetry } from './telemetry';
 import { executeVedicTool } from './tools/executor';
 import { findScriptureInsight } from './scriptureMap';
 import { retrieveDurableConsultationMemory } from '../sabha/orchestrator';
+import { readScriptureText, parseScriptureReadRequest } from './granthReader';
 
 export interface KashiSahayakResponse {
   text: string;
@@ -208,7 +209,7 @@ export async function processKashiSahayakQuery(
       intent: 'DARSHAN',
       confidence: intentRes.confidence,
       provenance: createDocumentedProvenance(shrineData.templeName + ' Official Trust Feed'),
-      structuredCard: { inChatDarshan: shrineData },
+      structuredCard: { inChatDarshan: shrineData, sounds: { ghanti: '/audio/ghanti.wav', sankh: '/audio/sankh.wav' } },
       toolCallsExecuted: ['get_temple_darshan'],
       quickChips: [
         { label: '🪔 दीप दान करें', action: 'OFFER_DIYA' },
@@ -322,6 +323,21 @@ export async function processKashiSahayakQuery(
         { label: '🪔 काशी विश्वनाथ लाइव दर्शन', action: 'INTENT_DARSHAN' },
         { label: '📜 विद्वान् ज्योतिषी परामर्श', action: 'INTENT_SCHOLAR', href: '/ask' }
       ]
+    };
+  }
+
+  // Exact stored passages only; unavailable content is not a documented quote.
+  const readingRequest = parseScriptureReadRequest(query);
+  if (readingRequest) {
+    const response = readScriptureText(readingRequest);
+    return {
+      text: response.found ? `${response.sourceName} ${response.chapter}.${response.verse}\n\n${response.text}` : response.text,
+      intent: 'GRANTH_READ', confidence: 0.92,
+      provenance: response.found
+        ? createDocumentedProvenance(response.sourceName, `${response.chapter}.${response.verse}`, 'DIRECT_QUOTE')
+        : createAIExplanationProvenance(),
+      structuredCard: { granthReadCard: response }, toolCallsExecuted: ['granth_reader'],
+      quickChips: [{ label: '📖 आरती एवं ग्रन्थ पुस्तकालय', action: 'OPEN_LIBRARY', href: '/aarti-stotra' }],
     };
   }
 

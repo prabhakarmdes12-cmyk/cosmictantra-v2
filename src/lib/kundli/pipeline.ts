@@ -54,9 +54,23 @@ function failed(state: PipelineState, e: unknown, reportId?: string): KundliPipe
  * Runs the full pipeline. Returns the typed result; PDF bytes are present
  * only when state === READY_FOR_DELIVERY.
  */
-export async function generateKundliPdf(
+type CalculateSnapshot = typeof import('../jyotish/canonicalSnapshot').getCanonicalJyotishSnapshot;
+
+// Explicit dependency seam for fault-injection tests. HTTP callers continue to
+// use generateKundliPdf; raw input/options cannot replace the calculation engine.
+export function createKundliPdfGenerator(calculateSnapshot: CalculateSnapshot) {
+  return (rawInput: RawBirthInput, options: GenerateKundliPdfOptions = {}) =>
+    runKundliPdf(rawInput, options, calculateSnapshot);
+}
+
+export function generateKundliPdf(rawInput: RawBirthInput, options: GenerateKundliPdfOptions = {}) {
+  return runKundliPdf(rawInput, options);
+}
+
+async function runKundliPdf(
   rawInput: RawBirthInput,
   options: GenerateKundliPdfOptions = {},
+  calculateSnapshot?: CalculateSnapshot,
 ): Promise<KundliPipelineResult> {
   const locale = options.locale ?? 'en';
   const renderPdf = options.renderPdf !== false;
@@ -112,7 +126,7 @@ export async function generateKundliPdf(
   let canonical;
   try {
     const { getCanonicalJyotishSnapshot } = await import('../jyotish/canonicalSnapshot');
-    const snapshot = getCanonicalJyotishSnapshot({
+    const snapshot = (calculateSnapshot ?? getCanonicalJyotishSnapshot)({
       birthDate: profile.birthDate,
       birthTime: profile.birthTime,
       latitude: profile.coordinates.latitude,

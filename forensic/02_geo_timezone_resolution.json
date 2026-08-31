@@ -1,0 +1,39 @@
+{
+  "artifactId": "02_geo_timezone_resolution.json",
+  "incidentId": "KUNDLI-INCIDENT-454",
+  "timestamp": "2026-08-31T10:30:00+05:30",
+  "description": "Geolocation/timezone resolution for the incident input. Without longitude and with latitude outside the India bounding box (or without it), the resolution fails.",
+  "data": {
+    "coordinatePair": {
+      "latitude": 25.5941,
+      "longitude": null
+    },
+    "coordinateStatus": "INCOMPLETE",
+    "coordinateValidationResult": {
+      "code": "KUNDLI_COORDINATES_INVALID",
+      "message": "longitude is required together with latitude",
+      "file": "src/lib/kundli/validation.ts",
+      "function": "validateBirthInput"
+    },
+    "timezoneResolution": {
+      "timezoneIdProvided": null,
+      "utcOffsetHoursProvided": null,
+      "canResolveFromCoordinates": false,
+      "indiaBoxCheck": {
+        "minLat": 6,
+        "maxLat": 37,
+        "minLng": 68,
+        "maxLng": 97.5,
+        "latitudeInBox": true,
+        "longitudeInBox": false,
+        "fullPairInBox": false
+      },
+      "resolutionStatus": "FAILED",
+      "expectedCode": "KUNDLI_COORDINATES_INVALID",
+      "fallbackPossible": false,
+      "fallbackApproved": false
+    },
+    "geoTimeZoneStageState": "FAILED / GATE 1b NOT PASSED",
+    "pipelineGateBlocked": true
+  }
+}
