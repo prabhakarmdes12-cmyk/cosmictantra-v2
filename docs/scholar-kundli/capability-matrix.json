@@ -3,12 +3,13 @@
   "generatedOn": "2026-09-01",
   "branch": "arena/01a0593a-cosmictantra-v2",
   "baseCommit": "b651bd7",
+  "updatedAtCommit": "f9ef3db",
   "method": "code inspection of the repository at HEAD; docs/tests are not counted as capability",
   "counts": {
     "IMPLEMENTED_NOT_E2E_TESTED": 10,
-    "PARTIAL": 14,
-    "MISSING": 25,
-    "IMPLEMENTED_AND_TESTED": 9,
+    "PARTIAL": 12,
+    "MISSING": 24,
+    "IMPLEMENTED_AND_TESTED": 12,
     "BLOCKED_BY_SOURCE_OR_DECISION": 2
   },
   "requirements": [
@@ -72,8 +73,8 @@
       "id": "S09",
       "section": "(preamble)",
       "requirement": "Yoga & Dosha section",
-      "status": "PARTIAL",
-      "evidence": "reportModel.ts:247 Major Yogas (prints • ${y.name} only) and :267 Dosha Analysis (manglik, sadeSati) | none asserting yoga correctness"
+      "status": "IMPLEMENTED_AND_TESTED",
+      "evidence": "reportModel.ts:243 status-aware yoga section; engine src/lib/jyotish/yogaEngine.ts | priya-1995-gk-negative.spec.ts (7), yoga-engine-contract.spec.ts (19), scholar-pdf-artifact.spec.ts (1)"
     },
     {
       "id": "S10",
@@ -100,15 +101,15 @@
       "id": "Z01",
       "section": "(preamble)",
       "requirement": "All displayed conclusions trace to canonical output",
-      "status": "PARTIAL",
+      "status": "IMPLEMENTED_AND_TESTED",
       "evidence": "canonicalModel.ts requireValue(); validation.ts; pipeline GATE 2/3"
     },
     {
       "id": "Z02",
       "section": "(preamble)",
       "requirement": "Yoga registry: stable ID, formal rule, inputs, evaluated conditions, result, evidence refs, status (`PRESENT`/`ABSENT`/`INDETERMINATE`/`NOT_CALCULATED`)",
-      "status": "MISSING",
-      "evidence": "types.ts:181-184 YogaResult { name, basis[] } only; types.ts:163 AnalysisStatus = 'CALCULATED' \\ | 'NOT_CALCULATED'"
+      "status": "IMPLEMENTED_AND_TESTED",
+      "evidence": "src/lib/jyotish/yogaEngine.ts; types.ts YogaResult / YogaStatus / YogaCondition | yoga-engine-contract.spec.ts, priya-1995-gk-negative.spec.ts"
     },
     {
       "id": "Z03",
@@ -140,294 +141,294 @@
     },
     {
       "id": "C01",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Ascendant agreement across summary/charts/tables",
       "status": "MISSING",
       "evidence": "—"
     },
     {
       "id": "C02",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Moon sign & Nakshatra agreement",
       "status": "MISSING",
       "evidence": "—"
     },
     {
       "id": "C03",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Longitude/sign/house consistency",
       "status": "MISSING",
       "evidence": "—"
     },
     {
       "id": "C04",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Rahu–Ketu opposition tolerance",
       "status": "MISSING",
       "evidence": "—"
     },
     {
       "id": "C05",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Dasha ordering & date continuity",
       "status": "MISSING",
       "evidence": "—"
     },
     {
       "id": "C06",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Lordship consistency",
       "status": "MISSING",
       "evidence": "—"
     },
     {
       "id": "C07",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Yoga evidence consistency",
       "status": "MISSING",
       "evidence": "—"
     },
     {
       "id": "C08",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Varga source consistency",
       "status": "MISSING",
       "evidence": "—"
     },
     {
       "id": "C09",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Language/value pairing",
       "status": "MISSING",
       "evidence": "—"
     },
     {
       "id": "C10",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "No missing required values",
       "status": "IMPLEMENTED_AND_TESTED",
       "evidence": "validation.ts assertReportCompleteness"
     },
     {
       "id": "C11",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "No contradictory prose",
       "status": "MISSING",
       "evidence": "—"
     },
     {
       "id": "C12",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "No impossible/duplicate page sequence",
       "status": "PARTIAL",
       "evidence": "layoutEngine.ts, pdfValidator.ts (blanks, density, ceiling)"
     },
     {
       "id": "C13",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Fail closed: no PDF, `pdfBuffer: null`, named error code, human diagnostic, no partial success",
       "status": "IMPLEMENTED_AND_TESTED",
       "evidence": "pipeline.ts:37-53 failed() returns pdfBuffer: null + errorCode + errorDetails; typed codes in errors.ts"
     },
     {
       "id": "Y01",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Every section declares system (Parashari / Jaimini / KP), method, source registry entry, implementation status, evidence strength",
       "status": "MISSING",
       "evidence": "No such fields in ReportSection (types.ts:245-251) or any section builder"
     },
     {
       "id": "Y02",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Infrastructure to support it",
       "status": "IMPLEMENTED_NOT_E2E_TESTED",
       "evidence": "src/lib/jyotish/evidenceGraph.ts, evidenceCompiler.ts, conventionCenter.ts, JYOTISH_CONVENTION_REGISTRY.md"
     },
     {
       "id": "Y03",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "No blending of system rules",
       "status": "BLOCKED_BY_SOURCE_OR_DECISION",
       "evidence": "Cannot be asserted — no section declares a system"
     },
     {
       "id": "E02",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Shadbala calculation trace",
       "status": "MISSING",
       "evidence": "none"
     },
     {
       "id": "E03",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Shadbala independent reference fixtures",
       "status": "MISSING",
       "evidence": "none"
     },
     {
       "id": "E04",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Varga: all 16 divisions computed",
       "status": "IMPLEMENTED_NOT_E2E_TESTED",
       "evidence": "canonicalModel.ts:22 DIVISION_LIST = [1,2,3,4,7,9,10,12,16,20,24,27,30,40,45,60]; vargaEngine.ts:370 generateShodashavarga"
     },
     {
       "id": "E05",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Varga: exact sign-division rules per division",
       "status": "PARTIAL",
       "evidence": "vargaEngine.ts:106 calculateVargaPlacement — explicit case 9 (:158) and case 10 (:170), remainder via generic harmonic path"
     },
     {
       "id": "E06",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Varga boundary/edge tests",
       "status": "MISSING",
       "evidence": "none found"
     },
     {
       "id": "E07",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Jaimini Chara Karaka ordering & degree treatment",
       "status": "IMPLEMENTED_NOT_E2E_TESTED",
       "evidence": "jaiminiEngine.ts:42-70 — 7 candidates (Rahu excluded), sorted by degree-in-rashi descending"
     },
     {
       "id": "E08",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Jaimini Rahu handling documented",
       "status": "PARTIAL",
       "evidence": "jaiminiEngine.ts:41 filters to the 7 classical grahas"
     },
     {
       "id": "E09",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Jaimini full synthesis (Chara Dasha, Arudha/Upapada Pada, Karakamsha-based judgement)",
       "status": "PARTIAL",
       "evidence": "jaiminiEngine.ts computes karakas + karakamsha and attempts Arudha Lagna (:78+); no Chara Dasha"
     },
     {
       "id": "P01",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Unicode Devanagari font preserved",
       "status": "IMPLEMENTED_NOT_E2E_TESTED",
       "evidence": "public/fonts/NotoSansDevanagari-{Regular,Bold}.ttf; src/lib/kundli/nodeFonts.ts:26 registration; pdfFonts.ts"
     },
     {
       "id": "P02",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Deterministic PDF for identical canonical input",
       "status": "PARTIAL",
       "evidence": "fingerprint lineage.ts, config recorded; no timestamp inside content except generatedAt (reportModel.ts:112)"
     },
     {
       "id": "P03",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "454-page regression protection / hard ceiling",
       "status": "IMPLEMENTED_AND_TESTED",
       "evidence": "config.ts:27 maxPages: 40; layoutEngine.ts:83; errors.ts:22; tests/kundli-pipeline/regression-454-page-runaway.spec.ts"
     },
     {
       "id": "P04",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Deterministic multi-volume plan with stable boundaries & page limits",
       "status": "MISSING",
       "evidence": "none in the PDF pipeline (the 17-volume book is a **web UI** artifact, kundliBookModel.ts)"
     },
     {
       "id": "P05",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Visual inspection of real PDFs (clipping, orphan headings, blank pages, overlapping text)",
       "status": "MISSING",
       "evidence": "tests/incident/pdfRaster.ts, pdf-preview.spec.ts provide rasterisation tooling"
     },
     {
       "id": "P06",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Tables across pages, headings near page boundaries, stable header/footer/page numbers",
       "status": "IMPLEMENTED_NOT_E2E_TESTED",
       "evidence": "layoutEngine.ts ensureFits, PageFooterBlock (types.ts:237)"
     },
     {
       "id": "P07",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Hindi / English / mixed / long names / missing optional values",
       "status": "PARTIAL",
       "evidence": "Hindi artifact test exists; incident report notes **hi locale keeps English section labels**"
     },
     {
       "id": "P08",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Missing required data → fail closed",
       "status": "IMPLEMENTED_AND_TESTED",
       "evidence": "assertReportCompleteness, INV_015 (disclaimer-only document must not validate)"
     },
     {
       "id": "R01",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Consent controls: “हाँ, पढ़िए” / “अभी नहीं” / “केवल अर्थ” / “छोटा अंश”",
       "status": "MISSING",
       "evidence": "not present (FloatingAIGuruAvatar.tsx)"
     },
     {
       "id": "R02",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Consent binds to the offered book/chapter/passage",
       "status": "MISSING",
       "evidence": "consentQuestion is free text only (groundedAnswer.ts)"
     },
     {
       "id": "R03",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Bare “हाँ पढ़ो” resumes the pending offer",
       "status": "MISSING",
       "evidence": "currently answered with “क्या पढ़ूँ?” (gateway.ts bare-consent branch)"
     },
     {
       "id": "R04",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Reject expired/forged pending offers",
       "status": "MISSING",
       "evidence": "no pending-offer object exists"
     },
     {
       "id": "R05",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Session survives refresh",
       "status": "IMPLEMENTED_AND_TESTED",
       "evidence": "readingSessionRef + localStorage + reviveVerifiedSession"
     },
     {
       "id": "R06",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "No long autoplay chain without a gesture/consent",
       "status": "IMPLEMENTED_AND_TESTED",
       "evidence": "auto-advance only after a delivered passage, reverified by session state (Granth Phase 3)"
     },
     {
       "id": "R07",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Graceful autoplay rejection",
       "status": "IMPLEMENTED_NOT_E2E_TESTED",
       "evidence": "utterance onerror never advances (useKashiVoice.ts)"
     },
     {
       "id": "R08",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "read/pause/explain/continue/stop consistent",
       "status": "IMPLEMENTED_AND_TESTED",
       "evidence": "session.ts, granthReader.ts"
     },
     {
       "id": "D01",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Manual device protocol (Chrome Android, Safari iPhone, Hindi female voice, mute, speed, pause, explain, resume, advance, screen lock, call interruption, refresh restoration, autoplay rejection, no Hindi voice)",
       "status": "MISSING",
       "evidence": ""
     },
     {
       "id": "D02",
-      "section": "The yoga fabrication defect (highest severity found)",
+      "section": "The yoga fabrication defect — FIXED in `f9ef3db`",
       "requirement": "Physical-device execution",
       "status": "BLOCKED_BY_SOURCE_OR_DECISION",
       "evidence": ""

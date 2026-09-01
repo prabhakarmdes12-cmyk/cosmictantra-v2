@@ -43,7 +43,7 @@ Documentation, interfaces, schemas and fixtures are **not** counted as capabilit
 | S06 | Planetary dossier | `reportModel.ts:143-152`: name, longitude, sign, degree-in-sign, nakshatra+pada, house, R/D, dignity | `invariants.spec.ts`, `tests/astrology.spec.ts` | `IMPLEMENTED_NOT_E2E_TESTED` |
 | S07 | Functional lordship | none in report model (`RASHI_LORDS`/`signLords` exist at `balaEngine.ts:508`, unused for this) | none | `MISSING` |
 | S08 | Dignity, conjunction & aspect analysis | dignity column at `reportModel.ts:151`; `drishti.grahaDrishti`/`rashiDrishti` computed at `canonicalSnapshot.ts:386-390` but **not surfaced** in any report section; no conjunction listing | none for aspect/conjunction in report | `PARTIAL` |
-| S09 | Yoga & Dosha section | `reportModel.ts:247` Major Yogas (prints `• ${y.name}` only) and `:267` Dosha Analysis (manglik, sadeSati) | none asserting yoga correctness | `PARTIAL` + **fabrication defect** (see §3) |
+| S09 | Yoga & Dosha section | `reportModel.ts:243` status-aware yoga section; engine `src/lib/jyotish/yogaEngine.ts` | `priya-1995-gk-negative.spec.ts` (7), `yoga-engine-contract.spec.ts` (19), `scholar-pdf-artifact.spec.ts` (1) | `IMPLEMENTED_AND_TESTED` (fixed in `f9ef3db`; scope: 9 rule-evaluated yogas + 1 NOT_CALCULATED, 3 doshas) |
 | S10 | Dasha overview from canonical calculation | `reportModel.ts:220` 9 Mahadashas, `:229` Current Dasha Period; engine `src/lib/dashaEngine.js`, `canonicalModel.ts` `dashaTimeline` | `tests/kundli-pipeline/boundary-fixtures.spec.ts` | `IMPLEMENTED_NOT_E2E_TESTED` |
 | S11 | Evidence/provenance certificate (per-claim) | `reportModel.ts:304-314` Appendix (report-model version, fingerprint, provenance) — not a per-claim certificate | `invariants.spec.ts` | `MISSING` |
 | S12 | Explicit limitations & method declaration | `reportModel.ts:93` Calculation Standard; `:322` Disclaimer; appendix line admits "per-yoga rule verification is a documented limitation" | — | `PARTIAL` — no per-system (Parashari/Jaimini/KP), per-engine (Shadbala/Varga) implementation-status declaration |
@@ -54,14 +54,21 @@ Documentation, interfaces, schemas and fixtures are **not** counted as capabilit
 
 | ID | Requirement | Code evidence | Label |
 | --- | --- | --- | --- |
-| Z01 | All displayed conclusions trace to canonical output | `canonicalModel.ts` `requireValue()`; `validation.ts`; pipeline GATE 2/3 | `PARTIAL` — **violated by S09's hardcoded yogas** |
-| Z02 | Yoga registry: stable ID, formal rule, inputs, evaluated conditions, result, evidence refs, status (`PRESENT`/`ABSENT`/`INDETERMINATE`/`NOT_CALCULATED`) | `types.ts:181-184` `YogaResult { name, basis[] }` only; `types.ts:163` `AnalysisStatus = 'CALCULATED' \| 'NOT_CALCULATED'` | `MISSING` |
+| Z01 | All displayed conclusions trace to canonical output | `canonicalModel.ts` `requireValue()`; `validation.ts`; pipeline GATE 2/3 | `IMPLEMENTED_AND_TESTED` for the calculated surfaces; **still unverified** for Shadbala/Varga/Jaimini/KP values displayed outside the PDF (web workbench) |
+| Z02 | Yoga registry: stable ID, formal rule, inputs, evaluated conditions, result, evidence refs, status (`PRESENT`/`ABSENT`/`INDETERMINATE`/`NOT_CALCULATED`) | `src/lib/jyotish/yogaEngine.ts`; `types.ts` `YogaResult` / `YogaStatus` / `YogaCondition` | `yoga-engine-contract.spec.ts`, `priya-1995-gk-negative.spec.ts` | `IMPLEMENTED_AND_TESTED` (fixed in `f9ef3db`) |
 | Z03 | No invented planetary positions | `canonicalModel.ts` requires all 9 planets + 12 houses; `KUNDLI_CALCULATION_INCOMPLETE` | `IMPLEMENTED_AND_TESTED` |
 | Z04 | Missing field is never filled with plausible text / treated as zero | `canonicalModel.ts:204` `pp?.divisionDegree ?? pp?.degreeInRasi ?? 0`; `balaEngine.ts:528` `\|\| 350.0`, `:551` `\|\| 300.0`, `:559` `drishtiBala = 25.0`; `evidenceGraph.ts:189` `?? 0.5` | `PARTIAL` — silent defaults exist in the strength layer |
 | Z05 | No silent ayanamsha substitution | single source `config.ts:14-16`, value printed `reportModel.ts:100` | `IMPLEMENTED_NOT_E2E_TESTED` |
 | Z06 | No duplicate sections / page padding | 16 distinct section builders, no repetition; page count follows content; ceiling 40 | `IMPLEMENTED_AND_TESTED` |
 
-### The yoga fabrication defect (highest severity found)
+### The yoga fabrication defect — FIXED in `f9ef3db`
+
+The unconditional literals at `canonicalSnapshot.ts:410-411` are gone. Yogas are now produced by
+`src/lib/jyotish/yogaEngine.ts` and carry id, rule, inputs, conditions, evidence and status. The
+`PRIYA-1995-GK-NEGATIVE` fixture proves a chart that does not support Gaja-Kesari reports it
+**ABSENT**. Historical defect, kept for the record:
+
+
 
 ```
 src/lib/jyotish/canonicalSnapshot.ts:410
@@ -79,8 +86,8 @@ chart. Every Kundli this pipeline produces declares all three yogas. They flow s
 Nothing in the pipeline can express "this yoga is ABSENT", so no negative fixture can currently pass.
 **Fixing this is the first coding task of the increment.**
 
-Related: `types.ts:186` allows a `kalsarpa` dosha id, but `buildYogasAndDoshas` only ever emits
-`manglik` and `sadeSati`. Kalsarpa is silently omitted rather than declared `NOT_CALCULATED`.
+Related: `kalsarpa` was previously typed but never emitted, i.e. silently omitted. It is now
+emitted with status `NOT_CALCULATED` and a stated reason, and the report prints it as such.
 
 ---
 
