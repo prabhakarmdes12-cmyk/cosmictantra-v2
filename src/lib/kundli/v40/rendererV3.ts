@@ -655,7 +655,7 @@ export async function renderKundliPdfV3(
     const noteW = CW - glyphW - xrefW - labelW - 5;
 
     for (const it of b.items) {
-      const statusWord = it.status.replace(/_/g, ' ').toLowerCase();
+      const statusWord = it.statusText ?? it.status.replace(/_/g, ' ').toLowerCase();
       const noteText = it.note ? `${statusWord} — ${it.note}` : statusWord;
       const h = Math.max(
         measureText(it.label, labelW, V3.typography.sizes.small, SERIF_BOLD, V3.spacing.tightLineMm),
@@ -815,7 +815,17 @@ export async function renderKundliPdfV3(
       });
     }
     const side = b.size === 'hero' ? V3.chart.heroSizeMm : V3.chart.inlineSizeMm;
-    const factsH = b.sideFacts && b.sideFacts.length > 0 ? 6.5 : 0;
+    // The facts line is measured, not assumed to be one line. A bilingual
+    // locale doubles its length ("लग्न — Ascendant: सिंह — Leo 12°06′ ...")
+    // and a hardcoded height let the second line run straight through the
+    // caption beneath it.
+    const factsText = b.sideFacts && b.sideFacts.length > 0
+      ? b.sideFacts.map((f) => `${f.label}: ${f.value}`).join('     ·     ')
+      : '';
+    const factsLineMm = 5.2;
+    const factsH = factsText.length > 0
+      ? measureText(factsText, CW, V3.typography.sizes.small, SERIF_BOLD, factsLineMm) + 1.3
+      : 0;
     const capH = measureText(b.caption, CW, V3.chart.captionSize, SANS, V3.spacing.microLineMm);
     const h = side + 7 + factsH + capH + 2;
     controller.ensureFits(Math.min(h, controller.usableHeight - 1), createPage);
@@ -832,11 +842,10 @@ export async function renderKundliPdfV3(
     });
 
     let y = top + side + 4;
-    if (b.sideFacts && b.sideFacts.length > 0) {
-      const text = b.sideFacts.map((f) => `${f.label}: ${f.value}`).join('     ·     ');
-      drawText(text, ML, y, CW, {
+    if (factsText.length > 0) {
+      drawText(factsText, ML, y, CW, {
         size: V3.typography.sizes.small, style: SERIF_BOLD, color: V3.colors.ink,
-        align: 'center', lineMm: 5.2,
+        align: 'center', lineMm: factsLineMm,
       });
       y += factsH;
     }

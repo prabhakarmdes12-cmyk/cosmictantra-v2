@@ -19,7 +19,7 @@
  */
 
 import PDFDocument from 'pdfkit';
-import { FontStack, type FontRole, type RunStyle, type TextRun } from './fontStack';
+import { FontStack, isDevanagariRole, type FontRole, type RunStyle, type TextRun } from './fontStack';
 
 /** 1 mm in PostScript points. */
 export const MM = 72 / 25.4;
@@ -113,10 +113,37 @@ export class PdfSurfaceV3 {
     this.doc.font(role).fontSize(sizePt);
   }
 
+  /**
+   * Letter-spacing in points for a run, in the units pdfkit wants.
+   *
+   * Devanagari runs are never tracked, for two independent reasons.
+   *
+   * Typographic: tracking is a Latin device (it opens up small-caps running
+   * heads and short labels). Devanagari builds a syllable as a base plus
+   * attached matras under one shirorekha; prising the glyphs apart is simply
+   * wrong, and no Devanagari typesetting tradition does it.
+   *
+   * Mechanical: pdfkit's `Tc` handling breaks on complex scripts. Its
+   * `widthOfString` bills tracking as `Tc x (utf16Length - 1)`, but the PDF
+   * `Tc` operator is applied once per *glyph* — and shaping turns 17 code
+   * units of "कार्यात्मक भूमिका" into 15 glyphs, so the measured width runs
+   * ahead of the drawn width and a gap opens before the next run. Worse, when
+   * a glyph carries a GPOS offset pdfkit re-anchors the pen with an absolute
+   * `Tm` that omits the accumulated `Tc`, which swallows the space that
+   * follows a mark-bearing cluster ("एवं दृष्टि" drew as "एवंदृष्टि").
+   * Suppressing tracking removes the cause rather than compensating for it.
+   */
+  private trackingPtFor(role: FontRole, trackingMm: number): number {
+    if (trackingMm === 0 || isDevanagariRole(role)) return 0;
+    return mmToPt(trackingMm);
+  }
+
   /** Shaped advance width of a run, in millimetres. */
   measureRunMm(text: string, role: FontRole, sizePt: number, trackingMm = 0): number {
     this.useFont(role, sizePt);
-    return ptToMm(this.doc.widthOfString(text, { characterSpacing: mmToPt(trackingMm) }));
+    return ptToMm(this.doc.widthOfString(text, {
+      characterSpacing: this.trackingPtFor(role, trackingMm),
+    }));
   }
 
   /** Shaped advance width of a whole string across all its font runs. */
@@ -157,14 +184,15 @@ export class PdfSurfaceV3 {
     for (const run of line.runs) {
       this.useFont(run.role, opts.size);
       this.doc.fillColor([color[0], color[1], color[2]]);
+      const tc = this.trackingPtFor(run.role, opts.trackingMm ?? 0);
       this.doc.text(run.text, mmToPt(x), mmToPt(baselineMm), {
         lineBreak: false,
         baseline: 'alphabetic',
-        characterSpacing: mmToPt(opts.trackingMm ?? 0),
+        characterSpacing: tc,
       });
       // Tc is text state and survives the enclosing BT/ET, so it is reset
       // explicitly. Leaving it set would letter-space the next unrelated run.
-      if (opts.trackingMm) this.doc.addContent('0 Tc');
+      if (tc) this.doc.addContent('0 Tc');
       x += run.widthMm;
     }
   }

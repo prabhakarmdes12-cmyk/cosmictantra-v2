@@ -27,6 +27,7 @@ import {
   applyConsultationDensity, auditPartADensity,
   type DensityApplication, type PartAFinding,
 } from './consultationDensity';
+import { toVisualOrder } from './pdf/shapedText';
 import { renderKundliPdfV3, type RenderV3Options, RENDERER_V3_VERSION } from './rendererV3';
 import {
   applyReportMode, DEFAULT_REPORT_MODE, MODE_DEFINITIONS,
@@ -67,7 +68,7 @@ export interface V41PipelineResult {
 export interface GenerateV41Options extends RenderV3Options {
   /** Audience edition. Defaults to SCHOLAR — Pandit workbench + appendix. */
   mode?: ReportMode;
-  locale?: 'en' | 'hi';
+  locale?: 'en' | 'hi' | 'hi-en';
   /** Skip the density transform to render the raw v2 model with renderer v3. */
   skipDensityTransform?: boolean;
   /** Treat Part A residue findings as a hard failure (default true). */
@@ -222,7 +223,17 @@ export async function generateKundliV41Pdf(
       // Mode-aware (§1): the gate asserts what THIS edition promises. A
       // fixed list would either fail CLIENT for correctly omitting a
       // practitioner's worksheet, or stop checking the appendix entirely.
-      mandatorySectionTitles: MODE_DEFINITIONS[mode].mandatorySectionTitles,
+      // Locale-aware (§2): the gate asserts the title THIS artifact actually
+      // prints. A Hindi report leads with "जन्म विवरण", so searching for
+      // "Kundli Passport" would fail a perfectly good document. The rendered
+      // title is taken from the model, and its visual-order form is offered
+      // too because PDF extraction returns Devanagari matras reordered.
+      mandatorySectionTitles: MODE_DEFINITIONS[mode].mandatorySectionTitles.map((label) => {
+        const section = report.sections.find((sec) => sec.title === label);
+        const block = section?.blocks.find((b) => b.kind === 'sectionTitle');
+        const rendered = block && block.kind === 'sectionTitle' ? block.text : label;
+        return { label, anyOf: [...new Set([rendered, toVisualOrder(rendered)])] };
+      }),
       maxPages: options.maxPages ?? 44,
     });
   } catch (e) {

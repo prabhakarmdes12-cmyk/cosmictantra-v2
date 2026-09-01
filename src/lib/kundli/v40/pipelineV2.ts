@@ -53,7 +53,7 @@ export interface V40PipelineResult {
 }
 
 export interface GenerateV40Options extends RenderV2Options {
-  locale?: 'en' | 'hi';
+  locale?: 'en' | 'hi' | 'hi-en';
   /** Skip the PDF-integrity gate (used by model-only tests). */
   skipPdf?: boolean;
 }

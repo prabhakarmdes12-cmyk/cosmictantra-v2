@@ -131,6 +131,20 @@ function isDevanagariCodePoint(cp: number): boolean {
 }
 
 /** True when the string contains any Devanagari. */
+/**
+ * True for the four Devanagari faces.
+ *
+ * Callers use this to suppress letter-spacing. Tracking is a Latin
+ * typographic device; Devanagari positions its matras and conjunct marks with
+ * GPOS mark attachment, so inserting a fixed advance after every glyph is both
+ * typographically wrong and mechanically destructive — see
+ * `PdfSurface.trackingPtFor`.
+ */
+export function isDevanagariRole(role: FontRole): boolean {
+  return role === 'devaSerif' || role === 'devaSerifBold'
+    || role === 'devaSans' || role === 'devaSansBold';
+}
+
 export function hasDevanagari(s: string): boolean {
   return DEVANAGARI.test(s);
 }

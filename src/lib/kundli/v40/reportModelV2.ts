@@ -17,6 +17,7 @@ import type { KundliCanonicalModel } from '../types';
 import type { KundliDerivedModel } from './derivedModel';
 import type { V2Block, V2Section, KundliReportModelV2 } from './reportBlocks';
 import { buildChartRenderModel, type ChartLabelMode } from '../chartModel';
+import { tr, trAll } from './structuralTerms';
 import { deriveReportId } from '../lineage';
 import { sha256Hex } from '../../granth/checksum';
 import { YOGA_SOURCE_REGISTRY_VERSION } from '../../jyotish/yogaSourceRegistry';
@@ -65,8 +66,23 @@ const ORDINAL = ['', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9t
 /* Block helpers                                                       */
 /* ------------------------------------------------------------------ */
 
-const title = (text: string, secondary?: string, tag?: string): V2Block =>
-  ({ kind: 'sectionTitle', text, secondary, tag });
+/**
+ * A section title, ordered for the reader's locale.
+ *
+ * §2 is explicit that a Hindi report is not English content wearing translated
+ * labels: in `hi-en` the Hindi/Sanskrit line comes first and the English line
+ * second, and in `hi` the English line is dropped altogether. Only `en` keeps
+ * the English title on top with the Devanagari beneath it.
+ */
+const title = (text: string, secondary?: string, tag?: string, mode: LabelMode = 'en'): V2Block => {
+  if (mode === 'en' || !secondary) return { kind: 'sectionTitle', text, secondary, tag };
+  return {
+    kind: 'sectionTitle',
+    text: secondary,
+    secondary: mode === 'hi-en' ? text : undefined,
+    tag,
+  };
+};
 const h2 = (text: string): V2Block => ({ kind: 'heading', level: 2, text });
 const h3 = (text: string): V2Block => ({ kind: 'heading', level: 3, text });
 const p = (text: string, size: 'body' | 'small' | 'micro' = 'body', contentType?: V2Block['contentType']): V2Block =>
@@ -111,7 +127,7 @@ function coverSection(
         documentTitle: TERMS.janmaKundli.hi,
         subjectName: s.name,
         birthLines: [
-          `${longDate(s.birthDate)}${wd ? `  ·  ${wd.en}` : ''}`,
+          `${longDate(s.birthDate)}${wd ? `  ·  ${tr(wd.en, mode)}` : ''}`,
           clockTime(s.birthTime),
           s.locationName,
         ],
@@ -156,7 +172,7 @@ function passportSection(
     startsNewPage: true,
     status: 'READY',
     blocks: [
-      title('Kundli Passport', renderTerm(TERMS.birthDetails, 'hi'), 'PART A'),
+      title('Kundli Passport', renderTerm(TERMS.birthDetails, 'hi'), tr('PART A', mode), mode),
       p('Every value on this page is an input or a declared setting. Nothing here is interpreted.', 'small', 'CALCULATED_FACT'),
 
       {
@@ -168,7 +184,7 @@ function passportSection(
           { label: label('name', mode), value: s.name },
           { label: label('date', mode), value: longDate(s.birthDate) },
           { label: label('localTime', mode), value: `${clockTime(s.birthTime)} (${s.birthTime} local)` },
-          { label: label('weekday', mode), value: wd ? `${wd.hi} — ${wd.en}` : '—' },
+          { label: label('weekday', mode), value: wd ? renderTerm(wd, mode) : '—' },
           { label: label('place', mode), value: s.locationName },
         ],
       },
@@ -194,22 +210,22 @@ function passportSection(
         columns: 2,
         contentType: 'CALCULATED_FACT',
         items: [
-          { label: label('tithi', mode), value: pan.tithi.name },
-          { label: label('paksha', mode), value: pan.tithi.paksha },
+          { label: label('tithi', mode), value: tr(pan.tithi.name, mode) },
+          { label: label('paksha', mode), value: tr(pan.tithi.paksha, mode) },
           { label: label('nakshatra', mode), value: `${nakshatraLabel(pan.nakshatra.name, mode)}` },
           { label: label('pada', mode), value: String(pan.nakshatra.pada) },
-          { label: label('yoga', mode), value: pan.yoga.name },
-          { label: label('karana', mode), value: pan.karana.name },
-          { label: label('ayana', mode), value: pan.ayana.value },
-          { label: label('ritu', mode), value: pan.ritu.value },
+          { label: label('yoga', mode), value: tr(pan.yoga.name, mode) },
+          { label: label('karana', mode), value: tr(pan.karana.name, mode) },
+          { label: label('ayana', mode), value: tr(pan.ayana.value, mode) },
+          { label: label('ritu', mode), value: tr(pan.ritu.value, mode) },
           {
             label: label('amantaMasa', mode),
-            value: pan.masa.amanta.status === 'CALCULATED' ? String(pan.masa.amanta.value) : 'not calculated',
+            value: pan.masa.amanta.status === 'CALCULATED' ? tr(String(pan.masa.amanta.value), mode) : tr('not calculated', mode),
             contentType: pan.masa.amanta.status === 'CALCULATED' ? 'CALCULATED_FACT' : 'NOT_CALCULATED',
           },
           {
             label: label('purnimantaMasa', mode),
-            value: 'not calculated',
+            value: tr('not calculated', mode),
             contentType: 'NOT_CALCULATED',
           },
           { label: label('samvat', mode), value: pan.samvat.value },
@@ -229,12 +245,12 @@ function passportSection(
         columns: 2,
         contentType: 'CALCULATED_FACT',
         items: [
-          { label: 'Zodiac', value: humanEnum(canonical.calculation.zodiac) },
-          { label: 'Ayanamsha', value: `${canonical.calculation.ayanamshaName} (${canonical.calculationMetadata.ayanamshaValueDegrees.toFixed(4)}\u00B0)` },
-          { label: 'House system', value: humanEnum(canonical.calculation.houseSystem), note: 'each bhava is one whole rashi, counted from the rashi of the lagna' },
-          { label: 'Node policy', value: humanEnum(canonical.calculation.nodeMode), note: 'Rahu and Ketu are the mean nodes, not the true nodes' },
-          { label: 'Aspect policy', value: 'Full Parashari drishti', note: 'the node 5/9 drishti variant is recorded but not adopted' },
-          { label: 'Ephemeris', value: humanEnum(canonical.calculation.ephemerisProvider) },
+          { label: tr('Zodiac', mode), value: tr(humanEnum(canonical.calculation.zodiac), mode) },
+          { label: tr('Ayanamsha', mode), value: `${canonical.calculation.ayanamshaName} (${canonical.calculationMetadata.ayanamshaValueDegrees.toFixed(4)}\u00B0)` },
+          { label: tr('House system', mode), value: tr(humanEnum(canonical.calculation.houseSystem), mode), note: tr('each bhava is one whole rashi, counted from the rashi of the lagna', mode) },
+          { label: tr('Node policy', mode), value: tr(humanEnum(canonical.calculation.nodeMode), mode), note: tr('Rahu and Ketu are the mean nodes, not the true nodes', mode) },
+          { label: tr('Aspect policy', mode), value: tr('Full Parashari drishti', mode), note: tr('the node 5/9 drishti variant is recorded but not adopted', mode) },
+          { label: tr('Ephemeris', mode), value: humanEnum(canonical.calculation.ephemerisProvider) },
         ],
       },
       {
@@ -287,7 +303,7 @@ function saarSection(
   for (const d of canonical.doshas) {
     if (d.id === 'manglik' && 'present' in d.result) {
       statusItems.push({
-        label: 'Manglik',
+        label: tr('Manglik', mode),
         status: d.result.present ? 'PRESENT' : 'ABSENT',
         note: d.result.present ? `severity ${d.result.severity}${d.result.cancellation?.cancelled ? ', cancellation rule applied' : ''}` : undefined,
         xref: 'D-01',
@@ -295,14 +311,14 @@ function saarSection(
     }
     if (d.id === 'sadeSati' && 'active' in d.result) {
       statusItems.push({
-        label: 'Sade Sati (natal Saturn from Moon)',
+        label: tr('Sade Sati (natal Saturn from Moon)', mode),
         status: d.result.active ? 'PRESENT' : 'ABSENT',
         note: d.result.active ? d.result.phase : 'not active at birth',
         xref: 'D-02',
       });
     }
     if (d.id === 'kalsarpa') {
-      statusItems.push({ label: 'Kalsarpa', status: 'NOT_CALCULATED', note: 'no adopted rule', xref: 'D-03' });
+      statusItems.push({ label: tr('Kalsarpa', mode), status: 'NOT_CALCULATED', note: 'no adopted rule', xref: 'D-03' });
     }
   }
 
@@ -313,7 +329,7 @@ function saarSection(
     startsNewPage: true,
     status: 'READY',
     blocks: [
-      title('Kundli Saar', renderTerm(TERMS.saar, 'hi'), 'PART A'),
+      title('Kundli Saar', renderTerm(TERMS.saar, 'hi'), tr('PART A', mode), mode),
       p('The structural chart in one page. Every line below is a calculated fact or a rule verdict; nothing on this page is an interpretation.', 'small', 'CALCULATED_FACT'),
 
       {
@@ -325,7 +341,7 @@ function saarSection(
           { label: label('lagna', mode), value: `${signLabelV40(asc.sign.id, mode)} ${dm(asc.degreeInSign)}` },
           { label: label('lagnesha', mode), value: lagnesha && lagneshaCond ? `${planetLabel(lagnesha, mode)} in the ${ORDINAL[lagneshaCond.house]} bhava` : '—' },
           { label: label('chandraRashi', mode), value: moon ? `${signLabelV40(moon.sign.id, mode)} ${dm(moon.degreeInSign)}` : '—' },
-          { label: label('janmaNakshatra', mode), value: `${nakshatraLabel(canonical.panchanga.nakshatra.name, mode)} · ${label('pada', 'en')} ${canonical.panchanga.nakshatra.pada}` },
+          { label: label('janmaNakshatra', mode), value: `${nakshatraLabel(canonical.panchanga.nakshatra.name, mode)} · ${label('pada', mode)} ${canonical.panchanga.nakshatra.pada}` },
           { label: label('nakshatraLord', mode), value: canonical.panchanga.nakshatra.ruler },
           { label: label('suryaRashi', mode), value: (() => { const s = canonical.planets.find((x) => x.id === 'Sun'); return s ? `${signLabelV40(s.sign.id, mode)} ${dm(s.degreeInSign)}` : '—'; })() },
         ],
@@ -353,7 +369,7 @@ function saarSection(
         items: statusItems,
       },
 
-      h3('Structural highlights'),
+      h3(tr('Structural highlights', mode)),
       bullets(derived.highlights.map((x) => x.statement)),
       p('Highlights are selected by declared salience rules over the calculated chart, not chosen by hand and not written by a language model. The rule that produced each line is listed in the Scholar Appendix.', 'micro', 'DERIVED_JYOTISH_FACT'),
     ],
@@ -367,24 +383,45 @@ function chartSection(
   labelModeChart: ChartLabelMode,
   mode: LabelMode,
   pageTag: string,
+  devanagariNumerals = false,
 ): V2Section {
-  const model = buildChartRenderModel(canonical, division, labelModeChart);
+  const model = { ...buildChartRenderModel(canonical, division, labelModeChart), devanagariNumerals };
   const asc = canonical.ascendant;
   const lagnesha = derived.bhavas.bhavas.find((b) => b.house === 1)?.lord ?? null;
   const lagneshaCond = derived.grahaConditions.conditions.find((c) => c.graha === lagnesha);
   const d9 = canonical.divisionalCharts.find((c) => c.division === 9);
 
+  // The English edition has always named the rashi in Sanskrit on this line
+  // and a golden artifact test pins it, so `en` output is left untouched; the
+  // Hindi locales get the Devanagari name from the registry.
+  const rashiHere = (id: number, sanskrit: string): string =>
+    (mode === 'en' ? sanskrit : signLabelV40(id, mode));
+
   const sideFacts = division === 1
     ? [
-        { label: label('lagna', 'en'), value: `${asc.sign.name} ${dm(asc.degreeInSign)}` },
-        { label: label('lagnesha', 'en'), value: lagnesha && lagneshaCond ? `${lagnesha} in ${ORDINAL[lagneshaCond.house]}H` : '—' },
-        { label: 'Moon', value: (() => { const m = canonical.planets.find((x) => x.id === 'Moon'); return m ? `${m.sign.name} ${dm(m.degreeInSign)} · ${ORDINAL[m.house]}H` : '—'; })() },
+        // §10: the line beside the chart is the first thing a Pandit reads,
+        // so the rashi, the lagnesha and its bhava are named in the reader's
+        // own vocabulary rather than transliterated ("सिंह", not "Simha";
+        // "दशम भाव", not "10thH").
+        { label: label('lagna', mode), value: `${rashiHere(asc.sign.id, asc.sign.name)} ${dm(asc.degreeInSign)}` },
+        {
+          label: label('lagnesha', mode),
+          value: lagnesha && lagneshaCond
+            ? `${planetLabel(lagnesha, mode)} → ${bhavaLabel(lagneshaCond.house, mode)}`
+            : '—',
+        },
+        { label: tr('Moon', mode), value: (() => {
+            const m = canonical.planets.find((x) => x.id === 'Moon');
+            return m ? `${rashiHere(m.sign.id, m.sign.name)} ${dm(m.degreeInSign)} · ${bhavaLabel(m.house, mode)}` : '—';
+          })() },
       ]
     : [
-        { label: 'D9 Lagna', value: d9?.lagnaSign ?? '—' },
-        { label: 'Vargottama', value: (() => {
-            const v = derived.grahaConditions.conditions.filter((c) => c.vargottama.value).map((c) => c.graha);
-            return v.length > 0 ? v.join(', ') : 'none';
+        { label: tr('D9 Lagna', mode), value: d9?.lagnaSign ? tr(d9.lagnaSign, mode) : '—' },
+        { label: tr('Vargottama', mode), value: (() => {
+            const v = derived.grahaConditions.conditions
+              .filter((c) => c.vargottama.value)
+              .map((c) => planetLabel(c.graha, mode));
+            return v.length > 0 ? v.join(', ') : tr('none', mode);
           })() },
       ];
 
@@ -392,7 +429,7 @@ function chartSection(
     const occ = model.placements.filter((x) => x.houseNumber === house.houseNumber);
     return [
       String(house.houseNumber),
-      signLabelV40(house.signNumber, mode === 'hi' ? 'hi' : 'en'),
+      signLabelV40(house.signNumber, mode),
       occ.length === 0 ? '—' : occ.map((x) => `${x.displayName ?? x.planetId}${x.retrograde ? ' (R)' : ''}`).join(', '),
     ];
   });
@@ -408,6 +445,7 @@ function chartSection(
         division === 1 ? 'D1 Rashi Chart' : 'D9 Navamsha',
         renderTerm(division === 1 ? TERMS.d1 : TERMS.d9, 'hi'),
         pageTag,
+        mode,
       ),
       {
         kind: 'chart',
@@ -422,7 +460,7 @@ function chartSection(
       },
       {
         kind: 'table',
-        headers: ['Bhava', 'Rashi', 'Grahas'],
+        headers: trAll(['Bhava', 'Rashi', 'Grahas'], mode),
         widths: [0.16, 0.3, 0.54],
         rows: placementRows,
         caption: 'Every placement in the drawing, as text.',
@@ -439,22 +477,22 @@ function grahaDossierSection(
 ): V2Section {
   const rows = derived.grahaConditions.conditions.map((c) => {
     const marks: string[] = [];
-    if (c.combustion.status === 'COMBUST') marks.push('combust');
-    else if (c.combustion.nearCombust) marks.push('near combustion');
-    if (c.dignity.category === 'OWN_SIGN') marks.push('own');
-    if (c.dignity.category === 'EXALTED') marks.push('exalted');
-    if (c.dignity.category === 'DEBILITATED') marks.push('debilitated');
-    if (c.dignity.category === 'MOOLATRIKONA') marks.push('moolatrikona');
-    if (c.vargottama.status === 'CALCULATED' && c.vargottama.value) marks.push('vargottama');
+    if (c.combustion.status === 'COMBUST') marks.push(tr('combust', mode));
+    else if (c.combustion.nearCombust) marks.push(tr('near combustion', mode));
+    if (c.dignity.category === 'OWN_SIGN') marks.push(tr('own', mode));
+    if (c.dignity.category === 'EXALTED') marks.push(tr('exalted', mode));
+    if (c.dignity.category === 'DEBILITATED') marks.push(tr('debilitated', mode));
+    if (c.dignity.category === 'MOOLATRIKONA') marks.push(tr('moolatrikona', mode));
+    if (c.vargottama.status === 'CALCULATED' && c.vargottama.value) marks.push(tr('vargottama', mode));
     return [
-      planetLabel(c.graha, mode === 'hi' ? 'hi' : 'en'),
-      signLabelV40(c.signId, mode === 'hi' ? 'hi' : 'en'),
+      planetLabel(c.graha, mode),
+      signLabelV40(c.signId, mode),
       dm(c.degreeInSign),
       String(c.house),
-      nakshatraLabel(c.nakshatra, mode === 'hi' ? 'hi' : 'en'),
+      nakshatraLabel(c.nakshatra, mode),
       String(c.pada),
       c.motion.retrograde ? 'R' : 'D',
-      dignityLabel(c.dignity.category, 'en'),
+      dignityLabel(c.dignity.category, mode),
       marks.join(' · ') || '—',
     ];
   });
@@ -466,10 +504,10 @@ function grahaDossierSection(
     startsNewPage: true,
     status: 'READY',
     blocks: [
-      title('Graha Dossier', renderTerm(TERMS.grahaDossier, 'hi'), 'PART A'),
+      title('Graha Dossier', renderTerm(TERMS.grahaDossier, 'hi'), tr('PART A', mode), mode),
       {
         kind: 'table',
-        headers: ['Graha', 'Rashi', 'Degree', 'Bhava', 'Nakshatra', 'Pada', 'Motion', 'Dignity', 'Notes'],
+        headers: trAll(['Graha', 'Rashi', 'Degree', 'Bhava', 'Nakshatra', 'Pada', 'Motion', 'Dignity', 'Notes'], mode),
         widths: [0.12, 0.12, 0.1, 0.07, 0.16, 0.06, 0.08, 0.14, 0.15],
         rows,
         contentType: 'CALCULATED_FACT',
@@ -477,23 +515,23 @@ function grahaDossierSection(
           'Degrees are shown in degrees and arc-minutes; the exact decimal longitude is retained in the machine record and printed in the Scholar Appendix. ' +
           'A status appears only when the engine actually calculated it.',
       },
-      h3('Functional role, conjunction and drishti'),
+      h3(tr('Functional role, conjunction and drishti', mode)),
       {
         kind: 'table',
-        headers: ['Graha', 'Rules bhavas', 'Functional position', 'Conjunct with', 'Casts drishti on', 'Receives drishti from'],
+        headers: trAll(['Graha', 'Rules bhavas', 'Functional position', 'Conjunct with', 'Casts drishti on', 'Receives drishti from'], mode),
         widths: [0.12, 0.12, 0.24, 0.16, 0.18, 0.18],
         rows: derived.grahaConditions.conditions.map((c) => [
-          planetLabel(c.graha, mode === 'hi' ? 'hi' : 'en'),
+          planetLabel(c.graha, mode),
           c.functionalLordship.ruledHouses.join(', ') || '—',
           functionalPosition(c.functionalLordship),
-          c.conjunctions.length > 0 ? c.conjunctions.map((x) => x.with).join(', ') : '—',
+          c.conjunctions.length > 0 ? c.conjunctions.map((x) => planetLabel(x.with, mode)).join(', ') : '—',
           c.aspectsGiven.length > 0 ? [...new Set(c.aspectsGiven.map((a) => a.toHouse))].sort((x, y) => x - y).join(', ') : '—',
-          c.aspectsReceived.length > 0 ? c.aspectsReceived.map((a) => a.from).join(', ') : '—',
+          c.aspectsReceived.length > 0 ? c.aspectsReceived.map((a) => planetLabel(a.from, mode)).join(', ') : '—',
         ]),
         contentType: 'DERIVED_JYOTISH_FACT',
         footnote: 'Functional position is what the graha rules FOR THIS LAGNA. It is kept apart from natural character, which is printed in the Scholar Appendix. No maraka verdict is issued by this engine.',
       },
-      h3('Condition notes'),
+      h3(tr('Condition notes', mode)),
       bullets([
         ...derived.grahaConditions.conditions
           .filter((c) => c.combustion.status === 'COMBUST' || c.combustion.nearCombust)
@@ -514,15 +552,15 @@ function grahaDossierSection(
 
 function bhavaMatrixSection(derived: KundliDerivedModel, mode: LabelMode): V2Section {
   const sign = (id: number | null | undefined) =>
-    (id ? signLabelV40(id, mode === 'hi' ? 'hi' : 'en') : '—');
+    (id ? signLabelV40(id, mode) : '—');
   const rows = derived.bhavas.bhavas.map((b) => [
     String(b.house),
     sign(b.signId),
-    b.lord ?? '—',
+    b.lord ? planetLabel(b.lord, mode) : '—',
     b.lordHouse ? `${ORDINAL[b.lordHouse]} · ${sign(b.lordSignId)}` : '—',
-    b.occupants.length > 0 ? b.occupants.join(', ') : '—',
-    b.aspectsReceived.length > 0 ? b.aspectsReceived.map((a) => a.from).join(', ') : '—',
-    b.karakas.join(', ') || '—',
+    b.occupants.length > 0 ? b.occupants.map((o) => planetLabel(o, mode)).join(', ') : '—',
+    b.aspectsReceived.length > 0 ? b.aspectsReceived.map((a) => planetLabel(a.from, mode)).join(', ') : '—',
+    b.karakas.map((k) => planetLabel(k, mode)).join(', ') || '—',
   ]);
 
   return {
@@ -532,18 +570,18 @@ function bhavaMatrixSection(derived: KundliDerivedModel, mode: LabelMode): V2Sec
     startsNewPage: true,
     status: 'READY',
     blocks: [
-      title('Bhava Intelligence Matrix', renderTerm(TERMS.bhavaMatrix, 'hi'), 'PART A'),
+      title('Bhava Intelligence Matrix', renderTerm(TERMS.bhavaMatrix, 'hi'), tr('PART A', mode), mode),
       p('All twelve bhavas with the sign on them, their lord, where that lord actually sits, who occupies them, and the full drishti they receive.', 'small', 'DERIVED_JYOTISH_FACT'),
       {
         kind: 'table',
-        headers: ['Bhava', 'Rashi', 'Bhavesha', 'Bhavesha placement', 'Occupants', 'Drishti received', 'Karaka'],
+        headers: trAll(['Bhava', 'Rashi', 'Bhavesha', 'Bhavesha placement', 'Occupants', 'Drishti received', 'Karaka'], mode),
         widths: [0.08, 0.13, 0.12, 0.2, 0.16, 0.16, 0.15],
         rows,
         contentType: 'DERIVED_JYOTISH_FACT',
         footnote:
           'Drishti listed is full Parashari graha drishti only. Bhava strength (bhava bala) is NOT calculated for this report — see the Scholar Appendix.',
       },
-      h3('Bhava by bhava'),
+      h3(tr('Bhava by bhava', mode)),
       {
         kind: 'kvGrid',
         columns: 2,
@@ -558,25 +596,29 @@ function bhavaMatrixSection(derived: KundliDerivedModel, mode: LabelMode): V2Sec
   };
 }
 
-function yogaDashboardSection(canonical: KundliCanonicalModel, derived: KundliDerivedModel): V2Section {
-  const present: { label: string; status: 'PRESENT'; note?: string; xref: string }[] = [];
-  const absent: { label: string; status: 'ABSENT'; note?: string; xref: string }[] = [];
-  const scholar: { label: string; status: 'NOT_CALCULATED'; note?: string; xref: string }[] = [];
-  const notCalc: { label: string; status: 'NOT_CALCULATED' | 'INDETERMINATE'; note?: string; xref: string }[] = [];
+function yogaDashboardSection(canonical: KundliCanonicalModel, derived: KundliDerivedModel, mode: LabelMode): V2Section {
+  const present: { label: string; status: 'PRESENT'; statusText?: string; note?: string; xref: string }[] = [];
+  const absent: { label: string; status: 'ABSENT'; statusText?: string; note?: string; xref: string }[] = [];
+  const scholar: { label: string; status: 'NOT_CALCULATED'; statusText?: string; note?: string; xref: string }[] = [];
+  const notCalc: { label: string; status: 'NOT_CALCULATED' | 'INDETERMINATE'; statusText?: string; note?: string; xref: string }[] = [];
 
+  // Yoga names and status words are user-visible Jyotish vocabulary, not
+  // identifiers — they belong in the reader's script. The appendix keeps the
+  // English name and the rule id.
+  const st = (x: string) => tr(x, mode).toLowerCase();
   canonical.yogas.forEach((y, i) => {
     const xref = `See Appendix Y-${String(i + 1).padStart(2, '0')}`;
-    if (y.status === 'PRESENT') present.push({ label: y.name, status: 'PRESENT', xref });
-    else if (y.status === 'ABSENT') absent.push({ label: y.name, status: 'ABSENT', xref });
-    else if (y.source.adoption === 'NOT_ADOPTED') scholar.push({ label: y.name, status: 'NOT_CALCULATED', note: y.notCalculatedReason ?? 'the sources disagree; the variant is recorded but not adopted, so no verdict is issued', xref });
-    else notCalc.push({ label: y.name, status: y.status === 'INDETERMINATE' ? 'INDETERMINATE' : 'NOT_CALCULATED', note: y.notCalculatedReason?.slice(0, 90), xref });
+    if (y.status === 'PRESENT') present.push({ label: tr(y.name, mode), status: 'PRESENT', statusText: st('Present'), xref });
+    else if (y.status === 'ABSENT') absent.push({ label: tr(y.name, mode), status: 'ABSENT', statusText: st('Absent'), xref });
+    else if (y.source.adoption === 'NOT_ADOPTED') scholar.push({ label: tr(y.name, mode), status: 'NOT_CALCULATED', statusText: st('Not calculated'), note: y.notCalculatedReason ?? 'the sources disagree; the variant is recorded but not adopted, so no verdict is issued', xref });
+    else notCalc.push({ label: tr(y.name, mode), status: y.status === 'INDETERMINATE' ? 'INDETERMINATE' : 'NOT_CALCULATED', statusText: st('Not calculated'), note: y.notCalculatedReason?.slice(0, 90), xref });
   });
 
-  const doshaItems: { label: string; status: 'PRESENT' | 'ABSENT' | 'NOT_CALCULATED'; note?: string; xref?: string }[] = [];
+  const doshaItems: { label: string; status: 'PRESENT' | 'ABSENT' | 'NOT_CALCULATED'; statusText?: string; note?: string; xref?: string }[] = [];
   for (const d of canonical.doshas) {
     if (d.id === 'manglik' && 'present' in d.result) {
       doshaItems.push({
-        label: 'Manglik',
+        label: tr('Manglik', mode),
         status: d.result.present ? 'PRESENT' : 'ABSENT',
         note: d.result.present
           ? `Mars in bhava ${d.result.causeHouses?.join(', ')}, severity ${d.result.severity}${d.result.cancellation?.cancelled ? '; cancellation rule applied' : '; no cancellation rule matched'}`
@@ -586,27 +628,27 @@ function yogaDashboardSection(canonical: KundliCanonicalModel, derived: KundliDe
     }
     if (d.id === 'sadeSati' && 'active' in d.result) {
       doshaItems.push({
-        label: 'Sade Sati',
+        label: tr('Sade Sati', mode),
         status: d.result.active ? 'PRESENT' : 'ABSENT',
         note: 'Natal check only: Saturn\'s sign relative to the Moon AT BIRTH. This is not a transit search over the client\'s life.',
         xref: 'See Appendix D-02',
       });
     }
     if (d.id === 'kalsarpa') {
-      doshaItems.push({ label: 'Kalsarpa', status: 'NOT_CALCULATED', note: 'No rule definition adopted; absence is not claimed.', xref: 'See Appendix D-03' });
+      doshaItems.push({ label: tr('Kalsarpa', mode), status: 'NOT_CALCULATED', note: 'No rule definition adopted; absence is not claimed.', xref: 'See Appendix D-03' });
     }
   }
 
   const blocks: V2Block[] = [
-    title('Yoga and Dosha', renderTerm(TERMS.yogaDashboard, 'hi'), 'PART A'),
+    title('Yoga and Dosha', renderTerm(TERMS.yogaDashboard, 'hi'), tr('PART A', mode), mode),
     p('A yoga is marked present only when EVERY condition of the applied rule evaluated true. A rule the engine does not implement is marked not calculated — it is never rewritten as absent.', 'small', 'TRADITIONAL_RULE'),
   ];
 
-  if (present.length > 0) blocks.push({ kind: 'statusList', title: 'Confirmed', items: present, contentType: 'TRADITIONAL_RULE', system: 'PARASHARI' });
-  if (absent.length > 0) blocks.push({ kind: 'statusList', title: 'Absent', items: absent, contentType: 'TRADITIONAL_RULE', system: 'PARASHARI' });
-  if (scholar.length > 0) blocks.push({ kind: 'statusList', title: 'Tradition-dependent — no verdict issued', items: scholar, contentType: 'NOT_CALCULATED', system: 'PARASHARI' });
-  if (notCalc.length > 0) blocks.push({ kind: 'statusList', title: 'Not calculated', items: notCalc, contentType: 'NOT_CALCULATED', system: 'PARASHARI' });
-  blocks.push({ kind: 'statusList', title: 'Dosha', items: doshaItems, contentType: 'TRADITIONAL_RULE', system: 'PARASHARI' });
+  if (present.length > 0) blocks.push({ kind: 'statusList', title: tr('Confirmed', mode), items: present, contentType: 'TRADITIONAL_RULE', system: 'PARASHARI' });
+  if (absent.length > 0) blocks.push({ kind: 'statusList', title: tr('Absent', mode), items: absent, contentType: 'TRADITIONAL_RULE', system: 'PARASHARI' });
+  if (scholar.length > 0) blocks.push({ kind: 'statusList', title: tr('Tradition-dependent — no verdict issued', mode), items: scholar, contentType: 'NOT_CALCULATED', system: 'PARASHARI' });
+  if (notCalc.length > 0) blocks.push({ kind: 'statusList', title: tr('Not calculated', mode), items: notCalc, contentType: 'NOT_CALCULATED', system: 'PARASHARI' });
+  blocks.push({ kind: 'statusList', title: tr('Dosha', mode), items: doshaItems, contentType: 'TRADITIONAL_RULE', system: 'PARASHARI' });
   blocks.push(p(
     'Source status for every rule above: traditional attribution — verification pending. The full provenance statement for each rule, including which locators have not been checked against a held edition, is in the Scholar Appendix.',
     'micro',
@@ -636,7 +678,7 @@ function vimshottariSection(canonical: KundliCanonicalModel, derived: KundliDeri
     startsNewPage: true,
     status: 'READY',
     blocks: [
-      title('Vimshottari Timeline', renderTerm(TERMS.vimshottari, 'hi'), 'PART A'),
+      title('Vimshottari Timeline', renderTerm(TERMS.vimshottari, 'hi'), tr('PART A', mode), mode),
       {
         kind: 'kvGrid',
         columns: 2,
@@ -664,7 +706,7 @@ function vimshottariSection(canonical: KundliCanonicalModel, derived: KundliDeri
       h3(`Antardasha schedule inside the running ${cur.mahadasha} mahadasha`),
       {
         kind: 'table',
-        headers: ['Antardasha', 'Start', 'End', ''],
+        headers: trAll(['Antardasha', 'Start', 'End', ''], mode),
         widths: [0.28, 0.26, 0.26, 0.2],
         rows: adRows,
         highlightRows: [adRows.findIndex((r) => r[3] === 'current')].filter((i) => i >= 0),
@@ -686,11 +728,11 @@ function activationSection(derived: KundliDerivedModel, mode: LabelMode): V2Sect
     .filter((p2) => p2.status === 'CALCULATED')
     .map((p2) => [
       humanEnum(p2.level),
-      p2.lord,
+      planetLabel(p2.lord, mode),
       `${ORDINAL[p2.natalHouse ?? 0]} · ${p2.natalSign ?? '—'}`,
       (p2.rulesHouses ?? []).join(', ') || '—',
       p2.dignity ? humanEnum(p2.dignity) : '—',
-      (p2.conjunctions ?? []).join(', ') || '—',
+      (p2.conjunctions ?? []).map((x: string) => planetLabel(x, mode)).join(', ') || '—',
       (p2.aspectsGivenTo ?? []).join(', ') || '—',
     ]);
 
@@ -701,20 +743,20 @@ function activationSection(derived: KundliDerivedModel, mode: LabelMode): V2Sect
     startsNewPage: true,
     status: 'READY',
     blocks: [
-      title('Current Dasha Activation', renderTerm(TERMS.activation, 'hi'), 'PART A'),
+      title('Current Dasha Activation', renderTerm(TERMS.activation, 'hi'), tr('PART A', mode), mode),
       p(derived.dasha.timingNote, 'small', 'DERIVED_JYOTISH_FACT'),
       {
         kind: 'table',
-        headers: ['Level', 'Lord', 'Natal bhava · rashi', 'Rules bhavas', 'Dignity', 'Conjunct', 'Aspects bhavas'],
+        headers: trAll(['Level', 'Lord', 'Natal bhava · rashi', 'Rules bhavas', 'Dignity', 'Conjunct', 'Aspects bhavas'], mode),
         widths: [0.15, 0.1, 0.19, 0.13, 0.14, 0.14, 0.15],
         rows,
         contentType: 'DERIVED_JYOTISH_FACT',
       },
-      h3('Overlapping themes'),
+      h3(tr('Overlapping themes', mode)),
       derived.dasha.overlappingThemes.length > 0
         ? bullets(derived.dasha.overlappingThemes.map((t) => t.statement))
         : p('No bhava is touched by more than one of the active lords.', 'small', 'DERIVED_JYOTISH_FACT'),
-      h3('Yoga participation of the active lords'),
+      h3(tr('Yoga participation of the active lords', mode)),
       bullets(
         derived.dasha.profiles
           .filter((p2) => p2.status === 'CALCULATED')
@@ -737,7 +779,7 @@ function activationSection(derived: KundliDerivedModel, mode: LabelMode): V2Sect
   };
 }
 
-function careerSection(derived: KundliDerivedModel): V2Section {
+function careerSection(derived: KundliDerivedModel, mode: LabelMode): V2Section {
   const c = derived.career;
   const pct = `${Math.round(c.confidence.evidenceCoverage * 100)}%`;
 
@@ -745,24 +787,24 @@ function careerSection(derived: KundliDerivedModel): V2Section {
     claims.map((x) => [x.statement, x.evidenceIds.slice(0, 2).join(' · ') || '—']);
 
   const blocks: V2Block[] = [
-    title('Career — Reference Synthesis', renderTerm(TERMS.career, 'hi'), 'PART A'),
+    title('Career — Reference Synthesis', renderTerm(TERMS.career, 'hi'), tr('PART A', mode), mode),
     p('Career is the one interpretive domain V40 builds end to end. Every factor below is listed with the evidence that produced it, including the factors that work against the reading and the factors that could not be evaluated at all.', 'small', 'INTERPRETIVE_SYNTHESIS'),
 
-    h3('Natal indication'),
+    h3(tr('Natal indication', mode)),
     bullets(c.natalPromise.map((x) => x.statement)),
   ];
 
   if (c.supportiveFactors.length > 0) {
     blocks.push(h3(`Supporting factors (${c.supportiveFactors.length})`));
     blocks.push({
-      kind: 'table', headers: ['Factor', 'Evidence'], widths: [0.68, 0.32],
+      kind: 'table', headers: trAll(['Factor', 'Evidence'], mode), widths: [0.68, 0.32],
       rows: claimRows(c.supportiveFactors), contentType: 'DERIVED_JYOTISH_FACT',
     });
   }
   if (c.challengingFactors.length > 0) {
     blocks.push(h3(`Challenging factors (${c.challengingFactors.length})`));
     blocks.push({
-      kind: 'table', headers: ['Factor', 'Evidence'], widths: [0.68, 0.32],
+      kind: 'table', headers: trAll(['Factor', 'Evidence'], mode), widths: [0.68, 0.32],
       rows: claimRows(c.challengingFactors), contentType: 'DERIVED_JYOTISH_FACT',
     });
   }
@@ -771,23 +813,23 @@ function careerSection(derived: KundliDerivedModel): V2Section {
     blocks.push(bullets(c.mixedFactors.map((x) => x.statement)));
   }
 
-  blocks.push(h3('Dasha activation'));
+  blocks.push(h3(tr('Dasha activation', mode)));
   blocks.push(bullets(c.dashaActivation.map((x) => x.statement)));
 
-  blocks.push(h3('Cross-chart confirmation'));
+  blocks.push(h3(tr('Cross-chart confirmation', mode)));
   blocks.push(bullets(c.vargaConfirmation.map((x) => x.statement + (x.notCalculatedReason ? ` (${x.notCalculatedReason})` : ''))));
 
-  blocks.push(h3('Conclusion'));
+  blocks.push(h3(tr('Conclusion', mode)));
   blocks.push(bullets(c.conclusion.statements.map((s) => s.text), 'body'));
   blocks.push({
     kind: 'kvGrid',
     columns: 2,
     contentType: 'INTERPRETIVE_SYNTHESIS',
     items: [
-      { label: 'Natal indication', value: c.conclusion.natalIndication },
-      { label: 'Current activation', value: c.conclusion.currentActivation },
-      { label: 'Evidence coverage', value: `${pct} of the declared factor checklist` },
-      { label: 'Rule agreement', value: c.confidence.ruleAgreement },
+      { label: tr('Natal indication', mode), value: c.conclusion.natalIndication },
+      { label: tr('Current activation', mode), value: c.conclusion.currentActivation },
+      { label: tr('Evidence coverage', mode), value: `${pct} of the declared factor checklist` },
+      { label: tr('Rule agreement', mode), value: c.confidence.ruleAgreement },
     ],
   });
   blocks.push({
@@ -799,14 +841,14 @@ function careerSection(derived: KundliDerivedModel): V2Section {
       `declared factors produced evidence. ` + c.conclusion.explicitlyNotClaimed.join(' '),
     contentType: 'NOT_CALCULATED',
   });
-  blocks.push(h3('Factors that could not be evaluated'));
+  blocks.push(h3(tr('Factors that could not be evaluated', mode)));
   blocks.push(bullets(c.confidence.missingFactors.map((m) => `${factorName(m.factor)} — ${m.reason}`), 'small'));
   blocks.push(p(`Birth-time sensitivity: ${c.confidence.birthTimeSensitivity}`, 'micro', 'PRACTICAL_REFLECTION'));
 
   return { id: 'career-synthesis', title: 'Career Synthesis', part: 'A', startsNewPage: true, status: 'READY', blocks };
 }
 
-function discussionSection(derived: KundliDerivedModel): V2Section {
+function discussionSection(derived: KundliDerivedModel, mode: LabelMode): V2Section {
   return {
     id: 'pandit-discussion-points',
     title: 'Pandit Discussion Points',
@@ -814,7 +856,7 @@ function discussionSection(derived: KundliDerivedModel): V2Section {
     startsNewPage: true,
     status: 'READY',
     blocks: [
-      title('Pandit Discussion Points', renderTerm(TERMS.discussionPoints, 'hi'), 'PART A'),
+      title('Pandit Discussion Points', renderTerm(TERMS.discussionPoints, 'hi'), tr('PART A', mode), mode),
       p('Questions raised by structures that exist in this chart. They are prompts for the consultation, not predictions, and none of them answers itself.', 'small', 'PRACTICAL_REFLECTION'),
       ...derived.discussionPoints.flatMap((d): V2Block[] => [
         p(`\u2022  ${d.question}`, 'body', 'PRACTICAL_REFLECTION'),
@@ -831,7 +873,7 @@ function discussionSection(derived: KundliDerivedModel): V2Section {
   };
 }
 
-function notesSection(): V2Section {
+function notesSection(mode: LabelMode): V2Section {
   return {
     id: 'pandit-notes',
     title: 'Pandit Notes',
@@ -839,7 +881,7 @@ function notesSection(): V2Section {
     startsNewPage: true,
     status: 'READY',
     blocks: [
-      title('Pandit Notes', renderTerm(TERMS.panditNotes, 'hi'), 'PART A'),
+      title('Pandit Notes', renderTerm(TERMS.panditNotes, 'hi'), tr('PART A', mode), mode),
       p('For the practitioner\'s own observations during the consultation.', 'small', 'PRACTICAL_REFLECTION'),
       { kind: 'notesArea', title: 'Main observation / मुख्य अवलोकन', lines: 4 },
       { kind: 'notesArea', title: 'Career / कर्म', lines: 3 },
@@ -852,7 +894,7 @@ function notesSection(): V2Section {
   };
 }
 
-function howToReadSection(canonical: KundliCanonicalModel, derived: KundliDerivedModel): V2Section {
+function howToReadSection(canonical: KundliCanonicalModel, derived: KundliDerivedModel, mode: LabelMode): V2Section {
   return {
     id: 'how-to-read',
     title: 'How to Read This Report',
@@ -860,8 +902,8 @@ function howToReadSection(canonical: KundliCanonicalModel, derived: KundliDerive
     startsNewPage: true,
     status: 'READY',
     blocks: [
-      title('How to Read This Report', 'इस कुण्डली को कैसे पढ़ें', 'PART A'),
-      h3('The kinds of statement in this report, kept apart'),
+      title('How to Read This Report', 'इस कुण्डली को कैसे पढ़ें', tr('PART A', mode), mode),
+      h3(tr('The kinds of statement in this report, kept apart', mode)),
       bullets([
         'CALCULATED FACT — produced by the astronomical calculation. A position, a bhava, a date.',
         'DERIVED FACT — a classical rule applied to those facts. A bhava lord, an aspect, a dignity.',
@@ -870,20 +912,20 @@ function howToReadSection(canonical: KundliCanonicalModel, derived: KundliDerive
         'REFLECTION — a question or a practical thought for the consultation. Never a prediction.',
         'NOT CALCULATED — the engine did not compute it. This is never rewritten as "absent".',
       ], 'body'),
-      h3('Status marks'),
+      h3(tr('Status marks', mode)),
       {
         kind: 'statusList',
         contentType: 'CALCULATED_FACT',
         items: [
-          { label: 'Present', status: 'PRESENT', note: 'every condition of the rule evaluated true' },
-          { label: 'Absent', status: 'ABSENT', note: 'every condition evaluated, at least one false' },
-          { label: 'Scholar judgement', status: 'SCHOLAR_JUDGEMENT', note: 'the sources disagree; the variant is recorded, not adopted' },
-          { label: 'Not calculated', status: 'NOT_CALCULATED', note: 'not computed. Absence is not claimed' },
-          { label: 'Validation pending', status: 'VALIDATION_PENDING', note: 'computed but not yet trusted; shown, never used in a conclusion' },
+          { label: tr('Present', mode), status: 'PRESENT', note: 'every condition of the rule evaluated true' },
+          { label: tr('Absent', mode), status: 'ABSENT', note: 'every condition evaluated, at least one false' },
+          { label: tr('Scholar judgement', mode), status: 'SCHOLAR_JUDGEMENT', note: 'the sources disagree; the variant is recorded, not adopted' },
+          { label: tr('Not calculated', mode), status: 'NOT_CALCULATED', note: 'not computed. Absence is not claimed' },
+          { label: tr('Validation pending', mode), status: 'VALIDATION_PENDING', note: 'computed but not yet trusted; shown, never used in a conclusion' },
         ],
       },
       p('The mark is a shape, not a colour, so the page still reads correctly in black and white or in photocopy.', 'micro', 'CALCULATED_FACT'),
-      h3('What this report will never do'),
+      h3(tr('What this report will never do', mode)),
       bullets([
         'It will not predict death, disease, marriage, childbirth, a court result or a financial outcome.',
         'It will not give a percentage chance of anything. Coverage figures describe evidence, not probability.',
@@ -945,8 +987,12 @@ function certificateSection(
   reportId: string,
   contentHash: string,
   generatedAt: string,
-  locale: 'en' | 'hi',
+  locale: LabelMode,
 ): V2Section {
+  // §3 exempts the Scholar Appendix: these are technical identifiers, rule ids,
+  // hashes and provenance enums. Translating them would break the audit trail
+  // — an identifier that changes script is not the same identifier.
+  const mode: LabelMode = 'en';
   const d1 = buildChartRenderModel(canonical, 1, 'EN');
   const d9 = buildChartRenderModel(canonical, 9, 'EN');
   return {
@@ -956,24 +1002,24 @@ function certificateSection(
     startsNewPage: true,
     status: 'READY',
     blocks: [
-      title('B1 · Calculation Certificate', 'गणना प्रमाणपत्र'),
+      title('B1 · Calculation Certificate', 'गणना प्रमाणपत्र', mode),
       {
         kind: 'kvGrid', columns: 1, contentType: 'CALCULATED_FACT',
         items: [
-          { label: 'Report ID', value: reportId },
-          { label: 'Input fingerprint', value: canonical.subject.fingerprint },
-          { label: 'Content hash', value: contentHash },
-          { label: 'Hash covers', value: 'every calculated value, the calculation configuration, the derived-model version and the source-registry version. The generation timestamp is EXCLUDED so two copies of the same report hash identically.' },
-          { label: 'Generated at', value: generatedAt },
-          { label: 'Report language', value: locale === 'hi' ? 'Hindi (hi)' : 'English (en)' },
-          { label: 'D1 placement hash', value: d1.placementHash },
-          { label: 'D9 placement hash', value: d9.placementHash },
-          { label: 'Chart model version', value: d1.chartModelVersion },
+          { label: tr('Report ID', mode), value: reportId },
+          { label: tr('Input fingerprint', mode), value: canonical.subject.fingerprint },
+          { label: tr('Content hash', mode), value: contentHash },
+          { label: tr('Hash covers', mode), value: 'every calculated value, the calculation configuration, the derived-model version and the source-registry version. The generation timestamp is EXCLUDED so two copies of the same report hash identically.' },
+          { label: tr('Generated at', mode), value: generatedAt },
+          { label: tr('Report language', mode), value: locale === 'hi' ? 'Hindi (hi)' : 'English (en)' },
+          { label: tr('D1 placement hash', mode), value: d1.placementHash },
+          { label: tr('D9 placement hash', mode), value: d9.placementHash },
+          { label: tr('Chart model version', mode), value: d1.chartModelVersion },
         ],
       },
-      h3('Engine versions'),
+      h3(tr('Engine versions', mode)),
       {
-        kind: 'table', headers: ['Component', 'Version'], widths: [0.5, 0.5],
+        kind: 'table', headers: trAll(['Component', 'Version'], mode), widths: [0.5, 0.5],
         rows: [
           ['Calculation kernel', canonical.calculation.engineVersion],
           ['Calculation version', canonical.calculation.calculationVersion],
@@ -983,7 +1029,7 @@ function certificateSection(
         ],
         contentType: 'CALCULATED_FACT',
       },
-      h3('Verification'),
+      h3(tr('Verification', mode)),
       p(
         'A report is verified by comparing four values: report ID, content hash, calculation version and report-model version. ' +
         'No QR code is printed: a verification endpoint has been specified but not built and security-tested, and a code that ' +
@@ -995,8 +1041,12 @@ function certificateSection(
 }
 
 function yogaEvidenceSection(canonical: KundliCanonicalModel): V2Section {
+  // §3 exempts the Scholar Appendix: these are technical identifiers, rule ids,
+  // hashes and provenance enums. Translating them would break the audit trail
+  // — an identifier that changes script is not the same identifier.
+  const mode: LabelMode = 'en';
   const blocks: V2Block[] = [
-    title('B2 · Yoga Evidence', 'योग प्रमाण'),
+    title('B2 · Yoga Evidence', 'योग प्रमाण', mode),
     p('One entry per registered rule, in the order the dashboard lists them. Each reads as an explanation, not as a debug log.', 'small', 'TRADITIONAL_RULE'),
   ];
 
@@ -1006,9 +1056,9 @@ function yogaEvidenceSection(canonical: KundliCanonicalModel): V2Section {
     blocks.push({
       kind: 'kvGrid', columns: 1, contentType: 'TRADITIONAL_RULE', system: y.system,
       items: [
-        { label: 'System', value: y.system },
-        { label: 'Rule ID', value: y.id },
-        { label: 'Requirement', value: y.rule },
+        { label: tr('System', mode), value: y.system },
+        { label: tr('Rule ID', mode), value: y.id },
+        { label: tr('Requirement', mode), value: y.rule },
       ],
     });
 
@@ -1019,19 +1069,19 @@ function yogaEvidenceSection(canonical: KundliCanonicalModel): V2Section {
     ]);
     if (observed.length > 0) {
       blocks.push({
-        kind: 'table', headers: ['Condition', 'Result', 'Observed'], widths: [0.32, 0.15, 0.53],
+        kind: 'table', headers: trAll(['Condition', 'Result', 'Observed'], mode), widths: [0.32, 0.15, 0.53],
         rows: observed, contentType: 'TRADITIONAL_RULE',
       });
     }
     blocks.push({
       kind: 'kvGrid', columns: 1, contentType: 'TRADITIONAL_RULE',
       items: [
-        { label: 'Result', value: `${y.status.replace(/_/g, ' ')}${y.notCalculatedReason ? ` — ${y.notCalculatedReason}` : ''}` },
-        ...(y.source.variants.length > 0 ? [{ label: 'Tradition variants not applied', value: y.source.variants.join(' ') }] : []),
-        { label: 'Adopted interpretation', value: y.source.adoptedInterpretation },
-        { label: 'Source (as attributed)', value: `${y.source.sourceWork} — ${y.source.locator}` },
-        { label: 'Locator verified', value: y.source.locatorVerified ? 'yes' : 'no' },
-        { label: 'Scholarly agreement', value: y.source.scholarlyAgreement },
+        { label: tr('Result', mode), value: `${y.status.replace(/_/g, ' ')}${y.notCalculatedReason ? ` — ${y.notCalculatedReason}` : ''}` },
+        ...(y.source.variants.length > 0 ? [{ label: tr('Tradition variants not applied', mode), value: y.source.variants.join(' ') }] : []),
+        { label: tr('Adopted interpretation', mode), value: y.source.adoptedInterpretation },
+        { label: tr('Source (as attributed)', mode), value: `${y.source.sourceWork} — ${y.source.locator}` },
+        { label: tr('Locator verified', mode), value: y.source.locatorVerified ? 'yes' : 'no' },
+        { label: tr('Scholarly agreement', mode), value: y.source.scholarlyAgreement },
       ],
     });
     blocks.push(divider());
@@ -1041,7 +1091,11 @@ function yogaEvidenceSection(canonical: KundliCanonicalModel): V2Section {
 }
 
 function doshaEvidenceSection(canonical: KundliCanonicalModel): V2Section {
-  const blocks: V2Block[] = [title('B3 · Dosha Evidence', 'दोष प्रमाण')];
+  // §3 exempts the Scholar Appendix: these are technical identifiers, rule ids,
+  // hashes and provenance enums. Translating them would break the audit trail
+  // — an identifier that changes script is not the same identifier.
+  const mode: LabelMode = 'en';
+  const blocks: V2Block[] = [title('B3 · Dosha Evidence', 'दोष प्रमाण', mode)];
   const mars = canonical.planets.find((x) => x.id === 'Mars');
   const moon = canonical.planets.find((x) => x.id === 'Moon');
   const saturn = canonical.planets.find((x) => x.id === 'Saturn');
@@ -1052,11 +1106,11 @@ function doshaEvidenceSection(canonical: KundliCanonicalModel): V2Section {
       blocks.push({
         kind: 'kvGrid', columns: 1, contentType: 'TRADITIONAL_RULE', system: 'PARASHARI',
         items: [
-          { label: 'Requirement', value: 'Mars occupies bhava 1, 4, 7, 8 or 12 counted from the lagna.' },
-          { label: 'Observed', value: mars ? `Mars in ${mars.sign.name}, bhava ${mars.house}, dignity ${mars.dignity.replace(/_/g, ' ').toLowerCase()}` : 'Mars unresolved' },
-          { label: 'Result', value: d.result.present ? `PRESENT — severity ${d.result.severity}` : 'ABSENT' },
-          { label: 'Cancellation rule', value: d.result.cancellation?.cancelled ? (d.result.cancellation.reason ?? 'applied') : 'no cancellation rule matched' },
-          { label: 'Limitation', value: 'Only the dignity-based cancellation is implemented. The many other cancellation rules taught in the tradition are NOT evaluated; their absence here is not a statement that they do not apply.' },
+          { label: tr('Requirement', mode), value: 'Mars occupies bhava 1, 4, 7, 8 or 12 counted from the lagna.' },
+          { label: tr('Observed', mode), value: mars ? `Mars in ${mars.sign.name}, bhava ${mars.house}, dignity ${mars.dignity.replace(/_/g, ' ').toLowerCase()}` : 'Mars unresolved' },
+          { label: tr('Result', mode), value: d.result.present ? `PRESENT — severity ${d.result.severity}` : 'ABSENT' },
+          { label: tr('Cancellation rule', mode), value: d.result.cancellation?.cancelled ? (d.result.cancellation.reason ?? 'applied') : 'no cancellation rule matched' },
+          { label: tr('Limitation', mode), value: 'Only the dignity-based cancellation is implemented. The many other cancellation rules taught in the tradition are NOT evaluated; their absence here is not a statement that they do not apply.' },
         ],
       });
     }
@@ -1065,15 +1119,15 @@ function doshaEvidenceSection(canonical: KundliCanonicalModel): V2Section {
       blocks.push({
         kind: 'kvGrid', columns: 1, contentType: 'TRADITIONAL_RULE', system: 'PARASHARI',
         items: [
-          { label: 'Requirement', value: 'Saturn occupies the 12th, 1st or 2nd sign counted from the natal Moon sign.' },
-          { label: 'Observed', value: moon && saturn ? `Moon in ${moon.sign.name} (sign ${moon.sign.id}); Saturn in ${saturn.sign.name} (sign ${saturn.sign.id}); offset ${(((saturn.sign.id - moon.sign.id + 12) % 12) + 1)}` : 'unresolved' },
-          { label: 'Result', value: `${d.result.active ? 'ACTIVE' : 'NOT ACTIVE'} — ${d.result.phase}` },
-          { label: 'Important limitation', value: 'This is a NATAL check at the birth instant only. It is NOT a transit search across the client\'s life, which is what most people mean by the term. A transit-based Sade Sati is not calculated by this report.' },
+          { label: tr('Requirement', mode), value: 'Saturn occupies the 12th, 1st or 2nd sign counted from the natal Moon sign.' },
+          { label: tr('Observed', mode), value: moon && saturn ? `Moon in ${moon.sign.name} (sign ${moon.sign.id}); Saturn in ${saturn.sign.name} (sign ${saturn.sign.id}); offset ${(((saturn.sign.id - moon.sign.id + 12) % 12) + 1)}` : 'unresolved' },
+          { label: tr('Result', mode), value: `${d.result.active ? 'ACTIVE' : 'NOT ACTIVE'} — ${d.result.phase}` },
+          { label: tr('Important limitation', mode), value: 'This is a NATAL check at the birth instant only. It is NOT a transit search across the client\'s life, which is what most people mean by the term. A transit-based Sade Sati is not calculated by this report.' },
         ],
       });
     }
     if (d.id === 'kalsarpa' && 'notCalculatedReason' in d.result) {
-      blocks.push(h3('D-03  Kalsarpa  —  NOT CALCULATED'));
+      blocks.push(h3(tr('D-03  Kalsarpa  —  NOT CALCULATED', mode)));
       blocks.push(p(d.result.notCalculatedReason ?? 'No rule definition adopted for this dosha.', 'small', 'NOT_CALCULATED'));
       blocks.push(p('Not calculated is not the same as absent. This report makes no claim either way.', 'small', 'NOT_CALCULATED'));
     }
@@ -1083,6 +1137,10 @@ function doshaEvidenceSection(canonical: KundliCanonicalModel): V2Section {
 }
 
 function grahaConditionAppendix(derived: KundliDerivedModel): V2Section {
+  // §3 exempts the Scholar Appendix: these are technical identifiers, rule ids,
+  // hashes and provenance enums. Translating them would break the audit trail
+  // — an identifier that changes script is not the same identifier.
+  const mode: LabelMode = 'en';
   const rows = derived.grahaConditions.conditions.map((c) => [
     c.graha,
     c.longitudeDeg.toFixed(6),
@@ -1103,25 +1161,25 @@ function grahaConditionAppendix(derived: KundliDerivedModel): V2Section {
     startsNewPage: true,
     status: 'READY',
     blocks: [
-      title('B4 · Graha Condition — full record', 'ग्रह अवस्था'),
+      title('B4 · Graha Condition — full record', 'ग्रह अवस्था', mode),
       p('Exact sidereal longitudes, to six decimal places, with every condition field the engine actually resolved.', 'small', 'CALCULATED_FACT'),
       {
         kind: 'table',
-        headers: ['Graha', 'Longitude', 'DMS in sign', 'Bhava', 'Dignity', 'Motion', 'Combustion', 'Vargottama', 'Rules', 'Natural'],
+        headers: trAll(['Graha', 'Longitude', 'DMS in sign', 'Bhava', 'Dignity', 'Motion', 'Combustion', 'Vargottama', 'Rules', 'Natural'], mode),
         widths: [0.09, 0.12, 0.12, 0.06, 0.12, 0.07, 0.16, 0.09, 0.08, 0.09],
         rows,
         contentType: 'CALCULATED_FACT',
       },
-      h3('Fields deliberately not filled'),
+      h3(tr('Fields deliberately not filled', mode)),
       bullets([
         'Compound (panchadha) relationship — the kernel collapses "neutral / enemy" into one label, so GREAT_FRIEND and GREAT_ENEMY cannot be recovered without an unverified second derivation.',
         'Planetary-war victor — requires celestial latitude, which the canonical model does not carry.',
         'Shadbala — computed but unvalidated; see B7.',
       ]),
-      h3('Functional lordship — natural character kept separate'),
+      h3(tr('Functional lordship — natural character kept separate', mode)),
       {
         kind: 'table',
-        headers: ['Graha', 'Rules bhavas', 'Functional position (this lagna)', 'Natural character'],
+        headers: trAll(['Graha', 'Rules bhavas', 'Functional position (this lagna)', 'Natural character'], mode),
         widths: [0.11, 0.13, 0.53, 0.23],
         rows: derived.functionalLordship.map((f) => [
           f.graha,
@@ -1136,6 +1194,10 @@ function grahaConditionAppendix(derived: KundliDerivedModel): V2Section {
 }
 
 function aspectAppendix(derived: KundliDerivedModel): V2Section {
+  // §3 exempts the Scholar Appendix: these are technical identifiers, rule ids,
+  // hashes and provenance enums. Translating them would break the audit trail
+  // — an identifier that changes script is not the same identifier.
+  const mode: LabelMode = 'en';
   return {
     id: 'appendix-aspects',
     title: 'Aspect Ledger',
@@ -1143,14 +1205,14 @@ function aspectAppendix(derived: KundliDerivedModel): V2Section {
     startsNewPage: true,
     status: 'READY',
     blocks: [
-      title('B5 · Aspect Ledger', 'दृष्टि विवरण'),
+      title('B5 · Aspect Ledger', 'दृष्टि विवरण', mode),
       {
         kind: 'callout', tone: 'info', title: 'Aspect policy — declared, not assumed',
         text: derived.aspectPolicy.declaration, contentType: 'TRADITIONAL_RULE',
       },
       {
         kind: 'table',
-        headers: ['From', 'Offset', 'Type', 'On bhava', 'Grahas aspected', 'Rule'],
+        headers: trAll(['From', 'Offset', 'Type', 'On bhava', 'Grahas aspected', 'Rule'], mode),
         widths: [0.12, 0.09, 0.24, 0.12, 0.24, 0.19],
         rows: derived.aspects.aspects.map((a) => [
           a.from, `${a.offset}th`, a.aspectType.replace(/_/g, ' '), String(a.toHouse),
@@ -1158,13 +1220,15 @@ function aspectAppendix(derived: KundliDerivedModel): V2Section {
         ]),
         contentType: 'DERIVED_JYOTISH_FACT',
       },
-      h3('Variants considered and not adopted'),
+      h3(tr('Variants considered and not adopted', mode)),
       bullets(derived.aspects.unadoptedVariants.map((v) => `${v.id}: ${v.description}`)),
     ],
   };
 }
 
 function d10Appendix(derived: KundliDerivedModel): V2Section {
+  // §3 exempts the Scholar Appendix — see the note on the other appendices.
+  const mode: LabelMode = 'en';
   const r = derived.d10;
   return {
     id: 'appendix-d10',
@@ -1173,7 +1237,7 @@ function d10Appendix(derived: KundliDerivedModel): V2Section {
     startsNewPage: true,
     status: 'READY',
     blocks: [
-      title('B6 · D10 Dashamsha — validation', 'दशांश सत्यापन'),
+      title('B6 · D10 Dashamsha — validation', 'दशांश सत्यापन', mode),
       {
         kind: 'callout', tone: 'limitation',
         // The label comes from the external-validation harness, not from a
@@ -1186,7 +1250,7 @@ function d10Appendix(derived: KundliDerivedModel): V2Section {
       p('Rule applied: each rashi is divided into ten parts of 3\u00B0. From an odd rashi the parts are counted from that rashi; from an even rashi they are counted from the ninth rashi from it.', 'small', 'TRADITIONAL_RULE'),
       {
         kind: 'table',
-        headers: ['Graha', 'Sidereal longitude', 'Kernel D10 rashi', 'Independent reference', 'Agreement'],
+        headers: trAll(['Graha', 'Sidereal longitude', 'Kernel D10 rashi', 'Independent reference', 'Agreement'], mode),
         widths: [0.14, 0.22, 0.22, 0.22, 0.2],
         rows: [
           ...r.comparisons.map((c) => [c.graha, c.longitudeDeg.toFixed(6), c.engineSign || '—', c.referenceSign, c.agrees ? 'match' : 'DISAGREES']),
@@ -1212,6 +1276,10 @@ function d10Appendix(derived: KundliDerivedModel): V2Section {
 }
 
 function unvalidatedAppendix(derived: KundliDerivedModel): V2Section {
+  // §3 exempts the Scholar Appendix: these are technical identifiers, rule ids,
+  // hashes and provenance enums. Translating them would break the audit trail
+  // — an identifier that changes script is not the same identifier.
+  const mode: LabelMode = 'en';
   return {
     id: 'appendix-unvalidated',
     title: 'Unvalidated Capabilities',
@@ -1219,7 +1287,7 @@ function unvalidatedAppendix(derived: KundliDerivedModel): V2Section {
     startsNewPage: true,
     status: 'READY',
     blocks: [
-      title('B7 · Shadbala and other unvalidated capabilities', 'अप्रमाणित गणनाएँ'),
+      title('B7 · Shadbala and other unvalidated capabilities', 'अप्रमाणित गणनाएँ', mode),
       {
         kind: 'callout', tone: 'limitation', title: 'Shadbala — validation pending',
         text:
@@ -1230,7 +1298,7 @@ function unvalidatedAppendix(derived: KundliDerivedModel): V2Section {
       },
       {
         kind: 'table',
-        headers: ['Capability', 'Status', 'Note'],
+        headers: trAll(['Capability', 'Status', 'Note'], mode),
         widths: [0.24, 0.16, 0.6],
         rows: derived.capabilities
           .filter((c) => c.status !== 'CALCULATED')
@@ -1242,6 +1310,10 @@ function unvalidatedAppendix(derived: KundliDerivedModel): V2Section {
 }
 
 function sourceRegistryAppendix(canonical: KundliCanonicalModel): V2Section {
+  // §3 exempts the Scholar Appendix: these are technical identifiers, rule ids,
+  // hashes and provenance enums. Translating them would break the audit trail
+  // — an identifier that changes script is not the same identifier.
+  const mode: LabelMode = 'en';
   const seen = new Set<string>();
   const rows: string[][] = [];
   for (const y of canonical.yogas) {
@@ -1265,7 +1337,7 @@ function sourceRegistryAppendix(canonical: KundliCanonicalModel): V2Section {
     startsNewPage: true,
     status: 'READY',
     blocks: [
-      title('B8 · Source registry and provenance', 'स्रोत सूची'),
+      title('B8 · Source registry and provenance', 'स्रोत सूची', mode),
       p(
         'The main report states source status once, as "traditional attribution — verification pending". The full statement is here, once, ' +
         'rather than repeated beside every rule. A citation records where a rule is traditionally attributed. It is not evidence that this ' +
@@ -1274,7 +1346,7 @@ function sourceRegistryAppendix(canonical: KundliCanonicalModel): V2Section {
       ),
       {
         kind: 'table',
-        headers: ['Rule ID', 'Source work', 'Locator', 'Edition held', 'Locator verified', 'In repository', 'Agreement'],
+        headers: trAll(['Rule ID', 'Source work', 'Locator', 'Edition held', 'Locator verified', 'In repository', 'Agreement'], mode),
         widths: [0.2, 0.16, 0.12, 0.16, 0.1, 0.1, 0.16],
         rows,
         contentType: 'TRADITIONAL_RULE',
@@ -1285,6 +1357,10 @@ function sourceRegistryAppendix(canonical: KundliCanonicalModel): V2Section {
 }
 
 function notCalculatedAppendix(derived: KundliDerivedModel, canonical: KundliCanonicalModel): V2Section {
+  // §3 exempts the Scholar Appendix: these are technical identifiers, rule ids,
+  // hashes and provenance enums. Translating them would break the audit trail
+  // — an identifier that changes script is not the same identifier.
+  const mode: LabelMode = 'en';
   const yogaNc = canonical.yogas.filter((y) => y.status === 'NOT_CALCULATED');
   return {
     id: 'appendix-not-calculated',
@@ -1293,19 +1369,19 @@ function notCalculatedAppendix(derived: KundliDerivedModel, canonical: KundliCan
     startsNewPage: true,
     status: 'READY',
     blocks: [
-      title('B9 · NOT CALCULATED inventory', 'गणित नहीं — सूची'),
+      title('B9 · NOT CALCULATED inventory', 'गणित नहीं — सूची', mode),
       p('Everything this build does not compute, in one list. Nothing here is claimed to be absent from the chart.', 'small', 'NOT_CALCULATED'),
       {
         kind: 'table',
-        headers: ['Capability', 'Status', 'Reason'],
+        headers: trAll(['Capability', 'Status', 'Reason'], mode),
         widths: [0.26, 0.15, 0.59],
         rows: derived.capabilities.map((c) => [c.name, c.status.replace(/_/g, ' '), c.note]),
         contentType: 'NOT_CALCULATED',
       },
-      h3('Yoga rules not evaluated'),
+      h3(tr('Yoga rules not evaluated', mode)),
       yogaNc.length > 0
         ? {
-            kind: 'table', headers: ['Rule', 'Reason'], widths: [0.32, 0.68],
+            kind: 'table', headers: trAll(['Rule', 'Reason'], mode), widths: [0.32, 0.68],
             rows: yogaNc.map((y) => [y.name, y.notCalculatedReason ?? 'reason not recorded']),
             contentType: 'NOT_CALCULATED',
           }
@@ -1320,6 +1396,10 @@ function notCalculatedAppendix(derived: KundliDerivedModel, canonical: KundliCan
 }
 
 function lineageAppendix(canonical: KundliCanonicalModel, derived: KundliDerivedModel): V2Section {
+  // §3 exempts the Scholar Appendix: these are technical identifiers, rule ids,
+  // hashes and provenance enums. Translating them would break the audit trail
+  // — an identifier that changes script is not the same identifier.
+  const mode: LabelMode = 'en';
   const samples: string[][] = [
     ['Lagna sign', FACT.lagnaSign, canonical.ascendant.sign.en],
     ['Lagna degree', FACT.lagnaDegree, canonical.ascendant.degreeInSign.toFixed(6)],
@@ -1338,19 +1418,19 @@ function lineageAppendix(canonical: KundliCanonicalModel, derived: KundliDerived
     startsNewPage: true,
     status: 'READY',
     blocks: [
-      title('B10 · Evidence lineage and verification', 'प्रमाण शृंखला'),
+      title('B10 · Evidence lineage and verification', 'प्रमाण शृंखला', mode),
       p('Every derived object in this report carries evidence identifiers that are paths into the canonical chart. The chain runs: interpretation, then the synthesis evidence behind it, then the Jyotish relation, then the calculated fact, then the canonical chart, then the birth input itself.', 'small', 'CALCULATED_FACT'),
       {
         kind: 'table',
-        headers: ['Statement', 'Canonical path', 'Value'],
+        headers: trAll(['Statement', 'Canonical path', 'Value'], mode),
         widths: [0.3, 0.42, 0.28],
         rows: samples,
         contentType: 'CALCULATED_FACT',
         caption: 'A sample of the evidence paths. The full set is machine-checked by the data-lineage acceptance suite.',
       },
-      h3('Derived engine versions'),
+      h3(tr('Derived engine versions', mode)),
       {
-        kind: 'table', headers: ['Engine', 'Version'], widths: [0.5, 0.5],
+        kind: 'table', headers: trAll(['Engine', 'Version'], mode), widths: [0.5, 0.5],
         rows: Object.entries(derived.engineVersions),
         contentType: 'CALCULATED_FACT',
       },
@@ -1366,7 +1446,7 @@ export function computeContentHashV2(
   canonical: KundliCanonicalModel,
   derived: KundliDerivedModel,
   reportId: string,
-  locale: 'en' | 'hi',
+  locale: LabelMode,
 ): string {
   return sha256Hex(JSON.stringify({
     v: 2,
@@ -1399,10 +1479,14 @@ export function computeContentHashV2(
 export function buildKundliReportModelV2(
   canonical: KundliCanonicalModel,
   derived: KundliDerivedModel,
-  locale: 'en' | 'hi' = 'en',
+  locale: LabelMode = 'en',
 ): KundliReportModelV2 {
   const mode = labelModeForLocale(locale);
-  const chartMode: ChartLabelMode = locale === 'hi' ? 'HI' : 'EN';
+  // A Hindi or bilingual Kundli draws Devanagari graha abbreviations in the
+  // chart — that is what a North Indian chart looks like. Numerals follow §4
+  // separately: Devanagari only for pure Hindi.
+  const chartMode: ChartLabelMode = locale === 'en' ? 'EN' : 'HI';
+  const devanagariNumerals = locale === 'hi';
   const reportId = deriveReportId(canonical.subject.fingerprint);
   const generatedAt = new Date().toISOString();
   const contentHash = computeContentHashV2(canonical, derived, reportId, locale);
@@ -1412,17 +1496,17 @@ export function buildKundliReportModelV2(
     coverSection(canonical, reportId, mode),
     passportSection(canonical, derived, mode),
     saarSection(canonical, derived, mode),
-    chartSection(canonical, derived, 1, chartMode, mode, 'PART A'),
-    chartSection(canonical, derived, 9, chartMode, mode, 'PART A'),
+    chartSection(canonical, derived, 1, chartMode, mode, tr('PART A', mode), devanagariNumerals),
+    chartSection(canonical, derived, 9, chartMode, mode, tr('PART A', mode), devanagariNumerals),
     grahaDossierSection(canonical, derived, mode),
     bhavaMatrixSection(derived, mode),
-    yogaDashboardSection(canonical, derived),
+    yogaDashboardSection(canonical, derived, mode),
     vimshottariSection(canonical, derived, mode),
     activationSection(derived, mode),
-    careerSection(derived),
-    discussionSection(derived),
-    notesSection(),
-    howToReadSection(canonical, derived),
+    careerSection(derived, mode),
+    discussionSection(derived, mode),
+    notesSection(mode),
+    howToReadSection(canonical, derived, mode),
 
     /* PART B */
     partBDivider(),

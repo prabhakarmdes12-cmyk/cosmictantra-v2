@@ -52,8 +52,18 @@ export const LAGNA_LABELS = { en: 'Lagna', hi: 'लग्न', abbrEn: 'Lg', abb
  * BILINGUAL deliberately uses Western digits: on a page that already carries
  * English terms, Devanagari digits are decoration rather than legibility.
  */
-export const signLabel = (n: number, mode: ChartLabelMode): string =>
-  numeral(n, numeralPolicyFor(mode === 'HI' ? 'hi' : 'en'));
+export const signLabel = (
+  n: number,
+  mode: ChartLabelMode,
+  devanagariNumerals?: boolean,
+): string =>
+  // Glyph script and numeral script are separate decisions. A `hi-en` chart
+  // draws traditional Devanagari graha abbreviations (सू, चं, मं) — that is
+  // simply what a North Indian chart looks like — while §4 keeps its numerals
+  // Western. Conflating the two is what produced १ २ ३ … 10 11 12.
+  numeral(n, numeralPolicyFor(
+    (devanagariNumerals ?? mode === 'HI') ? 'hi' : 'en',
+  ));
 
 export interface ChartPlacement {
   /** 1 for D1 Rashi, 9 for D9 Navamsha. */
@@ -84,6 +94,8 @@ export interface ChartRenderModel {
   chartNameHi: string;
   chartSystem: 'NORTH_INDIAN';
   labelMode: ChartLabelMode;
+  /** §4 numeral script for house/sign numbers. Defaults to labelMode === 'HI'. */
+  devanagariNumerals?: boolean;
   /** Sign occupying house 1, 1..12. */
   lagnaSignNumber: number;
   /** Evidence id of the Lagna marker. */

@@ -10,6 +10,7 @@
  */
 
 import type { ContentType, JyotishSystem } from './contentTypes';
+import type { LabelMode } from './labels';
 
 export type ReportPart = 'A' | 'B';
 
@@ -102,6 +103,12 @@ export interface StatusListBlock extends V2BlockBase {
   items: {
     label: string;
     status: 'PRESENT' | 'ABSENT' | 'SCHOLAR_JUDGEMENT' | 'NOT_CALCULATED' | 'VALIDATION_PENDING' | 'INDETERMINATE';
+    /**
+     * Localised word for `status`. The renderer draws this when present and
+     * otherwise derives an English word from the enum. Language lives in the
+     * model: the renderer must not know that उपस्थित means PRESENT.
+     */
+    statusText?: string;
     note?: string;
     xref?: string;
   }[];
@@ -148,7 +155,7 @@ export interface KundliReportModelV2 {
   reportModelVersion: string;
   reportId: string;
   generatedAt: string;
-  locale: 'en' | 'hi';
+  locale: LabelMode;
   labelMode: 'en' | 'hi' | 'hi-en';
   /** Deterministic; excludes the generation timestamp. */
   contentHash: string;

@@ -266,7 +266,7 @@ export function layoutChart(
 
     // --- House number --------------------------------------------------
     if (opt.showHouseNumbers) {
-      const hText = signLabel(houseNumber, model.labelMode);
+      const hText = signLabel(houseNumber, model.labelMode, model.devanagariNumerals);
       const y = bottom + houseFont * 0.9;
       labels.push({
         x: cx, y, text: hText, fontSize: houseFont, fontSizePt: houseFontPt,
@@ -277,7 +277,7 @@ export function layoutChart(
     }
 
     // --- Sign number ----------------------------------------------------
-    const signText = signLabel(house.signNumber, model.labelMode);
+    const signText = signLabel(house.signNumber, model.labelMode, model.devanagariNumerals);
     const signY = bottom + GAP + signFont * 0.8;
     labels.push({
       x: cx, y: signY, text: signText, fontSize: signFont, fontSizePt: signFontPt,

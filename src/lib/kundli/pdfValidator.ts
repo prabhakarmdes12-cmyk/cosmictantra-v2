@@ -18,7 +18,16 @@ import type { PdfQualityReport, PdfRenderMetrics } from './types';
 export interface ValidatePdfInput {
   buffer: Uint8Array;
   renderMetrics: PdfRenderMetrics;
-  mandatorySectionTitles: string[];
+  /**
+   * Sections the artifact must actually contain.
+   *
+   * A bare string is both the label and the text to search for. The object
+   * form separates the two, because the searched text is not always the
+   * English title: a Hindi report renders "जन्म विवरण", and PDF extraction
+   * returns Devanagari in visual order, so the caller supplies every form
+   * that counts as a hit while the label keeps failure messages readable.
+   */
+  mandatorySectionTitles: (string | { label: string; anyOf: string[] })[];
   maxPages?: number;
   extractor?: (buffer: Uint8Array) => Promise<{ pageCount: number; pages: { charCount: number }[]; allText?: string }>;
 }
@@ -74,11 +83,22 @@ export async function validatePdfIntegrity(input: ValidatePdfInput): Promise<Pdf
   const mandatorySectionsFound: string[] = [];
   const mandatorySectionsMissing: string[] = [];
   if (extracted.pageCount > 0) {
-    for (const title of input.mandatorySectionTitles) {
-      if (allText.toLowerCase().includes(title.toLowerCase())) {
-        mandatorySectionsFound.push(title);
+    // Text extraction reconstructs words from glyph positions and sprinkles
+    // whitespace where the gaps look wide enough — "प्रत् येक" and "है   ,"
+    // are both real output from a correctly rendered page. Matching on the
+    // whitespace-stripped form makes the check immune to that guesswork
+    // without weakening it: a multi-word title is still a long, specific
+    // needle.
+    const squash = (t: string): string => t.toLowerCase().replace(/\s+/g, '');
+    const haystack = squash(allText);
+    for (const entry of input.mandatorySectionTitles) {
+      const { label, anyOf } = typeof entry === 'string'
+        ? { label: entry, anyOf: [entry] }
+        : entry;
+      if (anyOf.some((needle) => haystack.includes(squash(needle)))) {
+        mandatorySectionsFound.push(label);
       } else {
-        mandatorySectionsMissing.push(title);
+        mandatorySectionsMissing.push(label);
       }
     }
     if (mandatorySectionsMissing.length > 0) {

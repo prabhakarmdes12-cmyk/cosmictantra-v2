@@ -279,6 +279,18 @@ export function statusLabel(status: string, mode: LabelMode): string {
 }
 
 /** Locale -> default label mode. Hindi reports are bilingual for Jyotish terms. */
-export function labelModeForLocale(locale: 'en' | 'hi'): LabelMode {
-  return locale === 'hi' ? 'hi-en' : 'en';
+/**
+ * V41 §2 — the locale IS the label mode.
+ *
+ * This used to read `locale === 'hi' ? 'hi-en' : 'en'`, which meant the `'hi'`
+ * label mode — implemented in every render function in this file — could never
+ * be reached. Worse, call sites defensively wrote `mode === 'hi' ? 'hi' : 'en'`
+ * to route Devanagari, and that ternary was therefore ALWAYS false: the graha
+ * dossier, the bhava matrix and the chart cells printed English planets and
+ * rashis in a Hindi report while the Devanagari sat unused in this registry.
+ *
+ * That single line is most of why Hindi coverage measured 4%.
+ */
+export function labelModeForLocale(locale: LabelMode): LabelMode {
+  return locale;
 }
