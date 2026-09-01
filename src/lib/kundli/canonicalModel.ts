@@ -11,6 +11,7 @@
 
 import { KundliError } from './errors';
 import { buildCalculationConfig } from './config';
+import { validateYogaEvaluation } from './yogaContract';
 import type {
   KundliCanonicalModel, PlanetPosition, HouseData, PanchangaData,
   AscendantData, DivisionalChartData, DashaTimelineData, SignRef,
@@ -250,15 +251,35 @@ export function buildDashas(snapshot: any): DashaTimelineData {
 
 export function buildYogasAndDoshas(snapshot: any): { yogas: YogaResult[]; doshas: DoshaResult[] } {
   const yd = snapshot.yogasAndDoshas ?? {};
-  const yogas: YogaResult[] = (Array.isArray(yd.rajYogas) ? yd.rajYogas : []).map((name: string) => ({
-    name,
-    basis: ['engine.declared.rajYogas'],
-  }));
-  for (const sc of Array.isArray(yd.specialCombinations) ? yd.specialCombinations : []) {
-    if (sc?.name) yogas.push({ name: sc.name, basis: ['engine.declared.specialCombinations'] });
+
+  // Yogas must arrive as rule evaluations, never as pre-declared name lists.
+  // Every record is validated against the yoga contract; any violation
+  // raises KUNDLI_CALCULATION_INCOMPLETE, which the pipeline turns into
+  // "no PDF, pdfBuffer: null".
+  if (!Array.isArray(yd.yogas)) {
+    throw new KundliError(
+      'KUNDLI_CALCULATION_INCOMPLETE',
+      'yoga evaluations missing from canonical snapshot — the engine must supply rule-evaluated yogas',
+      { received: typeof yd.yogas },
+    );
   }
 
+  const yogas: YogaResult[] = (yd.yogas as unknown[]).map((raw, index) =>
+    validateYogaEvaluation(raw, index),
+  );
+
   const doshas: DoshaResult[] = [];
+  if (yd.kalsarpa) {
+    doshas.push({
+      id: 'kalsarpa',
+      status: 'NOT_CALCULATED',
+      result: {
+        status: 'NOT_CALCULATED',
+        notCalculatedReason: (yd.kalsarpa as any).notCalculatedReason
+          ?? 'Kalsarpa dosha rule not implemented.',
+      },
+    });
+  }
   if (yd.manglik) {
     doshas.push({
       id: 'manglik',

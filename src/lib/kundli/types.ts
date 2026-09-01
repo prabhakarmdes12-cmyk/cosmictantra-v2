@@ -178,15 +178,68 @@ export interface SadeSatiResult {
   notCalculatedReason?: string;
 }
 
+/**
+ * Status of a rule-evaluated yoga.
+ *  PRESENT        every condition evaluated and true.
+ *  ABSENT         every condition evaluated and at least one false.
+ *  INDETERMINATE  a required input is unknown, so the rule cannot be judged.
+ *  NOT_CALCULATED the rule is known but not implemented; reported explicitly.
+ */
+export type YogaStatus = 'PRESENT' | 'ABSENT' | 'INDETERMINATE' | 'NOT_CALCULATED';
+
+export type JyotishSystem = 'PARASHARI' | 'JAIMINI' | 'KP';
+
+export interface YogaCondition {
+  id: string;
+  description: string;
+  /** true / false, or null when the condition could not be evaluated. */
+  satisfied: boolean | null;
+  evidence: string[];
+}
+
+export interface YogaSourceRef {
+  ruleId: string;
+  sourceWork: string;
+  locator: string;
+  editionOrTranslation: string;
+  verifiedInRepository: boolean;
+  locatorVerified: boolean;
+  scholarlyAgreement: 'GENERAL' | 'CONTESTED' | 'UNVERIFIED';
+  adoptedInterpretation: string;
+  variants: string[];
+  limitations: string[];
+  adoption: 'ADOPTED' | 'NOT_ADOPTED';
+}
+
 export interface YogaResult {
+  id: string;
   name: string;
-  basis: string[];            // facts (planet positions) that formed the yoga
+  system: JyotishSystem;
+  /** Versioned source-registry entry: provenance and stated limitations. */
+  source: YogaSourceRef;
+  /** Formal statement of the rule that was actually applied. */
+  rule: string;
+  inputs: { planets: string[]; houses: number[]; signs: string[] };
+  conditions: YogaCondition[];
+  /** Same value as `status`; kept explicit for report and evidence consumers. */
+  result: YogaStatus;
+  evidenceRefs: string[];
+  status: YogaStatus;
+  /** Present only when status === 'NOT_CALCULATED'. */
+  notCalculatedReason?: string;
+  /** Flat evidence list kept for existing consumers. */
+  basis: string[];
+}
+
+export interface KalsarpaResult {
+  status: 'NOT_CALCULATED';
+  notCalculatedReason: string;
 }
 
 export interface DoshaResult {
   id: 'manglik' | 'sadeSati' | 'kalsarpa';
   status: AnalysisStatus;
-  result: ManglikResult | SadeSatiResult;
+  result: ManglikResult | SadeSatiResult | KalsarpaResult;
 }
 
 export interface KundliCanonicalModel {

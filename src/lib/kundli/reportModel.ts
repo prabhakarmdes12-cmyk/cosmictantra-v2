@@ -240,13 +240,74 @@ function buildDashaTables(m: KundliCanonicalModel): ReportSection[] {
   ];
 }
 
+const YOGA_RESULT_LABEL: Record<string, string> = {
+  PRESENT: 'Present',
+  ABSENT: 'Absent',
+  INDETERMINATE: 'Indeterminate',
+  NOT_CALCULATED: 'Not calculated',
+};
+
+const conditionLabel = (satisfied: boolean | null): string =>
+  satisfied === null ? 'Not evaluated' : satisfied ? 'Satisfied' : 'Not satisfied';
+
 function buildYogaSections(m: KundliCanonicalModel): ReportSection[] {
-  const yogaBlocks: ReportBlock[] = m.yogas.map((y) => para(`• ${y.name}`));
+  if (m.yogas.length === 0) {
+    return [{
+      id: 'major-yogas',
+      title: 'Major Yogas',
+      status: 'NOT_APPLICABLE',
+      blocks: [para('No yoga rules are registered in this engine build.')],
+    }];
+  }
+
+  const summary = table(
+    ['Yoga', 'System', 'Status'],
+    m.yogas.map((y) => [y.name, y.system, YOGA_RESULT_LABEL[y.status] ?? y.status]),
+  );
+
+  const detail: ReportBlock[] = [];
+  for (const y of m.yogas) {
+    detail.push(heading(y.name, 3));
+    detail.push(kv('Status', YOGA_RESULT_LABEL[y.status] ?? y.status));
+    detail.push(kv('System', y.system));
+    detail.push(kv('Rule', y.rule || 'Rule text unavailable for this yoga.'));
+    detail.push(kv('Source (as attributed)', y.source.sourceWork));
+    detail.push(kv('Locator', y.source.locator));
+    detail.push(kv('Edition / translation held', y.source.editionOrTranslation));
+    detail.push(kv('Scholarly agreement', y.source.scholarlyAgreement));
+    detail.push(kv('Adopted interpretation', y.source.adoptedInterpretation));
+    if (y.source.variants.length > 0) {
+      detail.push(kv('Variants not applied', y.source.variants.join(' ')));
+    }
+    for (const limitation of y.source.limitations) {
+      detail.push(kv('Limitation', limitation));
+    }
+    if (y.inputs.planets.length > 0) detail.push(kv('Input grahas', y.inputs.planets.join(', ')));
+    if (y.inputs.houses.length > 0) detail.push(kv('Input bhavas', y.inputs.houses.join(', ')));
+    if (y.status === 'NOT_CALCULATED') {
+      detail.push(kv('Why not calculated', y.notCalculatedReason || 'Rule not implemented.'));
+    } else if (y.conditions.length > 0) {
+      detail.push(table(
+        ['Condition', 'Result', 'Evidence'],
+        y.conditions.map((c) => [
+          c.description,
+          conditionLabel(c.satisfied),
+          c.evidence.join('; '),
+        ]),
+      ));
+    }
+    detail.push(divider());
+  }
+
   return [{
     id: 'major-yogas',
     title: 'Major Yogas',
     status: 'READY',
-    blocks: yogaBlocks.length > 0 ? [para('Yogas declared by the CosmicTantra calculation engine:'), ...yogaBlocks] : [para('No major yogas were declared for this chart.')],
+    blocks: [
+      para('Every yoga below is evaluated against the canonical chart by the rule stated with it. Statuses are Present, Absent, Indeterminate (an input could not be resolved) or Not calculated (the rule is not implemented). No yoga is declared unless its rule produced it.'),
+      summary,
+      ...detail,
+    ],
   }];
 }
 
@@ -260,6 +321,10 @@ function buildDoshaSection(m: KundliCanonicalModel): ReportSection {
     }
     if (d.id === 'sadeSati' && d.result.status === 'CALCULATED' && 'active' in d.result) {
       blocks.push(kv('Sade Sati', d.result.active ? `Active — ${d.result.phase}` : `Not active (${d.result.phase})`));
+    }
+    if (d.id === 'kalsarpa' && d.result.status === 'NOT_CALCULATED' && 'notCalculatedReason' in d.result) {
+      blocks.push(kv('Kalsarpa', 'Not calculated — no rule implemented'));
+      blocks.push(para(d.result.notCalculatedReason || 'Rule not implemented.'));
     }
   }
   return {
@@ -311,7 +376,8 @@ function buildAppendix(m: KundliCanonicalModel): ReportSection {
       kv('Coordinate provenance', m.subject.coordinates.provenance),
       kv('Timezone provenance', m.subject.timezone.offsetProvenance),
       kv('Divisional charts', `${m.divisionalCharts.length} (D1–D60 shodashavarga)`),
-      para('Yoga declarations originate from the CosmicTantra calculation engine; per-yoga rule verification is a documented limitation (see engineering report).'),
+      para('Yogas are evaluated by the CosmicTantra yoga engine against this canonical chart. Each yoga in the Major Yogas section states its rule, its conditions, the evidence for each condition, and a status of Present, Absent, Indeterminate or Not calculated.'),
+      para('Limitation: only the yoga rules listed in the Major Yogas section are evaluated. Yogas that are not listed are not claimed to be absent — they are simply not implemented in this engine build.'),
     ],
   };
 }
