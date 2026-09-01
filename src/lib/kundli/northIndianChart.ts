@@ -120,6 +120,14 @@ export interface ChartRenderOptions {
   showHouseNumbers?: boolean;
   /** Grayscale-safe palette; no colour carries meaning. */
   palette?: { stroke: number; text: number; lagna: number; muted: number };
+  /**
+   * Stroke width of the Lagna marker, in surface units.
+   *
+   * Added in V40.1 so a renderer with a finer type colour can set a rule that
+   * reads as deliberate rather than as a printing fault. The default is the
+   * historical value, so v1 and v2 output is unchanged.
+   */
+  lagnaMarkerWidth?: number;
   title?: string;
 }
 
@@ -130,6 +138,7 @@ export const DEFAULT_CHART_OPTIONS: Required<ChartRenderOptions> = {
   minFontSize: 6,
   showHouseNumbers: true,
   palette: { stroke: 60, text: 20, lagna: 20, muted: 110 },
+  lagnaMarkerWidth: 1.6,
   title: '',
 };
 
@@ -196,8 +205,15 @@ export function layoutChart(
   const u = (pt: number) => pt * upp;
   const byHouse = occupantsByHouse(model);
   const labels: ChartLabel[] = [];
-  const houseFontPt = Math.max(5, Math.min(6.5, opt.baseFontSize - 2));
-  const signFontPt = Math.max(opt.minFontSize, Math.min(7.5, opt.baseFontSize - 0.75));
+  // V40.1: the house index used to be set at 6.5pt, which is below the 7pt
+  // legibility floor the print gate enforces — a Pandit reading a printed
+  // chart under a lamp should not have to squint at the one label that tells
+  // them which bhava they are looking at. Both chrome sizes were raised and
+  // the hierarchy is now carried by weight and colour (the house index is
+  // grey, the rashi index is dark) rather than by shrinking one of them below
+  // readability.
+  const houseFontPt = Math.max(7.1, Math.min(7.6, opt.baseFontSize - 1.2));
+  const signFontPt = Math.max(Math.max(opt.minFontSize, 7.1), Math.min(8.2, opt.baseFontSize - 0.5));
   const houseFont = u(houseFontPt);
   const signFont = u(signFontPt);
 
@@ -443,7 +459,7 @@ export function drawChartToPdf(
 
   // Lagna marker: a bold rule. Shape carries the meaning, not colour.
   doc.setDrawColor(opt.palette.lagna);
-  doc.setLineWidth(1.6);
+  doc.setLineWidth(opt.lagnaMarkerWidth);
   doc.line(
     x + layout.lagnaMarker.x, y + layout.lagnaMarker.y,
     x + layout.lagnaMarker.x + layout.lagnaMarker.w, y + layout.lagnaMarker.y,

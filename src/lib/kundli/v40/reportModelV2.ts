@@ -486,12 +486,14 @@ function grahaDossierSection(
       bullets([
         ...derived.grahaConditions.conditions
           .filter((c) => c.combustion.status === 'COMBUST' || c.combustion.nearCombust)
+          // Angular separations are DMS here, like every other Pandit-facing
+          // degree. The decimal form stays in the B4 condition appendix.
           .map((c) => c.combustion.status === 'COMBUST'
-            ? `${c.graha} is combust: ${c.combustion.angularDistance?.toFixed(2)}\u00B0 from the Sun against an orb of ${c.combustion.orbUsed}\u00B0.`
-            : `${c.graha} is ${c.combustion.angularDistance?.toFixed(2)}\u00B0 from the Sun, just outside the adopted ${c.combustion.orbUsed}\u00B0 orb — not combust under this rule.`),
+            ? `${c.graha} is combust: ${dm(c.combustion.angularDistance ?? 0)} from the Sun against an orb of ${dm(c.combustion.orbUsed ?? 0)}.`
+            : `${c.graha} is ${dm(c.combustion.angularDistance ?? 0)} from the Sun, just outside the adopted ${dm(c.combustion.orbUsed ?? 0)} orb — not combust under this rule.`),
         ...derived.grahaConditions.conditions
           .filter((c) => c.planetaryWar.status === 'IN_WAR')
-          .map((c) => `${c.graha} is in graha yuddha with ${c.planetaryWar.opponent} (${c.planetaryWar.separationDeg?.toFixed(3)}\u00B0). The victor is not calculated.`),
+          .map((c) => `${c.graha} is in graha yuddha with ${c.planetaryWar.opponent} (${dms(c.planetaryWar.separationDeg ?? 0)}). The victor is not calculated.`),
         `Rahu and Ketu are marked retrograde by the mean-node convention, not by observed motion.`,
         `Shadbala: validation pending — computed internally, not verified, and used in no conclusion.`,
       ]),
@@ -1162,7 +1164,12 @@ function d10Appendix(derived: KundliDerivedModel): V2Section {
     blocks: [
       title('B6 · D10 Dashamsha — validation', 'दशांश सत्यापन'),
       {
-        kind: 'callout', tone: 'limitation', title: D10_PROMOTION.status.replace(/_/g, ' '),
+        kind: 'callout', tone: 'limitation',
+        // The label comes from the external-validation harness, not from a
+        // hand-written string, so the page cannot claim a status the register
+        // does not support. Today the register is empty, so this reads
+        // INTERNAL CROSSCHECK ONLY.
+        title: `D10 status — ${D10_PROMOTION.externalStatus.replace(/_/g, ' ')}`,
         text: D10_PROMOTION.reason, contentType: 'NOT_CALCULATED',
       },
       p('Rule applied: each rashi is divided into ten parts of 3\u00B0. From an odd rashi the parts are counted from that rashi; from an even rashi they are counted from the ninth rashi from it.', 'small', 'TRADITIONAL_RULE'),
@@ -1183,7 +1190,12 @@ function d10Appendix(derived: KundliDerivedModel): V2Section {
         'small',
         'CALCULATED_FACT',
       ),
-      p('D10 is not used by the career synthesis, or by any other conclusion in this report, while its status remains validation pending.', 'small', 'NOT_CALCULATED'),
+      p(
+        D10_PROMOTION.mayInfluenceConclusions
+          ? 'D10 has been compared against an external reference and may inform conclusions.'
+          : 'D10 is not used by the career synthesis, or by any other conclusion in this report, while its status remains validation pending.',
+        'small', 'NOT_CALCULATED',
+      ),
     ],
   };
 }

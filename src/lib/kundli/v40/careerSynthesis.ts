@@ -27,6 +27,7 @@ import type { GrahaConditionResult, GrahaCondition } from './grahaCondition';
 import type { BhavaIntelligenceResult } from './bhavaIntelligence';
 import type { DashaActivation } from './dashaActivation';
 import { D10_PROMOTION } from './d10Validation';
+import { dm } from './format';
 import { KENDRA_HOUSES, TRIKONA_HOUSES, DUSTHANA_HOUSES } from './functionalLordship';
 
 export const CAREER_SYNTHESIS_VERSION = 'career-synthesis-v1';
@@ -305,14 +306,14 @@ export function buildCareerSynthesis(
       if (c.combustion.status === 'COMBUST') {
         challenging.push(claim(
           `CAREER_COMBUST_${g}`,
-          `${g} is combust — ${c.combustion.angularDistance?.toFixed(2)}° from the Sun against an orb of ${c.combustion.orbUsed}°.`,
+          `${g} is combust — ${dm(c.combustion.angularDistance ?? 0)} from the Sun against an orb of ${dm(c.combustion.orbUsed ?? 0)}.`,
           'CHALLENGING',
           c.combustion.evidenceIds,
         ));
       } else if (c.combustion.nearCombust) {
         mixed.push(claim(
           `CAREER_NEAR_COMBUST_${g}`,
-          `${g} is close to the Sun (${c.combustion.angularDistance?.toFixed(2)}° against an orb of ${c.combustion.orbUsed}°) but outside the adopted combustion orb.`,
+          `${g} is close to the Sun (${dm(c.combustion.angularDistance ?? 0)} against an orb of ${dm(c.combustion.orbUsed ?? 0)}) but outside the adopted combustion orb.`,
           'MIXED',
           c.combustion.evidenceIds,
         ));

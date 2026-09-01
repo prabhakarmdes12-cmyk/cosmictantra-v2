@@ -161,7 +161,7 @@ export function buildStructuralHighlights(
       id: 'HL_COMBUST',
       ruleId: 'SALIENCE_COMBUSTION',
       priority: 80,
-      statement: `Combust (asta): ${combust.map((c) => `${c.graha} at ${c.combustion.angularDistance?.toFixed(2)}° from the Sun, orb ${c.combustion.orbUsed}°`).join('; ')}.`,
+      statement: `Combust (asta): ${combust.map((c) => `${c.graha} at ${dm(c.combustion.angularDistance ?? 0)} from the Sun, orb ${dm(c.combustion.orbUsed ?? 0)}`).join('; ')}.`,
       contentType: 'DERIVED_JYOTISH_FACT',
       system: 'PARASHARI',
       evidenceIds: combust.flatMap((c) => c.combustion.evidenceIds),

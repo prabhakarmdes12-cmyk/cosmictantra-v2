@@ -21,28 +21,40 @@
 
 import type { KundliCanonicalModel } from '../types';
 import type { CapabilityStatus } from './contentTypes';
+import { d10Gate, GOLDEN_VALIDATION_REGISTER, type D10Gate } from './validation/externalValidation';
 
 export const D10_VALIDATION_VERSION = 'd10-validation-v1';
 
 /**
- * Promotion gate.
+ * Promotion gate — the ONE place that decides whether D10 may inform a
+ * conclusion.
  *
- * VERIFIED_FOR_REPORT requires agreement with an INDEPENDENT external
- * reference (a licensed ephemeris/varga table), which this repository does not
- * hold. Cross-implementation agreement and hand-computed boundary fixtures are
- * necessary but not sufficient, so the gate stays closed.
+ * V40.1 moves the decision out of this file's opinion and into the external
+ * validation register: the gate opens if, and only if, the register holds a
+ * D10 case that AGREES with a named outside reference. Cross-implementation
+ * agreement and hand-computed boundary fixtures are necessary but not
+ * sufficient — two implementations of the same misreading agree perfectly —
+ * so with today's (empty) register the gate stays closed.
+ *
+ * Opening it therefore requires editing evidence, not editing a boolean.
  */
+const GATE = d10Gate(GOLDEN_VALIDATION_REGISTER);
+
 export const D10_PROMOTION: {
   status: CapabilityStatus;
+  /** The §10 label: INTERNAL_CROSSCHECK_ONLY until a reference says otherwise. */
+  externalStatus: D10Gate['status'];
   mayInfluenceConclusions: boolean;
   reason: string;
 } = {
-  status: 'VALIDATION_PENDING',
-  mayInfluenceConclusions: false,
-  reason:
-    'D10 agrees with an independent re-implementation of the classical rule and with hand-computed ' +
-    'boundary fixtures (see docs/kundli-v40/07-d10-validation.md), but it has not been compared against ' +
-    'an external licensed reference. Until it has, D10 is displayed for reference only and is used in no conclusion.',
+  status: GATE.mayInformConclusions ? 'CALCULATED' : 'VALIDATION_PENDING',
+  externalStatus: GATE.status,
+  mayInfluenceConclusions: GATE.mayInformConclusions,
+  reason: GATE.mayInformConclusions
+    ? GATE.reason
+    : 'D10 agrees with an independent re-implementation of the classical rule and with hand-computed '
+      + 'boundary fixtures (see docs/kundli-v40/07-d10-validation.md), but it has not been compared against '
+      + 'an external reference. Until it has, D10 is displayed for reference only and is used in no conclusion.',
 };
 
 export const SIGN_NAMES_SANSKRIT = [

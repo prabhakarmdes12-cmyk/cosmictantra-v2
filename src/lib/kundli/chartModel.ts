@@ -391,6 +391,13 @@ export function chartTextualEquivalent(model: ChartRenderModel): string[] {
 export function occupantsByHouse(model: ChartRenderModel): Map<number, ChartPlacement[]> {
   const out = new Map<number, ChartPlacement[]>();
   for (const house of model.houses) out.set(house.houseNumber, []);
-  for (const p of model.placements) out.get(p.houseNumber)?.push(p);
+  // Only grahas occupy a house. A placement without a planetId is a marker for
+  // an EMPTY house; letting one through here makes the chart layout reserve a
+  // row for a label with no text, which silently squeezes the real
+  // abbreviations in every other house of the chart.
+  for (const p of model.placements) {
+    if (!p.planetId) continue;
+    out.get(p.houseNumber)?.push(p);
+  }
   return out;
 }
