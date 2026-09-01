@@ -43,6 +43,7 @@ import {
   voiceStateMessage,
   type VoiceInputState,
 } from '../src/lib/kashi/interaction';
+import { decideOffer, longReadingConsent } from '../src/lib/kashi/offerPolicy';
 import { GRANTHS_DATA } from '../src/lib/granth/libraryData';
 
 const EMOTION_IDS = EMOTION_PATHS.map((p) => p.id);
@@ -374,5 +375,44 @@ test.describe('emotion detection', () => {
   test('unmatched text returns null rather than guessing', () => {
     expect(detectEmotion('आज मौसम अच्छा है')).toBeNull();
     expect(detectEmotion('')).toBeNull();
+  });
+});
+
+test.describe('proactive recitation offer policy', () => {
+  const base = { offeredThisSession: false, hasVerseAvailable: true, mode: 'verse-with-meaning' as const };
+
+  test('offers on the first interaction, on the scripture area, after an emotional verse, and on request', () => {
+    for (const trigger of ['first-interaction', 'scripture-area-open', 'after-emotional-response', 'capability-question'] as const) {
+      const d = decideOffer({ ...base, trigger });
+      expect(d.show, `${trigger} should offer`).toBe(true);
+      expect(d.text).toContain('प्रमाणित ग्रन्थों से श्लोक या पाठ सुना सकती हूँ');
+    }
+  });
+
+  test('never advertises after an ordinary response', () => {
+    const d = decideOffer({ ...base, trigger: 'ordinary-response' });
+    expect(d.show).toBe(false);
+  });
+
+  test('offers at most once per session', () => {
+    const d = decideOffer({ ...base, offeredThisSession: true, trigger: 'scripture-area-open' });
+    expect(d.show).toBe(false);
+    // …but a direct "what can you do?" question always answers.
+    expect(decideOffer({ ...base, offeredThisSession: true, trigger: 'capability-question' }).show).toBe(true);
+  });
+
+  test('does not offer a passage when none is available', () => {
+    expect(decideOffer({ ...base, hasVerseAvailable: false, trigger: 'after-emotional-response' }).show).toBe(false);
+  });
+
+  test('conversation-only mode suppresses offers except a direct question', () => {
+    expect(decideOffer({ ...base, mode: 'conversation-only', trigger: 'first-interaction' }).show).toBe(false);
+    expect(decideOffer({ ...base, mode: 'conversation-only', trigger: 'capability-question' }).show).toBe(true);
+  });
+
+  test('long reading asks for consent before starting', () => {
+    expect(longReadingConsent('chapter')).toContain('पूरा अध्याय');
+    expect(longReadingConsent('book')).toContain('पूरा ग्रन्थ');
+    expect(longReadingConsent('chapter', 'en')).toContain('full chapter');
   });
 });

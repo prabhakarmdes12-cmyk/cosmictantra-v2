@@ -40,6 +40,21 @@ import { calculatePanchang } from '@/engines/panchang.js';
 import { chitiSensory } from '@/lib/chitiAudio';
 import { ScriptureInsight, findScriptureInsight, SCRIPTURE_WISDOM_REGISTRY } from '@/lib/ai/scriptureMap';
 import { MOOD_OPTIONS, MOOD_QUESTION_HI, getMoodById } from '@/lib/ai/moodOptions';
+import { useKashiSahayak } from '@/hooks/useKashiSahayak';
+import { KashiComposer } from '@/components/kashi/KashiComposer';
+import { KashiVerseCard } from '@/components/kashi/KashiVerseCard';
+import { KashiClarification, KashiQuickActions } from '@/components/kashi/KashiClarification';
+import type { EmotionId } from '@/lib/kashi/emotionalSupport';
+
+/** Existing mood chips -> Kashi emotional-support paths. */
+const MOOD_TO_EMOTION: Record<string, EmotionId> = {
+  MOOD_CALM: 'spiritual',
+  MOOD_ANXIOUS: 'anxiety',
+  MOOD_SAD: 'sadness',
+  MOOD_ANGRY: 'anger',
+  MOOD_CONFUSED: 'confusion',
+  MOOD_TIRED: 'stress',
+};
 import { useKashiVoice } from '@/lib/ai/useKashiVoice';
 import { shouldAutoAdvance, speechRateFor } from '@/lib/granth/session';
 import { getChatSafetyReply } from '@/lib/ai/chatSafety';
@@ -929,8 +944,15 @@ export default function FloatingAIGuruAvatar() {
     }, 400);
   };
 
+  const kashi = useKashiSahayak();
+
   const handleChipClick = (chip: { label: string; action: string; href?: string }) => {
     playClick();
+
+    // Kashi Sahayak: a mood chip is a direct user gesture, so the companion
+    // produces acknowledgement + a verified passage for that feeling.
+    const emotion = MOOD_TO_EMOTION[chip.action];
+    if (emotion) kashi.selectEmotion(emotion, chip.label);
 
     const userMsg: ChatMessage = {
       id: `u-${Date.now()}`,
@@ -2384,14 +2406,70 @@ export default function FloatingAIGuruAvatar() {
           </div>
 
           {/* Bottom Chat Input Bar */}
-          <form onSubmit={handleSendMessage} className="p-3 bg-[#FAF7F2] dark:bg-[#121526] border-t border-black/10 dark:border-white/10 flex items-center gap-2 shrink-0">
-            <input
-              type="text"
-              value={inputVal}
-              onChange={(e) => setInputVal(e.target.value)}
-              placeholder="मन की बात या प्रश्न लिखें — जैसे 'आज मन उदास है' या 'आज का राहुकाल'..."
-              className="flex-1 px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#070912] border border-black/10 dark:border-white/10 text-xs sm:text-sm text-[#1C1917] dark:text-white placeholder:text-[#8C827A] dark:placeholder:text-[#6C7280] focus:outline-none focus:border-[#8E6F1D]"
+          {/* KASHI SAHAYAK — verified passage, clarification, quick actions */}
+          <div data-testid="kashi-companion" data-revision={kashi.revision} className="px-3 pt-2 space-y-2">
+            {kashi.lastResponse?.guidance === 'safety' && (
+              <div data-testid="kashi-safety" role="alert" className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-300 dark:border-rose-800 text-xs">
+                {kashi.lastResponse.acknowledgement}
+              </div>
+            )}
+            {kashi.pendingVerse ? (
+              <KashiVerseCard
+                passage={kashi.pendingVerse}
+                reflection={kashi.lastResponse?.reflection || undefined}
+                language="hi"
+                autoplayAllowed={false}
+                onListen={() => kashi.control('resume')}
+                unresolvedReason={kashi.lastResponse?.unresolvedReason ?? null}
+              />
+            ) : kashi.lastResponse?.unresolvedReason ? (
+              <div data-testid="kashi-no-passage" className="p-3 rounded-xl bg-white dark:bg-[#121522] border border-black/10 dark:border-white/10 text-xs">
+                {kashi.lastResponse.unresolvedReason}
+              </div>
+            ) : null}
+            {kashi.voiceState === 'uncertain' && (
+              <KashiClarification
+                choices={kashi.clarification}
+                language="hi"
+                onChoose={(choice) => kashi.sendText(choice)}
+                onRetryVoice={kashi.startListening}
+                onTypeInstead={kashi.cancelListening}
+              />
+            )}
+            <KashiQuickActions
+              actions={kashi.quickActions}
+              onAction={(a) => {
+                if (a === 'रोकें') kashi.control('stop');
+                else if (a === 'आगे पढ़ें') kashi.control('advance');
+                else if (a === 'फिर से सुनाएं') kashi.control('repeat');
+                else if (a === 'केवल मुझसे बात करें') kashi.sendText('बस मुझसे बात करो');
+              }}
             />
+          </div>
+
+          <form onSubmit={handleSendMessage} className="p-3 bg-[#FAF7F2] dark:bg-[#121526] border-t border-black/10 dark:border-white/10 flex items-center gap-2 shrink-0">
+            <div className="flex-1">
+              <KashiComposer
+                language="hi"
+                voiceState={kashi.voiceState}
+                transcript={kashi.transcript}
+                canAutoSend={kashi.canAutoSend}
+                muted={kashi.session.muted}
+                speaking={false}
+                value={inputVal}
+                onValueChange={(v) => { setInputVal(v); kashi.editTranscript(v); }}
+                onSend={() => {
+                  const typed = (kashi.transcript || inputVal).trim();
+                  if (typed) kashi.sendText(typed);
+                  setInputVal('');
+                  void handleSendMessage();
+                }}
+                onMicPress={() => (kashi.voiceState === 'listening' ? kashi.stopListening() : kashi.startListening())}
+                onCancelListening={kashi.cancelListening}
+                onToggleMute={() => kashi.control(kashi.session.muted ? 'unmute' : 'mute')}
+                onStopSpeaking={() => kashi.control('stop')}
+              />
+            </div>
             <button
               type="submit"
               disabled={!inputVal.trim()}
