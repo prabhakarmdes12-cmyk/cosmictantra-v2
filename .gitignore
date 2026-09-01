@@ -38,3 +38,6 @@ Thumbs.db
 workspace-*
 scratch/
 test-results/
+
+# Generated verification artifacts (PDFs, rasters, extracted text)
+artifacts/

@@ -15,7 +15,22 @@ import type {
   KundliCanonicalModel, PlanetPosition, HouseData, PanchangaData,
   AscendantData, DivisionalChartData, DashaTimelineData, SignRef,
   YogaResult, DoshaResult, CalculationConfig, NormalizedBirthProfile, DashaPeriodInfo,
+  YogaCondition, YogaStatus,
 } from './types';
+
+/** Structural shape of a rule evaluation arriving from the yoga engine. */
+interface YogaEvaluationLike {
+  id: string;
+  name: string;
+  system?: string;
+  rule?: string;
+  inputs?: { planets?: string[]; houses?: number[]; signs?: string[] };
+  conditions?: YogaCondition[];
+  result?: YogaStatus;
+  evidenceRefs?: string[];
+  status: YogaStatus;
+  notCalculatedReason?: string;
+}
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -250,15 +265,57 @@ export function buildDashas(snapshot: any): DashaTimelineData {
 
 export function buildYogasAndDoshas(snapshot: any): { yogas: YogaResult[]; doshas: DoshaResult[] } {
   const yd = snapshot.yogasAndDoshas ?? {};
-  const yogas: YogaResult[] = (Array.isArray(yd.rajYogas) ? yd.rajYogas : []).map((name: string) => ({
-    name,
-    basis: ['engine.declared.rajYogas'],
-  }));
-  for (const sc of Array.isArray(yd.specialCombinations) ? yd.specialCombinations : []) {
-    if (sc?.name) yogas.push({ name: sc.name, basis: ['engine.declared.specialCombinations'] });
+
+  // Yogas must arrive as rule evaluations, never as pre-declared name lists.
+  if (!Array.isArray(yd.yogas)) {
+    throw new KundliError(
+      'KUNDLI_CALCULATION_INCOMPLETE',
+      'yoga evaluations missing from canonical snapshot — the engine must supply rule-evaluated yogas',
+      { received: typeof yd.yogas },
+    );
   }
 
+  const VALID_YOGA_STATUS = ['PRESENT', 'ABSENT', 'INDETERMINATE', 'NOT_CALCULATED'];
+  const yogas: YogaResult[] = (yd.yogas as YogaEvaluationLike[]).map((y) => {
+    if (!y || typeof y.id !== 'string' || !VALID_YOGA_STATUS.includes(y.status)) {
+      throw new KundliError(
+        'KUNDLI_CALCULATION_INCOMPLETE',
+        `yoga record is not a valid rule evaluation: ${JSON.stringify(y).slice(0, 120)}`,
+        { yogaId: y?.id ?? null },
+      );
+    }
+    const conditions: YogaCondition[] = Array.isArray(y.conditions) ? y.conditions : [];
+    return {
+      id: y.id,
+      name: requireValue(`yoga.${y.id}.name`, y.name),
+      system: y.system === 'JAIMINI' || y.system === 'KP' ? y.system : 'PARASHARI',
+      rule: y.rule ?? '',
+      inputs: {
+        planets: Array.isArray(y.inputs?.planets) ? y.inputs.planets : [],
+        houses: Array.isArray(y.inputs?.houses) ? y.inputs.houses : [],
+        signs: Array.isArray(y.inputs?.signs) ? y.inputs.signs : [],
+      },
+      conditions,
+      result: y.status,
+      evidenceRefs: Array.isArray(y.evidenceRefs) ? y.evidenceRefs : [],
+      status: y.status,
+      notCalculatedReason: y.notCalculatedReason,
+      basis: conditions.flatMap((c) => c.evidence),
+    };
+  });
+
   const doshas: DoshaResult[] = [];
+  if (yd.kalsarpa) {
+    doshas.push({
+      id: 'kalsarpa',
+      status: 'NOT_CALCULATED',
+      result: {
+        status: 'NOT_CALCULATED',
+        notCalculatedReason: (yd.kalsarpa as any).notCalculatedReason
+          ?? 'Kalsarpa dosha rule not implemented.',
+      },
+    });
+  }
   if (yd.manglik) {
     doshas.push({
       id: 'manglik',

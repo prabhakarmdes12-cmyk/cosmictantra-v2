@@ -33,6 +33,7 @@ import {
   VimshopakaBalaResult
 } from './balaEngine';
 import { calculateAshtakavarga, AshtakavargaResult } from './ashtakavargaEngine';
+import { evaluateYogas, presentYogaNames, YogaEvaluation } from './yogaEngine';
 import { calculateJaimini, JaiminiResult } from './jaiminiEngine';
 import { calculateKpSystem, KpSystemResult } from './kpEngine';
 import { calculateVarshaphala, VarshaphalaResult } from './varshaphalaEngine';
@@ -170,7 +171,15 @@ export interface CanonicalJyotishSnapshot {
       phase: string;
       description: string;
     };
+    kalsarpa: {
+      status: 'NOT_CALCULATED';
+      notCalculatedReason: string;
+    };
+    /** Rule evaluations — the authoritative yoga record. */
+    yogas: YogaEvaluation[];
+    /** Derived: names of yogas whose rules evaluated to PRESENT. */
     rajYogas: string[];
+    /** Deprecated: always empty; kept so existing consumers do not break. */
     specialCombinations: string[];
   };
   
@@ -322,6 +331,26 @@ export function getCanonicalJyotishSnapshot(context: NormalizedBirthContext): Ca
   const isSadeSati = [12, 1, 2].includes(saturnFromMoon);
   const sadeSatiPhase = saturnFromMoon === 12 ? '1st Phase (Rising / द्वादश शनि)' : saturnFromMoon === 1 ? 'Peak Phase (Janma Shani / जन्म शनि)' : saturnFromMoon === 2 ? '3rd Phase (Setting / द्वितीय शनि)' : 'Not Active';
 
+  // 11. Rule-evaluated yogas (replaces the previous unconditional declarations)
+  //     Every yoga is evaluated against the computed chart and carries its
+  //     conditions, evidence and status (PRESENT / ABSENT / INDETERMINATE /
+  //     NOT_CALCULATED). Nothing is declared that the rules did not produce.
+  const yogaChart = {
+    planets: (kundli.planets as any[]).map((p: any) => ({
+      id: p.name,
+      house: Number(p.house) || 0,
+      signId: Number(p.rashiId ?? p.rasiId) || 0,
+      signName: p.rashiName ?? p.rasiName ?? String(p.rashiId ?? p.rasiId ?? ''),
+      longitudeDeg: Number(p.longitude) || 0,
+    })),
+    houseSigns: (kundli.houses as any[]).map((h: any) => {
+      const signId = Number(h.rashiId ?? h.rasiId);
+      return Number.isFinite(signId) && signId > 0 ? signId : null;
+    }),
+    ascendantSignId: Number(kundli.lagna?.rashiId) || 0,
+  };
+  const yogaEvaluations = evaluateYogas(yogaChart);
+
   return {
     meta: {
       calculatedAt: new Date().toISOString(),
@@ -407,8 +436,19 @@ export function getCanonicalJyotishSnapshot(context: NormalizedBirthContext): Ca
         phase: sadeSatiPhase,
         description: isSadeSati ? `Saturn is currently transiting ${sadeSatiPhase} relative to natal Moon.` : 'Saturn is favorably placed.'
       },
-      rajYogas: ['Dharma-Karmadhipati Yoga (9th/10th Lord Resonance)', 'Gaja-Kesari Yoga (Jupiter in Kendra from Moon)'],
-      specialCombinations: ['Budhaditya Yoga (Sun-Mercury Intellect Conjunction)']
+      kalsarpa: {
+        // The type allows a kalsarpa dosha, but no rule is implemented yet.
+        // Declared explicitly as NOT_CALCULATED instead of being silently
+        // omitted, so a report cannot imply it was checked and found absent.
+        status: 'NOT_CALCULATED',
+        notCalculatedReason:
+          'Kalsarpa dosha rule not implemented: requires a documented definition of which node axis and which graha inclusion rule this engine adopts.',
+      },
+      yogas: yogaEvaluations,
+      // Derived convenience view for existing UI surfaces. Contains ONLY the
+      // yogas the rules above declared PRESENT.
+      rajYogas: presentYogaNames(yogaEvaluations),
+      specialCombinations: [],
     },
     ashtakavarga: calculateAshtakavarga(kundli.planets as any, kundli.lagna.rashiId || 1),
     jaimini: calculateJaimini(kundli.planets as any[], {
