@@ -17,7 +17,8 @@ import type { KundliCanonicalModel } from '../types';
 import type { KundliDerivedModel } from './derivedModel';
 import type { V2Block, V2Section, KundliReportModelV2 } from './reportBlocks';
 import { buildChartRenderModel, type ChartLabelMode } from '../chartModel';
-import { tr, trAll } from './structuralTerms';
+import { tr, trAll, trDate } from './structuralTerms';
+import { trProse } from './prosePassages';
 import { deriveReportId } from '../lineage';
 import { sha256Hex } from '../../granth/checksum';
 import { YOGA_SOURCE_REGISTRY_VERSION } from '../../jyotish/yogaSourceRegistry';
@@ -127,7 +128,7 @@ function coverSection(
         documentTitle: TERMS.janmaKundli.hi,
         subjectName: s.name,
         birthLines: [
-          `${longDate(s.birthDate)}${wd ? `  ·  ${tr(wd.en, mode)}` : ''}`,
+          `${trDate(longDate(s.birthDate), mode)}${wd ? `  ·  ${tr(wd.en, mode)}` : ''}`,
           clockTime(s.birthTime),
           s.locationName,
         ],
@@ -173,7 +174,7 @@ function passportSection(
     status: 'READY',
     blocks: [
       title('Kundli Passport', renderTerm(TERMS.birthDetails, 'hi'), tr('PART A', mode), mode),
-      p('Every value on this page is an input or a declared setting. Nothing here is interpreted.', 'small', 'CALCULATED_FACT'),
+      p(trProse('Every value on this page is an input or a declared setting. Nothing here is interpreted.', mode), 'small', 'CALCULATED_FACT'),
 
       {
         kind: 'kvGrid',
@@ -182,7 +183,7 @@ function passportSection(
         contentType: 'CALCULATED_FACT',
         items: [
           { label: label('name', mode), value: s.name },
-          { label: label('date', mode), value: longDate(s.birthDate) },
+          { label: label('date', mode), value: trDate(longDate(s.birthDate), mode) },
           { label: label('localTime', mode), value: `${clockTime(s.birthTime)} (${s.birthTime} local)` },
           { label: label('weekday', mode), value: wd ? renderTerm(wd, mode) : '—' },
           { label: label('place', mode), value: s.locationName },
@@ -199,8 +200,8 @@ function passportSection(
           { label: label('longitude', mode), value: `${s.coordinates.longitude.toFixed(4)}\u00B0` },
           { label: label('timezone', mode), value: `${tz.timezoneId} (${offset})` },
           { label: label('utcInstant', mode), value: tz.utcDateTime },
-          { label: label('timezoneProvenance', mode), value: humanEnum(tz.offsetProvenance) },
-          { label: label('coordinateProvenance', mode), value: humanEnum(s.coordinates.provenance) },
+          { label: label('timezoneProvenance', mode), value: tr(humanEnum(tz.offsetProvenance), mode) },
+          { label: label('coordinateProvenance', mode), value: tr(humanEnum(s.coordinates.provenance), mode) },
         ],
       },
 
@@ -232,9 +233,12 @@ function passportSection(
         ],
       },
       p(
-        `Lunar month: the amanta name above is derived by the panchang kernel from the Sun's sidereal rashi at birth. ` +
-        `The purnimanta name is reported as not calculated — see the Scholar Appendix for why the two conventions are not ` +
-        `treated as interchangeable here.`,
+        trProse(
+          `Lunar month: the amanta name above is derived by the panchang kernel from the Sun's sidereal rashi at birth. `
+          + `The purnimanta name is reported as not calculated — see the Scholar Appendix for why the two conventions are not `
+          + `treated as interchangeable here.`,
+          mode,
+        ),
         'micro',
         'NOT_CALCULATED',
       ),
@@ -256,12 +260,20 @@ function passportSection(
       {
         kind: 'callout',
         tone: 'info',
-        title: 'Why this page comes first',
-        text:
+        title: trProse('Why this page comes first', mode),
+        // The input fingerprint used to be appended here and was scrubbed
+        // back out by the Part A density filter, which matched on the English
+        // phrasing. Translating the sentence slipped it past that filter and
+        // the PA-02 gate caught the hash in Part A. §31 wants zero
+        // implementation hashes in Part A, so it is dropped at the source
+        // instead of relying on a downstream regex to keep removing it; the
+        // fingerprint is stated in the Scholar Appendix, where it belongs.
+        text: trProse(
           'Every statement in this report is downstream of the six settings above. Change the ayanamsha or the house system and a '
           + 'different chart appears, with different bhava lords and different yoga verdicts. They are printed here, before any '
-          + 'result, so a reader can reject the whole document on its inputs rather than argue with its conclusions. The input '
-          + `fingerprint ${s.fingerprint} is a hash of exactly these values.`,
+          + 'result, so a reader can reject the whole document on its inputs rather than argue with its conclusions.',
+          mode,
+        ),
         contentType: 'CALCULATED_FACT',
       },
     ],
@@ -330,7 +342,7 @@ function saarSection(
     status: 'READY',
     blocks: [
       title('Kundli Saar', renderTerm(TERMS.saar, 'hi'), tr('PART A', mode), mode),
-      p('The structural chart in one page. Every line below is a calculated fact or a rule verdict; nothing on this page is an interpretation.', 'small', 'CALCULATED_FACT'),
+      p(trProse('The structural chart in one page. Every line below is a calculated fact or a rule verdict; nothing on this page is an interpretation.', mode), 'small', 'CALCULATED_FACT'),
 
       {
         kind: 'kvGrid',
@@ -339,7 +351,7 @@ function saarSection(
         contentType: 'CALCULATED_FACT',
         items: [
           { label: label('lagna', mode), value: `${signLabelV40(asc.sign.id, mode)} ${dm(asc.degreeInSign)}` },
-          { label: label('lagnesha', mode), value: lagnesha && lagneshaCond ? `${planetLabel(lagnesha, mode)} in the ${ORDINAL[lagneshaCond.house]} bhava` : '—' },
+          { label: label('lagnesha', mode), value: lagnesha && lagneshaCond ? `${planetLabel(lagnesha, mode)} \u2192 ${bhavaLabel(lagneshaCond.house, mode)}` : '—' },
           { label: label('chandraRashi', mode), value: moon ? `${signLabelV40(moon.sign.id, mode)} ${dm(moon.degreeInSign)}` : '—' },
           { label: label('janmaNakshatra', mode), value: `${nakshatraLabel(canonical.panchanga.nakshatra.name, mode)} · ${label('pada', mode)} ${canonical.panchanga.nakshatra.pada}` },
           { label: label('nakshatraLord', mode), value: canonical.panchanga.nakshatra.ruler },
@@ -353,17 +365,17 @@ function saarSection(
         columns: 2,
         contentType: 'CALCULATED_FACT',
         items: [
-          { label: label('mahadasha', mode), value: `${canonical.dashas.current.mahadasha} (${canonical.dashas.current.startDate} to ${canonical.dashas.current.endDate})` },
-          { label: label('antardasha', mode), value: canonical.dashas.current.antardasha },
-          { label: label('pratyantardasha', mode), value: canonical.dashas.current.pratyantardasha || '—' },
-          { label: label('nextTransition', mode), value: derived.dasha.nextTransition ? `${derived.dasha.nextTransition.lord} from ${derived.dasha.nextTransition.onDate}` : '—' },
-          { label: label('balanceAtBirth', mode), value: bal.status === 'CALCULATED' ? `${bal.lord} — ${bal.ymd}` : 'not calculated' },
+          { label: label('mahadasha', mode), value: `${planetLabel(canonical.dashas.current.mahadasha, mode)} (${canonical.dashas.current.startDate} \u2013 ${canonical.dashas.current.endDate})` },
+          { label: label('antardasha', mode), value: planetLabel(canonical.dashas.current.antardasha, mode) },
+          { label: label('pratyantardasha', mode), value: canonical.dashas.current.pratyantardasha ? planetLabel(canonical.dashas.current.pratyantardasha, mode) : '—' },
+          { label: label('nextTransition', mode), value: derived.dasha.nextTransition ? `${planetLabel(derived.dasha.nextTransition.lord, mode)} \u2014 ${derived.dasha.nextTransition.onDate}` : '—' },
+          { label: label('balanceAtBirth', mode), value: bal.status === 'CALCULATED' ? `${planetLabel(bal.lord, mode)} — ${bal.ymd}` : tr('not calculated', mode) },
         ],
       },
 
       {
         kind: 'statusList',
-        title: 'Important configurations',
+        title: trProse('Important configurations', mode),
         contentType: 'TRADITIONAL_RULE',
         system: 'PARASHARI',
         items: statusItems,
@@ -371,7 +383,7 @@ function saarSection(
 
       h3(tr('Structural highlights', mode)),
       bullets(derived.highlights.map((x) => x.statement)),
-      p('Highlights are selected by declared salience rules over the calculated chart, not chosen by hand and not written by a language model. The rule that produced each line is listed in the Scholar Appendix.', 'micro', 'DERIVED_JYOTISH_FACT'),
+      p(trProse('Highlights are selected by declared salience rules over the calculated chart, not chosen by hand and not written by a language model. The rule that produced each line is listed in the Scholar Appendix.', mode), 'micro', 'DERIVED_JYOTISH_FACT'),
     ],
   };
 }
@@ -463,7 +475,7 @@ function chartSection(
         headers: trAll(['Bhava', 'Rashi', 'Grahas'], mode),
         widths: [0.16, 0.3, 0.54],
         rows: placementRows,
-        caption: 'Every placement in the drawing, as text.',
+        caption: trProse('Every placement in the drawing, as text.', mode),
         contentType: 'CALCULATED_FACT',
       },
     ],
@@ -571,7 +583,7 @@ function bhavaMatrixSection(derived: KundliDerivedModel, mode: LabelMode): V2Sec
     status: 'READY',
     blocks: [
       title('Bhava Intelligence Matrix', renderTerm(TERMS.bhavaMatrix, 'hi'), tr('PART A', mode), mode),
-      p('All twelve bhavas with the sign on them, their lord, where that lord actually sits, who occupies them, and the full drishti they receive.', 'small', 'DERIVED_JYOTISH_FACT'),
+      p(trProse('All twelve bhavas with the sign on them, their lord, where that lord actually sits, who occupies them, and the full drishti they receive.', mode), 'small', 'DERIVED_JYOTISH_FACT'),
       {
         kind: 'table',
         headers: trAll(['Bhava', 'Rashi', 'Bhavesha', 'Bhavesha placement', 'Occupants', 'Drishti received', 'Karaka'], mode),
@@ -641,7 +653,7 @@ function yogaDashboardSection(canonical: KundliCanonicalModel, derived: KundliDe
 
   const blocks: V2Block[] = [
     title('Yoga and Dosha', renderTerm(TERMS.yogaDashboard, 'hi'), tr('PART A', mode), mode),
-    p('A yoga is marked present only when EVERY condition of the applied rule evaluated true. A rule the engine does not implement is marked not calculated — it is never rewritten as absent.', 'small', 'TRADITIONAL_RULE'),
+    p(trProse('A yoga is marked present only when EVERY condition of the applied rule evaluated true. A rule the engine does not implement is marked not calculated — it is never rewritten as absent.', mode), 'small', 'TRADITIONAL_RULE'),
   ];
 
   if (present.length > 0) blocks.push({ kind: 'statusList', title: tr('Confirmed', mode), items: present, contentType: 'TRADITIONAL_RULE', system: 'PARASHARI' });
@@ -650,7 +662,7 @@ function yogaDashboardSection(canonical: KundliCanonicalModel, derived: KundliDe
   if (notCalc.length > 0) blocks.push({ kind: 'statusList', title: tr('Not calculated', mode), items: notCalc, contentType: 'NOT_CALCULATED', system: 'PARASHARI' });
   blocks.push({ kind: 'statusList', title: tr('Dosha', mode), items: doshaItems, contentType: 'TRADITIONAL_RULE', system: 'PARASHARI' });
   blocks.push(p(
-    'Source status for every rule above: traditional attribution — verification pending. The full provenance statement for each rule, including which locators have not been checked against a held edition, is in the Scholar Appendix.',
+    trProse('Source status for every rule above: traditional attribution — verification pending. The full provenance statement for each rule, including which locators have not been checked against a held edition, is in the Scholar Appendix.', mode),
     'micro',
     'TRADITIONAL_RULE',
   ));
@@ -660,7 +672,7 @@ function yogaDashboardSection(canonical: KundliCanonicalModel, derived: KundliDe
     'NOT_CALCULATED',
   ));
 
-  return { id: 'yoga-dosha-dashboard', title: 'Yoga and Dosha Dashboard', part: 'A', startsNewPage: true, status: 'READY', blocks };
+  return { id: 'yoga-dosha-dashboard', title: trProse('Yoga and Dosha Dashboard', mode), part: 'A', startsNewPage: true, status: 'READY', blocks };
 }
 
 function vimshottariSection(canonical: KundliCanonicalModel, derived: KundliDerivedModel, mode: LabelMode): V2Section {
@@ -692,12 +704,12 @@ function vimshottariSection(canonical: KundliCanonicalModel, derived: KundliDeri
           { label: label('mahadasha', mode), value: `${cur.mahadasha} (${cur.startDate} to ${cur.endDate})` },
           { label: label('antardasha', mode), value: cur.antardasha },
           { label: label('pratyantardasha', mode), value: cur.pratyantardasha || '—' },
-          { label: label('nextTransition', mode), value: derived.dasha.nextTransition ? `${derived.dasha.nextTransition.lord} from ${derived.dasha.nextTransition.onDate}` : '—' },
+          { label: label('nextTransition', mode), value: derived.dasha.nextTransition ? `${planetLabel(derived.dasha.nextTransition.lord, mode)} \u2014 ${derived.dasha.nextTransition.onDate}` : '—' },
         ],
       },
       {
         kind: 'timeline',
-        caption: 'All nine mahadashas. The current period is marked; the bar length is proportional to the period length.',
+        caption: trProse('All nine mahadashas. The current period is marked; the bar length is proportional to the period length.', mode),
         contentType: 'CALCULATED_FACT',
         periods: canonical.dashas.mahadashas.map((m) => ({
           label: m.planet, start: m.startDate, end: m.endDate, years: m.durationYears, current: m.isCurrent,
@@ -755,7 +767,7 @@ function activationSection(derived: KundliDerivedModel, mode: LabelMode): V2Sect
       h3(tr('Overlapping themes', mode)),
       derived.dasha.overlappingThemes.length > 0
         ? bullets(derived.dasha.overlappingThemes.map((t) => t.statement))
-        : p('No bhava is touched by more than one of the active lords.', 'small', 'DERIVED_JYOTISH_FACT'),
+        : p(trProse('No bhava is touched by more than one of the active lords.', mode), 'small', 'DERIVED_JYOTISH_FACT'),
       h3(tr('Yoga participation of the active lords', mode)),
       bullets(
         derived.dasha.profiles
@@ -767,12 +779,12 @@ function activationSection(derived: KundliDerivedModel, mode: LabelMode): V2Sect
               : `${p2.lord}: participates in no yoga that this engine found present.`;
           }),
       ),
-      { kind: 'notesArea', title: 'Notes on the running period', lines: 4 },
+      { kind: 'notesArea', title: trProse('Notes on the running period', mode), lines: 4 },
       {
         kind: 'callout',
         tone: 'limitation',
-        title: 'What this page does not say',
-        text: 'This page states which parts of the chart the running period touches. It does not name the events that follow, or their timing, or whether an outcome is favourable. No event is predicted anywhere in this report.',
+        title: trProse('What this page does not say', mode),
+        text: trProse('This page states which parts of the chart the running period touches. It does not name the events that follow, or their timing, or whether an outcome is favourable. No event is predicted anywhere in this report.', mode),
         contentType: 'NOT_CALCULATED',
       },
     ],
@@ -788,7 +800,7 @@ function careerSection(derived: KundliDerivedModel, mode: LabelMode): V2Section 
 
   const blocks: V2Block[] = [
     title('Career — Reference Synthesis', renderTerm(TERMS.career, 'hi'), tr('PART A', mode), mode),
-    p('Career is the one interpretive domain V40 builds end to end. Every factor below is listed with the evidence that produced it, including the factors that work against the reading and the factors that could not be evaluated at all.', 'small', 'INTERPRETIVE_SYNTHESIS'),
+    p(trProse('Career is the one interpretive domain V40 builds end to end. Every factor below is listed with the evidence that produced it, including the factors that work against the reading and the factors that could not be evaluated at all.', mode), 'small', 'INTERPRETIVE_SYNTHESIS'),
 
     h3(tr('Natal indication', mode)),
     bullets(c.natalPromise.map((x) => x.statement)),
@@ -835,7 +847,7 @@ function careerSection(derived: KundliDerivedModel, mode: LabelMode): V2Section 
   blocks.push({
     kind: 'callout',
     tone: 'limitation',
-    title: 'Read this before reading the conclusion',
+    title: trProse('Read this before reading the conclusion', mode),
     text:
       `Evidence coverage ${pct} means ${c.confidence.resolvedFactors.length} of ${c.confidence.resolvedFactors.length + c.confidence.missingFactors.length} ` +
       `declared factors produced evidence. ` + c.conclusion.explicitlyNotClaimed.join(' '),
@@ -845,7 +857,7 @@ function careerSection(derived: KundliDerivedModel, mode: LabelMode): V2Section 
   blocks.push(bullets(c.confidence.missingFactors.map((m) => `${factorName(m.factor)} — ${m.reason}`), 'small'));
   blocks.push(p(`Birth-time sensitivity: ${c.confidence.birthTimeSensitivity}`, 'micro', 'PRACTICAL_REFLECTION'));
 
-  return { id: 'career-synthesis', title: 'Career Synthesis', part: 'A', startsNewPage: true, status: 'READY', blocks };
+  return { id: 'career-synthesis', title: trProse('Career Synthesis', mode), part: 'A', startsNewPage: true, status: 'READY', blocks };
 }
 
 function discussionSection(derived: KundliDerivedModel, mode: LabelMode): V2Section {
@@ -857,7 +869,7 @@ function discussionSection(derived: KundliDerivedModel, mode: LabelMode): V2Sect
     status: 'READY',
     blocks: [
       title('Pandit Discussion Points', renderTerm(TERMS.discussionPoints, 'hi'), tr('PART A', mode), mode),
-      p('Questions raised by structures that exist in this chart. They are prompts for the consultation, not predictions, and none of them answers itself.', 'small', 'PRACTICAL_REFLECTION'),
+      p(trProse('Questions raised by structures that exist in this chart. They are prompts for the consultation, not predictions, and none of them answers itself.', mode), 'small', 'PRACTICAL_REFLECTION'),
       ...derived.discussionPoints.flatMap((d): V2Block[] => [
         p(`\u2022  ${d.question}`, 'body', 'PRACTICAL_REFLECTION'),
         p(`      basis: ${d.basis}`, 'micro', 'DERIVED_JYOTISH_FACT'),
@@ -866,7 +878,7 @@ function discussionSection(derived: KundliDerivedModel, mode: LabelMode): V2Sect
       {
         kind: 'callout',
         tone: 'info',
-        text: 'CosmicTantra generates these prompts to save a Pandit reading time. It does not answer them, and it does not replace the judgement that answers them.',
+        text: trProse('CosmicTantra generates these prompts to save a Pandit reading time. It does not answer them, and it does not replace the judgement that answers them.', mode),
         contentType: 'PRACTICAL_REFLECTION',
       },
     ],
@@ -882,14 +894,14 @@ function notesSection(mode: LabelMode): V2Section {
     status: 'READY',
     blocks: [
       title('Pandit Notes', renderTerm(TERMS.panditNotes, 'hi'), tr('PART A', mode), mode),
-      p('For the practitioner\'s own observations during the consultation.', 'small', 'PRACTICAL_REFLECTION'),
-      { kind: 'notesArea', title: 'Main observation / मुख्य अवलोकन', lines: 4 },
-      { kind: 'notesArea', title: 'Career / कर्म', lines: 3 },
-      { kind: 'notesArea', title: 'Marriage / विवाह', lines: 3 },
-      { kind: 'notesArea', title: 'Finance / धन', lines: 3 },
-      { kind: 'notesArea', title: 'Dasha / दशा', lines: 3 },
-      { kind: 'notesArea', title: 'Remedy / उपाय', lines: 3 },
-      { kind: 'notesArea', title: 'Follow-up / अगली भेंट', lines: 2 },
+      p(trProse('For the practitioner\'s own observations during the consultation.', mode), 'small', 'PRACTICAL_REFLECTION'),
+      { kind: 'notesArea', title: trProse('Main observation / मुख्य अवलोकन', mode), lines: 4 },
+      { kind: 'notesArea', title: trProse('Career / कर्म', mode), lines: 3 },
+      { kind: 'notesArea', title: trProse('Marriage / विवाह', mode), lines: 3 },
+      { kind: 'notesArea', title: trProse('Finance / धन', mode), lines: 3 },
+      { kind: 'notesArea', title: trProse('Dasha / दशा', mode), lines: 3 },
+      { kind: 'notesArea', title: trProse('Remedy / उपाय', mode), lines: 3 },
+      { kind: 'notesArea', title: trProse('Follow-up / अगली भेंट', mode), lines: 2 },
     ],
   };
 }
@@ -924,7 +936,7 @@ function howToReadSection(canonical: KundliCanonicalModel, derived: KundliDerive
           { label: tr('Validation pending', mode), status: 'VALIDATION_PENDING', note: 'computed but not yet trusted; shown, never used in a conclusion' },
         ],
       },
-      p('The mark is a shape, not a colour, so the page still reads correctly in black and white or in photocopy.', 'micro', 'CALCULATED_FACT'),
+      p(trProse('The mark is a shape, not a colour, so the page still reads correctly in black and white or in photocopy.', mode), 'micro', 'CALCULATED_FACT'),
       h3(tr('What this report will never do', mode)),
       bullets([
         'It will not predict death, disease, marriage, childbirth, a court result or a financial outcome.',
@@ -935,7 +947,7 @@ function howToReadSection(canonical: KundliCanonicalModel, derived: KundliDerive
       {
         kind: 'callout',
         tone: 'warning',
-        title: 'Disclaimer',
+        title: trProse('Disclaimer', mode),
         text:
           'Jyotish is an interpretive discipline. This document states what was calculated, what a tradition says about it, and what was not calculated at all. ' +
           'It is not a guarantee or a certainty about any future event, and it must not be used as the basis for medical, legal or financial decisions. ' +
@@ -1031,7 +1043,7 @@ function certificateSection(
       },
       h3(tr('Verification', mode)),
       p(
-        'A report is verified by comparing four values: report ID, content hash, calculation version and report-model version. ' +
+        trProse('A report is verified by comparing four values: report ID, content hash, calculation version and report-model version. ', mode) +
         'No QR code is printed: a verification endpoint has been specified but not built and security-tested, and a code that ' +
         'resolves nowhere — or that carries birth details in a URL — would be worse than no code at all.',
         'small', 'CALCULATED_FACT',
@@ -1047,7 +1059,7 @@ function yogaEvidenceSection(canonical: KundliCanonicalModel): V2Section {
   const mode: LabelMode = 'en';
   const blocks: V2Block[] = [
     title('B2 · Yoga Evidence', 'योग प्रमाण', mode),
-    p('One entry per registered rule, in the order the dashboard lists them. Each reads as an explanation, not as a debug log.', 'small', 'TRADITIONAL_RULE'),
+    p(trProse('One entry per registered rule, in the order the dashboard lists them. Each reads as an explanation, not as a debug log.', mode), 'small', 'TRADITIONAL_RULE'),
   ];
 
   canonical.yogas.forEach((y, i) => {
@@ -1087,7 +1099,7 @@ function yogaEvidenceSection(canonical: KundliCanonicalModel): V2Section {
     blocks.push(divider());
   });
 
-  return { id: 'appendix-yoga-evidence', title: 'Yoga Evidence', part: 'B', startsNewPage: true, status: 'READY', blocks };
+  return { id: 'appendix-yoga-evidence', title: trProse('Yoga Evidence', mode), part: 'B', startsNewPage: true, status: 'READY', blocks };
 }
 
 function doshaEvidenceSection(canonical: KundliCanonicalModel): V2Section {
@@ -1129,11 +1141,11 @@ function doshaEvidenceSection(canonical: KundliCanonicalModel): V2Section {
     if (d.id === 'kalsarpa' && 'notCalculatedReason' in d.result) {
       blocks.push(h3(tr('D-03  Kalsarpa  —  NOT CALCULATED', mode)));
       blocks.push(p(d.result.notCalculatedReason ?? 'No rule definition adopted for this dosha.', 'small', 'NOT_CALCULATED'));
-      blocks.push(p('Not calculated is not the same as absent. This report makes no claim either way.', 'small', 'NOT_CALCULATED'));
+      blocks.push(p(trProse('Not calculated is not the same as absent. This report makes no claim either way.', mode), 'small', 'NOT_CALCULATED'));
     }
   }
 
-  return { id: 'appendix-dosha-evidence', title: 'Dosha Evidence', part: 'B', startsNewPage: true, status: 'READY', blocks };
+  return { id: 'appendix-dosha-evidence', title: trProse('Dosha Evidence', mode), part: 'B', startsNewPage: true, status: 'READY', blocks };
 }
 
 function grahaConditionAppendix(derived: KundliDerivedModel): V2Section {
@@ -1162,7 +1174,7 @@ function grahaConditionAppendix(derived: KundliDerivedModel): V2Section {
     status: 'READY',
     blocks: [
       title('B4 · Graha Condition — full record', 'ग्रह अवस्था', mode),
-      p('Exact sidereal longitudes, to six decimal places, with every condition field the engine actually resolved.', 'small', 'CALCULATED_FACT'),
+      p(trProse('Exact sidereal longitudes, to six decimal places, with every condition field the engine actually resolved.', mode), 'small', 'CALCULATED_FACT'),
       {
         kind: 'table',
         headers: trAll(['Graha', 'Longitude', 'DMS in sign', 'Bhava', 'Dignity', 'Motion', 'Combustion', 'Vargottama', 'Rules', 'Natural'], mode),
@@ -1207,7 +1219,7 @@ function aspectAppendix(derived: KundliDerivedModel): V2Section {
     blocks: [
       title('B5 · Aspect Ledger', 'दृष्टि विवरण', mode),
       {
-        kind: 'callout', tone: 'info', title: 'Aspect policy — declared, not assumed',
+        kind: 'callout', tone: 'info', title: trProse('Aspect policy — declared, not assumed', mode),
         text: derived.aspectPolicy.declaration, contentType: 'TRADITIONAL_RULE',
       },
       {
@@ -1247,7 +1259,7 @@ function d10Appendix(derived: KundliDerivedModel): V2Section {
         title: `D10 status — ${D10_PROMOTION.externalStatus.replace(/_/g, ' ')}`,
         text: D10_PROMOTION.reason, contentType: 'NOT_CALCULATED',
       },
-      p('Rule applied: each rashi is divided into ten parts of 3\u00B0. From an odd rashi the parts are counted from that rashi; from an even rashi they are counted from the ninth rashi from it.', 'small', 'TRADITIONAL_RULE'),
+      p(trProse('Rule applied: each rashi is divided into ten parts of 3\u00B0. From an odd rashi the parts are counted from that rashi; from an even rashi they are counted from the ninth rashi from it.', mode), 'small', 'TRADITIONAL_RULE'),
       {
         kind: 'table',
         headers: trAll(['Graha', 'Sidereal longitude', 'Kernel D10 rashi', 'Independent reference', 'Agreement'], mode),
@@ -1289,7 +1301,7 @@ function unvalidatedAppendix(derived: KundliDerivedModel): V2Section {
     blocks: [
       title('B7 · Shadbala and other unvalidated capabilities', 'अप्रमाणित गणनाएँ', mode),
       {
-        kind: 'callout', tone: 'limitation', title: 'Shadbala — validation pending',
+        kind: 'callout', tone: 'limitation', title: trProse('Shadbala — validation pending', mode),
         text:
           'The kernel computes a full six-fold shadbala (sthana, dig, kala, cheshta, naisargika, drik) in virupas and rupas. ' +
           'No number from it appears anywhere in this report and no conclusion uses it, because it has not been compared against ' +
@@ -1339,7 +1351,7 @@ function sourceRegistryAppendix(canonical: KundliCanonicalModel): V2Section {
     blocks: [
       title('B8 · Source registry and provenance', 'स्रोत सूची', mode),
       p(
-        'The main report states source status once, as "traditional attribution — verification pending". The full statement is here, once, ' +
+        trProse('The main report states source status once, as "traditional attribution — verification pending". The full statement is here, once, ', mode) +
         'rather than repeated beside every rule. A citation records where a rule is traditionally attributed. It is not evidence that this ' +
         'implementation of the rule is correct, and no locator status below has been upgraded from memory or inference.',
         'small', 'TRADITIONAL_RULE',
@@ -1370,7 +1382,7 @@ function notCalculatedAppendix(derived: KundliDerivedModel, canonical: KundliCan
     status: 'READY',
     blocks: [
       title('B9 · NOT CALCULATED inventory', 'गणित नहीं — सूची', mode),
-      p('Everything this build does not compute, in one list. Nothing here is claimed to be absent from the chart.', 'small', 'NOT_CALCULATED'),
+      p(trProse('Everything this build does not compute, in one list. Nothing here is claimed to be absent from the chart.', mode), 'small', 'NOT_CALCULATED'),
       {
         kind: 'table',
         headers: trAll(['Capability', 'Status', 'Reason'], mode),
@@ -1385,10 +1397,10 @@ function notCalculatedAppendix(derived: KundliDerivedModel, canonical: KundliCan
             rows: yogaNc.map((y) => [y.name, y.notCalculatedReason ?? 'reason not recorded']),
             contentType: 'NOT_CALCULATED',
           }
-        : p('Every registered yoga rule was evaluated for this chart.', 'small', 'NOT_CALCULATED'),
+        : p(trProse('Every registered yoga rule was evaluated for this chart.', mode), 'small', 'NOT_CALCULATED'),
       {
         kind: 'callout', tone: 'warning',
-        text: 'No prediction of death, disease, marriage, childbirth, litigation or financial outcome is made anywhere in this report, and none is implied.',
+        text: trProse('No prediction of death, disease, marriage, childbirth, litigation or financial outcome is made anywhere in this report, and none is implied.', mode),
         contentType: 'NOT_CALCULATED',
       },
     ],
@@ -1419,14 +1431,14 @@ function lineageAppendix(canonical: KundliCanonicalModel, derived: KundliDerived
     status: 'READY',
     blocks: [
       title('B10 · Evidence lineage and verification', 'प्रमाण शृंखला', mode),
-      p('Every derived object in this report carries evidence identifiers that are paths into the canonical chart. The chain runs: interpretation, then the synthesis evidence behind it, then the Jyotish relation, then the calculated fact, then the canonical chart, then the birth input itself.', 'small', 'CALCULATED_FACT'),
+      p(trProse('Every derived object in this report carries evidence identifiers that are paths into the canonical chart. The chain runs: interpretation, then the synthesis evidence behind it, then the Jyotish relation, then the calculated fact, then the canonical chart, then the birth input itself.', mode), 'small', 'CALCULATED_FACT'),
       {
         kind: 'table',
         headers: trAll(['Statement', 'Canonical path', 'Value'], mode),
         widths: [0.3, 0.42, 0.28],
         rows: samples,
         contentType: 'CALCULATED_FACT',
-        caption: 'A sample of the evidence paths. The full set is machine-checked by the data-lineage acceptance suite.',
+        caption: trProse('A sample of the evidence paths. The full set is machine-checked by the data-lineage acceptance suite.', mode),
       },
       h3(tr('Derived engine versions', mode)),
       {

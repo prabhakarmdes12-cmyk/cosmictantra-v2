@@ -222,8 +222,12 @@ export async function renderKundliPdfV3(
   /* Page chrome                                                         */
   /* ------------------------------------------------------------------ */
 
+  /** Section identifiers, by page. Internal index: never localised. */
   const pageTitles: string[] = [];
+  /** The same thing as the reader sees it. Localised, drawn in the header. */
+  const pageHeadings: string[] = [];
   let runningTitle = '';
+  let runningHeading = '';
 
   const paintPaper = () => {
     if (!paperTint) return;
@@ -234,6 +238,7 @@ export async function renderKundliPdfV3(
     s.addPage();
     paintPaper();
     pageTitles.push(runningTitle);
+    pageHeadings.push(runningHeading);
   };
 
   const controller = new PaginationController({
@@ -903,9 +908,16 @@ export async function renderKundliPdfV3(
       if (section.blocks.length === 0) {
         throw new KundliError('KUNDLI_REPORT_INCOMPLETE', `section ${section.id} has no blocks`, { sectionId: section.id });
       }
+      // The running head is display text and follows the locale, so a Hindi
+      // page is not topped by an English strap. `section.title` stays the
+      // identifier: pageTitles is an internal index that the pipeline and the
+      // release gates resolve sections by, and it must not move with language.
+      const titleBlock = section.blocks.find((b) => b.kind === 'sectionTitle');
       runningTitle = section.title;
+      runningHeading = titleBlock && titleBlock.kind === 'sectionTitle' ? titleBlock.text : section.title;
       if (section.startsNewPage && index > 0) controller.newPage(createPage);
       pageTitles[controller.pageCount - 1] = section.title;
+      pageHeadings[controller.pageCount - 1] = runningHeading;
       for (const block of section.blocks) renderBlock(block);
       controller.advance(V3.spacing.sectionGapMm);
     });
@@ -922,10 +934,13 @@ export async function renderKundliPdfV3(
   for (let page = 2; page <= total; page += 1) {
     s.switchToPage(page);
     const title = pageTitles[page - 1] ?? '';
+    // The strap is display text and follows the locale; the divider test uses
+    // the identifier, which must not move with language.
+    const heading = pageHeadings[page - 1] || title;
     const isDivider = title === 'Scholar Appendix';
     if (!isDivider) {
       const size = V3.typography.sizes.footer;
-      const head = s.layoutSingle(title.toUpperCase(), SANS, size, V3.typography.smallCapsTrackingMm);
+      const head = s.layoutSingle(heading.toUpperCase(), SANS, size, V3.typography.smallCapsTrackingMm);
       for (const r of head.runs) fontsUsed.add(r.role);
       s.drawLine(head, ML, V3.page.headerBaselineMm, {
         size, style: SANS, color: V3.colors.inkFaint, trackingMm: V3.typography.smallCapsTrackingMm,

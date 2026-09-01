@@ -232,6 +232,18 @@ export const STRUCTURAL_HI: Record<string, string> = {
   'Dhanu': 'धनु', 'Makara': 'मकर', 'Kumbha': 'कुम्भ', 'Meena': 'मीन',
   'none': 'कोई नहीं',
 
+  /* ---- Gregorian month names ----
+   * The civil date stays in Western digits so the passport page does not mix
+   * numeral scripts (§4); only the month, which is a word, is translated. */
+  'January': 'जनवरी', 'February': 'फ़रवरी', 'March': 'मार्च', 'April': 'अप्रैल',
+  'May': 'मई', 'June': 'जून', 'July': 'जुलाई', 'August': 'अगस्त',
+  'September': 'सितम्बर', 'October': 'अक्टूबर', 'November': 'नवम्बर', 'December': 'दिसम्बर',
+
+  /* ---- provenance values still shown on the passport (§8 moves these to the appendix) ---- */
+  'Iana historical': 'आयाना ऐतिहासिक अभिलेख',
+  'Manual': 'हस्त-प्रविष्ट',
+  'Important configurations': 'विशेष योग-स्थितियाँ',
+
   /* ---- page furniture ---- */
   'PART A': 'भाग अ',
   'PART B': 'भाग ब',
@@ -268,6 +280,18 @@ export function tr(en: string, mode: LabelMode): string {
   if (mode === 'hi') return hi;
   if (mode === 'en') return en;
   return `${hi} / ${en}`;
+}
+
+/**
+ * Translates the month word inside an already-formatted long date.
+ *
+ * The date is data, so its digits are left alone — turning "15 June 1995" into
+ * "१५ जून १९९५" on a page whose coordinates read 25.5941° would mix numeral
+ * scripts, which §4 forbids and the NUM-06 gate catches.
+ */
+export function trDate(formatted: string, mode: LabelMode): string {
+  if (mode === 'en') return formatted;
+  return formatted.replace(/[A-Z][a-z]+/g, (word) => STRUCTURAL_HI[word] ?? word);
 }
 
 /** Convenience for `headers: [...].map(...)`. */

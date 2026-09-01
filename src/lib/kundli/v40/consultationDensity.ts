@@ -60,13 +60,6 @@ export interface DensityResult {
 
 export const DENSITY_RULES: DensityRule[] = [
   {
-    id: 'CD-01',
-    sectionId: 'kundli-passport',
-    action: 'STRIP_DETAIL',
-    rationale: 'The input fingerprint is a 16-hex implementation hash. It belongs on the certificate, not on the first page a client sees.',
-    preservedIn: 'Part B · B1 Calculation Certificate (Input fingerprint)',
-  },
-  {
     id: 'CD-02',
     sectionId: 'kundli-saar',
     action: 'SHORTEN',
@@ -183,16 +176,19 @@ export function applyConsultationDensity(source: KundliReportModelV2): DensityRe
 
   const section = (id: string): V2Section | undefined => report.sections.find((s) => s.id === id);
 
-  /* --- CD-01: fingerprint sentence out of the passport callout --- */
-  const passport = section('kundli-passport');
-  passport?.blocks.forEach((b, i) => {
-    if (b.kind !== 'callout') return;
-    const stripped = b.text.replace(/\s*The input fingerprint [0-9a-f]+ is a hash of exactly these values\.?/, '');
-    if (stripped !== b.text) {
-      record('CD-01', 'kundli-passport', i, b.text, stripped);
-      b.text = stripped;
-    }
-  });
+  /* --- CD-01 retired ---------------------------------------------------
+   * This rule used to strip "The input fingerprint <hex> is a hash of exactly
+   * these values." out of the passport callout, matching on the English
+   * wording. That worked only for as long as the sentence was English:
+   * translating it for §2 walked the hash straight past the filter and the
+   * PA-02 gate caught it in Part A.
+   *
+   * A last-mile scrubber keyed on prose is the wrong shape for this. The
+   * sentence is no longer emitted by `reportModelV2` at all, so there is
+   * nothing left to strip, and the fingerprint is stated once in Part B ·
+   * B1 Calculation Certificate. Removing the source is what makes the
+   * guarantee hold in every language.
+   * -------------------------------------------------------------------- */
 
   /* --- CD-02: shorten the salience-provenance paragraph --- */
   const saar = section('kundli-saar');
