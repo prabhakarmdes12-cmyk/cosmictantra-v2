@@ -1,0 +1,436 @@
+{
+  "schemaVersion": "1.0",
+  "generatedOn": "2026-09-01",
+  "branch": "arena/01a0593a-cosmictantra-v2",
+  "baseCommit": "b651bd7",
+  "method": "code inspection of the repository at HEAD; docs/tests are not counted as capability",
+  "counts": {
+    "IMPLEMENTED_NOT_E2E_TESTED": 10,
+    "PARTIAL": 14,
+    "MISSING": 25,
+    "IMPLEMENTED_AND_TESTED": 9,
+    "BLOCKED_BY_SOURCE_OR_DECISION": 2
+  },
+  "requirements": [
+    {
+      "id": "S01",
+      "section": "(preamble)",
+      "requirement": "Premium cover & report identity",
+      "status": "IMPLEMENTED_NOT_E2E_TESTED",
+      "evidence": "reportModel.ts:48 Cover; Ganesh + CosmicTantra emblem via renderAssets.ts, renderer.ts | tests/incident/pdf-preview.spec.ts, tests/incident/hindi-artifact.spec.ts"
+    },
+    {
+      "id": "S02",
+      "section": "(preamble)",
+      "requirement": "Birth-data passport (name, date, exact local time, TZ, coordinates, location, ayanamsha, engine/version)",
+      "status": "PARTIAL",
+      "evidence": "Name/date/time/place/lat/lon/provenance/TZ/UTC at reportModel.ts:73-88; ayanamsha + engine version at reportModel.ts:93-113 | tests/kundli-pipeline/invariants.spec.ts (INV_004/005/006)"
+    },
+    {
+      "id": "S03",
+      "section": "(preamble)",
+      "requirement": "At-a-glance chart summary (lagna, moon, nakshatra, current dasha in one block)",
+      "status": "MISSING",
+      "evidence": "none found | none"
+    },
+    {
+      "id": "S04",
+      "section": "(preamble)",
+      "requirement": "D1/Rashi chart",
+      "status": "PARTIAL",
+      "evidence": "reportModel.ts:169 Rashi Chart (D1); web SVG src/components/NorthIndianChart.tsx | tests/single-flow-kundli.spec.ts, tests/mobile-clickability.spec.ts"
+    },
+    {
+      "id": "S05",
+      "section": "(preamble)",
+      "requirement": "Bhava–Graha matrix",
+      "status": "PARTIAL",
+      "evidence": "reportModel.ts:160-162 table ['House','Sign','Planets'] | invariants.spec.ts (INV_007)"
+    },
+    {
+      "id": "S06",
+      "section": "(preamble)",
+      "requirement": "Planetary dossier",
+      "status": "IMPLEMENTED_NOT_E2E_TESTED",
+      "evidence": "reportModel.ts:143-152: name, longitude, sign, degree-in-sign, nakshatra+pada, house, R/D, dignity | invariants.spec.ts, tests/astrology.spec.ts"
+    },
+    {
+      "id": "S07",
+      "section": "(preamble)",
+      "requirement": "Functional lordship",
+      "status": "MISSING",
+      "evidence": "none in report model (RASHI_LORDS/signLords exist at balaEngine.ts:508, unused for this) | none"
+    },
+    {
+      "id": "S08",
+      "section": "(preamble)",
+      "requirement": "Dignity, conjunction & aspect analysis",
+      "status": "PARTIAL",
+      "evidence": "dignity column at reportModel.ts:151; drishti.grahaDrishti/rashiDrishti computed at canonicalSnapshot.ts:386-390 but **not surfaced** in any report section; no conjunction listing | none for aspect/conjunction in report"
+    },
+    {
+      "id": "S09",
+      "section": "(preamble)",
+      "requirement": "Yoga & Dosha section",
+      "status": "PARTIAL",
+      "evidence": "reportModel.ts:247 Major Yogas (prints • ${y.name} only) and :267 Dosha Analysis (manglik, sadeSati) | none asserting yoga correctness"
+    },
+    {
+      "id": "S10",
+      "section": "(preamble)",
+      "requirement": "Dasha overview from canonical calculation",
+      "status": "IMPLEMENTED_NOT_E2E_TESTED",
+      "evidence": "reportModel.ts:220 9 Mahadashas, :229 Current Dasha Period; engine src/lib/dashaEngine.js, canonicalModel.ts dashaTimeline | tests/kundli-pipeline/boundary-fixtures.spec.ts"
+    },
+    {
+      "id": "S11",
+      "section": "(preamble)",
+      "requirement": "Evidence/provenance certificate (per-claim)",
+      "status": "MISSING",
+      "evidence": "reportModel.ts:304-314 Appendix (report-model version, fingerprint, provenance) — not a per-claim certificate | invariants.spec.ts"
+    },
+    {
+      "id": "S12",
+      "section": "(preamble)",
+      "requirement": "Explicit limitations & method declaration",
+      "status": "PARTIAL",
+      "evidence": "reportModel.ts:93 Calculation Standard; :322 Disclaimer; appendix line admits \"per-yoga rule verification is a documented limitation\" | —"
+    },
+    {
+      "id": "Z01",
+      "section": "(preamble)",
+      "requirement": "All displayed conclusions trace to canonical output",
+      "status": "PARTIAL",
+      "evidence": "canonicalModel.ts requireValue(); validation.ts; pipeline GATE 2/3"
+    },
+    {
+      "id": "Z02",
+      "section": "(preamble)",
+      "requirement": "Yoga registry: stable ID, formal rule, inputs, evaluated conditions, result, evidence refs, status (`PRESENT`/`ABSENT`/`INDETERMINATE`/`NOT_CALCULATED`)",
+      "status": "MISSING",
+      "evidence": "types.ts:181-184 YogaResult { name, basis[] } only; types.ts:163 AnalysisStatus = 'CALCULATED' \\ | 'NOT_CALCULATED'"
+    },
+    {
+      "id": "Z03",
+      "section": "(preamble)",
+      "requirement": "No invented planetary positions",
+      "status": "IMPLEMENTED_AND_TESTED",
+      "evidence": "canonicalModel.ts requires all 9 planets + 12 houses; KUNDLI_CALCULATION_INCOMPLETE"
+    },
+    {
+      "id": "Z04",
+      "section": "(preamble)",
+      "requirement": "Missing field is never filled with plausible text / treated as zero",
+      "status": "PARTIAL",
+      "evidence": "canonicalModel.ts:204 pp?.divisionDegree ?? pp?.degreeInRasi ?? 0; balaEngine.ts:528 \\ | \\ | 350.0, :551 \\ | \\ | 300.0, :559 drishtiBala = 25.0; evidenceGraph.ts:189 ?? 0.5"
+    },
+    {
+      "id": "Z05",
+      "section": "(preamble)",
+      "requirement": "No silent ayanamsha substitution",
+      "status": "IMPLEMENTED_NOT_E2E_TESTED",
+      "evidence": "single source config.ts:14-16, value printed reportModel.ts:100"
+    },
+    {
+      "id": "Z06",
+      "section": "(preamble)",
+      "requirement": "No duplicate sections / page padding",
+      "status": "IMPLEMENTED_AND_TESTED",
+      "evidence": "16 distinct section builders, no repetition; page count follows content; ceiling 40"
+    },
+    {
+      "id": "C01",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Ascendant agreement across summary/charts/tables",
+      "status": "MISSING",
+      "evidence": "—"
+    },
+    {
+      "id": "C02",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Moon sign & Nakshatra agreement",
+      "status": "MISSING",
+      "evidence": "—"
+    },
+    {
+      "id": "C03",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Longitude/sign/house consistency",
+      "status": "MISSING",
+      "evidence": "—"
+    },
+    {
+      "id": "C04",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Rahu–Ketu opposition tolerance",
+      "status": "MISSING",
+      "evidence": "—"
+    },
+    {
+      "id": "C05",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Dasha ordering & date continuity",
+      "status": "MISSING",
+      "evidence": "—"
+    },
+    {
+      "id": "C06",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Lordship consistency",
+      "status": "MISSING",
+      "evidence": "—"
+    },
+    {
+      "id": "C07",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Yoga evidence consistency",
+      "status": "MISSING",
+      "evidence": "—"
+    },
+    {
+      "id": "C08",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Varga source consistency",
+      "status": "MISSING",
+      "evidence": "—"
+    },
+    {
+      "id": "C09",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Language/value pairing",
+      "status": "MISSING",
+      "evidence": "—"
+    },
+    {
+      "id": "C10",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "No missing required values",
+      "status": "IMPLEMENTED_AND_TESTED",
+      "evidence": "validation.ts assertReportCompleteness"
+    },
+    {
+      "id": "C11",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "No contradictory prose",
+      "status": "MISSING",
+      "evidence": "—"
+    },
+    {
+      "id": "C12",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "No impossible/duplicate page sequence",
+      "status": "PARTIAL",
+      "evidence": "layoutEngine.ts, pdfValidator.ts (blanks, density, ceiling)"
+    },
+    {
+      "id": "C13",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Fail closed: no PDF, `pdfBuffer: null`, named error code, human diagnostic, no partial success",
+      "status": "IMPLEMENTED_AND_TESTED",
+      "evidence": "pipeline.ts:37-53 failed() returns pdfBuffer: null + errorCode + errorDetails; typed codes in errors.ts"
+    },
+    {
+      "id": "Y01",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Every section declares system (Parashari / Jaimini / KP), method, source registry entry, implementation status, evidence strength",
+      "status": "MISSING",
+      "evidence": "No such fields in ReportSection (types.ts:245-251) or any section builder"
+    },
+    {
+      "id": "Y02",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Infrastructure to support it",
+      "status": "IMPLEMENTED_NOT_E2E_TESTED",
+      "evidence": "src/lib/jyotish/evidenceGraph.ts, evidenceCompiler.ts, conventionCenter.ts, JYOTISH_CONVENTION_REGISTRY.md"
+    },
+    {
+      "id": "Y03",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "No blending of system rules",
+      "status": "BLOCKED_BY_SOURCE_OR_DECISION",
+      "evidence": "Cannot be asserted — no section declares a system"
+    },
+    {
+      "id": "E02",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Shadbala calculation trace",
+      "status": "MISSING",
+      "evidence": "none"
+    },
+    {
+      "id": "E03",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Shadbala independent reference fixtures",
+      "status": "MISSING",
+      "evidence": "none"
+    },
+    {
+      "id": "E04",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Varga: all 16 divisions computed",
+      "status": "IMPLEMENTED_NOT_E2E_TESTED",
+      "evidence": "canonicalModel.ts:22 DIVISION_LIST = [1,2,3,4,7,9,10,12,16,20,24,27,30,40,45,60]; vargaEngine.ts:370 generateShodashavarga"
+    },
+    {
+      "id": "E05",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Varga: exact sign-division rules per division",
+      "status": "PARTIAL",
+      "evidence": "vargaEngine.ts:106 calculateVargaPlacement — explicit case 9 (:158) and case 10 (:170), remainder via generic harmonic path"
+    },
+    {
+      "id": "E06",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Varga boundary/edge tests",
+      "status": "MISSING",
+      "evidence": "none found"
+    },
+    {
+      "id": "E07",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Jaimini Chara Karaka ordering & degree treatment",
+      "status": "IMPLEMENTED_NOT_E2E_TESTED",
+      "evidence": "jaiminiEngine.ts:42-70 — 7 candidates (Rahu excluded), sorted by degree-in-rashi descending"
+    },
+    {
+      "id": "E08",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Jaimini Rahu handling documented",
+      "status": "PARTIAL",
+      "evidence": "jaiminiEngine.ts:41 filters to the 7 classical grahas"
+    },
+    {
+      "id": "E09",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Jaimini full synthesis (Chara Dasha, Arudha/Upapada Pada, Karakamsha-based judgement)",
+      "status": "PARTIAL",
+      "evidence": "jaiminiEngine.ts computes karakas + karakamsha and attempts Arudha Lagna (:78+); no Chara Dasha"
+    },
+    {
+      "id": "P01",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Unicode Devanagari font preserved",
+      "status": "IMPLEMENTED_NOT_E2E_TESTED",
+      "evidence": "public/fonts/NotoSansDevanagari-{Regular,Bold}.ttf; src/lib/kundli/nodeFonts.ts:26 registration; pdfFonts.ts"
+    },
+    {
+      "id": "P02",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Deterministic PDF for identical canonical input",
+      "status": "PARTIAL",
+      "evidence": "fingerprint lineage.ts, config recorded; no timestamp inside content except generatedAt (reportModel.ts:112)"
+    },
+    {
+      "id": "P03",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "454-page regression protection / hard ceiling",
+      "status": "IMPLEMENTED_AND_TESTED",
+      "evidence": "config.ts:27 maxPages: 40; layoutEngine.ts:83; errors.ts:22; tests/kundli-pipeline/regression-454-page-runaway.spec.ts"
+    },
+    {
+      "id": "P04",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Deterministic multi-volume plan with stable boundaries & page limits",
+      "status": "MISSING",
+      "evidence": "none in the PDF pipeline (the 17-volume book is a **web UI** artifact, kundliBookModel.ts)"
+    },
+    {
+      "id": "P05",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Visual inspection of real PDFs (clipping, orphan headings, blank pages, overlapping text)",
+      "status": "MISSING",
+      "evidence": "tests/incident/pdfRaster.ts, pdf-preview.spec.ts provide rasterisation tooling"
+    },
+    {
+      "id": "P06",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Tables across pages, headings near page boundaries, stable header/footer/page numbers",
+      "status": "IMPLEMENTED_NOT_E2E_TESTED",
+      "evidence": "layoutEngine.ts ensureFits, PageFooterBlock (types.ts:237)"
+    },
+    {
+      "id": "P07",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Hindi / English / mixed / long names / missing optional values",
+      "status": "PARTIAL",
+      "evidence": "Hindi artifact test exists; incident report notes **hi locale keeps English section labels**"
+    },
+    {
+      "id": "P08",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Missing required data → fail closed",
+      "status": "IMPLEMENTED_AND_TESTED",
+      "evidence": "assertReportCompleteness, INV_015 (disclaimer-only document must not validate)"
+    },
+    {
+      "id": "R01",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Consent controls: “हाँ, पढ़िए” / “अभी नहीं” / “केवल अर्थ” / “छोटा अंश”",
+      "status": "MISSING",
+      "evidence": "not present (FloatingAIGuruAvatar.tsx)"
+    },
+    {
+      "id": "R02",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Consent binds to the offered book/chapter/passage",
+      "status": "MISSING",
+      "evidence": "consentQuestion is free text only (groundedAnswer.ts)"
+    },
+    {
+      "id": "R03",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Bare “हाँ पढ़ो” resumes the pending offer",
+      "status": "MISSING",
+      "evidence": "currently answered with “क्या पढ़ूँ?” (gateway.ts bare-consent branch)"
+    },
+    {
+      "id": "R04",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Reject expired/forged pending offers",
+      "status": "MISSING",
+      "evidence": "no pending-offer object exists"
+    },
+    {
+      "id": "R05",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Session survives refresh",
+      "status": "IMPLEMENTED_AND_TESTED",
+      "evidence": "readingSessionRef + localStorage + reviveVerifiedSession"
+    },
+    {
+      "id": "R06",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "No long autoplay chain without a gesture/consent",
+      "status": "IMPLEMENTED_AND_TESTED",
+      "evidence": "auto-advance only after a delivered passage, reverified by session state (Granth Phase 3)"
+    },
+    {
+      "id": "R07",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Graceful autoplay rejection",
+      "status": "IMPLEMENTED_NOT_E2E_TESTED",
+      "evidence": "utterance onerror never advances (useKashiVoice.ts)"
+    },
+    {
+      "id": "R08",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "read/pause/explain/continue/stop consistent",
+      "status": "IMPLEMENTED_AND_TESTED",
+      "evidence": "session.ts, granthReader.ts"
+    },
+    {
+      "id": "D01",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Manual device protocol (Chrome Android, Safari iPhone, Hindi female voice, mute, speed, pause, explain, resume, advance, screen lock, call interruption, refresh restoration, autoplay rejection, no Hindi voice)",
+      "status": "MISSING",
+      "evidence": ""
+    },
+    {
+      "id": "D02",
+      "section": "The yoga fabrication defect (highest severity found)",
+      "requirement": "Physical-device execution",
+      "status": "BLOCKED_BY_SOURCE_OR_DECISION",
+      "evidence": ""
+    }
+  ]
+}
