@@ -15,6 +15,9 @@ import type {
   InterpretationEntry, SectionStatus,
 } from './types';
 import { interpretCanonicalModel, INTERPRETATION_GENERATOR_VERSION, ordinal } from './interpretation';
+import { determineDst, formatDst } from './dst';
+import { YOGA_SOURCE_REGISTRY, YOGA_SOURCE_REGISTRY_VERSION } from '../jyotish/yogaSourceRegistry';
+import { sha256Hex } from '../granth/checksum';
 
 export const REPORT_MODEL_VERSION = 'kundli-report-v1';
 
@@ -363,6 +366,209 @@ function buildInterpretationSections(entries: InterpretationEntry[]): ReportSect
   }));
 }
 
+/**
+ * Deterministic content fingerprint.
+ *
+ * Covers everything that determines what the report says. The generation
+ * timestamp is deliberately EXCLUDED: including it would change the hash on
+ * every run, so two copies of the same report could never be compared. The
+ * timestamp is recorded separately on the certificate.
+ */
+export function computeContentHash(
+  canonical: KundliCanonicalModel,
+  reportId: string,
+  locale: 'en' | 'hi',
+): string {
+  return sha256Hex(JSON.stringify({
+    v: 1,
+    reportId,
+    fingerprint: canonical.subject.fingerprint,
+    locale,
+    calculation: canonical.calculation,
+    ayanamshaValueDegrees: canonical.calculationMetadata.ayanamshaValueDegrees,
+    julianDay: canonical.calculationMetadata.julianDay,
+    ascendant: canonical.ascendant,
+    planets: canonical.planets,
+    houses: canonical.houses,
+    divisionalCharts: canonical.divisionalCharts,
+    dashas: canonical.dashas,
+    yogas: canonical.yogas,
+    doshas: canonical.doshas,
+    panchanga: canonical.panchanga,
+    reportModelVersion: REPORT_MODEL_VERSION,
+    sourceRegistryVersion: YOGA_SOURCE_REGISTRY_VERSION,
+  }));
+}
+
+/** Birth-data passport: every input the calculation rests on, stated once. */
+function buildPassport(m: KundliCanonicalModel, locale: 'en' | 'hi'): ReportSection {
+  const s = m.subject;
+  const c = m.calculation;
+  const tz = s.timezone;
+  const dst = determineDst(tz.timezoneId, tz.utcDateTime, tz.utcOffsetAtBirth);
+  const offsetLabel = `UTC${tz.utcOffsetAtBirth >= 0 ? '+' : ''}${tz.utcOffsetAtBirth}`;
+
+  return {
+    id: 'birth-data-passport',
+    title: 'Birth Data Passport',
+    status: 'READY',
+    blocks: [
+      para('Every value below is an input or a declared setting. Nothing here is interpreted.'),
+      heading('Subject', 3),
+      kv('Name', s.name),
+      kv('Birth date (civil)', s.birthDate),
+      kv('Birth time as recorded', s.birthTime),
+      kv('Birth place', s.locationName),
+      heading('Position and time', 3),
+      kv('Latitude', `${s.coordinates.latitude.toFixed(4)}°`),
+      kv('Longitude', `${s.coordinates.longitude.toFixed(4)}°`),
+      kv('Coordinate provenance', s.coordinates.provenance),
+      kv('Timezone', tz.timezoneId),
+      kv('Historical UTC offset at birth', `${offsetLabel} (${tz.offsetProvenance})`),
+      kv('Offset provenance', tz.offsetProvenance),
+      kv('Daylight saving time', formatDst(dst)),
+      para(dst.note),
+      kv('Local birth instant', tz.localDateTime),
+      kv('UTC birth instant', tz.utcDateTime),
+      heading('Declared calculation system', 3),
+      kv('Zodiac', c.zodiac),
+      kv('Ayanamsha', `${c.ayanamshaName} (${D2(m.calculationMetadata.ayanamshaValueDegrees)}°)`),
+      kv('House system', c.houseSystem),
+      kv('Node policy', c.nodeMode),
+      kv('Ephemeris', c.ephemerisProvider),
+      kv('Report language', locale === 'hi' ? 'Hindi (hi)' : 'English (en)'),
+      kv('Engine version', c.engineVersion),
+      kv('Report model version', REPORT_MODEL_VERSION),
+    ],
+  };
+}
+
+/**
+ * Calculation certificate: lineage, scope, and limits.
+ *
+ * States what was calculated, what was interpreted, what was NOT calculated,
+ * which source locators remain unverified, and that Jyotish is interpretive.
+ * There is deliberately NO QR code: a QR would imply a verification
+ * destination, and no tested one exists.
+ */
+function buildCertificate(
+  m: KundliCanonicalModel,
+  reportId: string,
+  locale: 'en' | 'hi',
+  contentHash: string,
+  interpretedSectionIds: string[],
+  generatedAt: string,
+): ReportSection {
+  const c = m.calculation;
+
+  const notCalculatedYogas = m.yogas.filter((y) => y.status === 'NOT_CALCULATED');
+  const notCalculatedDoshas = m.doshas.filter(
+    (d) => (d.result as any)?.status === 'NOT_CALCULATED',
+  );
+  const evaluatedYogas = m.yogas.filter((y) => y.status !== 'NOT_CALCULATED');
+
+  // Real locator status, read from the source registry rather than asserted.
+  const cited = m.yogas
+    .map((y) => YOGA_SOURCE_REGISTRY[y.source?.ruleId ?? ''])
+    .filter(Boolean);
+  const unverified = cited.filter((e) => !e.locatorVerified);
+  const unverifiedInRepo = cited.filter((e) => !e.verifiedInRepository);
+
+  const blocks: ReportBlock[] = [
+    para('This certificate states what this report does and does not contain. It is part of the report, not marketing copy.'),
+    heading('Lineage', 3),
+    kv('Report ID', reportId),
+    kv('Input fingerprint', m.subject.fingerprint),
+    kv('Content hash', contentHash),
+    kv('Hash covers', 'all calculated values, the calculation configuration, the report model version and the source registry version. The generation timestamp is excluded so that two copies of the same report hash identically.'),
+    kv('Generated at', generatedAt),
+    kv('Engine version', c.engineVersion),
+    kv('Calculation version', c.calculationVersion),
+    kv('Report model version', REPORT_MODEL_VERSION),
+    kv('Source registry version', YOGA_SOURCE_REGISTRY_VERSION),
+    kv('Ayanamsha', `${c.ayanamshaName} (${D2(m.calculationMetadata.ayanamshaValueDegrees)}°)`),
+    kv('House system', c.houseSystem),
+    kv('Node policy', c.nodeMode),
+    kv('Timezone provenance', m.subject.timezone.offsetProvenance),
+    kv('Coordinate provenance', m.subject.coordinates.provenance),
+
+    heading('What was calculated', 3),
+    para([
+      `Ascendant (${m.ascendant.sign.name} ${D2(m.ascendant.degreeInSign)}°)`,
+      `${m.planets.length} graha positions with nakshatra and pada`,
+      `${m.houses.length} bhavas (${c.houseSystem})`,
+      `${m.divisionalCharts.length} divisional charts, of which D1 and D9 are independently cross-checked`,
+      `Vimshottari dasha: balance at birth plus ${m.dashas.mahadashas.length} mahadashas`,
+      `${evaluatedYogas.length} yoga rules evaluated`,
+      `${m.doshas.length} dosha assessments`,
+      'Panchanga at birth (tithi, nakshatra, yoga, karana)',
+    ].join('; ') + '.'),
+
+    heading('What was interpreted', 3),
+    para([
+      `${interpretedSectionIds.length} interpretive sections, generated by deterministic rules (${INTERPRETATION_GENERATOR_VERSION}).`,
+      'Interpretations are traditional readings of the calculated chart. They are clearly separated from calculated values throughout this report, and no interpretation is presented inside a factual table.',
+    ].join(' ')),
+
+    heading('What was NOT calculated', 3),
+  ];
+
+  const notCalculatedLines: string[] = [];
+  for (const y of notCalculatedYogas) {
+    notCalculatedLines.push(`${y.id} — ${y.notCalculatedReason ?? 'reason not recorded'}`);
+  }
+  for (const d of notCalculatedDoshas) {
+    notCalculatedLines.push(`${d.id} — ${(d.result as any)?.notCalculatedReason ?? 'reason not recorded'}`);
+  }
+  notCalculatedLines.push(
+    'Shadbala, Ashtakavarga, Jaimini chara karakas, Ashtakoota matching and Gochara (transits) — the engine computes these internally, but this report does not carry them and none of them has been independently verified.',
+  );
+  notCalculatedLines.push(
+    `Divisional charts other than D1 and D9 (${Math.max(0, m.divisionalCharts.length - 2)} of them) — produced by the engine, not independently verified, and not used to reach any conclusion in this report.`,
+  );
+  notCalculatedLines.push(
+    'No prediction of death, marriage, childbirth, litigation, disease, accident or financial outcome is made anywhere in this report, and none is implied.',
+  );
+  for (const line of notCalculatedLines) blocks.push(para(`• ${line}`));
+
+  blocks.push(heading('Source locators that remain unverified', 3));
+  blocks.push(para(
+    `${cited.length} classical source entries are cited by this report. ` +
+    `${unverified.length} of them have locators that have NOT been checked against any edition held in this repository, ` +
+    `and ${unverifiedInRepo.length} cite a work for which no licensed copy exists here. ` +
+    `A citation records where a rule is traditionally attributed; it is not evidence that this implementation is correct. ` +
+    `No locator status below has been upgraded from memory or inference.`,
+  ));
+  if (unverified.length > 0) {
+    blocks.push(table(
+      ['Rule', 'Source work', 'Locator', 'Locator verified'],
+      unverified.slice(0, 12).map((e) => [e.ruleId, e.sourceWork, e.locator, 'NO — unverified']),
+    ));
+  }
+
+  blocks.push(heading('Verification and QR code', 3));
+  blocks.push(para(
+    'There is deliberately no QR code on this report. A QR code would imply a place where this document can be verified, ' +
+    'and no such verification destination has been built and tested. A decorative code that resolves nowhere, or that ' +
+    'exposes birth data in a URL, would be worse than no code at all.',
+  ));
+
+  blocks.push(heading('Status of this document', 3));
+  blocks.push(callout(
+    'Jyotish is an interpretive discipline. This report states what was calculated, what was traditionally interpreted, ' +
+    'and what was not calculated at all. It is not a guarantee, prediction or certainty about any future event, and it ' +
+    'must not be used as the basis for medical, legal or financial decisions.',
+    'info',
+  ));
+
+  return {
+    id: 'calculation-certificate',
+    title: 'Calculation Certificate',
+    status: 'READY',
+    blocks,
+  };
+}
+
 function buildAppendix(m: KundliCanonicalModel): ReportSection {
   return {
     id: 'appendix-calculation-notes',
@@ -410,6 +616,7 @@ export function buildKundliReportModel(
   // -> remedies -> calculation notes -> disclaimer.
   const sections: ReportSection[] = [
     buildCover(canonical),
+    buildPassport(canonical, locale),
     buildBirthSummary(canonical),
     buildRashiChart(canonical),
     buildPanchanga(canonical),
@@ -447,13 +654,23 @@ export function buildKundliReportModel(
 
   sections.push(buildCalculationMethod(canonical));
   sections.push(buildAppendix(canonical));
-  sections.push(buildDisclaimer());
 
   const reportId = deriveReportId(canonical.subject.fingerprint);
+  const generatedAt = new Date().toISOString();
+  const contentHash = computeContentHash(canonical, reportId, locale);
+  sections.push(buildCertificate(
+    canonical,
+    reportId,
+    locale,
+    contentHash,
+    [...bySection.keys()],
+    generatedAt,
+  ));
+  sections.push(buildDisclaimer());
 
   return {
     reportId,
-    generatedAt: new Date().toISOString(),
+    generatedAt,
     locale,
     calculation: canonical.calculation,
     subject: {
@@ -467,6 +684,7 @@ export function buildKundliReportModel(
     lineage: {
       reportId,
       fingerprint: canonical.subject.fingerprint,
+      contentHash,
       stages: [
         { stage: 'input-validated', at: new Date().toISOString(), ok: true },
         { stage: 'calculation-complete', at: new Date().toISOString(), ok: true },

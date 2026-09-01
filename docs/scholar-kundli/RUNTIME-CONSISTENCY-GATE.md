@@ -64,6 +64,20 @@ location.
 
 ## 3. Coverage
 
+### Passport and certificate — GATE 3b
+
+| Code | What is compared |
+|---|---|
+| `CG_PASSPORT_PRESENT` | the birth-data passport exists |
+| `CG_PASSPORT.<field>` | every declared input is present, non-blank, and equal to the canonical value (name, birth date, place, timezone, zodiac, house system, node policy, engine version, report model version) |
+| `CG_PASSPORT_DST` | daylight saving time is answered, or explicitly declared undetermined — never blank, never assumed |
+| `CG_PASSPORT_COORDINATES` | passport latitude/longitude equal the canonical coordinates |
+| `CG_CERTIFICATE_PRESENT` | the calculation certificate exists |
+| `CG_CERTIFICATE` | report id, fingerprint, engine version, ayanamsha, house system, node policy, timezone and coordinate provenance, report model version and source registry version all present and equal to what the calculation declares |
+| `CG_CERTIFICATE_HASH` | the printed content hash equals a freshly recomputed hash of this content — a stale or copied hash is rejected |
+| `CG_CERTIFICATE_SCOPE` | the certificate states what was NOT calculated, discloses unverified source locators, and says plainly that Jyotish is interpretive and not a guarantee |
+| `CG_CERTIFICATE_QR` | the certificate states that no QR code is present and why |
+
 ### Canonical stage — GATE 2b
 
 | Code | What is compared |
@@ -116,6 +130,25 @@ location.
 
 ---
 
+### Daylight saving time
+
+The passport answers "was DST in effect at birth" from IANA data, never by
+default. `determineDst()` samples the zone's UTC offset on the 15th of each
+month of the birth year and takes the **smallest** offset as the standard
+offset, because daylight saving advances the clock.
+
+An earlier version took the *modal* offset, which is wrong for any zone where
+DST covers more than half the year: for `America/New_York` the mode of 1995 is
+UTC-4, which is the daylight offset, so a June birth was reported as "no DST".
+Both the bug and the fix are covered by fixtures for a northern summer birth,
+a northern winter birth, a zone with no DST, an unknown zone and a missing
+offset. An unknown zone, an unparseable instant or a missing offset all return
+`UNDETERMINED` — never a defaulted answer.
+
+Known limit: a zone that ever applied *negative* daylight saving would be
+classified with its winter offset as standard. That matches how such zones are
+conventionally reported, and every determination records the method used.
+
 ## 4. Defects the gate found
 
 ### 4.1 Retrograde status was never delivered — FIXED
@@ -157,7 +190,8 @@ with an unverified recollection.
 
 ## 5. Test evidence
 
-`tests/kundli-pipeline/consistency-gate.spec.ts` — **64 tests, all passing**:
+`tests/kundli-pipeline/consistency-gate.spec.ts` — **67 tests, all passing**
+`tests/kundli-pipeline/passport-certificate.spec.ts` — **25 tests, all passing**:
 
 - 3 positive controls: the genuine model yields zero findings across 254 checks;
   the genuine report passes the report gate; the full pipeline still delivers a
@@ -175,7 +209,14 @@ with an unverified recollection.
 - 1 tolerance case proving the Rahu–Ketu tolerance is actually enforced
   (0.2° off passes at 0.5° tolerance, blocks at 0.05°).
 
-`tests/kundli-pipeline` as a whole: **181 passed, 0 failed**.
+The passport suite additionally covers: every required passport field present
+and equal to the canonical value; the content hash being deterministic across
+two builds yet changing when a planet moves; the certificate naming the yoga
+rules it did not calculate; the unverified-locator disclosure; the absence of a
+QR code; and the gate blocking delivery when the passport, the certificate, or
+the certificate's own limits are removed.
+
+`tests/kundli-pipeline` as a whole: **209 passed, 0 failed**.
 
 Regression check against the pre-change baseline: a ten-file subset was run
 before and after the change under identical conditions. Both runs produced
@@ -189,12 +230,10 @@ the default cache). **Zero regressions.**
 
 Stated plainly, because a gate's coverage is only as good as its gaps:
 
-1. **No consolidated certificate block exists.** `CG_CERTIFICATE` currently
-   verifies the engine version, ayanamsha, house system and report id wherever
-   they live today (`calculation-method`, `cover`). The full certificate —
-   report id, input fingerprint, engine version, ayanamsha, timezone provenance,
-   source-registry version, report-model version, content hash, timestamp — is
-   Phase 2. Until then those fields are not gated as a single unit.
+1. **No verification destination exists.** The certificate deliberately
+   carries no QR code, because a QR would imply a place where the document can
+   be checked and none has been built and tested. Until one exists, a reader
+   cannot independently verify a delivered PDF from the document itself.
 2. **Hindi labels are not implemented.** The report model accepts a `hi` locale
    but emits identical text. `CG_BILINGUAL_NOT_APPLIED` records this as a
    WARNING on every Hindi delivery. It is a missing feature, not a contradiction,

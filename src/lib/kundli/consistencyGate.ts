@@ -18,6 +18,8 @@
  */
 
 import { sha256Hex } from '../granth/checksum';
+import { computeContentHash, REPORT_MODEL_VERSION } from './reportModel';
+import { YOGA_SOURCE_REGISTRY_VERSION } from '../jyotish/yogaSourceRegistry';
 import type { KundliErrorCode } from './errors';
 import type {
   DashaPeriodInfo,
@@ -242,7 +244,7 @@ export function checkCanonicalConsistency(input: CanonicalConsistencyInput): Con
 
   c.assert(
     'CG_TZ_PROVENANCE',
-    !!tz.offsetProvenance && ['IANA_HISTORICAL', 'IANA_CURRENT', 'FIXED_OFFSET', 'MANUAL'].includes(String(tz.offsetProvenance)),
+    !!tz.offsetProvenance && ['IANA_HISTORICAL', 'USER_SUPPLIED', 'ESTIMATED', 'REGION_INFERRED'].includes(String(tz.offsetProvenance)),
     'subject.timezone.offsetProvenance',
     tz.offsetProvenance,
     'timezone offset provenance is missing or unrecognised',
@@ -495,8 +497,9 @@ export const SIGN_INDEX_BY_NAME: Record<string, number> = {
  * Flattens every rendered value of a section into a searchable string.
  * Used for summary-versus-table and bilingual comparisons.
  */
-export function sectionText(section: any): string {
+export function sectionText(section: any, includeTitle = true): string {
   const parts: string[] = [];
+  if (includeTitle && typeof section?.title === 'string') parts.push(section.title);
   const walk = (block: any) => {
     if (!block || typeof block !== 'object') return;
     if (typeof block.text === 'string') parts.push(block.text);
@@ -538,7 +541,8 @@ export function checkReportConsistency(
 
   /* --- every mandatory section has content --------------------------- */
   for (const s of report.sections) {
-    const text = sectionText(s);
+    // Body text only: a title with no content is still an empty section.
+    const text = sectionText(s, false);
     c.assert('CG_SECTION_CONTENT', text.trim().length > 0, `report.sections.${s.id}`, text.length, `section ${s.id} rendered empty`);
   }
 
@@ -550,21 +554,133 @@ export function checkReportConsistency(
     c.assert('CG_BILINGUAL', report.locale === 'en' || report.locale === 'hi', 'report.locale', report.locale, 'report locale is not set');
   }
 
-  /* --- certificate values ---------------------------------------------- */
-  // The consolidated certificate block is Phase 2. Until it exists, the gate
-  // checks the sections that carry these values today, so lineage is verified
-  // now rather than left unguarded.
-  const lineage = [byId('calculation-method'), byId('cover')].filter(Boolean);
-  const lineageText = lineage.map(sectionText).join(' | ');
-  c.assert('CG_CERTIFICATE', lineageText.includes(String(canonical.calculation.engineVersion)), 'report.calculation-method', canonical.calculation.engineVersion, 'engine version is missing from the calculation standard section');
-  c.assert('CG_CERTIFICATE', lineageText.includes(String(canonical.calculation.ayanamshaName)), 'report.calculation-method', canonical.calculation.ayanamshaName, 'ayanamsha name is missing from the calculation standard section');
-  c.assert('CG_CERTIFICATE', lineageText.includes(String(canonical.calculation.houseSystem)), 'report.calculation-method', canonical.calculation.houseSystem, 'house system is missing from the calculation standard section');
-  const reportId = (report as any).reportId ?? (report as any).id;
-  if (reportId) {
-    c.assert('CG_CERTIFICATE', lineageText.includes(String(reportId)), 'report.cover', reportId, 'report id is missing from the cover');
+  /* --- birth-data passport --------------------------------------------- */
+  const passport = byId('birth-data-passport');
+  c.assert('CG_PASSPORT_PRESENT', !!passport, 'report.sections', 'birth-data-passport', 'the birth data passport is missing');
+  if (passport) {
+    const kv = kvOf(passport);
+    // 'prefix' is for fields whose rendered value carries an explanatory
+    // suffix, e.g. "UTC+5.5 (IANA_HISTORICAL)". Everything else must match
+    // the canonical value exactly, including multi-word names.
+    const required: [string, string | null, 'exact' | 'prefix'][] = [
+      ['Name', canonical.subject.name, 'exact'],
+      ['Birth date (civil)', canonical.subject.birthDate, 'exact'],
+      ['Birth place', canonical.subject.locationName, 'exact'],
+      ['Timezone', canonical.subject.timezone.timezoneId, 'exact'],
+      ['Historical UTC offset at birth', null, 'prefix'],
+      ['Daylight saving time', null, 'prefix'],
+      ['Zodiac', canonical.calculation.zodiac, 'exact'],
+      ['House system', canonical.calculation.houseSystem, 'exact'],
+      ['Node policy', canonical.calculation.nodeMode, 'exact'],
+      ['Engine version', canonical.calculation.engineVersion, 'exact'],
+      ['Report model version', REPORT_MODEL_VERSION, 'exact'],
+    ];
+    for (const [label, expected, mode] of required) {
+      const actual = kv.get(label);
+      c.assert(`CG_PASSPORT.${label}`, typeof actual === 'string' && actual.trim().length > 0, `report.birth-data-passport.${label}`, actual, `passport field "${label}" is missing or blank`);
+      if (expected !== null && actual !== undefined) {
+        const rendered = mode === 'prefix' ? actual.split(' ')[0] : actual;
+        c.eq(`CG_PASSPORT.${label}`, `canonical.${label}`, expected, `report.birth-data-passport.${label}`, rendered);
+      }
+    }
+    // DST must be answered, or explicitly declared undetermined. Never blank.
+    const dstValue = kv.get('Daylight saving time') ?? '';
+    c.assert(
+      'CG_PASSPORT_DST',
+      dstValue.startsWith('Yes, in effect at birth') ||
+        dstValue.startsWith('No, not in effect at birth') ||
+        dstValue.startsWith('Undetermined'),
+      'report.birth-data-passport.Daylight saving time',
+      dstValue,
+      'daylight saving time must be answered or explicitly declared undetermined, never blank or assumed',
+    );
+    const lat = kv.get('Latitude') ?? '';
+    const lng = kv.get('Longitude') ?? '';
+    c.eq('CG_PASSPORT_COORDINATES', 'canonical.subject.coordinates.latitude', canonical.subject.coordinates.latitude.toFixed(4), 'report.birth-data-passport.Latitude', lat.replace('°', ''));
+    c.eq('CG_PASSPORT_COORDINATES', 'canonical.subject.coordinates.longitude', canonical.subject.coordinates.longitude.toFixed(4), 'report.birth-data-passport.Longitude', lng.replace('°', ''));
+  }
+
+  /* --- calculation certificate ------------------------------------------ */
+  const certificate = byId('calculation-certificate');
+  c.assert('CG_CERTIFICATE_PRESENT', !!certificate, 'report.sections', 'calculation-certificate', 'the calculation certificate is missing');
+  if (certificate) {
+    const text = sectionText(certificate);
+    const kv = kvOf(certificate);
+
+    c.eq('CG_CERTIFICATE', 'report.reportId', report.reportId, 'lineage.reportId', report.lineage?.reportId);
+    c.eq('CG_CERTIFICATE', 'lineage.fingerprint', report.lineage?.fingerprint, 'canonical.subject.fingerprint', canonical.subject.fingerprint);
+
+    // The content hash must be the hash of THIS content, not a stale one.
+    const recomputed = computeContentHash(canonical, report.reportId, report.locale);
+    c.eq('CG_CERTIFICATE_HASH', 'lineage.contentHash', report.lineage?.contentHash, 'recomputed content hash', recomputed);
+    c.assert('CG_CERTIFICATE_HASH', text.includes(recomputed), 'report.calculation-certificate', recomputed.slice(0, 16), 'the content hash is not rendered in the certificate');
+
+    for (const [label, expected] of [
+      ['Engine version', canonical.calculation.engineVersion],
+      ['Ayanamsha', canonical.calculation.ayanamshaName],
+      ['House system', canonical.calculation.houseSystem],
+      ['Node policy', canonical.calculation.nodeMode],
+      ['Timezone provenance', canonical.subject.timezone.offsetProvenance],
+      ['Coordinate provenance', canonical.subject.coordinates.provenance],
+      ['Report model version', REPORT_MODEL_VERSION],
+      ['Source registry version', YOGA_SOURCE_REGISTRY_VERSION],
+    ] as [string, string][]) {
+      const actual = kv.get(label);
+      c.assert(`CG_CERTIFICATE.${label}`, typeof actual === 'string' && actual.length > 0, `report.calculation-certificate.${label}`, actual, `certificate field "${label}" is missing`);
+      if (actual !== undefined) {
+        c.assert(`CG_CERTIFICATE.${label}`, actual.includes(String(expected)), `report.calculation-certificate.${label}`, actual, `certificate ${label} is "${actual}" but the calculation declares "${expected}"`);
+      }
+    }
+
+    // The certificate must state its own limits, not just its credentials.
+    c.assert('CG_CERTIFICATE_SCOPE', /What was NOT calculated/i.test(text), 'report.calculation-certificate', 'What was NOT calculated', 'the certificate does not state what was not calculated');
+    c.assert('CG_CERTIFICATE_SCOPE', /was NOT calculated|not calculated/i.test(text), 'report.calculation-certificate', 'not calculated', 'the certificate does not declare any uncalculated item');
+    c.assert('CG_CERTIFICATE_SCOPE', /unverified/i.test(text), 'report.calculation-certificate', 'unverified locators', 'the certificate does not disclose unverified source locators');
+    c.assert('CG_CERTIFICATE_SCOPE', /interpretive/i.test(text) && /not a guarantee/i.test(text), 'report.calculation-certificate', 'interpretive status', 'the certificate does not state that Jyotish is interpretive and not a guarantee');
+    c.assert('CG_CERTIFICATE_QR', /no QR code/i.test(text), 'report.calculation-certificate', 'QR statement', 'the certificate must state plainly that no QR code is present and why');
   }
 
   return c.report();
+}
+
+/**
+ * Labels excluded when comparing one rendering against another.
+ *
+ *  - wall-clock timestamps: these differ between any two renderings by
+ *    design, exactly as they are excluded from the content hash;
+ *  - the content hash: a hex digest whose digit runs are not astronomical
+ *    values. It is compared exactly, per report, by CG_CERTIFICATE_HASH.
+ */
+const NON_VALUE_LABELS = new Set(['Generated at', 'Calculation instant', 'Content hash']);
+
+/** Section text with non-comparable values removed. */
+function stableText(section: any): string {
+  const parts: string[] = [];
+  const walk = (block: any) => {
+    if (!block || typeof block !== 'object') return;
+    if (block.kind === 'keyValue' && NON_VALUE_LABELS.has(block.label)) return;
+    if (typeof block.text === 'string') parts.push(block.text);
+    if (typeof block.label === 'string') parts.push(block.label);
+    if (typeof block.value === 'string') parts.push(block.value);
+    if (Array.isArray(block.rows)) for (const row of block.rows) if (Array.isArray(row)) parts.push(row.join(' '));
+    if (Array.isArray(block.blocks)) for (const b of block.blocks) walk(b);
+  };
+  for (const b of section?.blocks ?? []) walk(b);
+  return parts.join(' | ');
+}
+
+/** Key-value pairs of a section, for structured (not textual) checking. */
+export function kvOf(section: any): Map<string, string> {
+  const out = new Map<string, string>();
+  const walk = (block: any) => {
+    if (!block || typeof block !== 'object') return;
+    if (block.kind === 'keyValue' && typeof block.label === 'string') {
+      out.set(block.label, String(block.value ?? ''));
+    }
+    if (Array.isArray(block.blocks)) for (const b of block.blocks) walk(b);
+  };
+  for (const b of section?.blocks ?? []) walk(b);
+  return out;
 }
 
 /**
@@ -580,13 +696,22 @@ export function checkBilingualEquivalence(
   hiReport: KundliReportModel,
 ): ConsistencyReport {
   const c = new Checker('bilingual');
+  // Timestamps and digests are excluded; see NON_VALUE_LABELS.
   const tokens = (r: KundliReportModel) =>
-    (r.sections.map((s) => sectionText(s)).join(' | ').match(/\d+(?:\.\d+)?/g) ?? []);
+    (r.sections.map((s) => stableText(s)).join(' | ').match(/\d+(?:\.\d+)?/g) ?? []);
 
   const en = tokens(enReport);
   const hi = tokens(hiReport);
 
-  if (en.join(',') === hi.join(',')) {
+  // "Are Hindi labels actually applied" is measured, not assumed: a Hindi
+  // report must contain more Devanagari text than the English one, which
+  // already carries a Sanskrit invocation and some Sanskrit proper nouns.
+  const devanagari = (r: KundliReportModel) =>
+    (r.sections.map((s) => sectionText(s)).join(' | ').match(/[\u0900-\u097F]/g) ?? []).length; // titles included
+  const enDev = devanagari(enReport);
+  const hiDev = devanagari(hiReport);
+
+  if (hiDev <= enDev) {
     c.findings.push({
       code: 'CG_BILINGUAL_NOT_APPLIED',
       severity: 'WARNING',
@@ -594,11 +719,27 @@ export function checkBilingualEquivalence(
       valueA: `${en.length} numeric tokens`,
       pathB: 'report[hi].sections',
       valueB: `${hi.length} numeric tokens`,
-      message: 'the Hindi and English renderings are identical, so Hindi labels are not being applied',
+      message: `the Hindi rendering adds no Devanagari text (${hiDev} characters versus ${enDev} in English), so Hindi labels are not being applied`,
     });
     c.checked++;
     c.checks.push('bilingual.CG_BILINGUAL_NOT_APPLIED');
   } else {
+    // A value present in one language and missing in the other is as serious
+    // as two different values, so the counts must agree first.
+    if (en.length !== hi.length) {
+      c.findings.push({
+        code: 'CG_BILINGUAL_VALUE',
+        severity: 'CRITICAL',
+        pathA: 'report[en].values',
+        valueA: `${en.length} values`,
+        pathB: 'report[hi].values',
+        valueB: `${hi.length} values`,
+        message: `the English rendering carries ${en.length} numeric values and the Hindi one ${hi.length}, so the two do not describe the same chart`,
+      });
+      c.checked++;
+      c.checks.push('bilingual.CG_BILINGUAL_VALUE');
+      return c.report();
+    }
     // Same length and same values, differing only where a label differs.
     for (let i = 0; i < Math.min(en.length, hi.length); i++) {
       if (en[i] !== hi[i]) {

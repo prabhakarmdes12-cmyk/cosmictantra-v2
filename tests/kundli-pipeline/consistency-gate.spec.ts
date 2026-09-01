@@ -485,26 +485,66 @@ test.describe('CONTRADICTION FIXTURES — report stage', () => {
   test('certificate lineage value missing', () => {
     const m: any = clone(realModel());
     const report = buildKundliReportModel(m, 'en');
-    const method = report.sections.find((s) => s.id === 'calculation-method')!;
-    (method as any).blocks = (method as any).blocks.filter((b: any) => JSON.stringify(b).indexOf('V36') === -1);
+    const cert = report.sections.find((s) => s.id === 'calculation-certificate')!;
+    (cert as any).blocks = (cert as any).blocks.filter((b: any) => JSON.stringify(b).indexOf('V36') === -1);
     const r = checkReportConsistency(m, report);
     expect(r.ok).toBe(false);
-    expect(r.findings.some((f) => f.code === 'CG_CERTIFICATE')).toBe(true);
+    expect(r.findings.some((f) => f.code.startsWith('CG_CERTIFICATE'))).toBe(true);
+  });
+
+  test('a stale content hash is rejected', () => {
+    const m = realModel();
+    const report: any = clone(buildKundliReportModel(m, 'en'));
+    report.lineage.contentHash = 'stale-hash-from-another-report';
+    const r = checkReportConsistency(m, report);
+    expect(r.ok).toBe(false);
+    const found = r.findings.filter((f) => f.code === 'CG_CERTIFICATE_HASH');
+    expect(found.length).toBeGreaterThan(0);
+    expect(found[0].pathA).toContain('contentHash');
+    expect(found[0].pathB).toContain('recomputed');
+  });
+
+  test('a passport with a blank DST answer is rejected', () => {
+    const m = realModel();
+    const report: any = clone(buildKundliReportModel(m, 'en'));
+    const passport = report.sections.find((s: any) => s.id === 'birth-data-passport');
+    const block = passport.blocks.find((b: any) => b.kind === 'keyValue' && b.label === 'Daylight saving time');
+    block.value = '';
+    const r = checkReportConsistency(m, report);
+    expect(r.ok).toBe(false);
+    expect(r.findings.some((f) => f.code === 'CG_PASSPORT_DST')).toBe(true);
   });
 
   test('Hindi and English values diverge', () => {
     const m = realModel();
     const en = buildKundliReportModel(m, 'en');
     const hi: any = clone(buildKundliReportModel(m, 'hi'));
-    // Simulate a translation that silently changes an astronomical value.
-    const idx = hi.sections.findIndex((s: any) => s.id === 'planetary-positions');
-    hi.sections[idx].blocks[0] = { type: 'table', rows: [['Sun', '999.99']] };
+    // A translation that changes an astronomical value while still rendering
+    // Hindi labels. Devanagari is added so the check reaches the value
+    // comparison rather than reporting that Hindi labels are missing.
+    hi.sections.push({
+      id: 'test-hindi-block',
+      title: 'परीक्षण',
+      status: 'READY',
+      blocks: [{ kind: 'table', headers: ['ग्रह', 'अंश'], rows: [['सूर्य', '999.99']] }],
+    });
     const r = checkBilingualEquivalence(en, hi);
     const critical = r.findings.filter((f) => f.severity === 'CRITICAL');
     expect(critical.length, JSON.stringify(r.findings)).toBeGreaterThan(0);
     expect(critical[0].code).toBe('CG_BILINGUAL_VALUE');
     expect(critical[0].pathA).toContain('en');
     expect(critical[0].pathB).toContain('hi');
+  });
+
+  test('a Hindi report that does apply labels raises no missing-label warning', () => {
+    const m = realModel();
+    const en = buildKundliReportModel(m, 'en');
+    const hi: any = clone(buildKundliReportModel(m, 'hi'));
+    // Simulate Devanagari labels having been applied to the sections.
+    for (const s of hi.sections) s.title = `हिन्दी — ${s.title}`;
+    const r = checkBilingualEquivalence(en, hi);
+    expect(r.findings.some((f) => f.code === 'CG_BILINGUAL_NOT_APPLIED'), JSON.stringify(r.findings)).toBe(false);
+    expect(r.ok).toBe(true);
   });
 
   test('Hindi labels not yet applied is recorded as a warning, not blocked', () => {

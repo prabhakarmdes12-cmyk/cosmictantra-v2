@@ -313,6 +313,8 @@ export interface InterpretationEntry {
 export interface ReportLineage {
   reportId: string;
   fingerprint: string;
+  /** Deterministic hash of the report content; excludes the generation timestamp. */
+  contentHash: string;
   stages: { stage: string; at: string; ok: boolean }[];
 }
 
