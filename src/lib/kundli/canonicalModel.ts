@@ -84,7 +84,29 @@ function readPlanetRecord(snapshotPlanets: any): Record<string, any> {
   return out;
 }
 
+/**
+ * Dignity of a graha.
+ *
+ * The engine's own dignity string is authoritative. The boolean flags below
+ * are consulted only when that string is absent: no snapshot this pipeline
+ * has produced populates them, and reading them alone reported every graha as
+ * NEUTRAL, which is a false fact rather than an absent one.
+ */
 function dignityOf(p: any): PlanetPosition['dignity'] {
+  const raw = typeof p.dignity === 'string' ? p.dignity
+    : typeof p.status === 'string' ? p.status : '';
+  const s = raw.toLowerCase();
+  if (s.includes('debilitat')) return 'DEBILITATED';
+  if (s.includes('exalt')) return 'EXALTED';
+  if (s.includes('moolatrikona') || s.includes('mooltrikona')) return 'MOOLATRIKONA';
+  if (s.includes('own sign') || s.includes('swakshetra')) return 'OWN_SIGN';
+  if (s.includes('friend')) return 'FRIEND_SIGN';
+  // 'Neutral / Enemy' is one of the engine's own labels: it is reported as
+  // NEUTRAL rather than guessed at, because the engine does not separate the
+  // two cases in that label.
+  if (s.includes('neutral')) return 'NEUTRAL';
+  if (s.includes('enemy')) return 'ENEMY_SIGN';
+
   if (p.isExalted) return 'EXALTED';
   if (p.isDebilitated) return 'DEBILITATED';
   if (p.isInOwnSign) return 'OWN_SIGN';

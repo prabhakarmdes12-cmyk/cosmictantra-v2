@@ -217,6 +217,8 @@ function requireGeoModule(): typeof import('./geoTz') {
 /* ------------------------------------------------------------------ */
 
 export const MANDATORY_REPORT_SECTIONS = [
+  'scholar-summary-1',
+  'scholar-summary-2',
   'birth-summary',
   'calculation-method',
   'panchanga',
