@@ -119,11 +119,78 @@ const normalizeTime = (t: unknown): string => {
   return m ? `${m[1].padStart(2, '0')}:${m[2]}` : t;
 };
 
-const msOf = (d: string | undefined | null): number => {
-  if (!d) return NaN;
-  const t = Date.parse(d);
-  return Number.isFinite(t) ? t : NaN;
-};
+const WALL_CLOCK = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?)?$/;
+const ABSOLUTE_INSTANT =
+  /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?)?(Z|[+-]\d{2}:?\d{2})$/;
+
+/**
+ * Parses a LOCAL WALL-CLOCK value as a wall-clock tuple, never as an instant.
+ *
+ * '1995-06-15T10:30:00' carries no zone. Handing it to Date.parse() makes it
+ * an instant in whatever zone the host happens to run in, so the same input
+ * yields 10:30Z on a UTC server, 05:00Z on an Asia/Kolkata server and 14:30Z
+ * on an America/New_York server. That is exactly the bug an earlier version
+ * of this gate shipped: it reported a false CG_UTC_CONVERSION contradiction
+ * for every Indian birth when the process ran under Asia/Kolkata.
+ *
+ * The components are read explicitly and reassembled with Date.UTC, which is
+ * host-independent. A value that rolls over (31 February, hour 25) is
+ * rejected rather than silently normalised.
+ */
+export function parseWallClockToUtcEpoch(localDateTime: string | undefined | null): number | null {
+  if (typeof localDateTime !== 'string') return null;
+  const m = WALL_CLOCK.exec(localDateTime.trim());
+  if (!m) return null;
+  const year = Number(m[1]);
+  const month = Number(m[2]);
+  const day = Number(m[3]);
+  const hour = m[4] === undefined ? 0 : Number(m[4]);
+  const minute = m[5] === undefined ? 0 : Number(m[5]);
+  const second = m[6] === undefined ? 0 : Number(m[6]);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  if (hour > 23 || minute > 59 || second > 59) return null;
+
+  const epoch = Date.UTC(year, month - 1, day, hour, minute, second);
+  // Date.UTC silently rolls invalid dates forward (1995-02-30 becomes March
+  // 2nd). Round-tripping catches that, so a bad date fails honestly.
+  const check = new Date(epoch);
+  if (
+    check.getUTCFullYear() !== year || check.getUTCMonth() !== month - 1 ||
+    check.getUTCDate() !== day || check.getUTCHours() !== hour ||
+    check.getUTCMinutes() !== minute || check.getUTCSeconds() !== second
+  ) return null;
+  return epoch;
+}
+
+/**
+ * Parses an ABSOLUTE instant. A timestamp with a time component but no zone
+ * is rejected: it is ambiguous, and guessing is what caused the original bug.
+ * A date-only value (YYYY-MM-DD) is UTC by the ECMAScript specification.
+ */
+export function parseAbsoluteInstant(value: string | undefined | null): number | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  const m = ABSOLUTE_INSTANT.exec(trimmed);
+  if (m) {
+    const dateOnly = m[4] === undefined;
+    const epoch = dateOnly
+      ? Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
+      : Date.parse(
+          `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6] ?? '00'}${m[7] === 'Z' ? 'Z' : m[7]}`,
+        );
+    if (!Number.isFinite(epoch)) return null;
+    return epoch;
+  }
+  // Date-only without a time component is unambiguously UTC per ECMA-262.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    const [y, mo, d] = trimmed.split('-').map(Number);
+    const epoch = Date.UTC(y, mo - 1, d);
+    const check = new Date(epoch);
+    if (check.getUTCFullYear() !== y || check.getUTCMonth() !== mo - 1 || check.getUTCDate() !== d) return null;
+    return epoch;
+  }
+  return null;
+}
 
 class Checker {
   findings: ConsistencyFinding[] = [];
@@ -226,20 +293,43 @@ export function checkCanonicalConsistency(input: CanonicalConsistencyInput): Con
   c.eq('CG_UTC_DATETIME', 'profile.timezone.utcDateTime', tz.utcDateTime, 'calculationMetadata.utcDateTime', m.calculationMetadata.utcDateTime);
 
   // Local and UTC must actually differ by the declared offset.
-  const localMs = msOf(m.calculationMetadata.localDateTime);
-  const utcMs = msOf(m.calculationMetadata.utcDateTime);
+  //
+  // localDateTime is a WALL-CLOCK value: it is compared as a tuple rebuilt
+  // with Date.UTC, never through Date.parse, so the result does not depend on
+  // the timezone of the machine running the gate.
+  const wallMs = parseWallClockToUtcEpoch(m.calculationMetadata.localDateTime);
+  const utcMs = parseAbsoluteInstant(m.calculationMetadata.utcDateTime);
   const offsetHours = typeof tz.utcOffsetAtBirth === 'number' ? tz.utcOffsetAtBirth : NaN;
-  if (Number.isFinite(localMs) && Number.isFinite(utcMs) && Number.isFinite(offsetHours)) {
-    const deltaMinutes = (localMs - utcMs) / 60000;
+
+  if (wallMs === null) {
+    c.assert(
+      'CG_UTC_CONVERSION',
+      false,
+      'calculationMetadata.localDateTime',
+      m.calculationMetadata.localDateTime,
+      'local birth time is not a valid wall-clock value, so the conversion cannot be verified',
+    );
+  } else if (utcMs === null) {
+    c.assert(
+      'CG_UTC_CONVERSION',
+      false,
+      'calculationMetadata.utcDateTime',
+      m.calculationMetadata.utcDateTime,
+      'UTC birth instant is not an absolute timestamp (a time without a zone is ambiguous), so the conversion cannot be verified',
+    );
+  } else if (!Number.isFinite(offsetHours)) {
+    c.assert('CG_UTC_CONVERSION', false, 'subject.timezone.utcOffsetAtBirth', tz.utcOffsetAtBirth, 'no historical UTC offset was recorded, so the conversion cannot be verified');
+  } else {
+    const deltaMinutes = (wallMs - utcMs) / 60000;
+    // One minute of tolerance absorbs offsets given to the second (LMT values
+    // such as +05:53:20) without hiding a genuinely wrong conversion.
     c.assert(
       'CG_UTC_CONVERSION',
       Math.abs(deltaMinutes - offsetHours * 60) <= 1,
       'calculationMetadata.localDateTime-utcDateTime',
-      `${deltaMinutes.toFixed(1)} min`,
-      `local minus UTC is ${deltaMinutes.toFixed(1)} min but the declared offset is ${offsetHours * 60} min`,
+      `${deltaMinutes.toFixed(2)} min`,
+      `local wall clock minus UTC is ${deltaMinutes.toFixed(2)} min but the declared historical offset is ${(offsetHours * 60).toFixed(2)} min`,
     );
-  } else {
-    c.assert('CG_UTC_CONVERSION', false, 'calculationMetadata.utcDateTime', m.calculationMetadata.utcDateTime, 'local/UTC timestamps or offset missing');
   }
 
   c.assert(
@@ -373,17 +463,28 @@ export function checkCanonicalConsistency(input: CanonicalConsistencyInput): Con
   c.assert('CG_DASHA_SEQUENCE', md.length === 9, 'dashas.mahadashas.length', md.length, `Vimshottari must have 9 mahadashas, found ${md.length}`);
   for (let i = 0; i < md.length; i++) {
     const p: DashaPeriodInfo = md[i];
-    const start = msOf(p.startDate);
-    const end = msOf(p.endDate);
-    c.assert(`CG_DASHA_DATES.${p.planet}`, Number.isFinite(start) && Number.isFinite(end) && end > start, `dashas.mahadashas[${i}]`, `${p.startDate}→${p.endDate}`, `mahadasha ${p.planet} has an invalid date range`);
+    const start = parseAbsoluteInstant(p.startDate);
+    const end = parseAbsoluteInstant(p.endDate);
+    c.assert(
+      `CG_DASHA_DATES.${p.planet}`,
+      start !== null && end !== null,
+      `dashas.mahadashas[${i}].dates`,
+      `${p.startDate}→${p.endDate}`,
+      start === null || end === null
+        ? `mahadasha ${p.planet} has a date that is not an absolute instant (a time without a zone is ambiguous): ${start === null ? p.startDate : p.endDate}`
+        : `mahadasha ${p.planet} has an invalid date range`,
+    );
+    c.assert(`CG_DASHA_DATES.${p.planet}`, start !== null && end !== null && end > start, `dashas.mahadashas[${i}]`, `${p.startDate}→${p.endDate}`, `mahadasha ${p.planet} ends before it starts`);
     if (i > 0) {
-      const prevEnd = msOf(md[i - 1].endDate);
+      const prevEnd = parseAbsoluteInstant(md[i - 1].endDate);
       c.assert(
         `CG_DASHA_CONTINUITY.${p.planet}`,
-        Math.abs(prevEnd - start) <= 1000,
+        prevEnd !== null && start !== null && Math.abs(prevEnd - start) <= 1000,
         `dashas.mahadashas[${i - 1}].endDate / [${i}].startDate`,
         `${md[i - 1].endDate} → ${p.startDate}`,
-        `dasha timeline has a gap or overlap of ${((start - prevEnd) / 86400000).toFixed(3)} days between ${md[i - 1].planet} and ${p.planet}`,
+        prevEnd !== null && start !== null
+          ? `dasha timeline has a gap or overlap of ${((start - prevEnd) / 86400000).toFixed(3)} days between ${md[i - 1].planet} and ${p.planet}`
+          : `dasha timeline contains a date that is not an absolute instant, so continuity between ${md[i - 1].planet} and ${p.planet} cannot be verified`,
       );
     }
   }
@@ -394,9 +495,10 @@ export function checkCanonicalConsistency(input: CanonicalConsistencyInput): Con
     c.eq('CG_CURRENT_DASHA', 'dashas.current.startDate', current?.startDate, `dashas.mahadashas[${currentMd.planet}].startDate`, currentMd.startDate);
     c.eq('CG_CURRENT_DASHA', 'dashas.current.endDate', current?.endDate, `dashas.mahadashas[${currentMd.planet}].endDate`, currentMd.endDate);
   }
-  const cs = msOf(current?.startDate);
-  const ce = msOf(current?.endDate);
-  c.assert('CG_CURRENT_DASHA', Number.isFinite(cs) && Number.isFinite(ce) && ce > cs, 'dashas.current', `${current?.startDate}→${current?.endDate}`, 'current dasha range is invalid');
+  const cs = parseAbsoluteInstant(current?.startDate);
+  const ce = parseAbsoluteInstant(current?.endDate);
+  c.assert('CG_CURRENT_DASHA', cs !== null && ce !== null, 'dashas.current.dates', `${current?.startDate}→${current?.endDate}`, 'current dasha dates are not absolute instants (a time without a zone is ambiguous)');
+  c.assert('CG_CURRENT_DASHA', cs !== null && ce !== null && ce > cs, 'dashas.current', `${current?.startDate}→${current?.endDate}`, 'current dasha range is invalid');
 
   /* --- yogas ----------------------------------------------------------- */
   for (const y of m.yogas) {

@@ -18,7 +18,14 @@ export const DASHA_LORDS = [
 
 export function calculateVimshottariDasha(moonLongitude, birthDateStr, targetDate = new Date()) {
   const [bYear, bMonth, bDay] = birthDateStr.split('-').map(Number);
-  const birthDate = new Date(bYear, bMonth - 1, bDay);
+  // Built at UTC midnight, deliberately. `new Date(y, m, d)` makes a LOCAL
+  // midnight, and every date below is emitted with toISOString(), so on a
+  // host east of UTC the first dasha period started a day early: the same
+  // birth produced a Vimshottari timeline beginning 1995-06-14 on a server
+  // in Asia/Kolkata and 1995-06-15 on a server in UTC. All arithmetic after
+  // this point is epoch arithmetic, so fixing the construction fixes the
+  // whole timeline and makes it identical in every host timezone.
+  const birthDate = new Date(Date.UTC(bYear, bMonth - 1, bDay));
   
   // Nakshatra span is 13°20' = 13.333333°
   const nakSpan = 360 / 27;

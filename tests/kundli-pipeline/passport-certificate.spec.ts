@@ -80,24 +80,67 @@ const kvOf = (report: any, id: string): Map<string, string> => {
 /* Daylight saving time                                                */
 /* ------------------------------------------------------------------ */
 
-test.describe('DST determination — answered from IANA data, never assumed', () => {
-  test('a northern-hemisphere summer birth is reported as DST in effect', () => {
+test.describe('DST determination — transition analysis, never a bare heuristic', () => {
+  test('northern hemisphere, summer: DST in effect', () => {
     const d = determineDst('America/New_York', '1995-06-15T14:30:00.000Z', -4);
     expect(d.status).toBe('YES');
     expect(d.standardOffsetHours).toBe(-5);
-    expect(d.note).toContain('daylight saving time was in effect');
+    expect(d.method).toBe('DST_IANA_TRANSITION_V2');
+    expect(d.note).toContain('daylight saving was in effect');
   });
 
-  test('a northern-hemisphere winter birth is reported as DST not in effect', () => {
+  test('northern hemisphere, winter: DST not in effect', () => {
     const d = determineDst('America/New_York', '1995-01-15T14:30:00.000Z', -5);
     expect(d.status).toBe('NO');
     expect(d.standardOffsetHours).toBe(-5);
   });
 
-  test('India is reported as no DST, not as an unknown', () => {
+  test('southern hemisphere, December: DST in effect', () => {
+    const d = determineDst('Australia/Sydney', '1995-12-15T02:00:00.000Z', 11);
+    expect(d.status).toBe('YES');
+    expect(d.standardOffsetHours).toBe(10);
+  });
+
+  test('southern hemisphere, June: DST not in effect', () => {
+    const d = determineDst('Australia/Sydney', '1995-06-15T02:00:00.000Z', 10);
+    expect(d.status).toBe('NO');
+    expect(d.standardOffsetHours).toBe(10);
+  });
+
+  test('Europe/London summer: DST in effect', () => {
+    const d = determineDst('Europe/London', '1995-07-15T12:00:00.000Z', 1);
+    expect(d.status).toBe('YES');
+    expect(d.standardOffsetHours).toBe(0);
+  });
+
+  test('a zone with no DST is NO, not UNDETERMINED', () => {
     const d = determineDst('Asia/Kolkata', '1995-06-15T05:00:00.000Z', 5.5);
     expect(d.status).toBe('NO');
     expect(d.standardOffsetHours).toBe(5.5);
+    expect(d.transitionsInYear).toBe(0);
+  });
+
+  test('Morocco: two offsets that are NOT seasonal DST is UNDETERMINED', () => {
+    // Morocco runs UTC+1 permanently and drops to UTC+0 for about a month
+    // each Ramadan. That alternates between two offsets without being
+    // daylight saving, so no answer is asserted.
+    const d = determineDst('Africa/Casablanca', '2019-06-15T12:00:00.000Z', 1);
+    expect(d.status).toBe('UNDETERMINED');
+    expect(d.method).toBe('NOT_DETERMINED');
+    expect(d.note).toMatch(/not a daylight-saving pattern|single offset/);
+  });
+
+  test('a permanent change of standard offset is UNDETERMINED, not DST', () => {
+    // Pyongyang moved from UTC+8:30 to UTC+9:00 in May 2018 and stayed there.
+    const d = determineDst('Asia/Pyongyang', '2018-06-15T12:00:00.000Z', 9);
+    expect(d.status).toBe('UNDETERMINED');
+    expect(d.note).toMatch(/not a single seasonal daylight-saving pattern/);
+  });
+
+  test('a declared offset that disagrees with IANA is reported, not resolved', () => {
+    const d = determineDst('America/New_York', '1995-06-15T14:30:00.000Z', -5);
+    expect(d.status).toBe('UNDETERMINED');
+    expect(d.note).toMatch(/disagreement is reported/);
   });
 
   test('an unknown timezone is UNDETERMINED, never guessed', () => {
@@ -105,17 +148,19 @@ test.describe('DST determination — answered from IANA data, never assumed', ()
     expect(d.status).toBe('UNDETERMINED');
     expect(d.standardOffsetHours).toBeNull();
     expect(d.method).toBe('NOT_DETERMINED');
-    expect(d.note).toContain('undetermined');
+    expect(d.note).toMatch(/no IANA data/);
   });
 
   test('a missing offset is UNDETERMINED rather than defaulted to zero', () => {
-    const d = determineDst('Asia/Kolkata', '1995-06-15T05:00:00.000Z', undefined);
-    expect(d.status).toBe('UNDETERMINED');
+    expect(determineDst('Asia/Kolkata', '1995-06-15T05:00:00.000Z', undefined).status).toBe('UNDETERMINED');
   });
 
   test('an unparseable instant is UNDETERMINED', () => {
-    const d = determineDst('Asia/Kolkata', 'not-a-date', 5.5);
-    expect(d.status).toBe('UNDETERMINED');
+    expect(determineDst('Asia/Kolkata', 'not-a-date', 5.5).status).toBe('UNDETERMINED');
+  });
+
+  test('a missing timezone id is UNDETERMINED', () => {
+    expect(determineDst('', '1995-06-15T05:00:00.000Z', 5.5).status).toBe('UNDETERMINED');
   });
 
   test('the underlying offset lookup agrees with known values', () => {
@@ -124,11 +169,31 @@ test.describe('DST determination — answered from IANA data, never assumed', ()
     expect(zoneOffsetHours('Asia/Kolkata', new Date('1995-06-15T12:00:00Z'))).toBe(5.5);
     expect(zoneOffsetHours('Mars/Olympus', new Date('1995-06-15T12:00:00Z'))).toBeNull();
   });
-});
 
-/* ------------------------------------------------------------------ */
-/* Passport                                                            */
-/* ------------------------------------------------------------------ */
+  test('the answer does not depend on the host timezone', () => {
+    const previous = process.env.TZ;
+    const answers = new Set<string>();
+    try {
+      for (const zone of ['UTC', 'Asia/Kolkata', 'America/New_York']) {
+        process.env.TZ = zone;
+        for (const [tz, iso, off] of [
+          ['America/New_York', '1995-06-15T14:30:00.000Z', -4],
+          ['Australia/Sydney', '1995-12-15T02:00:00.000Z', 11],
+          ['Africa/Casablanca', '2019-06-15T12:00:00.000Z', 1],
+          ['Asia/Kolkata', '1995-06-15T05:00:00.000Z', 5.5],
+        ] as [string, string, number][]) {
+          const d = determineDst(tz, iso, off);
+          answers.add(`${tz}|${d.status}|${d.standardOffsetHours}`);
+        }
+      }
+    } finally {
+      if (previous === undefined) delete process.env.TZ;
+      else process.env.TZ = previous;
+    }
+    // Four zones, three host timezones, one answer each.
+    expect(answers.size).toBe(4);
+  });
+});
 
 test.describe('Birth data passport', () => {
   test('every required input is stated', () => {
