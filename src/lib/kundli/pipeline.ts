@@ -18,6 +18,14 @@ import { computeFingerprint, deriveReportId } from './lineage';
 import { buildCanonicalModel } from './canonicalModel';
 import { buildKundliReportModel, assertReportCompleteness } from './reportModel';
 import { renderKundliReportPdf } from './renderer';
+import {
+  checkCanonicalConsistency,
+  checkReportConsistency,
+  checkBilingualEquivalence,
+  summariseForLog,
+  KUNDLI_CONSISTENCY_FAILED,
+  CONSISTENCY_GATE_VERSION,
+} from './consistencyGate';
 import { validatePdfIntegrity } from './pdfValidator';
 import { emitMetric, emitPipelineError } from './observability';
 import type {
@@ -136,6 +144,34 @@ async function runKundliPdf(
     });
     canonical = buildCanonicalModel({ profile, snapshot, config: KUNDLI_PIPELINE_CONFIG.calculation });
     validateCalculationModel(canonical);
+
+    /* GATE 2b — runtime consistency ------------------------------------ */
+    // A contradiction anywhere in the canonical model blocks delivery: the
+    // same gate that protects the reader also protects the certificate.
+    const consistency = checkCanonicalConsistency({
+      canonical,
+      snapshot,
+      nodeToleranceDeg: KUNDLI_PIPELINE_CONFIG.tolerances.nodeOppositionToleranceDeg,
+    });
+    emitMetric('pipeline.gate2b.consistency', { reportId, gate: CONSISTENCY_GATE_VERSION, ...summariseForLog(consistency) });
+    if (!consistency.ok) {
+      const critical = consistency.findings.filter((f) => f.severity === 'CRITICAL');
+      emitMetric('pipeline.gate2b.failed', { reportId, codes: critical.map((f) => f.code) });
+      return failed(
+        'CONSISTENCY_FAILED',
+        new KundliError(KUNDLI_CONSISTENCY_FAILED, `${critical.length} canonical contradiction(s): ${critical.map((f) => f.code).join(', ')}`, {
+          // Paths and value summaries only — never personal data.
+          contradictions: critical.slice(0, 20).map((f) => ({
+            code: f.code,
+            pathA: f.pathA,
+            valueA: f.valueA,
+            pathB: f.pathB,
+            valueB: f.valueB,
+          })),
+        }),
+        reportId,
+      );
+    }
   } catch (e) {
     emitMetric('pipeline.gate2.failed', { reportId, code: e instanceof KundliError ? e.code : 'unknown' });
     return failed('CALCULATION_FAILED', e, reportId);
@@ -147,6 +183,48 @@ async function runKundliPdf(
   try {
     report = buildKundliReportModel(canonical, locale);
     assertReportCompleteness(report);
+
+    /* GATE 3b — report-level consistency, before anything is rendered --- */
+    const reportConsistency = checkReportConsistency(canonical, report, {
+      bilingual: KUNDLI_PIPELINE_CONFIG.report.bilingualLabels,
+    });
+    // Hindi delivery: the same chart in English must carry identical values.
+    if (locale === 'hi') {
+      const enReport = buildKundliReportModel(canonical, 'en');
+      const bilingual = checkBilingualEquivalence(enReport, report);
+      emitMetric('pipeline.gate3b.bilingual', { reportId, ...summariseForLog(bilingual) });
+      const bilingualCritical = bilingual.findings.filter((f) => f.severity === 'CRITICAL');
+      if (bilingualCritical.length > 0) {
+        emitMetric('pipeline.gate3b.failed', { reportId, codes: bilingualCritical.map((f) => f.code) });
+        return failed(
+          'CONSISTENCY_FAILED',
+          new KundliError(KUNDLI_CONSISTENCY_FAILED, 'Hindi and English renderings disagree', {
+            contradictions: bilingualCritical.slice(0, 20).map((f) => ({
+              code: f.code, pathA: f.pathA, valueA: f.valueA, pathB: f.pathB, valueB: f.valueB,
+            })),
+          }),
+          reportId,
+        );
+      }
+    }
+    emitMetric('pipeline.gate3b.consistency', { reportId, gate: CONSISTENCY_GATE_VERSION, ...summariseForLog(reportConsistency) });
+    if (!reportConsistency.ok) {
+      const critical = reportConsistency.findings.filter((f) => f.severity === 'CRITICAL');
+      emitMetric('pipeline.gate3b.failed', { reportId, codes: critical.map((f) => f.code) });
+      return failed(
+        'CONSISTENCY_FAILED',
+        new KundliError(KUNDLI_CONSISTENCY_FAILED, `${critical.length} report contradiction(s): ${critical.map((f) => f.code).join(', ')}`, {
+          contradictions: critical.slice(0, 20).map((f) => ({
+            code: f.code,
+            pathA: f.pathA,
+            valueA: f.valueA,
+            pathB: f.pathB,
+            valueB: f.valueB,
+          })),
+        }),
+        reportId,
+      );
+    }
   } catch (e) {
     emitMetric('pipeline.gate3.failed', { reportId, code: e instanceof KundliError ? e.code : 'unknown' });
     return failed('REPORT_FAILED', e, reportId);

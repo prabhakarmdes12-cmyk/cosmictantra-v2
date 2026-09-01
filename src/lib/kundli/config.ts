@@ -35,6 +35,22 @@ export const KUNDLI_PIPELINE_CONFIG = {
     minAvgCharsPerPage: 50,
   },
 
+  tolerances: {
+    /**
+     * Rahu and Ketu are, by definition, 180 degrees apart. Anything beyond
+     * this tolerance is a calculation or adapter defect, not an astrological
+     * variation, so the consistency gate fails closed on it.
+     */
+    nodeOppositionToleranceDeg: 0.5,
+    /** Accepted rounding for date continuity checks, in days. */
+    dashaContinuityToleranceDays: 0.001,
+  },
+
+  report: {
+    /** Hindi and English labels are emitted side by side in the report. */
+    bilingualLabels: true,
+  },
+
   geo: {
     /** Approximate India bounding box — used to suggest Asia/Kolkata when no timezoneId is given. */
     indiaBox: { minLat: 6, maxLat: 37, minLng: 68, maxLng: 97.5 },

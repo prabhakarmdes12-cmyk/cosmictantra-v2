@@ -20,7 +20,8 @@ export type KundliErrorCode =
   | 'KUNDLI_PDF_RENDER_FAILED'
   | 'KUNDLI_PAGINATION_STALLED'
   | 'KUNDLI_PAGE_LIMIT_EXCEEDED'
-  | 'KUNDLI_PDF_QUALITY_FAILED';
+  | 'KUNDLI_PDF_QUALITY_FAILED'
+  | 'KUNDLI_CONSISTENCY_FAILED';
 
 export class KundliError extends Error {
   readonly code: KundliErrorCode;
@@ -60,6 +61,8 @@ export const KUNDLI_SAFE_MESSAGES: Record<KundliErrorCode, string> = {
     'The PDF layout did not make progress and was stopped to prevent an oversized document. Please try again.',
   KUNDLI_PAGE_LIMIT_EXCEEDED:
     'The PDF exceeded the maximum allowed length and was not delivered. Please try again.',
+  KUNDLI_CONSISTENCY_FAILED:
+    'This Kundli was withheld because two parts of the calculation disagreed with each other. Nothing has been delivered, and no payment has been charged. Please contact support with the reference shown on this screen.',
   KUNDLI_PDF_QUALITY_FAILED:
     'The generated PDF failed quality checks and was not delivered. Please try again.',
 };

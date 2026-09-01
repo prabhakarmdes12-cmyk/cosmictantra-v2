@@ -166,7 +166,10 @@ export function buildPlanets(snapshot: any): PlanetPosition[] {
         pada: p.nakshatra?.pada ?? p.nakshatraPada ?? 1,
       },
       house: houseOf(id),
-      retrograde: !!p.retrograde,
+      // The snapshot exposes motion as `isRetrograde` (celestialEngine, mean
+      // nodes). Reading `p.retrograde` silently reported every graha as
+      // direct, contradicting the chart the reader sees.
+      retrograde: !!(p.retrograde ?? p.isRetrograde),
       dignity: dignityOf(p),
     };
   });
