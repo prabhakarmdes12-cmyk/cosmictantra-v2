@@ -11,11 +11,14 @@ import { KundliError } from './errors';
 import { buildCalculationConfig } from './config';
 import { deriveReportId } from './lineage';
 import type {
-  KundliCanonicalModel, KundliReportModel, ReportSection, ReportBlock,
+  KundliCanonicalModel, KundliReportModel, ReportSection, ReportBlock, ChartBlock,
   InterpretationEntry, SectionStatus,
 } from './types';
 import { interpretCanonicalModel, INTERPRETATION_GENERATOR_VERSION, ordinal } from './interpretation';
 import { determineDst, formatDst } from './dst';
+import { buildChartRenderModel } from './chartModel';
+import { buildScholarSummarySections } from './scholarSummary';
+import type { ChartDivision, ChartLabelMode } from './chartModel';
 import { YOGA_SOURCE_REGISTRY, YOGA_SOURCE_REGISTRY_VERSION } from '../jyotish/yogaSourceRegistry';
 import { sha256Hex } from '../granth/checksum';
 
@@ -166,43 +169,71 @@ function buildHousePositions(m: KundliCanonicalModel): ReportSection {
   };
 }
 
-function buildRashiChart(m: KundliCanonicalModel): ReportSection {
+/**
+ * Chart section: the vector drawing plus the metadata that makes it auditable.
+ * The renderer draws placements that already exist in the canonical model; it
+ * calculates nothing.
+ */
+function buildChartSection(
+  m: KundliCanonicalModel,
+  division: ChartDivision,
+  labelMode: ChartLabelMode,
+): ReportSection {
+  const model = buildChartRenderModel(m, division, labelMode);
+  const title = labelMode === 'HI' ? model.chartNameHi : model.chartName;
   return {
-    id: 'rashi-chart',
-    title: 'Rashi Chart (D1)',
+    id: division === 1 ? 'd1-chart' : 'd9-chart',
+    title: `${title} — ${model.chartSystem.replace(/_/g, ' ').toLowerCase()} chart`,
     status: 'READY',
     blocks: [
-      para('North Indian style D1 chart.'),
-      { kind: 'chart', chartType: 'NORTH_INDIAN_D1', data: {
-        lagna: m.ascendant.sign.name,
-        houses: m.houses.map((h) => ({ number: h.number, sign: h.sign.name, planets: h.planets })),
-      } },
+      para(
+        division === 1
+          ? 'The Rashi chart (D1) shows the twelve bhavas counted from the Lagna, with the sign occupying each house and the grahas placed in it. House numbers advance counter-clockwise from the Lagna at the top.'
+          : 'The Navamsha chart (D9) is the ninth division, drawn from the same canonical placements. D1 and D9 are the only two divisional charts this report cross-checks; the remaining vargas are not verified and are not shown.',
+      ),
+      { kind: 'chart', chartType: division === 1 ? 'NORTH_INDIAN_D1' : 'NORTH_INDIAN_D9', data: model } satisfies ChartBlock,
+      kv('Chart data version', model.chartModelVersion),
+      kv('Chart system', model.chartSystem),
+      kv('Lagna sign', String(model.lagnaSignNumber)),
+      kv('Placement hash', model.placementHash),
+      kv('Lagna marker', `house 1 (${model.lagnaEvidenceId})`),
+      kv('Retrograde marker', 'a rule drawn beneath the graha abbreviation'),
     ],
   };
 }
 
-function buildNavamsha(m: KundliCanonicalModel): ReportSection {
-  const d9 = m.divisionalCharts.find((c) => c.division === 9);
-  if (!d9) {
-    return {
-      id: 'navamsha',
-      title: 'Navamsha (D9)',
-      status: 'NOT_APPLICABLE',
-      blocks: [para('Navamsha calculation was not available for this chart.')],
-    };
-  }
-  const lagnaCell = ['Lagna', d9.lagnaSign];
-  const rows = d9.planets.map((p) => [p.id, p.sign, `${p.degreeInSign.toFixed(2)}°`]);
+/**
+ * Textual placement table. This is the accessible equivalent of the drawing:
+ * every placement that appears in the chart appears here, in the same order.
+ */
+function buildChartTable(
+  m: KundliCanonicalModel,
+  division: ChartDivision,
+  labelMode: ChartLabelMode,
+): ReportSection {
+  const model = buildChartRenderModel(m, division, labelMode);
+  const rows = model.houses.map((house) => {
+    const occupants = model.placements.filter((p) => p.houseNumber === house.houseNumber);
+    return [
+      String(house.houseNumber),
+      String(house.signNumber),
+      occupants.length === 0 ? '—' : occupants.map((p) => p.displayName ?? p.planetId).join(', '),
+      occupants.filter((p) => p.retrograde).map((p) => p.displayName ?? p.planetId).join(', ') || '—',
+      occupants.map((p) => p.evidenceId).join(' '),
+    ];
+  });
   return {
-    id: 'navamsha',
-    title: 'Navamsha (D9) — Spouse, Dharma & Inner Soul',
+    id: division === 1 ? 'd1-placement-table' : 'd9-placement-table',
+    title: division === 1 ? 'D1 placements as text' : 'D9 placements as text',
     status: 'READY',
     blocks: [
-      para('Ninth harmonic (navamsha) of the natal chart — the classical tool for spouse and inner-purpose analysis.'),
-      table(['Placement', 'Sign', 'Degree'], [lagnaCell, ...rows]),
+      para('Every placement drawn above, as text. Nothing in this table is calculated by the renderer, and nothing is omitted.'),
+      table(['House', 'Sign', 'Grahas', 'Retrograde', 'Evidence'], rows),
     ],
   };
 }
+
+const labelModeFor = (locale: 'en' | 'hi'): ChartLabelMode => (locale === 'hi' ? 'HI' : 'EN');
 
 function buildDashaTables(m: KundliCanonicalModel): ReportSection[] {
   const mdRows = m.dashas.mahadashas.map((md, i) => [
@@ -617,12 +648,15 @@ export function buildKundliReportModel(
   const sections: ReportSection[] = [
     buildCover(canonical),
     buildPassport(canonical, locale),
+    ...buildScholarSummarySections(canonical, locale),
     buildBirthSummary(canonical),
-    buildRashiChart(canonical),
+    buildChartSection(canonical, 1, labelModeFor(locale)),
+    buildChartTable(canonical, 1, labelModeFor(locale)),
+    buildChartSection(canonical, 9, labelModeFor(locale)),
+    buildChartTable(canonical, 9, labelModeFor(locale)),
     buildPanchanga(canonical),
     buildPlanetaryPositions(canonical),
     buildHousePositions(canonical),
-    buildNavamsha(canonical),
     ...buildDashaTables(canonical),
   ];
 

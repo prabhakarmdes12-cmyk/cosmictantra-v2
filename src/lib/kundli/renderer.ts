@@ -12,6 +12,9 @@ import { PaginationController } from './layoutEngine';
 import { loadKundliRenderAssets, KundliRenderAssets } from './renderAssets';
 import { KUNDLI_PIPELINE_CONFIG } from './config';
 import type { KundliReportModel, ReportBlock, PdfRenderMetrics, ReportSection } from './types';
+import { drawChartToPdf } from './northIndianChart';
+import type { PdfChartSurface } from './northIndianChart';
+import type { ChartRenderModel } from './chartModel';
 
 const PAGE_WIDTH = 210;   // A4 mm
 const PAGE_HEIGHT = 297;
@@ -274,45 +277,44 @@ export async function renderKundliReportPdf(
     return consumed;
   };
 
-  const renderChart = (b: Extract<ReportBlock, { kind: 'chart' }>): number => {
-    const h = 108;
+  /**
+   * Vector chart block.
+   *
+   * Draws a validated ChartRenderModel with PDF line and text primitives —
+   * never a raster image. If the block carries no render model the chart is
+   * skipped and counted as such, rather than invented from loose fields.
+   */
+  const renderChart = (b: Extract<ReportBlock, { kind: 'chart' }>, devFontAvailable: boolean): number => {
+    const model = b.data as ChartRenderModel | undefined;
+    if (!model || !Array.isArray(model.houses) || model.houses.length !== 12) {
+      // A chart drawn from incomplete data is indistinguishable from a real
+      // one, so an unusable model must never be drawn.
+      return 0;
+    }
+    // A4 page width is 210mm; 130mm leaves the chart legible and centred
+    // inside the text column without crowding it.
+    const side = 130;
+    const h = side + 16;
     controller.ensureFits(h, () => doc.addPage(), drawChrome);
-    const left = MARGIN + 40;
-    const top = controller.cursorY + 4;
-    const side = 96;
-    // North-Indian chart: four diamonds and eight disjoint triangles.
-    const data = (b.data as { lagna: string; houses: { number: number; sign: string; planets: string[] }[] });
-    const slots = [[50,25], [25,8], [8,25], [25,50], [8,75], [25,92],
-      [50,75], [75,92], [92,75], [75,50], [92,25], [75,8]];
-    const abbreviations: Record<string, string> = {
-      Sun: 'Su', Moon: 'Mo', Mars: 'Ma', Mercury: 'Me', Jupiter: 'Ju',
-      Venus: 'Ve', Saturn: 'Sa', Rahu: 'Ra', Ketu: 'Ke',
-    };
-    doc.setDrawColor(80);
-    doc.rect(left, top, side, side);
-    const line = (x1: number, y1: number, x2: number, y2: number) =>
-      doc.line(left + x1 * side / 100, top + y1 * side / 100,
-        left + x2 * side / 100, top + y2 * side / 100);
-    line(0, 0, 100, 100); line(100, 0, 0, 100);
-    line(50, 0, 100, 50); line(100, 50, 50, 100);
-    line(50, 100, 0, 50); line(0, 50, 50, 0);
-    data.houses.forEach((house) => {
-      const s = slots[(house.number - 1) % 12];
-      const x = left + s[0] * side / 100;
-      const y = top + s[1] * side / 100;
-      textFont(house.sign, false);
-      doc.setFontSize(5.5);
-      doc.setTextColor(100);
-      doc.text(String(house.number), x, y - 4, { align: 'center' });
-      doc.setTextColor(40);
-      doc.text(house.sign.split(' ')[0].slice(0, 4), x, y - 1, { align: 'center' });
-      doc.setFontSize(house.planets.length > 3 ? 4 : 5.5);
-      const planets = house.planets.map(p => abbreviations[p] ?? p.slice(0, 2));
-      for (let i = 0; i < planets.length; i += 3) {
-        doc.text(planets.slice(i, i + 3).join(' '), x, y + 2 + Math.floor(i / 3) * 2, { align: 'center' });
-      }
-      controller.recordChars(house.sign.slice(0, 4).length + planets.join('').length);
+    const left = MARGIN + (PAGE_WIDTH - 2 * MARGIN - side) / 2;
+    const top = controller.cursorY + 6;
+
+    drawChartToPdf(doc as unknown as PdfChartSurface, model, left, top, {
+      size: side,
+      baseFontSize: 9,
+      minFontSize: 6,
+      devFontAvailable,
     });
+
+    // A caption states, in words, what the drawing encodes.
+    textFont(model.chartName, false);
+    doc.setFontSize(7);
+    doc.setTextColor(110);
+    doc.text(
+      `Lagna is marked by the bold rule beneath house 1. Retrograde grahas carry a rule beneath their abbreviation. Chart data ${model.chartModelVersion}.`,
+      left, top + side + 8, { align: 'left' },
+    );
+    controller.recordChars(model.textual.join(' ').length);
     controller.advance(h);
     return h;
   };
@@ -347,7 +349,7 @@ export async function renderKundliReportPdf(
       case 'paragraph': return renderParagraph(b);
       case 'keyValue': return renderKeyValue(b);
       case 'table': return renderTable(b);
-      case 'chart': return renderChart(b);
+      case 'chart': return renderChart(b, devFontLoaded);
       case 'callout': return renderCallout(b);
       case 'divider': return renderDivider();
       case 'pageFooter': return 0;

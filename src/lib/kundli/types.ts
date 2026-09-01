@@ -122,7 +122,7 @@ export interface PlanetPosition {
   nakshatra: { name: string; pada: number };
   house: number;              // 1..12
   retrograde: boolean;
-  dignity: 'EXALTED' | 'DEBILITATED' | 'OWN_SIGN' | 'FRIEND_SIGN' | 'NEUTRAL' | 'ENEMY_SIGN';
+  dignity: 'EXALTED' | 'DEBILITATED' | 'MOOLATRIKONA' | 'OWN_SIGN' | 'FRIEND_SIGN' | 'NEUTRAL' | 'ENEMY_SIGN';
 }
 
 export interface HouseData {
@@ -284,7 +284,12 @@ export interface TableBlock extends ReportBlockBase {
   /** Optional column emphasis (e.g. highlight the current dasha row). */
   highlightRows?: number[];
 }
-export interface ChartBlock extends ReportBlockBase { kind: 'chart'; chartType: 'NORTH_INDIAN_D1'; data: unknown; }
+export interface ChartBlock extends ReportBlockBase {
+  kind: 'chart';
+  chartType: 'NORTH_INDIAN_D1' | 'NORTH_INDIAN_D9';
+  /** Validated render model. The renderer draws this and nothing else. */
+  data: unknown;
+}
 export interface CalloutBlock extends ReportBlockBase { kind: 'callout'; text: string; tone: 'warning' | 'info' | 'remedy'; }
 export interface DividerBlock extends ReportBlockBase { kind: 'divider'; }
 export interface PageFooterBlock extends ReportBlockBase { kind: 'pageFooter'; text: string; }
