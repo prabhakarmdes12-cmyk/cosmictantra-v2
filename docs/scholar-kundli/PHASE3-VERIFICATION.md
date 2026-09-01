@@ -14,11 +14,16 @@ Nothing was cherry-picked onto `main`. The held Kashi commits (`1698ab6`,
 
 | # | SHA | Contents |
 |---|---|---|
-| 1 | `b2dfe97` | Canonical chart model and validation (`chartModel.ts`, error codes) |
-| 2 | `a2d8221` | North Indian D1/D9 vector renderer, report wiring, gate correction for bilingual charts |
-| 3 | `4c578b6` | Scholar Summary (two pages), plus the dignity correction |
-| 4 | `7e7bd13` | Fourteen chart and summary checks in the delivery gate |
-| 5 | *(this commit)* | Fixtures, gate tests, visual artifacts, and these three documents |
+| 1 | `2be0e8e` | Canonical chart model and validation (`chartModel.ts`, error codes) |
+| 2 | `6c234a6` | North Indian D1/D9 vector renderer and report wiring |
+| 3 | `be0e058` | Scholar Summary (two pages), plus the dignity correction |
+| 4 | `7d623e4` | Fourteen chart and summary checks in the delivery gate |
+| 5 | `a48959a` | Fixtures, gate tests, visual artifacts, and these three documents |
+
+See §11: these five were recreated after the sandbox lost its commit objects.
+The file content is byte-identical to what was verified; the commit SHAs are
+not the ones the work first carried, and no attempt was made to preserve the
+intermediate states that were lost.
 
 ## 2. What was built
 
@@ -46,9 +51,9 @@ Deliverables: `docs/scholar-kundli/CHART-RENDERING-v1.md`,
 ### Primary suite — `tests/kundli-pipeline`
 
 ```
-TZ=UTC              323 passed, 5 skipped   41.4 s
-TZ=Asia/Kolkata     323 passed, 5 skipped   40.9 s
-TZ=America/New_York 323 passed, 5 skipped   40.5 s
+TZ=UTC              324 passed, 5 skipped   48.9 s
+TZ=Asia/Kolkata     324 passed, 5 skipped
+TZ=America/New_York 324 passed, 5 skipped
 ```
 
 Identical results under all three host timezones. The 5 skipped are the browser
@@ -233,3 +238,27 @@ The verdict is `READY_FOR_INDEPENDENT_REVIEW`. It is not a claim that the
 charts are correct, complete, visually approved, or the best available. It is a
 claim that the work is finished to the stated standard and needs a human to
 look at it before anyone relies on it.
+
+## 11. Infrastructure note
+
+The sandbox this was built in does not persist `.git` between sessions. Twice
+during Phase 3 the repository reset to the session-start commit, discarding
+all unpushed commit objects while leaving the working tree intact.
+
+The first time, the Phase 1 and 2 commits (`2ba20be`, `40a04ae`, `36a3c1b`)
+were recovered from the remote. The second time, the five Phase 3 commits had
+not yet been pushed — GitHub authentication had expired — and were lost. They
+were recreated from the surviving working tree, five topical commits as
+before, and pushed immediately.
+
+What this means for a reviewer:
+
+- The five commits carry the **final** content of their files, not the
+  intermediate states that were lost. The history reads as five topical
+  commits rather than as the evolution it originally was.
+- The tree at `a48959a` is the tree that was tested: 324 passed, 0 failed,
+  under all three host timezones.
+- No history was rewritten and nothing was force-pushed at any point.
+
+Lesson applied: commit and push before the end of a session, not after.
+
