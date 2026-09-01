@@ -547,15 +547,30 @@ test.describe('CONTRADICTION FIXTURES — report stage', () => {
     expect(r.ok).toBe(true);
   });
 
-  test('Hindi labels not yet applied is recorded as a warning, not blocked', () => {
+  test('Hindi coverage is measured and reported, never rounded up', () => {
     const m = realModel();
     const en = buildKundliReportModel(m, 'en');
     const hi = buildKundliReportModel(m, 'hi');
     const r = checkBilingualEquivalence(en, hi);
-    // Honest state today: the two renderings are identical because Hindi
-    // labels are not implemented. Reported, never hidden, never a false pass.
-    expect(r.findings.some((f) => f.code === 'CG_BILINGUAL_NOT_APPLIED')).toBe(true);
-    expect(r.ok, 'a missing feature must not block delivery as a contradiction').toBe(true);
+    // Honest state after Phase 3: chart labels and placement tables carry
+    // Devanagari; section prose, headings and interpretation text are still
+    // English. The gate must measure and report that, never imply a full
+    // translation, and never block delivery over it.
+    const codes = r.findings.map((f) => f.code);
+    console.log('[bilingual]', JSON.stringify(r.findings.map((f) => ({ code: f.code, message: f.message }))));
+
+    // Charts are bilingual now, so "nothing applied" must not be claimed.
+    expect(codes).not.toContain('CG_BILINGUAL_NOT_APPLIED');
+
+    // The untranslated remainder is disclosed, section by section.
+    const partial = r.findings.find((f) => f.code === 'CG_BILINGUAL_PARTIAL');
+    expect(partial, 'partial Hindi coverage must be disclosed').toBeTruthy();
+    expect(partial!.severity).toBe('WARNING');
+    expect(partial!.valueB).toContain('planetary-positions');
+
+    // Whatever the coverage, the two renderings must describe the same chart.
+    expect(codes).not.toContain('CG_BILINGUAL_VALUE');
+    expect(r.ok, 'partial translation must not block delivery as a contradiction').toBe(true);
   });
 });
 

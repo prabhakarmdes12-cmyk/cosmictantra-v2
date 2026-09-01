@@ -22,8 +22,11 @@ import {
   checkCanonicalConsistency,
   checkReportConsistency,
   checkBilingualEquivalence,
+  checkChartAndSummaryConsistency,
   summariseForLog,
   KUNDLI_CONSISTENCY_FAILED,
+  KUNDLI_CHART_INVALID,
+  KUNDLI_SUMMARY_INVALID,
   CONSISTENCY_GATE_VERSION,
 } from './consistencyGate';
 import { validatePdfIntegrity } from './pdfValidator';
@@ -207,6 +210,35 @@ async function runKundliPdf(
         );
       }
     }
+    /* GATE 3c — charts and the Scholar Summary, before rendering -------- */
+    // A drawing that disagrees with the canonical model is indistinguishable
+    // from a correct one once it is on the page, so these are all critical.
+    const chartConsistency = checkChartAndSummaryConsistency({
+      canonical,
+      report,
+      enReport: locale === 'hi' ? buildKundliReportModel(canonical, 'en') : undefined,
+      locale,
+    });
+    emitMetric('pipeline.gate3c.consistency', { reportId, gate: CONSISTENCY_GATE_VERSION, ...summariseForLog(chartConsistency) });
+    const chartCritical = chartConsistency.findings.filter((f) => f.severity === 'CRITICAL');
+    if (chartCritical.length > 0) {
+      emitMetric('pipeline.gate3c.failed', { reportId, codes: chartCritical.map((f) => f.code) });
+      const chartCode = chartCritical.some((f) => f.code.startsWith('CG_CHART'))
+        ? KUNDLI_CHART_INVALID
+        : chartCritical.some((f) => f.code.startsWith('CG_SUMMARY'))
+          ? KUNDLI_SUMMARY_INVALID
+          : KUNDLI_CONSISTENCY_FAILED;
+      return failed(
+        'CONSISTENCY_FAILED',
+        new KundliError(chartCode, 'the charts or the Scholar Summary disagree with the calculated chart', {
+          contradictions: chartCritical.slice(0, 20).map((f) => ({
+            code: f.code, pathA: f.pathA, valueA: f.valueA, pathB: f.pathB, valueB: f.valueB,
+          })),
+        }),
+        reportId,
+      );
+    }
+
     emitMetric('pipeline.gate3b.consistency', { reportId, gate: CONSISTENCY_GATE_VERSION, ...summariseForLog(reportConsistency) });
     if (!reportConsistency.ok) {
       const critical = reportConsistency.findings.filter((f) => f.severity === 'CRITICAL');

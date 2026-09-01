@@ -19,6 +19,8 @@
 
 import { sha256Hex } from '../granth/checksum';
 import { computeContentHash, REPORT_MODEL_VERSION } from './reportModel';
+import { buildScholarSummary, scanBannedLanguage } from './scholarSummary';
+import { PLANET_ABBREVIATIONS } from './chartModel';
 import { YOGA_SOURCE_REGISTRY_VERSION } from '../jyotish/yogaSourceRegistry';
 import type { KundliErrorCode } from './errors';
 import type {
@@ -32,6 +34,8 @@ export const CONSISTENCY_GATE_VERSION = 'consistency-gate-v1';
 
 /** Stable error code emitted for any critical contradiction. */
 export const KUNDLI_CONSISTENCY_FAILED: KundliErrorCode = 'KUNDLI_CONSISTENCY_FAILED';
+export const KUNDLI_CHART_INVALID: KundliErrorCode = 'KUNDLI_CHART_INVALID';
+export const KUNDLI_SUMMARY_INVALID: KundliErrorCode = 'KUNDLI_SUMMARY_INVALID';
 
 export type ConsistencySeverity = 'CRITICAL' | 'WARNING';
 
@@ -826,6 +830,30 @@ export function checkBilingualEquivalence(
     c.checked++;
     c.checks.push('bilingual.CG_BILINGUAL_NOT_APPLIED');
   } else {
+    // Hindi is applied to some sections only. That is measured and reported
+    // rather than rounded up to "bilingual", so the report never implies
+    // more translation than it actually carries.
+    const devSections = hiReport.sections.filter(
+      (s) => ((sectionText(s, true).match(/[\u0900-\u097F]/g) ?? []).length) > 0,
+    ).length;
+    const total = hiReport.sections.length;
+    if (devSections < total) {
+      const untranslated = hiReport.sections
+        .filter((s) => ((sectionText(s, true).match(/[\u0900-\u097F]/g) ?? []).length) === 0)
+        .map((s) => s.id);
+      c.findings.push({
+        code: 'CG_BILINGUAL_PARTIAL',
+        severity: 'WARNING',
+        pathA: 'report[hi].sections',
+        valueA: `${devSections}/${total} sections carry Devanagari`,
+        pathB: 'report[hi].sections',
+        valueB: untranslated.join(', '),
+        message: `Hindi labels are applied to ${devSections} of ${total} sections (${hiDev} Devanagari characters); the remaining ${total - devSections} are English and are not translated`,
+      });
+      c.checked++;
+      c.checks.push('bilingual.CG_BILINGUAL_PARTIAL');
+    }
+
     // A value present in one language and missing in the other is as serious
     // as two different values, so the counts must agree first.
     if (en.length !== hi.length) {
@@ -860,6 +888,428 @@ export function checkBilingualEquivalence(
     c.checked++;
     c.checks.push('bilingual.CG_BILINGUAL_VALUE');
   }
+  return c.report();
+}
+
+
+/* ------------------------------------------------------------------ */
+/* Stage 3 — charts and the Scholar Summary                            */
+/* ------------------------------------------------------------------ */
+
+export interface ChartSummaryConsistencyInput {
+  canonical: KundliCanonicalModel;
+  /** The report as it will be delivered, in its own language. */
+  report: KundliReportModel;
+  /** The same chart rendered in English, for the bilingual value check. */
+  enReport?: KundliReportModel;
+  locale?: 'en' | 'hi';
+}
+
+/** Pulls the validated chart render model out of a delivered report section. */
+function chartModelOf(report: KundliReportModel, sectionId: string): any | undefined {
+  const section = report.sections.find((s) => s.id === sectionId);
+  if (!section) return undefined;
+  const block: any = section.blocks.find((b: any) => b.kind === 'chart');
+  return block?.data;
+}
+
+const SIGN_NAME_TO_INDEX: Record<string, number> = {
+  Mesha: 1, Vrishabha: 2, Mithuna: 3, Karka: 4, Karka1: 4, Simha: 5, Kanya: 6,
+  Tula: 7, Vrishchika: 8, Dhanu: 9, Makara: 10, Kumbha: 11, Meena: 12,
+};
+
+const signIndex = (value: unknown): number | null => {
+  if (typeof value === 'number' && value >= 1 && value <= 12) return value;
+  if (typeof value === 'string') {
+    const n = Number(value);
+    if (Number.isFinite(n) && n >= 1 && n <= 12) return n;
+    return SIGN_NAME_TO_INDEX[value] ?? null;
+  }
+  return null;
+};
+
+/**
+ * Fourteen checks over the charts and the Scholar Summary.
+ *
+ * Every one is CRITICAL on failure: a chart that disagrees with the canonical
+ * model, or a summary that disagrees with the chart, must stop delivery. A
+ * drawing is indistinguishable from a correct one once it is on the page, so
+ * there is no safe way to ship it and warn about it afterwards.
+ */
+export function checkChartAndSummaryConsistency(
+  input: ChartSummaryConsistencyInput,
+): ConsistencyReport {
+  const { canonical, report, enReport } = input;
+  const c = new Checker('charts');
+  const byId = (id: string) => report.sections.find((s) => s.id === id);
+
+  const d1: any = chartModelOf(report, 'd1-chart');
+  const d9: any = chartModelOf(report, 'd9-chart');
+  // The summary facts, rebuilt from the same canonical model. The gate must
+  // not trust the summary's own copy of itself: it checks the summary against
+  // what the canonical model says.
+  const summaryFacts = buildScholarSummary(canonical, input.locale ?? 'en').facts;
+
+  /* 1 and 2 — all twelve houses present in both charts ---------------- */
+  for (const [label, model] of [['D1', d1], ['D9', d9]] as const) {
+    const numbers = (model?.houses ?? []).map((h: any) => h.houseNumber).sort((a: number, b: number) => a - b);
+    const expected = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    c.eq(
+      `CG_CHART_${label}_HOUSES`,
+      `canonical.divisionalCharts[${label === 'D1' ? 1 : 9}].houses`,
+      expected.join(','),
+      `report.${label.toLowerCase()}-chart.houses`,
+      numbers.join(','),
+      `${label} must show all twelve houses; found ${numbers.length}`,
+    );
+  }
+
+  /* 3 — D1 lagna marker agrees with the canonical ascendant ----------- */
+  if (d1) {
+    c.eq(
+      'CG_CHART_D1_LAGNA',
+      'canonical.ascendant.sign.id',
+      canonical.ascendant.sign.id,
+      'report.d1-chart.lagnaSignNumber',
+      d1.lagnaSignNumber,
+      'the D1 lagna marker does not agree with the calculated ascendant',
+    );
+  } else {
+    c.assert('CG_CHART_D1_PRESENT', false, 'report.d1-chart', 'missing', 'the D1 chart section carries no chart model');
+  }
+
+  /* 4 — D9 lagna agrees with the canonical navamsha lagna ------------- */
+  const d9Canonical = canonical.divisionalCharts.find((d) => d.division === 9);
+  if (d9 && d9Canonical) {
+    const expected = signIndex(d9Canonical.lagnaSign);
+    c.eq(
+      'CG_CHART_D9_LAGNA',
+      'canonical.divisionalCharts[9].lagnaSign',
+      expected,
+      'report.d9-chart.lagnaSignNumber',
+      d9.lagnaSignNumber,
+      'the D9 lagna marker does not agree with the calculated navamsha lagna',
+    );
+  } else {
+    c.assert('CG_CHART_D9_PRESENT', !!(d9 && d9Canonical), 'report.d9-chart', d9 ? 'canonical D9 missing' : 'missing', 'the D9 chart or its canonical source is absent');
+  }
+
+  /* 5 — D1 placements agree with the canonical planets ---------------- */
+  if (d1) {
+    for (const p of canonical.planets) {
+      const placement = (d1.placements ?? []).find((x: any) => x.planetId === p.id);
+      if (!placement) {
+        c.assert('CG_CHART_D1_PLANETS', false, `report.d1-chart.placements.${p.id}`, 'absent', `${p.id} is not drawn in the D1 chart`);
+        continue;
+      }
+      c.eq(
+        'CG_CHART_D1_PLANETS',
+        `canonical.planets[${p.id}].house`,
+        p.house,
+        `report.d1-chart.placements[${p.id}].house`,
+        placement.houseNumber,
+        `${p.id} is drawn in house ${placement.houseNumber} but the canonical model places it in ${p.house}`,
+      );
+      c.eq(
+        'CG_CHART_D1_PLANETS',
+        `canonical.planets[${p.id}].sign.id`,
+        p.sign.id,
+        `report.d1-chart.placements[${p.id}].sign`,
+        placement.signNumber,
+        `${p.id} is drawn in sign ${placement.signNumber} but the canonical model places it in sign ${p.sign.id}`,
+      );
+    }
+    // Nothing extra may be drawn.
+    for (const placement of d1.placements ?? []) {
+      c.assert(
+        'CG_CHART_D1_PLANETS',
+        canonical.planets.some((p) => p.id === placement.planetId),
+        `report.d1-chart.placements[${placement.planetId}]`,
+        'not in the canonical model',
+        `${placement.planetId} is drawn but has no canonical placement`,
+      );
+    }
+  }
+
+  /* 6 — D9 placements agree with the navamsha of the canonical planets  */
+  if (d9) {
+    for (const p of canonical.planets) {
+      const expectedSign = navamshaSignOf(p.sign.id - 1, p.degreeInSign);
+      const placement = (d9.placements ?? []).find((x: any) => x.planetId === p.id);
+      if (!placement) {
+        c.assert('CG_CHART_D9_PLANETS', false, `report.d9-chart.placements.${p.id}`, 'absent', `${p.id} is not drawn in the D9 chart`);
+        continue;
+      }
+      c.eq(
+        'CG_CHART_D9_PLANETS',
+        `navamsha(canonical.planets[${p.id}])`,
+        expectedSign,
+        `report.d9-chart.placements[${p.id}].sign`,
+        placement.signNumber,
+        `${p.id} is drawn in navamsha sign ${placement.signNumber} but the canonical longitude gives ${expectedSign}`,
+      );
+    }
+  }
+
+  /* 7 — retrograde markers agree with the canonical retrograde flags --- */
+  for (const [label, model] of [['D1', d1], ['D9', d9]] as const) {
+    if (!model) continue;
+    for (const p of canonical.planets) {
+      const placement = (model.placements ?? []).find((x: any) => x.planetId === p.id);
+      if (!placement) continue;
+      c.eq(
+        'CG_CHART_RETROGRADE_MARKER',
+        `canonical.planets[${p.id}].retrograde`,
+        p.retrograde,
+        `report.${label.toLowerCase()}-chart.placements[${p.id}].retrograde`,
+        placement.retrograde,
+        `the ${label} retrograde marker for ${p.id} disagrees with the canonical retrograde flag`,
+      );
+    }
+  }
+
+  /* 8 — Rahu and Ketu are both present, exactly once, in both charts --- */
+  for (const [label, model] of [['D1', d1], ['D9', d9]] as const) {
+    for (const node of ['Rahu', 'Ketu']) {
+      const count = (model?.placements ?? []).filter((x: any) => x.planetId === node).length;
+      c.assert(
+        'CG_CHART_NODES',
+        count === 1,
+        `report.${label.toLowerCase()}-chart.placements[${node}]`,
+        `${count} drawn`,
+        `${node} must appear exactly once in ${label}; ${count} found`,
+      );
+    }
+  }
+
+  /* 9 — the textual equivalent matches the drawing --------------------- */
+  for (const [label, model, tableId] of [['D1', d1, 'd1-placement-table'], ['D9', d9, 'd9-placement-table']] as const) {
+    if (!model) continue;
+    const table = byId(tableId);
+    const tableText = table ? sectionText(table, false) : '';
+    for (const p of model.placements ?? []) {
+      c.assert(
+        'CG_CHART_TEXTUAL_EQUIVALENT',
+        tableText.includes(p.evidenceId),
+        `report.${tableId}`,
+        p.evidenceId,
+        `the ${label} textual table is missing the evidence id for ${p.planetId}, so the drawing and the text do not agree`,
+      );
+    }
+    // Every drawn graha must be named in the textual equivalent.
+    const textual = (model.textual ?? []).join(' | ');
+    for (const p of model.placements ?? []) {
+      c.assert(
+        'CG_CHART_TEXTUAL_EQUIVALENT',
+        textual.includes(p.evidenceId),
+        `report.${label.toLowerCase()}-chart.textual`,
+        p.evidenceId,
+        `the ${label} textual equivalent does not mention ${p.planetId}`,
+      );
+    }
+  }
+
+  /* 10 — English and Hindi charts carry identical values --------------- */
+  if (enReport) {
+    const enD1: any = chartModelOf(enReport, 'd1-chart');
+    const enD9: any = chartModelOf(enReport, 'd9-chart');
+    for (const [label, a, b] of [['D1', enD1, d1], ['D9', enD9, d9]] as const) {
+      if (!a || !b) continue;
+      const keyOf = (m: any) => (m.placements ?? [])
+        .map((p: any) => `${p.planetId}:H${p.houseNumber}:S${p.signNumber}:${p.retrograde ? 'R' : 'D'}`)
+        .sort()
+        .join('|');
+      c.eq(
+        'CG_CHART_BILINGUAL_VALUES',
+        `report[en].${label.toLowerCase()}-chart.placements`,
+        keyOf(a),
+        `report[hi].${label.toLowerCase()}-chart.placements`,
+        keyOf(b),
+        `the Hindi and English ${label} charts do not place the grahas identically`,
+      );
+      c.eq(
+        'CG_CHART_BILINGUAL_VALUES',
+        `report[en].${label.toLowerCase()}-chart.lagna`,
+        a.lagnaSignNumber,
+        `report[hi].${label.toLowerCase()}-chart.lagna`,
+        b.lagnaSignNumber,
+        `the Hindi and English ${label} charts do not share a lagna`,
+      );
+    }
+  }
+
+  const summary1 = byId('scholar-summary-1');
+  const summary2 = byId('scholar-summary-2');
+  c.assert('CG_SUMMARY_PRESENT', !!summary1 && !!summary2, 'report.sections', 'scholar-summary-1 / scholar-summary-2', 'the Scholar Summary is missing');
+
+  /* 11 — every summary fact is already stated in the detailed sections --- */
+  // The check is on the value, not on the evidence id: a summary-only id can
+  // never appear in a detail section, so matching on the id would prove
+  // nothing. Each fact names the section that must state the same value and
+  // the token it is written with there.
+  if (summary1) {
+    for (const block of summary1.blocks) {
+      if ((block as any).kind !== 'keyValue') continue;
+      const kv = block as any;
+      const match = /\[([A-Z0-9\-_]+)\]\s*$/.exec(String(kv.label ?? ''));
+      if (!match) continue;
+      const id = match[1];
+      const fact = summaryFacts.find((f) => f.id === id);
+      if (!fact) continue;
+      const target = byId(fact.sectionId);
+      // Case-insensitive: sections write labels in title case and the summary
+      // in sentence case. The comparison is about the value, not the casing.
+      const targetText = (target ? sectionText(target, false) : '').toLowerCase();
+      c.assert(
+        'CG_SUMMARY_FACT_PRESENT',
+        targetText.includes(fact.valueToken.toLowerCase()),
+        `report.${fact.sectionId}`,
+        fact.valueToken,
+        `the summary states ${id} as "${kv.value}", but the detailed section "${fact.sectionId}" never writes "${fact.valueToken}" — the summary would be the only place this value exists`,
+      );
+    }
+  }
+
+  /* 12 — only PRESENT yogas are summarised ------------------------------ */
+  {
+    const summaryText = `${summary1 ? sectionText(summary1, false) : ''} | ${summary2 ? sectionText(summary2, false) : ''}`;
+    for (const yoga of canonical.yogas) {
+      const id = `YOGA-${yoga.id.toUpperCase()}`;
+      const mentioned = summaryText.includes(id) || summaryText.includes(yoga.name);
+      if (!mentioned) continue;
+      c.assert(
+        'CG_SUMMARY_YOGA_STATUS',
+        yoga.status === 'PRESENT',
+        `canonical.yogas[${yoga.id}].status`,
+        yoga.status,
+        `${yoga.name} is named in the summary but its status is ${yoga.status}; only PRESENT yogas may be summarised`,
+      );
+    }
+  }
+
+  /* 13 — the summary dasha matches the canonical timeline --------------- */
+  if (summary1) {
+    const kv = kvOf(summary1);
+    // Look the lines up by their evidence id, never by their label: the label
+    // is translated, and a Hindi label would make this check blind.
+    const valueFor = (id: string): string => {
+      for (const block of summary1.blocks) {
+        if ((block as any).kind !== 'keyValue') continue;
+        const b = block as any;
+        if (String(b.label ?? '').includes(`[${id}]`)) return String(b.value ?? '');
+      }
+      return '';
+    };
+    const current = canonical.dashas.current;
+    const mahaLine = valueFor('DASHA-MAHA-CURRENT');
+    // The period is identified by its boundaries and by the graha in any
+    // script it is written in: the Hindi summary names राहु where the
+    // canonical model says Rahu, and that is a translation, not a
+    // disagreement.
+    const planetForms = (id: string): string[] => {
+      const entry = (PLANET_ABBREVIATIONS as Record<string, { full: { en: string; hi: string } }>)[id];
+      return entry ? [id, entry.full.en, entry.full.hi] : [id];
+    };
+    const namesPlanet = (line: string, id: string) => planetForms(id).some((form) => line.includes(form));
+    c.assert(
+      'CG_SUMMARY_DASHA_MATCH',
+      namesPlanet(mahaLine, current.mahadasha) && mahaLine.includes(current.startDate) && mahaLine.includes(current.endDate),
+      'canonical.dashas.current.mahadasha',
+      `${current.mahadasha} ${current.startDate}..${current.endDate}`,
+      mahaLine,
+    );
+    const currentMd = canonical.dashas.mahadashas.find((p) => p.planet === current.mahadasha);
+    const currentAd = currentMd?.antardashas?.find((a) => a.planet === current.antardasha);
+    const antarLine = valueFor('DASHA-ANTAR-CURRENT');
+    if (currentAd) {
+      c.assert(
+        'CG_SUMMARY_DASHA_MATCH',
+        namesPlanet(antarLine, currentAd.planet) && antarLine.includes(currentAd.startDate) && antarLine.includes(currentAd.endDate),
+        'canonical.dashas.mahadashas[].antardashas[]',
+        `${current.antardasha} ${currentAd.startDate}..${currentAd.endDate}`,
+        antarLine,
+      );
+    } else {
+      c.assert(
+        'CG_SUMMARY_DASHA_MATCH',
+        antarLine.toLowerCase().includes('not calculated'),
+        'canonical.dashas.current.antardasha',
+        'not dated',
+        antarLine,
+      );
+    }
+  }
+
+  /* 14 — every evidence reference resolves to exactly one record -------- */
+  // An id may be cited in several places; that is the point of having one.
+  // What must never happen is one id denoting two different records, or a
+  // citation to an id that denotes nothing.
+  {
+    const resolved = new Map<string, string>();
+    const bind = (id: string, record: string) => {
+      const previous = resolved.get(id);
+      if (previous === undefined) { resolved.set(id, record); return; }
+      if (previous !== record) {
+        c.eq(
+          'CG_EVIDENCE_RESOLVES',
+          `evidence[${id}] (first binding)`,
+          previous,
+          `evidence[${id}] (second binding)`,
+          record,
+          `evidence id ${id} is bound to two different records, so it does not resolve to exactly one`,
+        );
+      }
+    };
+
+    // Chart placements and lagna carry their canonical path with them.
+    for (const model of [d1, d9]) {
+      for (const p of model?.placements ?? []) bind(p.evidenceId, p.sourcePath);
+      if (model?.lagnaEvidenceId) {
+        bind(model.lagnaEvidenceId, `canonical.divisionalCharts[${model.division}].lagnaSign`);
+      }
+    }
+    // Summary facts and interpretations carry theirs too.
+    for (const f of summaryFacts) bind(f.id, f.canonicalPath);
+    for (const i of buildScholarSummary(canonical, input.locale ?? 'en').interpretations) {
+      bind(i.id, i.factPath);
+      bind(i.sourceEvidence, 'sourceRegistry');
+    }
+
+    // Every id cited anywhere in the report must denote something.
+    const cited = new Set<string>();
+    for (const section of report.sections) {
+      const ids = sectionText(section, false).match(/\b(?:FACT|CHART-D1|CHART-D9|CHART|DASHA|YOGA|DOSHA|SOURCE)-[A-Za-z0-9_\-]+/g) ?? [];
+      for (const id of ids) cited.add(id);
+    }
+    for (const id of [...cited].sort()) {
+      c.assert(
+        'CG_EVIDENCE_RESOLVES',
+        resolved.has(id),
+        `evidence[${id}]`,
+        'no canonical record',
+        `the report cites ${id}, which is not bound to any canonical record`,
+      );
+    }
+  }
+
+  /* Language safety: a summary must never promise an event. ------------ */
+  {
+    const parts = [summary1, summary2]
+      .filter(Boolean)
+      .map((s) => ({ where: s!.id, text: sectionText(s!, false) }));
+    for (const finding of scanBannedLanguage(parts)) {
+      c.assert(
+        'CG_SUMMARY_LANGUAGE',
+        false,
+        `report.${finding.where}`,
+        finding.phrase,
+        `the summary uses the phrase "${finding.phrase}", which promises an outcome; context: …${finding.excerpt}…`,
+      );
+    }
+    c.checked++;
+    c.checks.push('charts.CG_SUMMARY_LANGUAGE');
+  }
+
   return c.report();
 }
 
