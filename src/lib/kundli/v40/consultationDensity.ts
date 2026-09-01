@@ -366,7 +366,13 @@ export function applyConsultationDensity(source: KundliReportModelV2): DensityRe
     const [moved] = report.sections.splice(howToReadIndex, 1);
     moved.part = 'B';
     const title = moved.blocks.find((b) => b.kind === 'sectionTitle');
-    if (title && title.kind === 'sectionTitle') title.text = `B0 · ${title.text}`;
+    if (title && title.kind === 'sectionTitle') {
+      title.text = `B0 · ${title.text}`;
+      // The section moved parts, so its running tag must move with it.
+      // Leaving "PART A" on a page printed after the Part B divider made the
+      // appendix boundary unreadable in the artifact.
+      if (title.tag) title.tag = title.tag.replace(/PART A/g, 'PART B');
+    }
     const newDividerIndex = report.sections.findIndex((sec) => sec.id === 'part-b-divider');
     report.sections.splice(newDividerIndex + 1, 0, moved);
     record('CD-09', 'how-to-read', howToReadIndex, 'Part A', 'Part B (B0)');

@@ -348,7 +348,11 @@ export function buildCareerSynthesis(
         const target = benefic ? supportive : mixed;
         target.push(claim(
           `CAREER_DRISHTI_${a.from}`,
-          `${a.from} casts its ${ORDINAL[a.offset] ?? `${a.offset}th`} full drishti on the 10th bhava (rule ${a.ruleId}).`,
+          // The sentence already states the rule in words ("its 7th full
+          // drishti"), so the machine rule id was pure duplication in Part A.
+          // It survives verbatim in the Scholar Appendix aspect ledger, which
+          // prints ruleId per aspect, and in the evidence ids carried below.
+          `${a.from} casts its ${ORDINAL[a.offset] ?? `${a.offset}th`} full drishti on the 10th bhava.`,
           benefic ? 'SUPPORTING' : 'MIXED',
           a.evidenceIds,
         ));

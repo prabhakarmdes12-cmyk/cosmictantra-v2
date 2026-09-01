@@ -41,7 +41,7 @@ import { chitiSensory } from '@/lib/chitiAudio';
 import { generateKundliPdf } from '@/lib/kundli/pipeline';
 import { KUNDLI_SAFE_MESSAGES } from '@/lib/kundli/errors';
 import { searchCities } from '@/lib/cities';
-import type { KundliPipelineResult, PipelineState, RawBirthInput } from '@/lib/kundli/types';
+import type { PipelineState, RawBirthInput } from '@/lib/kundli/types';
 
 /**
  * Kundli UI chrome localization — the selected language drives the report
@@ -571,59 +571,76 @@ export default function MasterKundliReportClient() {
   };
 
   /**
-   * QUALIFIED PDF PATH — runs the full Kundli pipeline with typed gates:
-   *   input validation -> geo/tz resolution -> calculation -> canonical model
-   *   -> interpretation -> report model -> pagination-guarded renderer
-   *   -> post-generation PDF integrity validation -> delivery.
-   * A PDF is only downloaded when the pipeline reaches READY_FOR_DELIVERY.
+   * QUALIFIED PDF PATH — V41 §0.
+   *
+   * The download now goes to `POST /api/kundli/pdf`, which runs pipeline v3
+   * (`kundli-report-v2` + renderer v3) on the server. It used to call the v1
+   * pipeline directly in this component, which is why every downloaded file
+   * still said V36 long after v2/v3 shipped: renderer v3 reads font files
+   * from disk and cannot run in a browser at all, so the client path could
+   * never have reached it.
+   *
+   * There is deliberately no fallback to v1 here. If the server cannot issue
+   * a gated document, the user sees a fail-safe message and gets no file —
+   * a silent downgrade is exactly the failure V41 exists to end.
    */
   const handleDownloadPDF = async () => {
     chitiSensory.playTick();
     setIsGeneratingPdf(true);
     setFailSafe(null);
     setLastPdfMeta(null);
-    setPipelineState(null);
+    setPipelineState('INPUT_VALIDATED');
     try {
       const raw = (rawInputRef.current ?? {}) as RawBirthInput;
-      const result: KundliPipelineResult = await generateKundliPdf(raw, {
-        locale: lang === 'hi' ? 'hi' : 'en',
-        onMetric: (name) => {
-          const stageMap: Record<string, PipelineState> = {
-            'pipeline.gate1.passed': 'INPUT_VALIDATED',
-            'pipeline.gate2.passed': 'CALCULATION_COMPLETE',
-            'pipeline.gate3.passed': 'REPORT_READY',
-            'pipeline.render.passed': 'PDF_RENDERED',
-            'pipeline.validate.passed': 'PDF_VALIDATED',
-            'pipeline.delivered': 'READY_FOR_DELIVERY'
-          };
-          const next = stageMap[name];
-          if (next) setPipelineState(next);
-        }
+      setPipelineState('CALCULATION_COMPLETE');
+
+      const response = await fetch('/api/kundli/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          birth: raw,
+          mode: 'SCHOLAR',
+          locale: lang === 'hi' ? 'hi' : 'en',
+        }),
       });
 
-      if (result.state === 'READY_FOR_DELIVERY' && result.pdfBuffer && result.report) {
-        const blob = new Blob([result.pdfBuffer as unknown as BlobPart], { type: 'application/pdf' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        const safeName = (result.report.subject.name || 'Seeker').replace(/[^a-z0-9]+/gi, '_');
-        const dob = result.report.subject.birthDate || 'birthdate';
-        a.href = url;
-        a.download = `Kundli_${safeName}_${dob}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 2000);
-        setLastPdfMeta({
-          pageCount: result.pdfQuality?.pageCount ?? 0,
-          fileSizeKB: Math.round(result.pdfBuffer.byteLength / 1024)
-        });
-      } else {
-        // Fail-safe: never show a corrupt/incomplete Kundli.
-        const code = result.errorCode ?? 'KUNDLI_INPUT_INVALID';
+      if (!response.ok) {
+        let code = 'KUNDLI_PDF_RENDER_FAILED';
+        try {
+          const detail = await response.json();
+          if (typeof detail?.errorCode === 'string') code = detail.errorCode;
+        } catch { /* non-JSON error body — keep the generic code */ }
         setFailSafe({
-          message: KUNDLI_SAFE_MESSAGES[code as keyof typeof KUNDLI_SAFE_MESSAGES] ?? KUNDLI_SAFE_MESSAGES.KUNDLI_INPUT_INVALID,
-          code
+          message:
+            KUNDLI_SAFE_MESSAGES[code as keyof typeof KUNDLI_SAFE_MESSAGES] ??
+            KUNDLI_SAFE_MESSAGES.KUNDLI_PDF_RENDER_FAILED,
+          code,
         });
+        return;
       }
+
+      setPipelineState('PDF_VALIDATED');
+      const blob = await response.blob();
+      const pages = Number(response.headers.get('X-Kundli-Pages') ?? '0');
+
+      const disposition = response.headers.get('Content-Disposition') ?? '';
+      const match = /filename="([^"]+)"/.exec(disposition);
+      const safeName = (raw.name || 'Seeker').replace(/[^a-z0-9]+/gi, '_');
+      const dob = raw.birthDate || 'birthdate';
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = match?.[1] ?? `Kundli_${safeName}_${dob}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 2000);
+
+      setPipelineState('READY_FOR_DELIVERY');
+      setLastPdfMeta({
+        pageCount: pages,
+        fileSizeKB: Math.round(blob.size / 1024),
+      });
     } catch (err) {
       console.error('[Kundli PDF] generation failed', err);
       setFailSafe({

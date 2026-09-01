@@ -14,6 +14,7 @@
 import { KundliError } from './errors';
 import { navamshaSignOf, signOfLongitude } from './consistencyGate';
 import type { KundliCanonicalModel } from './types';
+import { numeral, numeralPolicyFor } from './v40/numerals';
 
 export const CHART_MODEL_VERSION = 'chart-model-v1';
 
@@ -40,12 +41,19 @@ export const PLANET_ABBREVIATIONS: Record<PlanetId, { en: string; hi: string; fu
 
 export const LAGNA_LABELS = { en: 'Lagna', hi: 'लग्न', abbrEn: 'Lg', abbrHi: 'ल' } as const;
 
-/** Devanagari digits, so sign numbers can be rendered without an Arabic fallback. */
-const DEVANAGARI_DIGITS = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९'];
-export const signLabel = (n: number, mode: ChartLabelMode): string => {
-  if (mode === 'HI') return DEVANAGARI_DIGITS[n] ?? String(n);
-  return String(n);
-};
+/**
+ * Sign and house numerals for a chart (V41 §4).
+ *
+ * This used to index a ten-element Devanagari array directly, so signs 1-9
+ * rendered as १-९ and signs 10-12 fell through to ASCII — every North Indian
+ * chart in a Hindi report mixed both scripts. The policy now lives in
+ * `v40/numerals` and handles multi-digit values.
+ *
+ * BILINGUAL deliberately uses Western digits: on a page that already carries
+ * English terms, Devanagari digits are decoration rather than legibility.
+ */
+export const signLabel = (n: number, mode: ChartLabelMode): string =>
+  numeral(n, numeralPolicyFor(mode === 'HI' ? 'hi' : 'en'));
 
 export interface ChartPlacement {
   /** 1 for D1 Rashi, 9 for D9 Navamsha. */

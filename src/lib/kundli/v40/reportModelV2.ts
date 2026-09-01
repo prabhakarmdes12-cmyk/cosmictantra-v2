@@ -117,9 +117,13 @@ function coverSection(
         identityLines,
         currentPeriodLine: `Current: ${canonical.dashas.current.mahadasha} ${TERMS.mahadasha.en} / ${canonical.dashas.current.antardasha} ${TERMS.antardasha.en}`,
         reportId,
+        // §6: the cover carries the Report ID and the calculation school, and
+        // nothing else. Engine, report-model and derived-layer versions moved
+        // to the Scholar Appendix (B1 Calculation Certificate), where they are
+        // preserved in full — a cover is an identity page, not a build stamp,
+        // and a client reading "kundli-derived-v1" learns nothing they can use.
         verificationBadge: [
           `${canonical.calculation.ayanamshaName} · ${canonical.calculation.houseSystem.replace(/_/g, '-').toLowerCase()} · ${canonical.calculation.nodeMode.replace(/_/g, ' ').toLowerCase()}`,
-          `${REPORT_MODEL_V2_VERSION} · ${canonical.calculation.calculationVersion} · ${derived.version}`,
         ],
         contentType: 'CALCULATED_FACT',
       },

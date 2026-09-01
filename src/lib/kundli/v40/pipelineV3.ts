@@ -28,6 +28,10 @@ import {
   type DensityApplication, type PartAFinding,
 } from './consultationDensity';
 import { renderKundliPdfV3, type RenderV3Options, RENDERER_V3_VERSION } from './rendererV3';
+import {
+  applyReportMode, DEFAULT_REPORT_MODE, MODE_DEFINITIONS,
+  type ReportMode, type ModeApplication,
+} from './reportModes';
 
 export type V41PipelineState =
   | 'INPUT_REJECTED' | 'CALCULATION_FAILED' | 'CONSISTENCY_FAILED'
@@ -55,9 +59,14 @@ export interface V41PipelineResult {
   pageTitles: string[];
   rendererVersion: string;
   fontsUsed: string[];
+  /** Which audience edition was produced, and what it dropped. */
+  mode: ReportMode;
+  modeApplication: ModeApplication | null;
 }
 
 export interface GenerateV41Options extends RenderV3Options {
+  /** Audience edition. Defaults to SCHOLAR — Pandit workbench + appendix. */
+  mode?: ReportMode;
   locale?: 'en' | 'hi';
   /** Skip the density transform to render the raw v2 model with renderer v3. */
   skipDensityTransform?: boolean;
@@ -75,6 +84,8 @@ const EMPTY = {
   pageTitles: [] as string[],
   rendererVersion: RENDERER_V3_VERSION,
   fontsUsed: [] as string[],
+  mode: DEFAULT_REPORT_MODE,
+  modeApplication: null as ModeApplication | null,
 };
 
 export async function generateKundliV41Pdf(
@@ -126,6 +137,16 @@ export async function generateKundliV41Pdf(
     }
   }
 
+  /* GATE 3d2 — audience edition (§1)
+   *
+   * Applied AFTER the density transform so that CLIENT and PANDIT inherit
+   * every Part A cleanup, and BEFORE the residue audit so the audit runs on
+   * the sections actually being printed. SCHOLAR is the identity transform. */
+  const mode = options.mode ?? DEFAULT_REPORT_MODE;
+  const modeResult = applyReportMode(report, mode);
+  report = modeResult.report;
+  const modeApplication = modeResult.application;
+
   /* GATE 3e — no engineering residue left in Part A */
   const partAFindings = auditPartADensity(report);
   const enforce = options.enforcePartADensity ?? true;
@@ -138,7 +159,7 @@ export async function generateKundliV41Pdf(
       sourceReport, report,
       pdfBuffer: null, pdfQuality: null, metrics: null,
       ...EMPTY,
-      densityApplied, densityUnmatched, partAFindings,
+      densityApplied, densityUnmatched, partAFindings, mode, modeApplication,
     };
   }
 
@@ -153,7 +174,7 @@ export async function generateKundliV41Pdf(
       sourceReport, report,
       pdfBuffer: null, pdfQuality: null, metrics: null,
       ...EMPTY,
-      densityApplied, densityUnmatched, partAFindings, languageFindings,
+      densityApplied, densityUnmatched, partAFindings, languageFindings, mode, modeApplication,
     };
   }
 
@@ -164,7 +185,7 @@ export async function generateKundliV41Pdf(
       sourceReport, report,
       pdfBuffer: null, pdfQuality: null, metrics: null,
       ...EMPTY,
-      densityApplied, densityUnmatched, partAFindings, languageFindings,
+      densityApplied, densityUnmatched, partAFindings, languageFindings, mode, modeApplication,
     };
   }
 
@@ -188,7 +209,7 @@ export async function generateKundliV41Pdf(
       sourceReport, report,
       pdfBuffer: null, pdfQuality: null, metrics: null,
       ...EMPTY,
-      densityApplied, densityUnmatched, partAFindings, languageFindings,
+      densityApplied, densityUnmatched, partAFindings, languageFindings, mode, modeApplication,
     };
   }
 
@@ -198,10 +219,10 @@ export async function generateKundliV41Pdf(
     pdfQuality = await validatePdfIntegrity({
       buffer,
       renderMetrics: metrics,
-      mandatorySectionTitles: [
-        'Kundli Passport', 'Kundli Saar', 'Graha Dossier',
-        'Bhava Intelligence Matrix', 'Vimshottari Timeline', 'Pandit Notes',
-      ],
+      // Mode-aware (§1): the gate asserts what THIS edition promises. A
+      // fixed list would either fail CLIENT for correctly omitting a
+      // practitioner's worksheet, or stop checking the appendix entirely.
+      mandatorySectionTitles: MODE_DEFINITIONS[mode].mandatorySectionTitles,
       maxPages: options.maxPages ?? 44,
     });
   } catch (e) {
@@ -213,7 +234,7 @@ export async function generateKundliV41Pdf(
       sourceReport, report,
       pdfBuffer: buffer, pdfQuality: null, metrics,
       ...EMPTY,
-      densityApplied, densityUnmatched, partAFindings, languageFindings, pageTitles, fontsUsed,
+      densityApplied, densityUnmatched, partAFindings, languageFindings, mode, modeApplication, pageTitles, fontsUsed,
     };
   }
 
@@ -225,5 +246,6 @@ export async function generateKundliV41Pdf(
     densityApplied, densityUnmatched, partAFindings, languageFindings, pageTitles,
     rendererVersion: RENDERER_V3_VERSION,
     fontsUsed,
+    mode, modeApplication,
   };
 }
