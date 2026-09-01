@@ -22,6 +22,10 @@
  * or treats a missing value as zero.
  */
 
+import { YOGA_SOURCE_REGISTRY_VERSION, sourceEntryFor, type YogaSourceEntry } from './yogaSourceRegistry';
+
+export { YOGA_SOURCE_REGISTRY_VERSION };
+
 export type YogaStatus = 'PRESENT' | 'ABSENT' | 'INDETERMINATE' | 'NOT_CALCULATED';
 
 export type JyotishSystem = 'PARASHARI' | 'JAIMINI' | 'KP';
@@ -51,6 +55,8 @@ export interface YogaEvaluation {
   rule: string;
   inputs: YogaInputs;
   conditions: YogaConditionResult[];
+  /** Versioned source-registry entry describing provenance and limits. */
+  source: YogaSourceEntry;
   /** Same value as `status`; kept explicit for report/evidence consumers. */
   result: YogaStatus;
   evidenceRefs: string[];
@@ -119,9 +125,21 @@ const isKendra = (from: number, to: number): boolean => KENDRA_OFFSETS.includes(
 
 const signLord = (signId: number | null): string | null => (signId ? SIGN_LORDS[signId] ?? null : null);
 
-function resolveStatus(conditions: YogaConditionResult[]): YogaStatus {
+/**
+ * AND-based status resolution.
+ *
+ *   any condition conclusively false  -> ABSENT        (a false condition is
+ *                                                       logically decisive,
+ *                                                       even if another
+ *                                                       condition is unknown)
+ *   else any condition unresolved     -> INDETERMINATE
+ *   else (every condition true)       -> PRESENT
+ */
+export function resolveStatus(conditions: YogaConditionResult[]): YogaStatus {
+  if (conditions.length === 0) return 'NOT_CALCULATED';
+  if (conditions.some((c) => c.satisfied === false)) return 'ABSENT';
   if (conditions.some((c) => c.satisfied === null)) return 'INDETERMINATE';
-  return conditions.every((c) => c.satisfied === true) ? 'PRESENT' : 'ABSENT';
+  return 'PRESENT';
 }
 
 interface YogaRuleMeta {
@@ -299,11 +317,13 @@ const GajaKesariRule: YogaRuleMeta = {
 
 const DharmaKarmaAdhipatiRule: YogaRuleMeta = {
   id: 'YOGA_DHARMA_KARMA_ADHIPATI',
-  name: 'Dharma-Karmadhipati Yoga',
+  name: 'Dharma-Karmadhipati Yoga (conjunction or parivartana only)',
   rule:
-    'The lord of the 9th house and the lord of the 10th house are conjoined ' +
-    '(same house), in mutual kendra (offset 0, 3, 6 or 9), or in parivartana ' +
-    '(each occupying a sign owned by the other).',
+    'LIMITED RULE: the lord of the 9th house and the lord of the 10th house ' +
+    'are conjoined (occupy the same house) OR are in parivartana (each ' +
+    'occupying a sign owned by the other). Generic mutual-kendra placement is ' +
+    'NOT sufficient under this rule and is registered separately as ' +
+    'YOGA_DHARMA_KARMA_ADHIPATI_MUTUAL_KENDRA (NOT_CALCULATED).',
   inputs: { planets: [], houses: [9, 10], signs: [] },
   implemented: true,
   evaluate: (chart) => {
@@ -334,7 +354,7 @@ const DharmaKarmaAdhipatiRule: YogaRuleMeta = {
     if (!lord9 || !lord10) {
       conditions.push({
         id: 'lord-relation',
-        description: '9th lord and 10th lord are conjoined, in mutual kendra, or in parivartana',
+        description: '9th lord and 10th lord are conjoined or in parivartana (mutual kendra is not adopted)',
         satisfied: null,
         evidence: ['not evaluated: house lord(s) unresolved'],
       });
@@ -345,7 +365,7 @@ const DharmaKarmaAdhipatiRule: YogaRuleMeta = {
     if (!p9 || !p10 || p9.house < 1 || p10.house < 1) {
       conditions.push({
         id: 'lord-relation',
-        description: '9th lord and 10th lord are conjoined, in mutual kendra, or in parivartana',
+        description: '9th lord and 10th lord are conjoined or in parivartana (mutual kendra is not adopted)',
         satisfied: null,
         evidence: [
           `${lord9} house ${p9?.house ?? 'unresolved'}`,
@@ -355,20 +375,71 @@ const DharmaKarmaAdhipatiRule: YogaRuleMeta = {
       return conditions;
     }
     const conjoined = p9.house === p10.house;
-    const mutualKendra = isKendra(p9.house, p10.house);
     const parivartana =
       (OWN_SIGNS[lord9] ?? []).includes(p10.signId) &&
       (OWN_SIGNS[lord10] ?? []).includes(p9.signId);
     conditions.push({
       id: 'lord-relation',
-      description: '9th lord and 10th lord are conjoined, in mutual kendra, or in parivartana',
-      satisfied: conjoined || mutualKendra || parivartana,
+      description: '9th lord and 10th lord are conjoined or in parivartana (mutual kendra is not adopted)',
+      satisfied: conjoined || parivartana,
       evidence: [
         `9th lord ${lord9} in house ${p9.house}, sign ${p9.signId}`,
         `10th lord ${lord10} in house ${p10.house}, sign ${p10.signId}`,
         `conjoined: ${conjoined}`,
-        `mutual kendra: ${mutualKendra} (offset ${houseOffset(p9.house, p10.house)})`,
         `parivartana: ${parivartana}`,
+        `mutual kendra: ${isKendra(p9.house, p10.house)} (offset ${houseOffset(p9.house, p10.house)}) — recorded for a scholar, NOT adopted as sufficient`,
+      ],
+    });
+    return conditions;
+  },
+};
+
+const DharmaKarmaAdhipatiMutualKendraRule: YogaRuleMeta = {
+  id: 'YOGA_DHARMA_KARMA_ADHIPATI_MUTUAL_KENDRA',
+  name: 'Dharma-Karmadhipati Yoga — mutual-kendra variant (not adopted)',
+  rule:
+    'NOT ADOPTED: the 9th lord and the 10th lord occupy kendra positions ' +
+    'relative to each other (offset 0, 3, 6 or 9). Reported as evidence only; ' +
+    'the status is always NOT_CALCULATED because no licensed source in this ' +
+    'repository settles whether this variant is sufficient on its own.',
+  inputs: { planets: [], houses: [9, 10], signs: [] },
+  implemented: true,
+  evaluate: (chart) => {
+    const sign9 = houseSignOf(chart, 9);
+    const sign10 = houseSignOf(chart, 10);
+    const lord9 = signLord(sign9);
+    const lord10 = signLord(sign10);
+    const conditions: YogaConditionResult[] = [
+      {
+        id: 'lords-resolved',
+        description: 'Both house lords identified',
+        satisfied: lord9 && lord10 ? true : null,
+        evidence: [`9th lord ${lord9 ?? 'unresolved'}`, `10th lord ${lord10 ?? 'unresolved'}`],
+      },
+    ];
+    const p9 = lord9 ? planetOf(chart, lord9) : undefined;
+    const p10 = lord10 ? planetOf(chart, lord10) : undefined;
+    if (!p9 || !p10 || p9.house < 1 || p10.house < 1) {
+      conditions.push({
+        id: 'mutual-kendra-offset',
+        description: '9th lord and 10th lord are in mutual kendra (offset 0, 3, 6 or 9)',
+        satisfied: null,
+        evidence: [
+          `${lord9 ?? '9th lord'} house ${p9?.house ?? 'unresolved'}`,
+          `${lord10 ?? '10th lord'} house ${p10?.house ?? 'unresolved'}`,
+        ],
+      });
+      return conditions;
+    }
+    const offset = houseOffset(p9.house, p10.house);
+    conditions.push({
+      id: 'mutual-kendra-offset',
+      description: '9th lord and 10th lord are in mutual kendra (offset 0, 3, 6 or 9)',
+      satisfied: KENDRA_OFFSETS.includes(offset),
+      evidence: [
+        `9th lord ${lord9} in house ${p9.house}`,
+        `10th lord ${lord10} in house ${p10.house}`,
+        `offset ${offset} — recorded for a scholar; NOT adopted as sufficient`,
       ],
     });
     return conditions;
@@ -403,6 +474,7 @@ const YOGA_RULES: YogaRuleMeta[] = [
     rule: 'The Moon and Mars occupy the same sign.',
   }),
   DharmaKarmaAdhipatiRule,
+  DharmaKarmaAdhipatiMutualKendraRule,
   panchaMahapurushaRule({ id: 'YOGA_RUCHAKA', name: 'Ruchaka Yoga (Pancha Mahapurusha)', planet: 'Mars' }),
   panchaMahapurushaRule({ id: 'YOGA_HAMSA', name: 'Hamsa Yoga (Pancha Mahapurusha)', planet: 'Jupiter' }),
   panchaMahapurushaRule({ id: 'YOGA_MALAVYA', name: 'Malavya Yoga (Pancha Mahapurusha)', planet: 'Venus' }),
@@ -421,22 +493,53 @@ export const YOGA_RULE_IDS: string[] = YOGA_RULES.map((r) => r.id);
  */
 export function evaluateYogas(chart: YogaChartInput): YogaEvaluation[] {
   return YOGA_RULES.map((rule) => {
-    if (!rule.implemented) {
+    // A rule without a source-registry entry cannot be reported at all.
+    const source = sourceEntryFor(rule.id);
+
+    // NOT_ADOPTED rules still compute their conditions as evidence for a
+    // scholar, but their status is always NOT_CALCULATED: the engine does not
+    // claim PRESENT or ABSENT for an interpretation it has not adopted.
+    if (!rule.implemented || source.adoption === 'NOT_ADOPTED') {
+      const conditions = rule.evaluate(chart);
+      const reason = rule.notCalculatedReason
+        ?? `Rule not adopted (registry ${YOGA_SOURCE_REGISTRY_VERSION}). ${source.limitations.join(' ')}`;
       return {
         id: rule.id,
         name: rule.name,
         system: 'PARASHARI' as JyotishSystem,
         rule: rule.rule,
         inputs: rule.inputs,
-        conditions: [],
+        conditions,
+        source,
+        result: 'NOT_CALCULATED' as YogaStatus,
+        evidenceRefs: conditions.flatMap((c) => c.evidence),
+        status: 'NOT_CALCULATED' as YogaStatus,
+        notCalculatedReason: reason,
+      };
+    }
+
+    const conditions = rule.evaluate(chart);
+    const status = resolveStatus(conditions);
+
+    // Defensive: an adopted rule that produced no conditions cannot be judged,
+    // so it is reported NOT_CALCULATED rather than defaulted to PRESENT.
+    if (conditions.length === 0) {
+      return {
+        id: rule.id,
+        name: rule.name,
+        system: 'PARASHARI' as JyotishSystem,
+        rule: rule.rule,
+        inputs: rule.inputs,
+        conditions,
+        source,
         result: 'NOT_CALCULATED' as YogaStatus,
         evidenceRefs: [],
         status: 'NOT_CALCULATED' as YogaStatus,
-        notCalculatedReason: rule.notCalculatedReason,
+        notCalculatedReason:
+          'Rule produced no conditions for this chart — not judged (fail-closed).',
       };
     }
-    const conditions = rule.evaluate(chart);
-    const status = resolveStatus(conditions);
+
     return {
       id: rule.id,
       name: rule.name,
@@ -444,6 +547,7 @@ export function evaluateYogas(chart: YogaChartInput): YogaEvaluation[] {
       rule: rule.rule,
       inputs: rule.inputs,
       conditions,
+      source,
       result: status,
       evidenceRefs: conditions.flatMap((c) => c.evidence),
       status,

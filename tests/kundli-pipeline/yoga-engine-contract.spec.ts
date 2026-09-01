@@ -14,10 +14,18 @@ import { test, expect } from '@playwright/test';
 import {
   evaluateYogas,
   presentYogaNames,
+  resolveStatus,
+  YOGA_RULE_IDS,
   type YogaChartInput,
+  type YogaConditionResult,
   type YogaPlanetInput,
   type YogaStatus,
 } from '../../src/lib/jyotish/yogaEngine';
+import {
+  YOGA_SOURCE_REGISTRY,
+  YOGA_SOURCE_REGISTRY_VERSION,
+  sourceEntryFor,
+} from '../../src/lib/jyotish/yogaSourceRegistry';
 
 const VALID_STATUS: YogaStatus[] = ['PRESENT', 'ABSENT', 'INDETERMINATE', 'NOT_CALCULATED'];
 
@@ -103,11 +111,36 @@ test.describe('YOGA ENGINE — Pancha Mahapurusha', () => {
 test.describe('YOGA ENGINE — Dharma-Karmadhipati', () => {
   // Lagna sign 1 (Mesha): house 9 = sign 9 (Dhanu, lord Jupiter),
   // house 10 = sign 10 (Makara, lord Saturn).
-  test('9th and 10th lords in mutual kendra give PRESENT', () => {
+  test('mutual kendra alone is NOT sufficient under the adopted rule', () => {
+    // Many popular sources accept mutual kendra; no licensed source in this
+    // repository settles it, so the adopted rule does not accept it and the
+    // variant is registered separately as NOT_CALCULATED.
     const c = chart({ Jupiter: { house: 1, signId: 9 }, Saturn: { house: 4, signId: 10 } }, 1);
     const y = byId(c, 'YOGA_DHARMA_KARMA_ADHIPATI');
-    expect(y.status).toBe('PRESENT');
+    expect(y.status).toBe('ABSENT');
+    expect(y.rule).toContain('mutual-kendra placement is NOT sufficient');
+    // The offset is still reported so a scholar can adjudicate it.
     expect(y.conditions.at(-1)!.evidence.join(' ')).toContain('mutual kendra: true');
+    expect(y.conditions.at(-1)!.evidence.join(' ')).toContain('NOT adopted as sufficient');
+  });
+
+  test('the mutual-kendra variant is registered and reported NOT_CALCULATED with evidence', () => {
+    const c = chart({ Jupiter: { house: 1, signId: 9 }, Saturn: { house: 4, signId: 10 } }, 1);
+    const y = byId(c, 'YOGA_DHARMA_KARMA_ADHIPATI_MUTUAL_KENDRA');
+    expect(y.status).toBe('NOT_CALCULATED');
+    expect(y.notCalculatedReason).toContain('not adopted');
+    // Conditions ARE still computed, purely as evidence for a scholar.
+    const offset = y.conditions.find((q) => q.id === 'mutual-kendra-offset')!;
+    expect(offset.satisfied).toBe(true);
+    expect(offset.evidence.join(' ')).toContain('offset 3');
+  });
+
+  test('the mutual-kendra variant reports ABSENT-offset evidence when the lords are not in kendra', () => {
+    const c = chart({ Jupiter: { house: 1, signId: 9 }, Saturn: { house: 2, signId: 10 } }, 1);
+    const y = byId(c, 'YOGA_DHARMA_KARMA_ADHIPATI_MUTUAL_KENDRA');
+    expect(y.status).toBe('NOT_CALCULATED');
+    const offset = y.conditions.find((q) => q.id === 'mutual-kendra-offset')!;
+    expect(offset.satisfied).toBe(false);
   });
 
   test('9th and 10th lords conjoined give PRESENT', () => {
@@ -138,6 +171,49 @@ test.describe('YOGA ENGINE — Dharma-Karmadhipati', () => {
       ascendantSignId: 1,
     };
     expect(byId(c, 'YOGA_DHARMA_KARMA_ADHIPATI').status).toBe('INDETERMINATE');
+  });
+});
+
+test.describe('YOGA ENGINE — status resolution (AND semantics)', () => {
+  const cond = (id: string, satisfied: boolean | null): YogaConditionResult => ({
+    id,
+    description: id,
+    satisfied,
+    evidence: [`evidence for ${id}`],
+  });
+
+  test('all true -> PRESENT', () => {
+    expect(resolveStatus([cond('a', true), cond('b', true)])).toBe('PRESENT');
+  });
+
+  test('any false -> ABSENT, even when another condition is unresolved', () => {
+    expect(resolveStatus([cond('a', true), cond('b', false), cond('c', null)])).toBe('ABSENT');
+  });
+
+  test('false plus unresolved is ABSENT, never INDETERMINATE', () => {
+    expect(resolveStatus([cond('a', false), cond('b', null)])).toBe('ABSENT');
+    expect(resolveStatus([cond('a', null), cond('b', false)])).toBe('ABSENT');
+  });
+
+  test('true plus unresolved -> INDETERMINATE', () => {
+    expect(resolveStatus([cond('a', true), cond('b', null)])).toBe('INDETERMINATE');
+  });
+
+  test('all unresolved -> INDETERMINATE', () => {
+    expect(resolveStatus([cond('a', null), cond('b', null)])).toBe('INDETERMINATE');
+  });
+
+  test('no conditions -> NOT_CALCULATED (fail closed, never PRESENT)', () => {
+    expect(resolveStatus([])).toBe('NOT_CALCULATED');
+  });
+
+  test('chart-level mixed case: false kendra plus unknown sign is ABSENT', () => {
+    // Mars in house 3 (not a kendra -> conclusively false) with an
+    // unresolved sign (own/exaltation unknown -> null).
+    const y = byId(chart({ Mars: { house: 3, signId: 0 } }), 'YOGA_RUCHAKA');
+    expect(y.conditions.find((c) => c.id === 'mars.in-kendra')!.satisfied).toBe(false);
+    expect(y.conditions.find((c) => c.id === 'mars.own-or-exalted')!.satisfied).toBeNull();
+    expect(y.status).toBe('ABSENT');
   });
 });
 
@@ -187,6 +263,51 @@ test.describe('YOGA ENGINE — contract', () => {
     expect(kemadruma.status).toBe('NOT_CALCULATED');
     expect(kemadruma.conditions).toEqual([]);
     expect(kemadruma.notCalculatedReason).toContain('not implemented');
+  });
+
+  test('every registered rule has a versioned source-registry entry', () => {
+    expect(YOGA_SOURCE_REGISTRY_VERSION).toMatch(/^jyotish-source-registry-v\d+$/);
+    for (const id of YOGA_RULE_IDS) {
+      const entry = sourceEntryFor(id);
+      expect(entry.ruleId).toBe(id);
+      expect(entry.sourceWork.length).toBeGreaterThan(10);
+      expect(entry.locator.length).toBeGreaterThan(0);
+      expect(entry.editionOrTranslation.length).toBeGreaterThan(0);
+      expect(entry.adoptedInterpretation.length).toBeGreaterThan(20);
+      expect(Array.isArray(entry.variants)).toBe(true);
+      expect(entry.limitations.length).toBeGreaterThan(0);
+      expect(['ADOPTED', 'NOT_ADOPTED']).toContain(entry.adoption);
+      // Honesty: nothing in this repository is a verified licensed source.
+      expect(entry.verifiedInRepository).toBe(false);
+      expect(entry.locatorVerified).toBe(false);
+    }
+  });
+
+  test('NOT_ADOPTED rules always evaluate to NOT_CALCULATED', () => {
+    const c = chart({
+      Moon: { house: 1, signId: 1 }, Jupiter: { house: 4, signId: 4 },
+      Sun: { house: 1, signId: 1 }, Mercury: { house: 1, signId: 1 },
+      Mars: { house: 1, signId: 1 }, Venus: { house: 1, signId: 1 }, Saturn: { house: 1, signId: 1 },
+    });
+    for (const y of evaluateYogas(c)) {
+      if (y.source.adoption === 'NOT_ADOPTED') {
+        expect(y.status, `${y.id} must not claim PRESENT/ABSENT`).toBe('NOT_CALCULATED');
+        expect(y.notCalculatedReason).toBeTruthy();
+      } else {
+        expect(['PRESENT', 'ABSENT', 'INDETERMINATE']).toContain(y.status);
+      }
+    }
+  });
+
+  test('every evaluation carries its source entry', () => {
+    const c = chart({
+      Moon: { house: 5, signId: 9 }, Jupiter: { house: 4, signId: 8 },
+      Sun: { house: 10, signId: 2 }, Mercury: { house: 10, signId: 2 },
+    });
+    for (const y of evaluateYogas(c)) {
+      expect(y.source.ruleId).toBe(y.id);
+      expect(y.source.adoptedInterpretation.length).toBeGreaterThan(20);
+    }
   });
 
   test('presentYogaNames exposes only PRESENT yogas', () => {

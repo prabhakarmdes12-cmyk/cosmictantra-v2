@@ -180,6 +180,35 @@ test.describe('PRIYA-1995-GK-NEGATIVE — unsupported yogas must be ABSENT', () 
     expect(text).toContain('Not calculated');   // Kemadruma — rule not implemented
   });
 
+  test('Dharma-Karmadhipati: mutual kendra alone is not claimed as PRESENT', () => {
+    const m = buildPriyaModel();
+    // For this chart the 9th lord (Mars, house 1) and the 10th lord (Venus,
+    // house 10) ARE in mutual kendra (offset 9). The adopted rule accepts
+    // conjunction or parivartana only, so the yoga is ABSENT here and the
+    // contested variant is reported separately as NOT_CALCULATED.
+    const dk = yogaById(m, 'YOGA_DHARMA_KARMA_ADHIPATI');
+    expect(dk.status).toBe('ABSENT');
+    expect(dk.conditions.at(-1)!.evidence.join(' ')).toContain('mutual kendra: true');
+    expect(dk.conditions.at(-1)!.evidence.join(' ')).toContain('NOT adopted as sufficient');
+
+    const variant = yogaById(m, 'YOGA_DHARMA_KARMA_ADHIPATI_MUTUAL_KENDRA');
+    expect(variant.status).toBe('NOT_CALCULATED');
+    expect(variant.notCalculatedReason).toContain('not adopted');
+    expect(variant.conditions.find((c) => c.id === 'mutual-kendra-offset')!.satisfied).toBe(true);
+  });
+
+  test('every yoga carries a source-registry entry with its limitations', () => {
+    const m = buildPriyaModel();
+    for (const y of m.yogas) {
+      expect(y.source.ruleId, `${y.id} source entry`).toBe(y.id);
+      expect(y.source.adoptedInterpretation.length).toBeGreaterThan(20);
+      expect(y.source.limitations.length).toBeGreaterThan(0);
+      // Nothing in this repository is a verified licensed source.
+      expect(y.source.verifiedInRepository).toBe(false);
+      expect(y.source.locatorVerified).toBe(false);
+    }
+  });
+
   test('kalsarpa is declared NOT_CALCULATED rather than silently omitted', () => {
     const m = buildPriyaModel();
     const kalsarpa = m.doshas.find((d) => d.id === 'kalsarpa');

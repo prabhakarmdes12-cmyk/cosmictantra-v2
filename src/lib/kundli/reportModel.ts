@@ -271,6 +271,17 @@ function buildYogaSections(m: KundliCanonicalModel): ReportSection[] {
     detail.push(kv('Status', YOGA_RESULT_LABEL[y.status] ?? y.status));
     detail.push(kv('System', y.system));
     detail.push(kv('Rule', y.rule || 'Rule text unavailable for this yoga.'));
+    detail.push(kv('Source (as attributed)', y.source.sourceWork));
+    detail.push(kv('Locator', y.source.locator));
+    detail.push(kv('Edition / translation held', y.source.editionOrTranslation));
+    detail.push(kv('Scholarly agreement', y.source.scholarlyAgreement));
+    detail.push(kv('Adopted interpretation', y.source.adoptedInterpretation));
+    if (y.source.variants.length > 0) {
+      detail.push(kv('Variants not applied', y.source.variants.join(' ')));
+    }
+    for (const limitation of y.source.limitations) {
+      detail.push(kv('Limitation', limitation));
+    }
     if (y.inputs.planets.length > 0) detail.push(kv('Input grahas', y.inputs.planets.join(', ')));
     if (y.inputs.houses.length > 0) detail.push(kv('Input bhavas', y.inputs.houses.join(', ')));
     if (y.status === 'NOT_CALCULATED') {

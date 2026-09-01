@@ -197,10 +197,26 @@ export interface YogaCondition {
   evidence: string[];
 }
 
+export interface YogaSourceRef {
+  ruleId: string;
+  sourceWork: string;
+  locator: string;
+  editionOrTranslation: string;
+  verifiedInRepository: boolean;
+  locatorVerified: boolean;
+  scholarlyAgreement: 'GENERAL' | 'CONTESTED' | 'UNVERIFIED';
+  adoptedInterpretation: string;
+  variants: string[];
+  limitations: string[];
+  adoption: 'ADOPTED' | 'NOT_ADOPTED';
+}
+
 export interface YogaResult {
   id: string;
   name: string;
   system: JyotishSystem;
+  /** Versioned source-registry entry: provenance and stated limitations. */
+  source: YogaSourceRef;
   /** Formal statement of the rule that was actually applied. */
   rule: string;
   inputs: { planets: string[]; houses: number[]; signs: string[] };

@@ -11,26 +11,12 @@
 
 import { KundliError } from './errors';
 import { buildCalculationConfig } from './config';
+import { validateYogaEvaluation } from './yogaContract';
 import type {
   KundliCanonicalModel, PlanetPosition, HouseData, PanchangaData,
   AscendantData, DivisionalChartData, DashaTimelineData, SignRef,
   YogaResult, DoshaResult, CalculationConfig, NormalizedBirthProfile, DashaPeriodInfo,
-  YogaCondition, YogaStatus,
 } from './types';
-
-/** Structural shape of a rule evaluation arriving from the yoga engine. */
-interface YogaEvaluationLike {
-  id: string;
-  name: string;
-  system?: string;
-  rule?: string;
-  inputs?: { planets?: string[]; houses?: number[]; signs?: string[] };
-  conditions?: YogaCondition[];
-  result?: YogaStatus;
-  evidenceRefs?: string[];
-  status: YogaStatus;
-  notCalculatedReason?: string;
-}
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -267,6 +253,9 @@ export function buildYogasAndDoshas(snapshot: any): { yogas: YogaResult[]; dosha
   const yd = snapshot.yogasAndDoshas ?? {};
 
   // Yogas must arrive as rule evaluations, never as pre-declared name lists.
+  // Every record is validated against the yoga contract; any violation
+  // raises KUNDLI_CALCULATION_INCOMPLETE, which the pipeline turns into
+  // "no PDF, pdfBuffer: null".
   if (!Array.isArray(yd.yogas)) {
     throw new KundliError(
       'KUNDLI_CALCULATION_INCOMPLETE',
@@ -275,34 +264,9 @@ export function buildYogasAndDoshas(snapshot: any): { yogas: YogaResult[]; dosha
     );
   }
 
-  const VALID_YOGA_STATUS = ['PRESENT', 'ABSENT', 'INDETERMINATE', 'NOT_CALCULATED'];
-  const yogas: YogaResult[] = (yd.yogas as YogaEvaluationLike[]).map((y) => {
-    if (!y || typeof y.id !== 'string' || !VALID_YOGA_STATUS.includes(y.status)) {
-      throw new KundliError(
-        'KUNDLI_CALCULATION_INCOMPLETE',
-        `yoga record is not a valid rule evaluation: ${JSON.stringify(y).slice(0, 120)}`,
-        { yogaId: y?.id ?? null },
-      );
-    }
-    const conditions: YogaCondition[] = Array.isArray(y.conditions) ? y.conditions : [];
-    return {
-      id: y.id,
-      name: requireValue(`yoga.${y.id}.name`, y.name),
-      system: y.system === 'JAIMINI' || y.system === 'KP' ? y.system : 'PARASHARI',
-      rule: y.rule ?? '',
-      inputs: {
-        planets: Array.isArray(y.inputs?.planets) ? y.inputs.planets : [],
-        houses: Array.isArray(y.inputs?.houses) ? y.inputs.houses : [],
-        signs: Array.isArray(y.inputs?.signs) ? y.inputs.signs : [],
-      },
-      conditions,
-      result: y.status,
-      evidenceRefs: Array.isArray(y.evidenceRefs) ? y.evidenceRefs : [],
-      status: y.status,
-      notCalculatedReason: y.notCalculatedReason,
-      basis: conditions.flatMap((c) => c.evidence),
-    };
-  });
+  const yogas: YogaResult[] = (yd.yogas as unknown[]).map((raw, index) =>
+    validateYogaEvaluation(raw, index),
+  );
 
   const doshas: DoshaResult[] = [];
   if (yd.kalsarpa) {
