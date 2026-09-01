@@ -27,6 +27,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import { createRateLimiter, clientKeyFor } from '@/lib/rateLimit';
 import { generateKundliV41Pdf } from '@/lib/kundli/v40/pipelineV3';
 import { parseReportMode, MODE_DEFINITIONS, type ReportMode } from '@/lib/kundli/v40/reportModes';
 import type { RawBirthInput } from '@/lib/kundli/types';
@@ -46,6 +47,15 @@ export const DOWNLOAD_CONTRACT = {
   rendererVersion: 'kundli-pdf-renderer-v3',
 } as const;
 
+/**
+ * Rendering a Scholar edition is ~2s of CPU, nine font faces and a 39-page
+ * layout — comfortably the most expensive endpoint in the app, and it takes
+ * one unauthenticated POST to start one. Twelve per minute is far above what
+ * a person clicking Download can produce (they must wait for each file) and
+ * far below what makes the box unusable.
+ */
+const pdfLimiter = createRateLimiter({ limit: 12, windowMs: 60 * 1000 });
+
 interface DownloadRequest {
   birth?: RawBirthInput;
   mode?: string;
@@ -63,6 +73,9 @@ function filename(name: string | null | undefined, date: string | null | undefin
 }
 
 export async function POST(request: Request) {
+  const limited = pdfLimiter.check(clientKeyFor(request));
+  if (limited) return limited;
+
   let body: DownloadRequest;
   try {
     body = (await request.json()) as DownloadRequest;

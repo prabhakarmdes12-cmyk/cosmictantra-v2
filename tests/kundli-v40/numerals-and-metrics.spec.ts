@@ -12,8 +12,7 @@
 import { test, expect } from '@playwright/test';
 import { generateKundliV41Pdf } from '../../src/lib/kundli/v40/pipelineV3';
 import {
-  numeral, numeralPolicyFor, toDevanagariDigits, toAsciiDigits,
-  findMixedNumerals, enforceNumeralPolicy,
+  numeral, numeralPolicyFor, toDevanagariDigits, toAsciiDigits, findMixedNumerals,
 } from '../../src/lib/kundli/v40/numerals';
 import { signLabel } from '../../src/lib/kundli/chartModel';
 import { GOLDEN_BIRTH_INPUT } from './goldenCanonical';
@@ -60,11 +59,16 @@ test.describe('§4 — numeral policy', () => {
     expect(numeral(12, { devanagariNumerals: true })).toBe('१२');
   });
 
-  test('NUM-05: enforcement collapses a mixed string to one script', () => {
-    const mixed = '१ २ ३ 10 11 12';
-    expect(findMixedNumerals(mixed)).not.toBeNull();
-    expect(findMixedNumerals(enforceNumeralPolicy(mixed, { devanagariNumerals: true }))).toBeNull();
-    expect(findMixedNumerals(enforceNumeralPolicy(mixed, { devanagariNumerals: false }))).toBeNull();
+  test('NUM-05: mixing is detected and named, not silently repaired', () => {
+    // There is intentionally no auto-repair helper. A normaliser would make a
+    // broken call site render correctly and the bug would outlive the release.
+    const found = findMixedNumerals('१ २ ३ 10 11 12');
+    expect(found).not.toBeNull();
+    expect(found!.devanagari.sort()).toEqual(['१', '२', '३']);
+    expect(found!.ascii.sort()).toEqual(['0', '1', '2']);
+    // Single-script strings are clean in either script.
+    expect(findMixedNumerals('१ २ ३ १० ११ १२')).toBeNull();
+    expect(findMixedNumerals('1 2 3 10 11 12')).toBeNull();
   });
 
   test('NUM-06: no line in a rendered chart page mixes numeral scripts', async () => {

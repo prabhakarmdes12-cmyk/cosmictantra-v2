@@ -81,7 +81,6 @@ const divider = (): V2Block => ({ kind: 'divider' });
 
 function coverSection(
   canonical: KundliCanonicalModel,
-  derived: KundliDerivedModel,
   reportId: string,
   mode: LabelMode,
 ): V2Section {
@@ -89,6 +88,8 @@ function coverSection(
   const asc = canonical.ascendant;
   const moon = canonical.planets.find((x) => x.id === 'Moon');
   const wd = weekdayOf(s.birthDate);
+  const md = canonical.dashas.current.mahadasha;
+  const ad = canonical.dashas.current.antardasha;
 
   const identityLines = [
     `${signLabelV40(asc.sign.id, 'hi')} ${TERMS.lagna.hi}  ·  ${asc.sign.en} Ascendant ${dm(asc.degreeInSign)}`,
@@ -115,7 +116,13 @@ function coverSection(
           s.locationName,
         ],
         identityLines,
-        currentPeriodLine: `Current: ${canonical.dashas.current.mahadasha} ${TERMS.mahadasha.en} / ${canonical.dashas.current.antardasha} ${TERMS.antardasha.en}`,
+        // Bilingual, like every other line on this cover. It previously read
+        // "Current: Rahu Mahadasha / Mercury Antardasha" — the one purely
+        // English sentence on an otherwise Devanagari-first page, and the
+        // single most consulted fact on it. §6 asks for राहु महादशा.
+        currentPeriodLine:
+          `${planetLabel(md, 'hi')} ${TERMS.mahadasha.hi}  ·  ${planetLabel(ad, 'hi')} ${TERMS.antardasha.hi}`
+          + `   —   ${planetLabel(md, 'en')} ${TERMS.mahadasha.en} / ${planetLabel(ad, 'en')} ${TERMS.antardasha.en}`,
         reportId,
         // §6: the cover carries the Report ID and the calculation school, and
         // nothing else. Engine, report-model and derived-layer versions moved
@@ -1402,7 +1409,7 @@ export function buildKundliReportModelV2(
 
   const sections: V2Section[] = [
     /* PART A */
-    coverSection(canonical, derived, reportId, mode),
+    coverSection(canonical, reportId, mode),
     passportSection(canonical, derived, mode),
     saarSection(canonical, derived, mode),
     chartSection(canonical, derived, 1, chartMode, mode, 'PART A'),

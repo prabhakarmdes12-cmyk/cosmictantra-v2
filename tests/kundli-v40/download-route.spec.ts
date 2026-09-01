@@ -23,10 +23,21 @@ import { inspectPdf } from './qa/pdfInspect';
 
 const ROUTE = 'http://localhost/api/kundli/pdf';
 
-const post = (body: unknown) =>
+/**
+ * Each call presents a distinct client IP.
+ *
+ * The route is rate limited per client key, and these specs legitimately make
+ * ~20 requests. Giving each its own key exercises the real limiter rather than
+ * switching it off for tests; DKCR-15 then exhausts a single key on purpose.
+ */
+let clientSeq = 0;
+const post = (body: unknown, ip?: string) =>
   POST(new Request(ROUTE, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-forwarded-for': ip ?? `10.0.0.${(clientSeq += 1) % 250}`,
+    },
     body: JSON.stringify(body),
   }));
 
@@ -152,8 +163,28 @@ test.describe('DOWNLOAD_KUNDLI_CURRENT_RENDERER', () => {
   });
 
   test('DKCR-11: malformed JSON is refused', async () => {
-    const res = await POST(new Request(ROUTE, { method: 'POST', body: 'not json' }));
+    const res = await POST(new Request(ROUTE, {
+      method: 'POST', body: 'not json',
+      headers: { 'x-forwarded-for': '10.9.9.9' },
+    }));
     expect(res.status).toBe(400);
+  });
+
+  test('DKCR-15: one client cannot spin the renderer without limit', async () => {
+    // Rendering a Scholar edition is the most expensive thing this app does.
+    // Cheap rejections (bad input) still count against the budget, so the
+    // limiter cannot be bypassed by alternating good and bad requests.
+    const ip = '203.0.113.7';
+    let sawLimit = false;
+    for (let i = 0; i < 20; i += 1) {
+      const res = await post({}, ip);
+      if (res.status === 429) { sawLimit = true; break; }
+    }
+    expect(sawLimit, 'the endpoint must be rate limited').toBe(true);
+
+    // A different client is unaffected.
+    const other = await post({}, '203.0.113.8');
+    expect(other.status).toBe(400);
   });
 
   test('DKCR-12: the route advertises its contract without generating', async () => {

@@ -50,7 +50,10 @@ export const TERMS = {
   tithi: T('तिथि', 'Tithi'),
   paksha: T('पक्ष', 'Paksha'),
   nakshatra: T('नक्षत्र', 'Nakshatra'),
-  pada: T('पद', 'Pada'),
+  // चरण, not पद. Both are correct Jyotish for a nakshatra quarter, but चरण is
+  // what a North Indian Pandit says aloud, and V41 §6 specifies it by name.
+  // One concept, one Hindi word, everywhere in the document.
+  pada: T('चरण', 'Pada'),
   yoga: T('योग', 'Yoga'),
   karana: T('करण', 'Karana'),
   ayana: T('अयन', 'Ayana'),

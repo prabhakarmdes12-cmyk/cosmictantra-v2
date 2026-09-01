@@ -44,6 +44,24 @@ const REQUIRED_PAGES: { name: string; match: RegExp }[] = [
 
 const DPI = 110;
 
+/**
+ * Threshold for *reporting* pixel drift. Not a failure threshold — see the
+ * module docblock; the brief is explicit that pixel diffs never block.
+ *
+ * Calibrated against two measurements on this fixture rather than guessed:
+ *
+ *   0.0260%  the Calculation Certificate every single run, because it prints
+ *            GENERATED AT. Inherent churn; must stay below the threshold or
+ *            the log cries wolf on every run and stops being read.
+ *   0.3494%  removing one line of 8pt text from the cover — a real, visible
+ *            editorial change that a reviewer must be told about.
+ *
+ * The previous value was 1%, which sat above BOTH. A whole line vanished from
+ * the cover in V41 and the visual suite said nothing at all. 0.1% separates
+ * the two cases with an order of magnitude of headroom on each side.
+ */
+const DRIFT_REPORT_THRESHOLD = 0.001;
+
 test('every page §7 names is present and identifiable', async () => {
   const { result } = await goldenV3Artifact();
   for (const want of REQUIRED_PAGES) {
@@ -70,7 +88,7 @@ test('VISUAL — the nine required pages match their baselines', async () => {
       continue;
     }
     expect(snap.diff!.sameSize, `${want.name} changed page dimensions`).toBe(true);
-    if (snap.diff!.diffFraction > 0.01) {
+    if (snap.diff!.diffFraction > DRIFT_REPORT_THRESHOLD) {
       drifted.push(`${want.name}: ${(snap.diff!.diffFraction * 100).toFixed(2)}% of pixels, max channel delta ${snap.diff!.maxChannelDelta}`);
     }
   }

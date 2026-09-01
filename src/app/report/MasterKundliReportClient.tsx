@@ -604,6 +604,16 @@ export default function MasterKundliReportClient() {
         }),
       });
 
+      if (response.status === 429) {
+        // Transport-level, not a Kundli failure. Saying "render failed" here
+        // would tell the user their chart is broken when it is fine.
+        setFailSafe({
+          message: 'Too many Kundli downloads in a short time. Please wait a minute and try again.',
+          code: 'KUNDLI_RATE_LIMITED',
+        });
+        return;
+      }
+
       if (!response.ok) {
         let code = 'KUNDLI_PDF_RENDER_FAILED';
         try {

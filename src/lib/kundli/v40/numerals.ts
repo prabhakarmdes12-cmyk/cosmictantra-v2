@@ -69,16 +69,16 @@ export function numeral(value: number | string, policy: NumeralPolicy): string {
   return policy.devanagariNumerals ? toDevanagariDigits(s) : toAsciiDigits(s);
 }
 
-/**
- * Normalises a whole display string so it cannot contain both scripts.
+/*
+ * There was an `enforceNumeralPolicy(s, policy)` here that rewrote any string
+ * to a single script on its way to the page. It is deliberately gone.
  *
- * The safety net rather than the mechanism: individual call sites should use
- * `numeral()`, but any string that reaches the page having been assembled from
- * several sources gets forced to one script here.
+ * A last-mile normaliser would have silently laundered the exact defect §4
+ * exists to catch: the chart would have looked right while `signLabel` was
+ * still wrong, and the next call site to build a label by hand would have been
+ * fixed invisibly too. The mixing is a bug at the source, so it fails the gate
+ * (`findMixedNumerals`, NUM-06) and gets fixed at the source.
  */
-export function enforceNumeralPolicy(s: string, policy: NumeralPolicy): string {
-  return policy.devanagariNumerals ? toDevanagariDigits(s) : toAsciiDigits(s);
-}
 
 /**
  * Detects a violation: both numeral scripts in one string.
