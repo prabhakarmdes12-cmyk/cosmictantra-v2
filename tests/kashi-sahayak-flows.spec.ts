@@ -143,6 +143,8 @@ test.describe('KS — browser flows', () => {
     await menu.click();
     await page.getByRole('button', { name: /ग्रंथ पाठ व स्वर-वाचन/ }).first().click();
     await page.getByRole('button', { name: /श्री हनुमान चालीसा/ }).first().click();
+    // Multi-unit texts ask which unit to hear; pick the opening unit chip
+    await page.getByRole('button', { name: /आरम्भिक दोहा|सम्पूर्ण चौपाई/ }).first().click();
     await expect(page.getByText('श्री हनुमान चालीसा', { exact: false }).last()).toBeVisible();
     await expect(page.getByRole('button', { name: /पाठ आरम्भ/ })).toBeVisible();
     await expect(page.getByText('श्रीगुरु चरन सरोज', { exact: false })).toBeVisible();
@@ -151,6 +153,9 @@ test.describe('KS — browser flows', () => {
   test('kundli intake pulse card opens the concierge modal with live tel and WhatsApp links', async ({ page }) => {
     await page.goto('/');
     await page.getByTitle(/काशी सहायक/).first().click();
+    const menu = page.getByRole('button', { name: /मुख्य मेन्यू/ });
+    await expect(menu).toBeVisible();
+    await menu.click();
     await page.getByRole('button', { name: /पंडित जी से सीधी बात/ }).first().click();
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
