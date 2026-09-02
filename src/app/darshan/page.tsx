@@ -836,6 +836,28 @@ export default function DarshanPage() {
   const [cycleSpeedSec, setCycleSpeedSec] = useState<number>(30);
   const [progressSec, setProgressSec] = useState<number>(0);
   const [videoStreamSource, setVideoStreamSource] = useState<'LOCAL' | 'YOUTUBE'>('YOUTUBE');
+  /**
+   * Silent network-error catch (Module 6): the HD video stream is the ONLY
+   * visible mode — there is no image toggle anywhere in the UI. But if the
+   * local stream errors or the browser reports the network as down (YouTube
+   * iframe failures are undetectable cross-origin, so offline events are the
+   * proxy), we quietly fall back to the shrine's HD photograph so the devotee
+   * still gets darshan instead of a black screen. Recovery is equally silent.
+   */
+  const [mediaFailed, setMediaFailed] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setMediaFailed(!navigator.onLine);
+    const goOffline = () => setMediaFailed(true);
+    const goOnline = () => setMediaFailed(false);
+    window.addEventListener('offline', goOffline);
+    window.addEventListener('online', goOnline);
+    return () => {
+      window.removeEventListener('offline', goOffline);
+      window.removeEventListener('online', goOnline);
+    };
+  }, []);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [flowers, setFlowers] = useState<Array<{ id: number; x: number; icon: string; size: number; duration?: string; delay?: string; rot?: number }>>([]);
@@ -1441,9 +1463,19 @@ export default function DarshanPage() {
 
                 {/* Main Visual Screen: Real HD Photo OR Video Launcher */}
                 <div className="relative w-full flex-1 flex items-center justify-center overflow-hidden min-h-[340px] sm:min-h-[420px] lg:min-h-[460px] bg-black">
-                    /* Video / Live Stream Screen: Plays Real HD Aarti Video / YouTube Live */
+                    {/* Video / Live Stream Screen: Plays Real HD Aarti Video / YouTube Live */}
                     <div className="relative w-full h-full min-h-[340px] sm:min-h-[420px] bg-black flex items-center justify-center overflow-hidden">
-                      {videoStreamSource === 'LOCAL' ? (
+                      {mediaFailed ? (
+                        /* Silent catch — shrine photograph stands in while the
+                           network/stream is down. No toggle, no error chrome. */
+                        <img
+                          key={`fallback-${activeShrine.id}`}
+                          src={activeShrine.imageUrl}
+                          alt={`${activeShrine.nameHi} — दर्शन`}
+                          className="w-full h-full object-cover"
+                          draggable={false}
+                        />
+                      ) : videoStreamSource === 'LOCAL' ? (
                         <video
                           key={`video-local-${activeShrine.id}`}
                           src="/kashi-hero-video.mp4"
@@ -1451,6 +1483,7 @@ export default function DarshanPage() {
                           autoPlay
                           loop
                           playsInline
+                          onError={() => setMediaFailed(true)}
                           className="w-full h-full object-cover"
                         />
                       ) : (
