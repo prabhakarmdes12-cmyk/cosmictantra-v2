@@ -7,6 +7,7 @@ import {
   rashiDistance,
   totalBand,
   normalizePerson,
+  isValidMilanInput,
 } from '../../src/lib/kundli/v42/milan/milanEngine';
 
 const taurusRohini1 = { rashiName: 'Taurus', nakshatraName: 'Rohini', pada: 1, rashiLord: 'Venus' };
@@ -105,6 +106,13 @@ test.describe('Milan engine — derived helpers', () => {
     expect(rashiLordByName('Taurus')).toBe('Venus');
     expect(rashiLordByName('unknown')).toBe('');
     expect(normalizePerson({ pada: 99 })).toMatchObject({ pada: 1 });
+  });
+
+  test('isValidMilanInput rejects unknown rashi/nakshatra', () => {
+    expect(isValidMilanInput({ rashiName: 'Taurus', nakshatraName: 'Rohini' })).toBe(true);
+    expect(isValidMilanInput({ rashiName: 'Unknown', nakshatraName: 'Rohini' })).toBe(false);
+    expect(isValidMilanInput({ rashiName: 'Taurus', nakshatraName: 'None' })).toBe(false);
+    expect(isValidMilanInput({})).toBe(false);
   });
 
   test('milanInputFromSnapshot reads canonical Moon shape', () => {

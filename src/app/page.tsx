@@ -192,7 +192,7 @@ export default function AppLandingPage() {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {[
                 { href: '/calendar', title: lang === 'hi' ? 'वैदिक कैलेंडर' : 'Vedic calendar', detail: lang === 'hi' ? 'तिथि, पर्व और शुभ दिन' : 'Tithi, festivals and useful dates', icon: CalendarDays },
-                { href: '/kundali-milan', title: lang === 'hi' ? 'कुण्डली मिलान' : 'Kundali matching', detail: lang === 'hi' ? 'दो जन्म विवरणों का मिलान' : 'Compare two birth profiles', icon: HeartHandshake },
+                { href: '/milan', title: lang === 'hi' ? 'कुण्डली मिलान' : 'Kundali Milan', detail: lang === 'hi' ? 'दो जन्म विवरणों का 36-गुण अष्टकूट मिलान' : 'Classical 36-Guna Ashtakoota Milan report', icon: HeartHandshake },
                 { href: '/muhurat/personalized', title: lang === 'hi' ? 'व्यक्तिगत मुहूर्त' : 'Personal Muhurat', detail: lang === 'hi' ? 'महत्वपूर्ण कार्य का सही समय' : 'Find timing for an important event', icon: Sparkles },
                 { href: '/library', title: lang === 'hi' ? 'वैदिक पुस्तकालय' : 'Vedic library', detail: lang === 'hi' ? 'विधि और शब्द सरल रूप में' : 'Understand methods and terminology', icon: BookOpen },
               ].map(({ href, title, detail, icon: Icon }) => (

@@ -96,6 +96,16 @@ export function normalizePerson(input: Partial<MilanPersonInput>): MilanPersonIn
   };
 }
 
+/** True when the input resolves to a known rashi and nakshatra. */
+export function isValidMilanInput(input: Partial<MilanPersonInput>): boolean {
+  const n = normalizePerson(input);
+  return Boolean(
+    n.rashiName && n.nakshatraName &&
+    RASHI_ID_BY_NAME[n.rashiName] &&
+    YONI_BY_NAKSHATRA[n.nakshatraName]
+  );
+}
+
 /** Lookup the lord for an English rashi name; empty when unknown. */
 export function rashiLordByName(rashiName: string): string {
   const rashi = RASHIS.find((r: any) => r.en.toLocaleLowerCase() === rashiName.toLocaleLowerCase());
