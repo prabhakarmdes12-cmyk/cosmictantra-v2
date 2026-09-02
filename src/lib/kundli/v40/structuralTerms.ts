@@ -243,6 +243,7 @@ export const STRUCTURAL_HI: Record<string, string> = {
   'Iana historical': 'आयाना ऐतिहासिक अभिलेख',
   'Manual': 'हस्त-प्रविष्ट',
   'Important configurations': 'विशेष योग-स्थितियाँ',
+  'Factors that could not be evaluated': 'जिन कारकों की जाँच नहीं हो सकी',
 
   /* ---- page furniture ---- */
   'PART A': 'भाग अ',

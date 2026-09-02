@@ -208,6 +208,9 @@ export default function MasterKundliReportClient() {
   const [activeDivision, setActiveDivision] = useState<number>(1); // 1 = D1, 9 = D9, 10 = D10, 60 = D60
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [lang, setLang] = useState('en');
+  // PDF language is intentionally narrower than the site-wide chrome locale:
+  // the qualified V3 report currently supports these three authored editions.
+  const [pdfLocale, setPdfLocale] = useState<'en' | 'hi' | 'hi-en'>('en');
   const [isLangModalOpen, setIsLangModalOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
@@ -241,6 +244,9 @@ export default function MasterKundliReportClient() {
   const t = (key: keyof typeof KUNDLI_UI) => KUNDLI_UI[key][lang === 'hi' ? 'hi' : 'en'];
   const handleSelectLang = (code: string) => {
     setLang(code);
+    // A global Hindi/English choice should be reflected in the next generated
+    // PDF, while an explicit bilingual PDF choice remains intact.
+    if (code === 'hi' || code === 'en') setPdfLocale(code);
     document.documentElement.lang = code;
     try { localStorage.setItem('cosmictantra_lang', code); } catch {}
   };
@@ -269,6 +275,7 @@ export default function MasterKundliReportClient() {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [failSafe, setFailSafe] = useState<{ message: string; code: string } | null>(null);
   const [lastPdfMeta, setLastPdfMeta] = useState<{ pageCount: number; fileSizeKB: number } | null>(null);
+  const [pdfNotice, setPdfNotice] = useState<string | null>(null);
 
   // RAW input that faithfully reflects what the caller actually supplied.
   // NO silent default substitution happens here — the pipeline validates it.
@@ -289,6 +296,7 @@ export default function MasterKundliReportClient() {
     const savedLanguage = localStorage.getItem('cosmictantra_lang');
     if (savedLanguage) {
       setLang(savedLanguage);
+      if (savedLanguage === 'hi' || savedLanguage === 'en') setPdfLocale(savedLanguage);
       document.documentElement.lang = savedLanguage;
     }
 
@@ -565,29 +573,37 @@ export default function MasterKundliReportClient() {
     });
   };
 
-  const handlePrint = () => {
-    chitiSensory.playTick();
-    window.print();
+  type PdfAction = 'download' | 'print';
+
+  /** Start a browser download from the one qualified V3 response. */
+  const savePdfBlob = (blob: Blob, objectUrl: string, name: string) => {
+    const anchor = document.createElement('a');
+    anchor.href = objectUrl;
+    anchor.download = name;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    // Keep the blob alive long enough for the browser download hand-off, then
+    // release it even if the user navigates away.
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 15_000);
   };
 
   /**
-   * QUALIFIED PDF PATH — V41 §0.
+   * The sole client path for a qualified report artifact.
    *
-   * The download now goes to `POST /api/kundli/pdf`, which runs pipeline v3
-   * (`kundli-report-v2` + renderer v3) on the server. It used to call the v1
-   * pipeline directly in this component, which is why every downloaded file
-   * still said V36 long after v2/v3 shipped: renderer v3 reads font files
-   * from disk and cannot run in a browser at all, so the client path could
-   * never have reached it.
-   *
-   * There is deliberately no fallback to v1 here. If the server cannot issue
-   * a gated document, the user sees a fail-safe message and gets no file —
-   * a silent downgrade is exactly the failure V41 exists to end.
+   * Download and Print deliberately POST the identical birth/mode/locale
+   * payload to `/api/kundli/pdf`. Print never prints the interactive HTML: it
+   * opens the returned V3 PDF in the browser's native PDF viewer, whose Print
+   * command is the same file the Download action saves.
    */
-  const handleDownloadPDF = async () => {
-    chitiSensory.playTick();
+  const requestQualifiedPdf = async (
+    action: PdfAction,
+    printWindow?: Window | null,
+  ) => {
+    let printDelivered = false;
     setIsGeneratingPdf(true);
     setFailSafe(null);
+    setPdfNotice(null);
     setLastPdfMeta(null);
     setPipelineState('INPUT_VALIDATED');
     try {
@@ -600,13 +616,11 @@ export default function MasterKundliReportClient() {
         body: JSON.stringify({
           birth: raw,
           mode: 'SCHOLAR',
-          locale: lang === 'hi' ? 'hi' : 'en',
+          locale: pdfLocale,
         }),
       });
 
       if (response.status === 429) {
-        // Transport-level, not a Kundli failure. Saying "render failed" here
-        // would tell the user their chart is broken when it is fine.
         setFailSafe({
           message: 'Too many Kundli downloads in a short time. Please wait a minute and try again.',
           code: 'KUNDLI_RATE_LIMITED',
@@ -632,19 +646,46 @@ export default function MasterKundliReportClient() {
       setPipelineState('PDF_VALIDATED');
       const blob = await response.blob();
       const pages = Number(response.headers.get('X-Kundli-Pages') ?? '0');
-
       const disposition = response.headers.get('Content-Disposition') ?? '';
       const match = /filename="([^"]+)"/.exec(disposition);
       const safeName = (raw.name || 'Seeker').replace(/[^a-z0-9]+/gi, '_');
       const dob = raw.birthDate || 'birthdate';
+      const name = match?.[1] ?? `Kundli_${safeName}_${dob}.pdf`;
+      const objectUrl = URL.createObjectURL(blob);
 
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = match?.[1] ?? `Kundli_${safeName}_${dob}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 2000);
+      if (action === 'print' && printWindow && !printWindow.closed) {
+        // The tab was opened synchronously in the click handler. That preserves
+        // popup permission while the server renders; navigating it to a Blob
+        // keeps the browser's PDF print controls bound to this exact response.
+        printWindow.location.replace(objectUrl);
+        printDelivered = true;
+        window.setTimeout(() => URL.revokeObjectURL(objectUrl), 5 * 60_000);
+
+        // A browser with its PDF viewer disabled can turn a Blob navigation
+        // into a download and leave the preparatory popup at about:blank. Do
+        // not leave a misleading empty tab behind: the already-issued file is
+        // still the same qualified Blob, and the visitor is told to print it
+        // from their download viewer. A native PDF viewer navigates away from
+        // about:blank (or becomes cross-origin), so it is never interrupted.
+        window.setTimeout(() => {
+          try {
+            if (!printWindow.closed && printWindow.location.href === 'about:blank') {
+              printWindow.close();
+              setPdfNotice('Your browser downloaded the qualified PDF instead of opening a print viewer. Open the downloaded PDF and choose Print.');
+            }
+          } catch {
+            // A native PDF viewer may use its own origin. That is a successful
+            // hand-off, so there is deliberately nothing to do.
+          }
+        }, 4_000);
+      } else {
+        // Popup blockers must never downgrade the report. Save the same Blob
+        // and let the visitor print it from their PDF viewer instead.
+        savePdfBlob(blob, objectUrl, name);
+        if (action === 'print') {
+          setPdfNotice('Your browser blocked the PDF print tab. The qualified PDF was downloaded; open it and choose Print.');
+        }
+      }
 
       setPipelineState('READY_FOR_DELIVERY');
       setLastPdfMeta({
@@ -655,12 +696,35 @@ export default function MasterKundliReportClient() {
       console.error('[Kundli PDF] generation failed', err);
       setFailSafe({
         message: KUNDLI_SAFE_MESSAGES.KUNDLI_PDF_RENDER_FAILED,
-        code: 'KUNDLI_PDF_RENDER_FAILED'
+        code: 'KUNDLI_PDF_RENDER_FAILED',
       });
     } finally {
+      if (printWindow && !printWindow.closed && action === 'print' && !printDelivered) {
+        // Error responses should not leave a misleading blank preparation tab.
+        printWindow.close();
+      }
       setIsGeneratingPdf(false);
-      setTimeout(() => setPipelineState(null), 1200);
+      window.setTimeout(() => setPipelineState(null), 1200);
     }
+  };
+
+  const handleDownloadPDF = () => {
+    chitiSensory.playTick();
+    void requestQualifiedPdf('download');
+  };
+
+  const handlePrint = () => {
+    chitiSensory.playTick();
+    // Opening before the first await makes this robust against popup blockers.
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      try {
+        printWindow.opener = null;
+        printWindow.document.title = 'Preparing Kundli PDF';
+        printWindow.document.body.innerHTML = '<p style="font-family:system-ui;padding:24px">Preparing your qualified Kundli PDF…</p>';
+      } catch { /* A restrictive browser can still navigate the tab below. */ }
+    }
+    void requestQualifiedPdf('print', printWindow);
   };
 
   return (
@@ -759,6 +823,36 @@ export default function MasterKundliReportClient() {
             </div>
           )}
 
+          {/*
+            Keep this selector in the mobile toolbar as well as on desktop.
+            `hi-en` changes the qualified server-PDF payload; it is not a
+            display-only translation toggle, so hiding it below `md` made the
+            public bilingual report inaccessible to phone users.
+          */}
+          <div
+            className="flex shrink-0 items-center rounded-lg border border-[#E5D7BC] dark:border-white/10 bg-white dark:bg-[#121422] p-0.5"
+            role="group"
+            aria-label="Qualified PDF language"
+          >
+            {([
+              ['en', 'EN', 'English PDF'],
+              ['hi', 'हिन्दी', 'Hindi PDF'],
+              ['hi-en', 'हि + EN', 'Hindi-English bilingual PDF'],
+            ] as const).map(([locale, label, accessibleLabel]) => (
+              <button
+                key={locale}
+                type="button"
+                onClick={() => setPdfLocale(locale)}
+                aria-label={accessibleLabel}
+                aria-pressed={pdfLocale === locale}
+                title={accessibleLabel}
+                className={`px-2 py-1 text-[10px] font-bold rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8E6F1D] focus-visible:ring-offset-1 ${pdfLocale === locale ? 'bg-[#8E6F1D] text-white dark:bg-[#D4AF37] dark:text-[#060709]' : 'text-[#78716C] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#EFECE6]'}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
           <button
             onClick={() => setIsEditModalOpen(true)}
             className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-[#E5D7BC] dark:border-white/10 bg-white dark:bg-[#121422] hover:bg-[#F5EFE6] dark:bg-[#1C1E27] dark:hover:bg-[#1C1E27] transition-colors"
@@ -770,6 +864,7 @@ export default function MasterKundliReportClient() {
 
           <button
             onClick={handlePrint}
+            disabled={isGeneratingPdf}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-[#8E6F1D]/30 bg-white dark:bg-[#121422] hover:bg-[#F5EFE6] dark:bg-[#1C1E27] dark:hover:bg-[#1C1E27] text-[#8E6F1D] dark:text-[#F0C968] transition-colors shadow-xs"
           >
             <Printer className="w-3.5 h-3.5" />
@@ -790,7 +885,7 @@ export default function MasterKundliReportClient() {
       </header>
 
       {/* Generation progress / fail-safe strip (real backend states only) */}
-      {(isGeneratingPdf || pipelineState || failSafe) && (
+      {(isGeneratingPdf || pipelineState || failSafe || pdfNotice) && (
         <div className="border-b border-[#E5D7BC] dark:border-white/10 bg-[#FAF6EF] dark:bg-[#161828] px-4 lg:px-8 py-3 print:hidden">
           {isGeneratingPdf ? (
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
@@ -846,6 +941,11 @@ export default function MasterKundliReportClient() {
               >
                 <Edit3 className="w-3.5 h-3.5" /> {lang === 'hi' ? 'जन्म विवरण जाँचें' : 'Verify birth details'}
               </button>
+            </div>
+          ) : pdfNotice ? (
+            <div className="flex items-start gap-2.5 max-w-3xl">
+              <CheckCircle2 className="w-4 h-4 text-[#15803D] dark:text-emerald-400 mt-0.5 shrink-0" />
+              <p className="text-xs font-semibold text-[#1C1917] dark:text-[#EFECE6]">{pdfNotice}</p>
             </div>
           ) : null}
         </div>
@@ -1130,13 +1230,14 @@ export default function MasterKundliReportClient() {
             <div>
               <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968]">Your Kundli PDF</h3>
               <p className="text-[11px] text-[#78716C] dark:text-[#A8A29E] mt-0.5">
-                Validated report with Hindi-name support. Narrative sections are currently in English.
+                Qualified V3 PDF. Choose English, हिन्दी, or a Hindi-English bilingual edition.
                 {lastPdfMeta && <span className="text-[#15803D] dark:text-emerald-400 font-semibold"> Last: {lastPdfMeta.pageCount} pages · {lastPdfMeta.fileSizeKB} KB · PASS</span>}
               </p>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={handlePrint}
+                disabled={isGeneratingPdf}
                 className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-[#8E6F1D]/30 bg-white dark:bg-[#121422] hover:bg-[#F5EFE6] dark:bg-[#1C1E27] dark:hover:bg-[#1C1E27] text-[#8E6F1D] dark:text-[#F0C968] transition-colors"
               >
                 <Printer className="w-3.5 h-3.5" /> Print

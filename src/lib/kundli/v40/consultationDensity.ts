@@ -24,6 +24,7 @@
 
 import type { KundliReportModelV2, V2Block, V2Section } from './reportBlocks';
 import { D10_PROMOTION } from './d10Validation';
+import { trProse } from './prosePassages';
 
 /** Escapes a literal string for use inside a RegExp. */
 const escapeRegExp = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -165,6 +166,11 @@ function blockText(b: V2Block): string {
  */
 export function applyConsultationDensity(source: KundliReportModelV2): DensityResult {
   const report = clone(source);
+  // This transform edits reader-facing prose, so its replacement copy must
+  // follow the model locale. A prior English-only transform translated the
+  // source model correctly and then put English boilerplate back into Hindi.
+  const locale = source.locale;
+  const readerText = (english: string): string => trProse(english, locale);
   const applied: DensityApplication[] = [];
   const matched = new Set<string>();
 
@@ -193,8 +199,8 @@ export function applyConsultationDensity(source: KundliReportModelV2): DensityRe
   /* --- CD-02: shorten the salience-provenance paragraph --- */
   const saar = section('kundli-saar');
   saar?.blocks.forEach((b, i) => {
-    if (b.kind !== 'paragraph' || !/salience rules/.test(b.text)) return;
-    const after = 'Highlights are selected by declared salience rules over the calculated chart. The rule behind each line is listed in the Scholar Appendix.';
+    if (b.kind !== 'paragraph' || (!/salience rules/.test(b.text) && !/मुख्य बिन्दु/.test(b.text))) return;
+    const after = readerText('Highlights are selected by declared salience rules over the calculated chart. The rule behind each line is listed in the Scholar Appendix.');
     record('CD-02', 'kundli-saar', i, b.text, after);
     b.text = after;
   });
@@ -205,15 +211,15 @@ export function applyConsultationDensity(source: KundliReportModelV2): DensityRe
   if (dossier) {
     dossier.blocks.forEach((b, i) => {
       if (b.kind === 'bullets') {
-        const keep = b.items.filter((it) => !/^Shadbala:/.test(it));
+        const keep = b.items.filter((it) => !/^(Shadbala:|षड्बल:)/.test(it));
         if (keep.length !== b.items.length) {
-          movedToUnvalidated.push(...b.items.filter((it) => /^Shadbala:/.test(it)));
+          movedToUnvalidated.push(...b.items.filter((it) => /^(Shadbala:|षड्बल:)/.test(it)));
           record('CD-03', 'graha-dossier', i, b.items.join(' | '), keep.join(' | '));
           b.items = keep;
         }
       }
-      if (b.kind === 'table' && b.footnote && /machine record/.test(b.footnote)) {
-        const after = 'Degrees are shown in degrees and arc-minutes. Exact decimal longitudes are in the Scholar Appendix.';
+      if (b.kind === 'table' && b.footnote && /machine record|गणना-अभिलेख/.test(b.footnote)) {
+        const after = readerText('Degrees are shown in degrees and arc-minutes. Exact decimal longitudes are in the Scholar Appendix.');
         record('CD-04', 'graha-dossier', i, b.footnote, after);
         b.footnote = after;
       }
@@ -223,8 +229,8 @@ export function applyConsultationDensity(source: KundliReportModelV2): DensityRe
   /* --- CD-05: yoga dashboard source-status boilerplate --- */
   const yoga = section('yoga-dosha-dashboard');
   yoga?.blocks.forEach((b, i) => {
-    if (b.kind !== 'paragraph' || !/Source status for every rule above/.test(b.text)) return;
-    const after = 'Source status for every rule above: traditional attribution, verification pending. Full provenance is in the Scholar Appendix.';
+    if (b.kind !== 'paragraph' || (!/Source status for every rule above/.test(b.text) && !/ऊपर के प्रत्येक नियम/.test(b.text))) return;
+    const after = readerText('Source status for every rule above: traditional attribution, verification pending. Full provenance is in the Scholar Appendix.');
     record('CD-05', 'yoga-dosha-dashboard', i, b.text, after);
     b.text = after;
   });
@@ -235,7 +241,7 @@ export function applyConsultationDensity(source: KundliReportModelV2): DensityRe
   if (vim) {
     const keep: V2Block[] = [];
     vim.blocks.forEach((b, i) => {
-      if (b.kind === 'paragraph' && /Balance-at-birth precision/.test(b.text)) {
+      if (b.kind === 'paragraph' && (/Balance-at-birth precision/.test(b.text) || /ऊपर दिया जन्म-कालीन दशा-शेष/.test(b.text))) {
         record('CD-06', 'vimshottari-timeline', i, b.text, '(moved to Part B · B1)');
         movedToCertificate.push(b);
         return;
@@ -248,7 +254,7 @@ export function applyConsultationDensity(source: KundliReportModelV2): DensityRe
     vim.blocks.push({
       kind: 'paragraph',
       size: 'micro',
-      text: 'The balance at birth printed above was re-derived from the Moon\'s longitude and agrees with the dasha engine to within one calendar day.',
+      text: readerText('The balance at birth printed above was re-derived from the Moon\'s longitude and agrees with the dasha engine to within one calendar day.'),
     });
   }
 
@@ -264,7 +270,7 @@ export function applyConsultationDensity(source: KundliReportModelV2): DensityRe
       escapeRegExp(D10_PROMOTION.reason.replace(/\s*\(see docs\/kundli-v40\/[a-z0-9-]+\.md\)/g, '')),
       'g',
     );
-    const D10_SHORT = 'D10 has not been compared against an external reference, so it is displayed for reference only and is used in no conclusion.';
+    const D10_SHORT = readerText('D10 has not been compared against an external reference, so it is displayed for reference only and is used in no conclusion.');
     let seenD10 = 0;
 
     const rewrite = (text: string, sectionIndex: number): string => {
@@ -276,7 +282,7 @@ export function applyConsultationDensity(source: KundliReportModelV2): DensityRe
         D10_LONG_NO_DOC,
         () => {
           seenD10 += 1;
-          return seenD10 === 1 ? D10_SHORT : 'D10 is quarantined — see the Scholar Appendix.';
+          return seenD10 === 1 ? D10_SHORT : readerText('D10 is quarantined — see the Scholar Appendix.');
         },
       );
       if (out !== before) record('CD-08', 'career-synthesis', sectionIndex, before, out);

@@ -153,6 +153,19 @@ test.describe('DOWNLOAD_KUNDLI_CURRENT_RENDERER', () => {
     expect(hi.allText).not.toBe(en.allText);
   });
 
+  test('DKCR-09b: hi-en is a public bilingual PDF, never an English fallback', async () => {
+    const { res, bytes } = await downloadBytes({ birth: GOLDEN_BIRTH_INPUT, locale: 'hi-en' });
+    expect(res.status).toBe(200);
+    expect(res.headers.get('X-Kundli-Locale')).toBe('hi-en');
+
+    const bilingual = await inspectPdf(bytes);
+    // The bilingual model uses Hindi reader prose alongside bilingual terms;
+    // checking both scripts proves this is a real third artifact rather than
+    // an alias that quietly goes back to the English default.
+    expect(bilingual.allText).toMatch(/[\u0900-\u097F]/);
+    expect(bilingual.allText).toContain('Kundli Passport');
+  });
+
   /* ── No silent fallback ─────────────────────────────────────────────── */
 
   test('DKCR-10: a rejected input yields an error, never a document', async () => {
@@ -188,10 +201,11 @@ test.describe('DOWNLOAD_KUNDLI_CURRENT_RENDERER', () => {
     expect(other.status).toBe(400);
   });
 
-  test('DKCR-12: the route advertises its contract without generating', async () => {
+  test('DKCR-12: the route advertises its contract and all public locales without generating', async () => {
     const body = await (await GET()).json();
     expect(body.contract).toEqual(DOWNLOAD_CONTRACT);
     expect(body.modes.map((m: { mode: string }) => m.mode)).toEqual(['CLIENT', 'PANDIT', 'SCHOLAR']);
+    expect(body.locales).toEqual(['en', 'hi', 'hi-en']);
   });
 
   /* ── The UI is wired to this route ──────────────────────────────────── */
@@ -199,13 +213,39 @@ test.describe('DOWNLOAD_KUNDLI_CURRENT_RENDERER', () => {
   test('DKCR-13: the report page downloads via the API, not the v1 pipeline', async () => {
     const fs = await import('node:fs/promises');
     const src = await fs.readFile('src/app/report/MasterKundliReportClient.tsx', 'utf8');
-
+    const requestStart = src.indexOf('const requestQualifiedPdf');
+    const request = src.slice(requestStart, src.indexOf('const handleDownloadPDF', requestStart));
     const handler = src.slice(
       src.indexOf('const handleDownloadPDF'),
-      src.indexOf('const handleDownloadPDF') + 3000,
+      src.indexOf('const handlePrint'),
     );
-    expect(handler, 'the download handler must call the API route').toContain('/api/kundli/pdf');
-    expect(handler, 'the download handler must not call the v1 pipeline').not.toContain('generateKundliPdf(');
+
+    // Download and Print share one request helper. Assert at that actual
+    // boundary rather than assuming the click handler owns the fetch itself.
+    expect(handler, 'the download handler must call the qualified request helper').toContain("requestQualifiedPdf('download')");
+    expect(request, 'the qualified request helper must call the API route').toContain('/api/kundli/pdf');
+    expect(request, 'the qualified request helper must not call the v1 pipeline').not.toContain('generateKundliPdf(');
+  });
+
+  test('DKCR-13b: Print uses the exact qualified PDF response and the bilingual selector is mobile-reachable', async () => {
+    const fs = await import('node:fs/promises');
+    const src = await fs.readFile('src/app/report/MasterKundliReportClient.tsx', 'utf8');
+    const sharedRequest = src.slice(
+      src.indexOf('const requestQualifiedPdf'),
+      src.indexOf('const handleDownloadPDF'),
+    );
+    const printStart = src.indexOf('const handlePrint');
+    const printHandler = src.slice(printStart, src.indexOf('return (', printStart));
+    const localeSelector = src.slice(src.indexOf('aria-label="Qualified PDF language"') - 500, src.indexOf('aria-label="Qualified PDF language"') + 1800);
+
+    expect(sharedRequest).toContain("fetch('/api/kundli/pdf'");
+    expect(sharedRequest).toContain('locale: pdfLocale');
+    expect(sharedRequest).toContain('printWindow.location.replace(objectUrl)');
+    expect(printHandler).toContain("requestQualifiedPdf('print', printWindow)");
+    expect(src).not.toContain('window.print()');
+    expect(localeSelector).toContain('flex shrink-0 items-center');
+    expect(localeSelector).not.toContain('hidden md:flex');
+    expect(localeSelector).toContain("['hi-en', 'हि + EN', 'Hindi-English bilingual PDF']");
   });
 
   test('DKCR-14: v1 is preserved, not deleted', async () => {

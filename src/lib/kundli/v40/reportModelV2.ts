@@ -30,21 +30,44 @@ import {
   label, bhavaLabel, planetLabel, signLabelV40, nakshatraLabel, dignityLabel,
   labelModeForLocale, type LabelMode, TERMS, renderTerm,
 } from './labels';
-import { dm, dms, longDate, clockTime, weekdayOf } from './format';
+import { dms, longDate, clockTime, weekdayOf } from './format';
 import { FACT } from './factPaths';
+import {
+  localizeKnownText,
+  readerBhava,
+  readerDateValue,
+  readerDignity,
+  readerDm,
+  readerDms,
+  readerEphemeris,
+  readerEvidence,
+  readerNumber,
+  readerPlanet,
+  readerSamvat,
+  readerSign,
+  readerStatus,
+  readerYmd,
+  readerClock,
+} from './reportPresentation';
 
 export const REPORT_MODEL_V2_VERSION = 'kundli-report-v2';
 
 /** Short label for what a graha rules for this lagna. Never a verdict. */
-function functionalPosition(f: import('./functionalLordship').FunctionalLordship): string {
-  if (f.ruledHouses.length === 0) return 'no sign lordship (node)';
-  if (f.yogakaraka) return 'yogakaraka — kendra and trikona lord';
-  const parts: string[] = [];
-  if (f.rulesKendra) parts.push('kendra lord');
-  if (f.rulesTrikona) parts.push('trikona lord');
-  if (f.rulesDusthana) parts.push('dusthana lord');
-  if (f.marakaCandidate) parts.push('maraka candidate');
-  return parts.join(', ') || 'neutral bhava lord';
+function functionalPosition(
+  f: import('./functionalLordship').FunctionalLordship,
+  mode: LabelMode = 'en',
+): string {
+  const raw = f.ruledHouses.length === 0
+    ? 'no sign lordship (node)'
+    : f.yogakaraka
+      ? 'yogakaraka — kendra and trikona lord'
+      : [
+          f.rulesKendra ? 'kendra lord' : '',
+          f.rulesTrikona ? 'trikona lord' : '',
+          f.rulesDusthana ? 'dusthana lord' : '',
+          f.marakaCandidate ? 'maraka candidate' : '',
+        ].filter(Boolean).join(', ') || 'neutral bhava lord';
+  return mode === 'en' ? raw : localizeKnownText(raw, mode);
 }
 
 /** SCREAMING_SNAKE enum -> readable words, without losing the term itself. */
@@ -55,9 +78,111 @@ function humanEnum(value: string): string {
 }
 
 /** CAREER_FACTOR enum -> a phrase a reader can parse. */
-function factorName(id: string): string {
+const CAREER_FACTOR_LABELS: Record<string, { en: string; hi: string }> = {
+  TENTH_BHAVA_SIGN: { en: 'Tenth-bhava sign', hi: 'दशम भाव की राशि' },
+  TENTH_LORD_IDENTITY: { en: 'Tenth lord', hi: 'दशमेश' },
+  TENTH_LORD_PLACEMENT: { en: 'Tenth-lord placement', hi: 'दशमेश की स्थिति' },
+  TENTH_OCCUPANTS: { en: 'Tenth-bhava occupants', hi: 'दशम भाव के स्थित ग्रह' },
+  LAGNESHA_RELATION: { en: 'Lagnesha relationship', hi: 'लग्नेश सम्बन्ध' },
+  ARTHA_TRIKONA: { en: 'Artha-trikona factors', hi: 'अर्थ त्रिकोण कारक' },
+  FUNCTIONAL_LORDSHIP: { en: 'Functional lordship', hi: 'कार्यात्मक स्वामित्व' },
+  DIGNITY_OF_KEY_GRAHAS: { en: 'Key-graha dignity', hi: 'मुख्य ग्रहों की अवस्था' },
+  DRISHTI_ON_TENTH: { en: 'Drishti on the tenth', hi: 'दशम भाव पर दृष्टि' },
+  CAREER_YOGAS: { en: 'Career-related yogas', hi: 'कर्म-सम्बन्धी योग' },
+  D10_CONFIRMATION: { en: 'Dashamsha confirmation', hi: 'दशांश पुष्टि' },
+  DASHA_ACTIVATION: { en: 'Dasha activation', hi: 'दशा सक्रियता' },
+  TRANSIT_ACTIVATION: { en: 'Transit activation', hi: 'गोचर सक्रियता' },
+};
+function factorName(id: string, mode: LabelMode = 'en'): string {
+  const term = CAREER_FACTOR_LABELS[id];
+  if (term) return mode === 'en' ? term.en : mode === 'hi' ? term.hi : `${term.hi} / ${term.en}`;
   const words = id.replace(/_/g, ' ').toLowerCase();
-  return words.charAt(0).toUpperCase() + words.slice(1);
+  const readable = words.charAt(0).toUpperCase() + words.slice(1);
+  return mode === 'en' ? readable : localizeKnownText(readable, mode);
+}
+
+/** Plain Hindi prose for an unavailable synthesis factor, retaining its reason. */
+function unavailableFactorReason(factor: string, reason: string, mode: LabelMode): string {
+  if (mode === 'en') return reason;
+  const byFactor: Record<string, string> = {
+    D10_CONFIRMATION: 'दशांश का स्वतंत्र सत्यापन अभी उपलब्ध नहीं है।',
+    TRANSIT_ACTIVATION: 'इस रिपोर्ट के लिए गोचर-नियम सत्यापित नहीं हैं।',
+    TENTH_BHAVA_SIGN: 'कुण्डली में दशम भाव उपलब्ध नहीं है।',
+    TENTH_LORD_IDENTITY: 'दशम भाव की राशि से उसका स्वामी निर्धारित नहीं हो सका।',
+    TENTH_LORD_PLACEMENT: 'दशमेश की स्थिति निर्धारित नहीं हो सकी।',
+    TENTH_OCCUPANTS: 'दशम भाव उपलब्ध नहीं है।',
+    LAGNESHA_RELATION: 'लग्नेश और दशमेश की स्थितियाँ निर्धारित नहीं हो सकीं।',
+    ARTHA_TRIKONA: 'अर्थ त्रिकोण के सभी भाव निर्धारित नहीं हो सके।',
+    FUNCTIONAL_LORDSHIP: 'कर्म-विषय के मुख्य ग्रह निर्धारित नहीं हो सके।',
+    DIGNITY_OF_KEY_GRAHAS: 'मुख्य ग्रह निर्धारित नहीं हो सके।',
+    DRISHTI_ON_TENTH: 'दशम भाव उपलब्ध नहीं है।',
+    CAREER_YOGAS: 'कर्म-ग्रहों अथवा अर्थ भावों से सम्बन्धित कोई पंजीकृत योग-नियम उपलब्ध नहीं है।',
+    DASHA_ACTIVATION: 'कोई चालू दशा-स्वामी रूपरेखित नहीं हो सका।',
+  };
+  return byFactor[factor] ?? trProse(reason, mode);
+}
+
+function careerCountHeading(kind: 'supportive' | 'challenging' | 'mixed', count: number, mode: LabelMode): string {
+  const terms = {
+    supportive: { en: 'Supporting factors', hi: 'सहायक कारक' },
+    challenging: { en: 'Challenging factors', hi: 'बाधक कारक' },
+    mixed: { en: 'Mixed and contextual factors', hi: 'मिश्रित एवं सन्दर्भ कारक' },
+  }[kind];
+  const suffix = ` (${readerNumber(count, mode)})`;
+  return mode === 'en' ? `${terms.en}${suffix}` : mode === 'hi' ? `${terms.hi}${suffix}` : `${terms.hi} / ${terms.en}${suffix}`;
+}
+
+/** Compact motion marker for tight Part A tables. */
+function motionMark(retrograde: boolean, mode: LabelMode): string {
+  if (mode === 'en') return retrograde ? 'R' : 'D';
+  if (mode === 'hi') return retrograde ? 'व' : 'मा';
+  return retrograde ? 'व / R' : 'मा / D';
+}
+
+function appendixRef(id: string, mode: LabelMode): string {
+  if (mode === 'en') return `See Appendix ${id}`;
+  return mode === 'hi' ? `परिशिष्ट ${id}` : `परिशिष्ट / Appendix ${id}`;
+}
+
+function statusCaption(status: string, mode: LabelMode): string {
+  if (mode === 'en') return status.replace(/_/g, ' ').toLowerCase();
+  return readerStatus(status, mode).toLowerCase();
+}
+
+function bhavaStructureStatement(
+  b: KundliDerivedModel['bhavas']['bhavas'][number],
+  mode: LabelMode,
+): string {
+  if (mode === 'en') return b.structureStatement;
+  const parts = [`${readerBhava(b.house, mode)} में ${readerSign(b.signName, mode)} राशि है।`];
+  if (b.lord && b.lordHouse) {
+    parts.push(`इसके स्वामी ${readerPlanet(b.lord, mode)} ${readerBhava(b.lordHouse, mode)} में ${readerSign(b.lordSignName ?? '', mode)} में स्थित हैं।`);
+  } else if (b.lord) {
+    parts.push(`इसका स्वामी ${readerPlanet(b.lord, mode)} है; उसकी स्थिति निर्धारित नहीं हो सकी।`);
+  }
+  parts.push(b.occupants.length > 0
+    ? `स्थित ग्रह: ${b.occupants.map((planet) => readerPlanet(planet, mode)).join(', ')}।`
+    : 'इस भाव में कोई ग्रह स्थित नहीं है।');
+  parts.push(b.aspectsReceived.length > 0
+    ? `पूर्ण पराशरी दृष्टि: ${b.aspectsReceived.map((aspect) => readerPlanet(aspect.from, mode)).join(', ')}।`
+    : 'इस भाव पर कोई पूर्ण पराशरी दृष्टि नहीं है।');
+  return parts.join(' ');
+}
+
+function localizedRuleAgreement(value: string, mode: LabelMode): string {
+  if (mode === 'en') return value;
+  const translated = trProse(value, mode);
+  if (translated !== value) return translated;
+  const disagreement = /^The factors disagree: (\d+) supporting against (\d+) challenging\. Both are listed; neither is suppressed\.$/.exec(value);
+  if (disagreement) {
+    const [, support, challenge] = disagreement;
+    const hindi = `कारकों में मतभेद है: ${readerNumber(support, 'hi')} सहायक और ${readerNumber(challenge, 'hi')} बाधक। दोनों सूचियाँ दी गई हैं; कोई दबाया नहीं गया।`;
+    return mode === 'hi' ? hindi : `${hindi} / ${value}`;
+  }
+  if (value === 'Too few factors resolved to speak of agreement.') {
+    return mode === 'hi' ? 'एकमतता कहने के लिए बहुत कम कारक निर्धारित हुए हैं।' : `एकमतता कहने के लिए बहुत कम कारक निर्धारित हुए हैं। / ${value}`;
+  }
+  return localizeKnownText(value, mode);
 }
 
 const ORDINAL = ['', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th'];
@@ -109,11 +234,21 @@ function coverSection(
   const md = canonical.dashas.current.mahadasha;
   const ad = canonical.dashas.current.antardasha;
 
-  const identityLines = [
-    `${signLabelV40(asc.sign.id, 'hi')} ${TERMS.lagna.hi}  ·  ${asc.sign.en} Ascendant ${dm(asc.degreeInSign)}`,
-    moon ? `${signLabelV40(moon.sign.id, 'hi')} ${TERMS.rashi.hi}  ·  ${moon.sign.en} Moon sign` : '',
-    `${nakshatraLabel(canonical.panchanga.nakshatra.name, 'hi')} — ${TERMS.pada.hi} ${canonical.panchanga.nakshatra.pada}  ·  ${canonical.panchanga.nakshatra.name} pada ${canonical.panchanga.nakshatra.pada}`,
-  ].filter(Boolean);
+  const identityLines = mode === 'en'
+    // The English artifact retains Sanskrit names beside its English labels;
+    // they are a useful Jyotish convention rather than untranslated prose.
+    ? [
+        `${signLabelV40(asc.sign.id, 'hi')} ${TERMS.lagna.hi}  ·  ${asc.sign.en} Ascendant ${readerDm(asc.degreeInSign, mode)}`,
+        moon ? `${signLabelV40(moon.sign.id, 'hi')} ${TERMS.rashi.hi}  ·  ${moon.sign.en} Moon sign` : '',
+        `${nakshatraLabel(canonical.panchanga.nakshatra.name, 'hi')} — ${TERMS.pada.hi} ${canonical.panchanga.nakshatra.pada}  ·  ${canonical.panchanga.nakshatra.name} pada ${canonical.panchanga.nakshatra.pada}`,
+      ].filter(Boolean)
+    : [
+        `${signLabelV40(asc.sign.id, mode)} ${renderTerm(TERMS.lagna, mode)} ${readerDm(asc.degreeInSign, mode)}`,
+        moon ? `${signLabelV40(moon.sign.id, mode)} ${renderTerm(TERMS.rashi, mode)}` : '',
+        `${nakshatraLabel(canonical.panchanga.nakshatra.name, mode)} — ${renderTerm(TERMS.pada, mode)} ${readerNumber(canonical.panchanga.nakshatra.pada, mode)}`,
+      ].filter(Boolean);
+  const hindiCurrent = `${planetLabel(md, 'hi')} ${TERMS.mahadasha.hi}  ·  ${planetLabel(ad, 'hi')} ${TERMS.antardasha.hi}`;
+  const englishCurrent = `${planetLabel(md, 'en')} ${TERMS.mahadasha.en} / ${planetLabel(ad, 'en')} ${TERMS.antardasha.en}`;
 
   return {
     id: 'cover',
@@ -126,21 +261,22 @@ function coverSection(
         kind: 'cover',
         invocation: TERMS.invocation.hi,
         brand: 'CosmicTantra',
-        documentTitle: TERMS.janmaKundli.hi,
+        documentTitle: renderTerm(TERMS.janmaKundli, mode),
         subjectName: s.name,
         birthLines: [
           `${trDate(longDate(s.birthDate), mode)}${wd ? `  ·  ${tr(wd.en, mode)}` : ''}`,
-          clockTime(s.birthTime),
+          readerClock(clockTime(s.birthTime), mode),
           s.locationName,
         ],
         identityLines,
-        // Bilingual, like every other line on this cover. It previously read
-        // "Current: Rahu Mahadasha / Mercury Antardasha" — the one purely
-        // English sentence on an otherwise Devanagari-first page, and the
-        // single most consulted fact on it. §6 asks for राहु महादशा.
-        currentPeriodLine:
-          `${planetLabel(md, 'hi')} ${TERMS.mahadasha.hi}  ·  ${planetLabel(ad, 'hi')} ${TERMS.antardasha.hi}`
-          + `   —   ${planetLabel(md, 'en')} ${TERMS.mahadasha.en} / ${planetLabel(ad, 'en')} ${TERMS.antardasha.en}`,
+        // Pure Hindi does not carry a stray English sentence; the public
+        // `hi-en` edition deliberately carries both terms on this high-value
+        // line, while English retains its conventional English reading.
+        currentPeriodLine: mode === 'hi'
+          ? hindiCurrent
+          : mode === 'hi-en'
+            ? `${hindiCurrent}   —   ${englishCurrent}`
+            : englishCurrent,
         reportId,
         // §6: the cover carries the Report ID and the calculation school, and
         // nothing else. Engine, report-model and derived-layer versions moved
@@ -165,7 +301,11 @@ function passportSection(
   const tz = s.timezone;
   const pan = derived.panchanga;
   const wd = weekdayOf(s.birthDate);
-  const offset = `UTC${tz.utcOffsetAtBirth >= 0 ? '+' : ''}${tz.utcOffsetAtBirth}`;
+  const offsetRaw = `UTC${tz.utcOffsetAtBirth >= 0 ? '+' : ''}${tz.utcOffsetAtBirth}`;
+  const offset = readerNumber(offsetRaw, mode);
+  const localTime = mode === 'hi'
+    ? readerClock(clockTime(s.birthTime), mode)
+    : `${readerClock(clockTime(s.birthTime), mode)} (${mode === 'hi-en' ? 'स्थानीय / local' : 'local'})`;
 
   return {
     id: 'kundli-passport',
@@ -184,8 +324,8 @@ function passportSection(
         contentType: 'CALCULATED_FACT',
         items: [
           { label: label('name', mode), value: s.name },
-          { label: label('date', mode), value: trDate(longDate(s.birthDate), mode) },
-          { label: label('localTime', mode), value: `${clockTime(s.birthTime)} (${s.birthTime} local)` },
+          { label: label('date', mode), value: readerDateValue(trDate(longDate(s.birthDate), mode), mode) },
+          { label: label('localTime', mode), value: localTime },
           { label: label('weekday', mode), value: wd ? renderTerm(wd, mode) : '—' },
           { label: label('place', mode), value: s.locationName },
         ],
@@ -197,10 +337,10 @@ function passportSection(
         columns: 2,
         contentType: 'CALCULATED_FACT',
         items: [
-          { label: label('latitude', mode), value: `${s.coordinates.latitude.toFixed(4)}\u00B0` },
-          { label: label('longitude', mode), value: `${s.coordinates.longitude.toFixed(4)}\u00B0` },
+          { label: label('latitude', mode), value: `${readerNumber(s.coordinates.latitude.toFixed(4), mode)}\u00B0` },
+          { label: label('longitude', mode), value: `${readerNumber(s.coordinates.longitude.toFixed(4), mode)}\u00B0` },
           { label: label('timezone', mode), value: `${tz.timezoneId} (${offset})` },
-          { label: label('utcInstant', mode), value: tz.utcDateTime },
+          { label: label('utcInstant', mode), value: readerDateValue(tz.utcDateTime, mode) },
           { label: label('timezoneProvenance', mode), value: tr(humanEnum(tz.offsetProvenance), mode) },
           { label: label('coordinateProvenance', mode), value: tr(humanEnum(s.coordinates.provenance), mode) },
         ],
@@ -215,7 +355,7 @@ function passportSection(
           { label: label('tithi', mode), value: tr(pan.tithi.name, mode) },
           { label: label('paksha', mode), value: tr(pan.tithi.paksha, mode) },
           { label: label('nakshatra', mode), value: `${nakshatraLabel(pan.nakshatra.name, mode)}` },
-          { label: label('pada', mode), value: String(pan.nakshatra.pada) },
+          { label: label('pada', mode), value: readerNumber(pan.nakshatra.pada, mode) },
           { label: label('yoga', mode), value: tr(pan.yoga.name, mode) },
           { label: label('karana', mode), value: tr(pan.karana.name, mode) },
           { label: label('ayana', mode), value: tr(pan.ayana.value, mode) },
@@ -230,7 +370,7 @@ function passportSection(
             value: tr('not calculated', mode),
             contentType: 'NOT_CALCULATED',
           },
-          { label: label('samvat', mode), value: pan.samvat.value },
+          { label: label('samvat', mode), value: readerSamvat(pan.samvat.value, mode) },
         ],
       },
       p(
@@ -251,11 +391,11 @@ function passportSection(
         contentType: 'CALCULATED_FACT',
         items: [
           { label: tr('Zodiac', mode), value: tr(humanEnum(canonical.calculation.zodiac), mode) },
-          { label: tr('Ayanamsha', mode), value: `${canonical.calculation.ayanamshaName} (${canonical.calculationMetadata.ayanamshaValueDegrees.toFixed(4)}\u00B0)` },
+          { label: tr('Ayanamsha', mode), value: `${canonical.calculation.ayanamshaName} (${readerNumber(canonical.calculationMetadata.ayanamshaValueDegrees.toFixed(4), mode)}\u00B0)` },
           { label: tr('House system', mode), value: tr(humanEnum(canonical.calculation.houseSystem), mode), note: tr('each bhava is one whole rashi, counted from the rashi of the lagna', mode) },
           { label: tr('Node policy', mode), value: tr(humanEnum(canonical.calculation.nodeMode), mode), note: tr('Rahu and Ketu are the mean nodes, not the true nodes', mode) },
           { label: tr('Aspect policy', mode), value: tr('Full Parashari drishti', mode), note: tr('the node 5/9 drishti variant is recorded but not adopted', mode) },
-          { label: tr('Ephemeris', mode), value: humanEnum(canonical.calculation.ephemerisProvider) },
+          { label: tr('Ephemeris', mode), value: readerEphemeris(canonical.calculation.ephemerisProvider, mode) },
         ],
       },
       {
@@ -295,6 +435,7 @@ function saarSection(
   const statusItems: {
     label: string;
     status: 'PRESENT' | 'ABSENT' | 'SCHOLAR_JUDGEMENT' | 'NOT_CALCULATED' | 'INDETERMINATE';
+    statusText?: string;
     note?: string;
     xref?: string;
   }[] = [];
@@ -304,8 +445,9 @@ function saarSection(
   canonical.yogas.forEach((y, i) => {
     if (y.status === 'PRESENT') {
       statusItems.push({
-        label: y.name,
+        label: mode === 'en' ? y.name : localizeKnownText(y.name, mode),
         status: y.status as typeof statusItems[number]['status'],
+        statusText: statusCaption(y.status, mode),
         xref: `Y-${String(i + 1).padStart(2, '0')}`,
       });
     }
@@ -316,7 +458,10 @@ function saarSection(
       statusItems.push({
         label: tr('Manglik', mode),
         status: d.result.present ? 'PRESENT' : 'ABSENT',
-        note: d.result.present ? `severity ${d.result.severity}${d.result.cancellation?.cancelled ? ', cancellation rule applied' : ''}` : undefined,
+        statusText: statusCaption(d.result.present ? 'PRESENT' : 'ABSENT', mode),
+        note: d.result.present ? (mode === 'en'
+          ? `severity ${d.result.severity}${d.result.cancellation?.cancelled ? ', cancellation rule applied' : ''}`
+          : `${localizeKnownText('severity', mode)} ${readerStatus(d.result.severity ?? 'MEDIUM', mode)}${d.result.cancellation?.cancelled ? (mode === 'hi' ? ', रद्दीकरण-नियम लागू' : ', रद्दीकरण-नियम लागू / cancellation rule applied') : ''}`) : undefined,
         xref: 'D-01',
       });
     }
@@ -324,7 +469,8 @@ function saarSection(
       statusItems.push({
         label: tr('Sade Sati (natal Saturn from Moon)', mode),
         status: d.result.active ? 'PRESENT' : 'ABSENT',
-        note: d.result.active ? d.result.phase : 'not active at birth',
+        statusText: statusCaption(d.result.active ? 'PRESENT' : 'ABSENT', mode),
+        note: d.result.active ? readerStatus(d.result.phase ?? 'not active at birth', mode) : localizeKnownText('not active at birth', mode),
         xref: 'D-02',
       });
     }
@@ -349,12 +495,12 @@ function saarSection(
         columns: 2,
         contentType: 'CALCULATED_FACT',
         items: [
-          { label: label('lagna', mode), value: `${signLabelV40(asc.sign.id, mode)} ${dm(asc.degreeInSign)}` },
+          { label: label('lagna', mode), value: `${signLabelV40(asc.sign.id, mode)} ${readerDm(asc.degreeInSign, mode)}` },
           { label: label('lagnesha', mode), value: lagnesha && lagneshaCond ? `${planetLabel(lagnesha, mode)} \u2192 ${bhavaLabel(lagneshaCond.house, mode)}` : '—' },
-          { label: label('chandraRashi', mode), value: moon ? `${signLabelV40(moon.sign.id, mode)} ${dm(moon.degreeInSign)}` : '—' },
-          { label: label('janmaNakshatra', mode), value: `${nakshatraLabel(canonical.panchanga.nakshatra.name, mode)} · ${label('pada', mode)} ${canonical.panchanga.nakshatra.pada}` },
-          { label: label('nakshatraLord', mode), value: canonical.panchanga.nakshatra.ruler },
-          { label: label('suryaRashi', mode), value: (() => { const s = canonical.planets.find((x) => x.id === 'Sun'); return s ? `${signLabelV40(s.sign.id, mode)} ${dm(s.degreeInSign)}` : '—'; })() },
+          { label: label('chandraRashi', mode), value: moon ? `${signLabelV40(moon.sign.id, mode)} ${readerDm(moon.degreeInSign, mode)}` : '—' },
+          { label: label('janmaNakshatra', mode), value: `${nakshatraLabel(canonical.panchanga.nakshatra.name, mode)} · ${label('pada', mode)} ${readerNumber(canonical.panchanga.nakshatra.pada, mode)}` },
+          { label: label('nakshatraLord', mode), value: readerPlanet(canonical.panchanga.nakshatra.ruler, mode) },
+          { label: label('suryaRashi', mode), value: (() => { const s = canonical.planets.find((x) => x.id === 'Sun'); return s ? `${signLabelV40(s.sign.id, mode)} ${readerDm(s.degreeInSign, mode)}` : '—'; })() },
         ],
       },
 
@@ -364,17 +510,17 @@ function saarSection(
         columns: 2,
         contentType: 'CALCULATED_FACT',
         items: [
-          { label: label('mahadasha', mode), value: `${planetLabel(canonical.dashas.current.mahadasha, mode)} (${canonical.dashas.current.startDate} \u2013 ${canonical.dashas.current.endDate})` },
+          { label: label('mahadasha', mode), value: `${planetLabel(canonical.dashas.current.mahadasha, mode)} (${readerDateValue(canonical.dashas.current.startDate, mode)} \u2013 ${readerDateValue(canonical.dashas.current.endDate, mode)})` },
           { label: label('antardasha', mode), value: planetLabel(canonical.dashas.current.antardasha, mode) },
           { label: label('pratyantardasha', mode), value: canonical.dashas.current.pratyantardasha ? planetLabel(canonical.dashas.current.pratyantardasha, mode) : '—' },
-          { label: label('nextTransition', mode), value: derived.dasha.nextTransition ? `${planetLabel(derived.dasha.nextTransition.lord, mode)} \u2014 ${derived.dasha.nextTransition.onDate}` : '—' },
-          { label: label('balanceAtBirth', mode), value: bal.status === 'CALCULATED' ? `${planetLabel(bal.lord, mode)} — ${bal.ymd}` : tr('not calculated', mode) },
+          { label: label('nextTransition', mode), value: derived.dasha.nextTransition ? `${planetLabel(derived.dasha.nextTransition.lord, mode)} \u2014 ${readerDateValue(derived.dasha.nextTransition.onDate, mode)}` : '—' },
+          { label: label('balanceAtBirth', mode), value: bal.status === 'CALCULATED' ? `${planetLabel(bal.lord, mode)} — ${readerYmd(bal.ymd, mode)}` : tr('not calculated', mode) },
         ],
       },
 
       {
         kind: 'statusList',
-        title: trProse('Important configurations', mode),
+        title: tr('Important configurations', mode),
         contentType: 'TRADITIONAL_RULE',
         system: 'PARASHARI',
         items: statusItems,
@@ -396,7 +542,7 @@ function chartSection(
   pageTag: string,
   devanagariNumerals = false,
 ): V2Section {
-  const model = { ...buildChartRenderModel(canonical, division, labelModeChart), devanagariNumerals };
+  const model = buildChartRenderModel(canonical, division, labelModeChart, { devanagariNumerals });
   const asc = canonical.ascendant;
   const lagnesha = derived.bhavas.bhavas.find((b) => b.house === 1)?.lord ?? null;
   const lagneshaCond = derived.grahaConditions.conditions.find((c) => c.graha === lagnesha);
@@ -414,7 +560,7 @@ function chartSection(
         // so the rashi, the lagnesha and its bhava are named in the reader's
         // own vocabulary rather than transliterated ("सिंह", not "Simha";
         // "दशम भाव", not "10thH").
-        { label: label('lagna', mode), value: `${rashiHere(asc.sign.id, asc.sign.name)} ${dm(asc.degreeInSign)}` },
+        { label: label('lagna', mode), value: `${rashiHere(asc.sign.id, asc.sign.name)} ${readerDm(asc.degreeInSign, mode)}` },
         {
           label: label('lagnesha', mode),
           value: lagnesha && lagneshaCond
@@ -423,11 +569,11 @@ function chartSection(
         },
         { label: tr('Moon', mode), value: (() => {
             const m = canonical.planets.find((x) => x.id === 'Moon');
-            return m ? `${rashiHere(m.sign.id, m.sign.name)} ${dm(m.degreeInSign)} · ${bhavaLabel(m.house, mode)}` : '—';
+            return m ? `${rashiHere(m.sign.id, m.sign.name)} ${readerDm(m.degreeInSign, mode)} · ${bhavaLabel(m.house, mode)}` : '—';
           })() },
       ]
     : [
-        { label: tr('D9 Lagna', mode), value: d9?.lagnaSign ? tr(d9.lagnaSign, mode) : '—' },
+        { label: tr('D9 Lagna', mode), value: d9?.lagnaSign ? readerSign(d9.lagnaSign, mode) : '—' },
         { label: tr('Vargottama', mode), value: (() => {
             const v = derived.grahaConditions.conditions
               .filter((c) => c.vargottama.value)
@@ -439,9 +585,14 @@ function chartSection(
   const placementRows = model.houses.map((house) => {
     const occ = model.placements.filter((x) => x.houseNumber === house.houseNumber);
     return [
-      String(house.houseNumber),
+      readerNumber(house.houseNumber, mode),
       signLabelV40(house.signNumber, mode),
-      occ.length === 0 ? '—' : occ.map((x) => `${x.displayName ?? x.planetId}${x.retrograde ? ' (R)' : ''}`).join(', '),
+      occ.length === 0 ? '—' : occ.map((x) => {
+        const name = x.displayName ?? x.planetId ?? '';
+        const degree = x.degreeInSign === undefined ? '' : ` ${readerDm(x.degreeInSign, mode)}`;
+        const motion = x.retrograde ? ` (${motionMark(true, mode)})` : '';
+        return `${name}${degree}${motion}`;
+      }).join(', '),
     ];
   });
 
@@ -463,9 +614,9 @@ function chartSection(
         chartType: division === 1 ? 'NORTH_INDIAN_D1' : 'NORTH_INDIAN_D9',
         data: model,
         size: 'hero',
-        caption: division === 1
+        caption: trProse(division === 1
           ? 'North Indian format. House 1 is the top diamond and carries the Lagna marker; houses advance anticlockwise. A rule beneath an abbreviation marks retrograde motion.'
-          : 'The ninth division, drawn from the same canonical placements with the same visual grammar as D1. D1 and D9 are the two charts this report cross-checks.',
+          : 'The ninth division, drawn from the same canonical placements with the same visual grammar as D1. D1 and D9 are the two charts this report cross-checks.', mode),
         sideFacts,
         contentType: 'CALCULATED_FACT',
       },
@@ -498,12 +649,12 @@ function grahaDossierSection(
     return [
       planetLabel(c.graha, mode),
       signLabelV40(c.signId, mode),
-      dm(c.degreeInSign),
-      String(c.house),
+      readerDm(c.degreeInSign, mode),
+      readerNumber(c.house, mode),
       nakshatraLabel(c.nakshatra, mode),
-      String(c.pada),
-      c.motion.retrograde ? 'R' : 'D',
-      dignityLabel(c.dignity.category, mode),
+      readerNumber(c.pada, mode),
+      motionMark(c.motion.retrograde, mode),
+      readerDignity(c.dignity.category, mode),
       marks.join(' · ') || '—',
     ];
   });
@@ -522,9 +673,11 @@ function grahaDossierSection(
         widths: [0.12, 0.12, 0.1, 0.07, 0.16, 0.06, 0.08, 0.14, 0.15],
         rows,
         contentType: 'CALCULATED_FACT',
-        footnote:
+        footnote: trProse(
           'Degrees are shown in degrees and arc-minutes; the exact decimal longitude is retained in the machine record and printed in the Scholar Appendix. ' +
           'A status appears only when the engine actually calculated it.',
+          mode,
+        ),
       },
       h3(tr('Functional role, conjunction and drishti', mode)),
       {
@@ -533,14 +686,14 @@ function grahaDossierSection(
         widths: [0.12, 0.12, 0.24, 0.16, 0.18, 0.18],
         rows: derived.grahaConditions.conditions.map((c) => [
           planetLabel(c.graha, mode),
-          c.functionalLordship.ruledHouses.join(', ') || '—',
-          functionalPosition(c.functionalLordship),
+          c.functionalLordship.ruledHouses.map((house) => readerNumber(house, mode)).join(', ') || '—',
+          functionalPosition(c.functionalLordship, mode),
           c.conjunctions.length > 0 ? c.conjunctions.map((x) => planetLabel(x.with, mode)).join(', ') : '—',
-          c.aspectsGiven.length > 0 ? [...new Set(c.aspectsGiven.map((a) => a.toHouse))].sort((x, y) => x - y).join(', ') : '—',
+          c.aspectsGiven.length > 0 ? [...new Set(c.aspectsGiven.map((a) => a.toHouse))].sort((x, y) => x - y).map((house) => readerNumber(house, mode)).join(', ') : '—',
           c.aspectsReceived.length > 0 ? c.aspectsReceived.map((a) => planetLabel(a.from, mode)).join(', ') : '—',
         ]),
         contentType: 'DERIVED_JYOTISH_FACT',
-        footnote: 'Functional position is what the graha rules FOR THIS LAGNA. It is kept apart from natural character, which is printed in the Scholar Appendix. No maraka verdict is issued by this engine.',
+        footnote: trProse('Functional position is what the graha rules FOR THIS LAGNA. It is kept apart from natural character, which is printed in the Scholar Appendix. No maraka verdict is issued by this engine.', mode),
       },
       h3(tr('Condition notes', mode)),
       bullets([
@@ -549,13 +702,28 @@ function grahaDossierSection(
           // Angular separations are DMS here, like every other Pandit-facing
           // degree. The decimal form stays in the B4 condition appendix.
           .map((c) => c.combustion.status === 'COMBUST'
-            ? `${c.graha} is combust: ${dm(c.combustion.angularDistance ?? 0)} from the Sun against an orb of ${dm(c.combustion.orbUsed ?? 0)}.`
-            : `${c.graha} is ${dm(c.combustion.angularDistance ?? 0)} from the Sun, just outside the adopted ${dm(c.combustion.orbUsed ?? 0)} orb — not combust under this rule.`),
+            ? trTemplate(
+                'GRAHA_COMBUST',
+                { graha: c.graha, distance: readerDm(c.combustion.angularDistance ?? 0, mode), orb: readerDm(c.combustion.orbUsed ?? 0, mode) },
+                mode,
+                `${c.graha} is combust: ${readerDm(c.combustion.angularDistance ?? 0, mode)} from the Sun against an orb of ${readerDm(c.combustion.orbUsed ?? 0, mode)}.`,
+              )
+            : trTemplate(
+                'GRAHA_NEAR_COMBUST',
+                { graha: c.graha, distance: readerDm(c.combustion.angularDistance ?? 0, mode), orb: readerDm(c.combustion.orbUsed ?? 0, mode) },
+                mode,
+                `${c.graha} is ${readerDm(c.combustion.angularDistance ?? 0, mode)} from the Sun, just outside the adopted ${readerDm(c.combustion.orbUsed ?? 0, mode)} orb — not combust under this rule.`,
+              )),
         ...derived.grahaConditions.conditions
           .filter((c) => c.planetaryWar.status === 'IN_WAR')
-          .map((c) => `${c.graha} is in graha yuddha with ${c.planetaryWar.opponent} (${dms(c.planetaryWar.separationDeg ?? 0)}). The victor is not calculated.`),
-        `Rahu and Ketu are marked retrograde by the mean-node convention, not by observed motion.`,
-        `Shadbala: validation pending — computed internally, not verified, and used in no conclusion.`,
+          .map((c) => trTemplate(
+            'GRAHA_WAR',
+            { graha: c.graha, opponent: c.planetaryWar.opponent ?? '', separation: readerDms(c.planetaryWar.separationDeg ?? 0, mode) },
+            mode,
+            `${c.graha} is in graha yuddha with ${c.planetaryWar.opponent} (${readerDms(c.planetaryWar.separationDeg ?? 0, mode)}). The victor is not calculated.`,
+          )),
+        trProse('Rahu and Ketu are marked retrograde by the mean-node convention, not by observed motion.', mode),
+        trProse('Shadbala: validation pending — computed internally, not verified, and used in no conclusion.', mode),
       ]),
     ],
   };
@@ -565,10 +733,10 @@ function bhavaMatrixSection(derived: KundliDerivedModel, mode: LabelMode): V2Sec
   const sign = (id: number | null | undefined) =>
     (id ? signLabelV40(id, mode) : '—');
   const rows = derived.bhavas.bhavas.map((b) => [
-    String(b.house),
+    readerNumber(b.house, mode),
     sign(b.signId),
     b.lord ? planetLabel(b.lord, mode) : '—',
-    b.lordHouse ? `${ORDINAL[b.lordHouse]} · ${sign(b.lordSignId)}` : '—',
+    b.lordHouse ? `${readerBhava(b.lordHouse, mode)} · ${sign(b.lordSignId)}` : '—',
     b.occupants.length > 0 ? b.occupants.map((o) => planetLabel(o, mode)).join(', ') : '—',
     b.aspectsReceived.length > 0 ? b.aspectsReceived.map((a) => planetLabel(a.from, mode)).join(', ') : '—',
     b.karakas.map((k) => planetLabel(k, mode)).join(', ') || '—',
@@ -589,8 +757,10 @@ function bhavaMatrixSection(derived: KundliDerivedModel, mode: LabelMode): V2Sec
         widths: [0.08, 0.13, 0.12, 0.2, 0.16, 0.16, 0.15],
         rows,
         contentType: 'DERIVED_JYOTISH_FACT',
-        footnote:
+        footnote: trProse(
           'Drishti listed is full Parashari graha drishti only. Bhava strength (bhava bala) is NOT calculated for this report — see the Scholar Appendix.',
+          mode,
+        ),
       },
       h3(tr('Bhava by bhava', mode)),
       {
@@ -598,11 +768,11 @@ function bhavaMatrixSection(derived: KundliDerivedModel, mode: LabelMode): V2Sec
         columns: 2,
         contentType: 'DERIVED_JYOTISH_FACT',
         items: derived.bhavas.bhavas.map((b) => ({
-          label: `${ORDINAL[b.house]} bhava`,
-          value: b.structureStatement,
+          label: readerBhava(b.house, mode),
+          value: bhavaStructureStatement(b, mode),
         })),
       },
-      p(`Karaka attributions: ${KARAKA_SOURCE_NOTE}`, 'micro', 'TRADITIONAL_RULE'),
+      p(trProse(`Karaka attributions: ${KARAKA_SOURCE_NOTE}`, mode), 'micro', 'TRADITIONAL_RULE'),
     ],
   };
 }
@@ -618,11 +788,21 @@ function yogaDashboardSection(canonical: KundliCanonicalModel, derived: KundliDe
   // English name and the rule id.
   const st = (x: string) => tr(x, mode).toLowerCase();
   canonical.yogas.forEach((y, i) => {
-    const xref = `See Appendix Y-${String(i + 1).padStart(2, '0')}`;
+    const xref = appendixRef(`Y-${String(i + 1).padStart(2, '0')}`, mode);
     if (y.status === 'PRESENT') present.push({ label: tr(y.name, mode), status: 'PRESENT', statusText: st('Present'), xref });
     else if (y.status === 'ABSENT') absent.push({ label: tr(y.name, mode), status: 'ABSENT', statusText: st('Absent'), xref });
-    else if (y.source.adoption === 'NOT_ADOPTED') scholar.push({ label: tr(y.name, mode), status: 'NOT_CALCULATED', statusText: st('Not calculated'), note: y.notCalculatedReason ?? 'the sources disagree; the variant is recorded but not adopted, so no verdict is issued', xref });
-    else notCalc.push({ label: tr(y.name, mode), status: y.status === 'INDETERMINATE' ? 'INDETERMINATE' : 'NOT_CALCULATED', statusText: st('Not calculated'), note: y.notCalculatedReason?.slice(0, 90), xref });
+    else if (y.source.adoption === 'NOT_ADOPTED') scholar.push({
+      label: tr(y.name, mode), status: 'NOT_CALCULATED', statusText: st('Not calculated'),
+      note: mode === 'en'
+        ? y.notCalculatedReason ?? 'the sources disagree; the variant is recorded but not adopted, so no verdict is issued'
+        : trProse('This rule variant is recorded but not adopted; no verdict is issued.', mode),
+      xref,
+    });
+    else notCalc.push({
+      label: tr(y.name, mode), status: y.status === 'INDETERMINATE' ? 'INDETERMINATE' : 'NOT_CALCULATED', statusText: st('Not calculated'),
+      note: mode === 'en' ? y.notCalculatedReason?.slice(0, 90) : trProse('This rule was not calculated; absence is not claimed.', mode),
+      xref,
+    });
   });
 
   const doshaItems: { label: string; status: 'PRESENT' | 'ABSENT' | 'NOT_CALCULATED'; statusText?: string; note?: string; xref?: string }[] = [];
@@ -631,22 +811,26 @@ function yogaDashboardSection(canonical: KundliCanonicalModel, derived: KundliDe
       doshaItems.push({
         label: tr('Manglik', mode),
         status: d.result.present ? 'PRESENT' : 'ABSENT',
+        statusText: statusCaption(d.result.present ? 'PRESENT' : 'ABSENT', mode),
         note: d.result.present
-          ? `Mars in bhava ${d.result.causeHouses?.join(', ')}, severity ${d.result.severity}${d.result.cancellation?.cancelled ? '; cancellation rule applied' : '; no cancellation rule matched'}`
-          : 'Mars is not in bhava 1/4/7/8/12',
-        xref: 'See Appendix D-01',
+          ? mode === 'en'
+            ? `Mars in bhava ${d.result.causeHouses?.join(', ')}, severity ${d.result.severity}${d.result.cancellation?.cancelled ? '; cancellation rule applied' : '; no cancellation rule matched'}`
+            : `मंगल ${d.result.causeHouses?.map((house) => readerBhava(house, mode)).join(', ') ?? '—'} में है; ${localizeKnownText('severity', mode)} ${readerStatus(d.result.severity ?? 'MEDIUM', mode)}${d.result.cancellation?.cancelled ? (mode === 'hi' ? '; रद्दीकरण-नियम लागू' : '; रद्दीकरण-नियम लागू / cancellation rule applied') : (mode === 'hi' ? '; कोई रद्दीकरण-नियम नहीं मिला' : '; कोई रद्दीकरण-नियम नहीं मिला / no cancellation rule matched')}`
+          : trProse('Mars is not in bhava 1/4/7/8/12.', mode),
+        xref: appendixRef('D-01', mode),
       });
     }
     if (d.id === 'sadeSati' && 'active' in d.result) {
       doshaItems.push({
         label: tr('Sade Sati', mode),
         status: d.result.active ? 'PRESENT' : 'ABSENT',
-        note: 'Natal check only: Saturn\'s sign relative to the Moon AT BIRTH. This is not a transit search over the client\'s life.',
-        xref: 'See Appendix D-02',
+        statusText: statusCaption(d.result.active ? 'PRESENT' : 'ABSENT', mode),
+        note: trProse('Natal check only: Saturn\'s sign relative to the Moon at birth. This is not a transit search over the client\'s life.', mode),
+        xref: appendixRef('D-02', mode),
       });
     }
     if (d.id === 'kalsarpa') {
-      doshaItems.push({ label: tr('Kalsarpa', mode), status: 'NOT_CALCULATED', note: 'No rule definition adopted; absence is not claimed.', xref: 'See Appendix D-03' });
+      doshaItems.push({ label: tr('Kalsarpa', mode), status: 'NOT_CALCULATED', statusText: statusCaption('NOT_CALCULATED', mode), note: trProse('No rule definition adopted; absence is not claimed.', mode), xref: appendixRef('D-03', mode) });
     }
   }
 
@@ -666,7 +850,12 @@ function yogaDashboardSection(canonical: KundliCanonicalModel, derived: KundliDe
     'TRADITIONAL_RULE',
   ));
   blocks.push(p(
-    `Only ${canonical.yogas.length} yoga rules are registered in this engine build. A yoga that is not listed here is not claimed to be absent — it was simply not evaluated.`,
+    trTemplate(
+      'YOGA_RULE_COUNT',
+      { count: canonical.yogas.length },
+      mode,
+      `Only ${canonical.yogas.length} yoga rules are registered in this engine build. A yoga that is not listed here is not claimed to be absent — it was simply not evaluated.`,
+    ),
     'micro',
     'NOT_CALCULATED',
   ));
@@ -678,9 +867,20 @@ function vimshottariSection(canonical: KundliCanonicalModel, derived: KundliDeri
   const bal = derived.dasha.balanceAtBirth;
   const cur = canonical.dashas.current;
   const currentMd = canonical.dashas.mahadashas.find((m) => m.isCurrent);
+  const dateRange = (start: string, end: string): string => {
+    const hindi = `${readerDateValue(start, 'hi')} से ${readerDateValue(end, 'hi')}`;
+    if (mode === 'en') return `${start} to ${end}`;
+    return mode === 'hi' ? hindi : `${hindi} / ${start} to ${end}`;
+  };
+  const duration = (years: number): string => {
+    const english = `${years.toFixed(0)}y`;
+    const hindi = `${readerNumber(years.toFixed(0), 'hi')} वर्ष`;
+    return mode === 'en' ? english : mode === 'hi' ? hindi : `${hindi} / ${english}`;
+  };
   const adRows = (currentMd?.antardashas ?? []).map((ad) => [
-    ad.planet, ad.startDate, ad.endDate, ad.planet === cur.antardasha ? 'current' : '',
+    readerPlanet(ad.planet, mode), readerDateValue(ad.startDate, mode), readerDateValue(ad.endDate, mode), ad.planet === cur.antardasha ? localizeKnownText('current', mode) : '',
   ]);
+  const currentAdIndex = (currentMd?.antardashas ?? []).findIndex((ad) => ad.planet === cur.antardasha);
 
   return {
     id: 'vimshottari-timeline',
@@ -697,13 +897,19 @@ function vimshottariSection(canonical: KundliCanonicalModel, derived: KundliDeri
         items: [
           {
             label: label('balanceAtBirth', mode),
-            value: bal.status === 'CALCULATED' ? `${bal.lord} mahadasha — ${bal.ymd} (${bal.years.toFixed(6)} years)` : 'not calculated',
-            note: bal.status === 'CALCULATED' ? `${(bal.nakshatraFractionRemaining * 100).toFixed(4)}% of the birth nakshatra remained` : undefined,
+            value: bal.status === 'CALCULATED'
+              ? `${readerPlanet(bal.lord, mode)} ${renderTerm(TERMS.mahadasha, mode)} — ${readerYmd(bal.ymd, mode)} (${readerNumber(bal.years.toFixed(6), mode)} ${mode === 'hi' ? 'वर्ष' : mode === 'hi-en' ? 'वर्ष / years' : 'years'})`
+              : tr('not calculated', mode),
+            note: bal.status === 'CALCULATED'
+              ? mode === 'en'
+                ? `${(bal.nakshatraFractionRemaining * 100).toFixed(4)}% of the birth nakshatra remained`
+                : `${readerNumber((bal.nakshatraFractionRemaining * 100).toFixed(4), mode)}% जन्म नक्षत्र का शेष भाग${mode === 'hi-en' ? ' / of the birth nakshatra remained' : ''}`
+              : undefined,
           },
-          { label: label('mahadasha', mode), value: `${cur.mahadasha} (${cur.startDate} to ${cur.endDate})` },
-          { label: label('antardasha', mode), value: cur.antardasha },
-          { label: label('pratyantardasha', mode), value: cur.pratyantardasha || '—' },
-          { label: label('nextTransition', mode), value: derived.dasha.nextTransition ? `${planetLabel(derived.dasha.nextTransition.lord, mode)} \u2014 ${derived.dasha.nextTransition.onDate}` : '—' },
+          { label: label('mahadasha', mode), value: `${readerPlanet(cur.mahadasha, mode)} (${dateRange(cur.startDate, cur.endDate)})` },
+          { label: label('antardasha', mode), value: readerPlanet(cur.antardasha, mode) },
+          { label: label('pratyantardasha', mode), value: cur.pratyantardasha ? readerPlanet(cur.pratyantardasha, mode) : '—' },
+          { label: label('nextTransition', mode), value: derived.dasha.nextTransition ? `${planetLabel(derived.dasha.nextTransition.lord, mode)} \u2014 ${readerDateValue(derived.dasha.nextTransition.onDate, mode)}` : '—' },
         ],
       },
       {
@@ -711,22 +917,25 @@ function vimshottariSection(canonical: KundliCanonicalModel, derived: KundliDeri
         caption: trProse('All nine mahadashas. The current period is marked; the bar length is proportional to the period length.', mode),
         contentType: 'CALCULATED_FACT',
         periods: canonical.dashas.mahadashas.map((m) => ({
-          label: m.planet, start: m.startDate, end: m.endDate, years: m.durationYears, current: m.isCurrent,
+          label: readerPlanet(m.planet, mode), start: readerDateValue(m.startDate, mode), end: readerDateValue(m.endDate, mode), years: m.durationYears, current: m.isCurrent,
+          rangeLabel: dateRange(m.startDate, m.endDate), durationLabel: duration(m.durationYears),
         })),
       },
-      h3(`Antardasha schedule inside the running ${cur.mahadasha} mahadasha`),
+      h3(trTemplate('DASHA_SCHEDULE', { mahadasha: cur.mahadasha }, mode, `Antardasha schedule inside the running ${cur.mahadasha} mahadasha`)),
       {
         kind: 'table',
         headers: trAll(['Antardasha', 'Start', 'End', ''], mode),
         widths: [0.28, 0.26, 0.26, 0.2],
         rows: adRows,
-        highlightRows: [adRows.findIndex((r) => r[3] === 'current')].filter((i) => i >= 0),
+        highlightRows: [currentAdIndex].filter((i) => i >= 0),
         contentType: 'CALCULATED_FACT',
       },
       p(
-        `Balance-at-birth precision: the canonical adapter stores this value as a rounded string ("${canonical.dashas.startingBalanceYears.toFixed(1)} years"). ` +
-        `The figure above is re-derived from the Moon's sidereal longitude with the same Vimshottari constants the dasha engine uses, and cross-checked against ` +
-        `the first mahadasha the engine emitted: ${bal.crossCheck.note}`,
+        mode === 'en'
+          ? `Balance-at-birth precision: the canonical adapter stores this value as a rounded string ("${canonical.dashas.startingBalanceYears.toFixed(1)} years"). ` +
+            `The figure above is re-derived from the Moon's sidereal longitude with the same Vimshottari constants the dasha engine uses, and cross-checked against ` +
+            `the first mahadasha the engine emitted: ${bal.crossCheck.note}`
+          : trProse("The balance at birth printed above was re-derived from the Moon\'s longitude and agrees with the dasha engine to within one calendar day.", mode),
         'micro',
         'DERIVED_JYOTISH_FACT',
       ),
@@ -738,13 +947,13 @@ function activationSection(derived: KundliDerivedModel, mode: LabelMode): V2Sect
   const rows = derived.dasha.profiles
     .filter((p2) => p2.status === 'CALCULATED')
     .map((p2) => [
-      humanEnum(p2.level),
-      planetLabel(p2.lord, mode),
-      `${ORDINAL[p2.natalHouse ?? 0]} · ${p2.natalSign ?? '—'}`,
-      (p2.rulesHouses ?? []).join(', ') || '—',
-      p2.dignity ? humanEnum(p2.dignity) : '—',
-      (p2.conjunctions ?? []).map((x: string) => planetLabel(x, mode)).join(', ') || '—',
-      (p2.aspectsGivenTo ?? []).join(', ') || '—',
+      readerStatus(p2.level, mode),
+      readerPlanet(p2.lord, mode),
+      p2.natalHouse ? `${readerBhava(p2.natalHouse, mode)} · ${readerSign(p2.natalSign ?? '', mode)}` : '—',
+      (p2.rulesHouses ?? []).map((house) => readerNumber(house, mode)).join(', ') || '—',
+      p2.dignity ? readerDignity(p2.dignity, mode) : '—',
+      (p2.conjunctions ?? []).map((x: string) => readerPlanet(x, mode)).join(', ') || '—',
+      (p2.aspectsGivenTo ?? []).map((house) => readerNumber(house, mode)).join(', ') || '—',
     ]);
 
   return {
@@ -755,7 +964,7 @@ function activationSection(derived: KundliDerivedModel, mode: LabelMode): V2Sect
     status: 'READY',
     blocks: [
       title('Current Dasha Activation', renderTerm(TERMS.activation, 'hi'), tr('PART A', mode), mode),
-      p(derived.dasha.timingNote, 'small', 'DERIVED_JYOTISH_FACT'),
+      p(trProse(derived.dasha.timingNote, mode), 'small', 'DERIVED_JYOTISH_FACT'),
       {
         kind: 'table',
         headers: trAll(['Level', 'Lord', 'Natal bhava · rashi', 'Rules bhavas', 'Dignity', 'Conjunct', 'Aspects bhavas'], mode),
@@ -774,8 +983,18 @@ function activationSection(derived: KundliDerivedModel, mode: LabelMode): V2Sect
           .map((p2) => {
             const yp = (p2.yogaParticipation ?? []).filter((y) => y.status === 'PRESENT');
             return yp.length > 0
-              ? `${p2.lord}: participates in ${yp.map((y) => y.name).join(', ')}.`
-              : `${p2.lord}: participates in no yoga that this engine found present.`;
+              ? trTemplate(
+                  'DASHA_YOGA_PRESENT',
+                  { lord: p2.lord, yogas: yp.map((y) => y.name).join(', ') },
+                  mode,
+                  `${p2.lord}: participates in ${yp.map((y) => y.name).join(', ')}.`,
+                )
+              : trTemplate(
+                  'DASHA_YOGA_NONE',
+                  { lord: p2.lord },
+                  mode,
+                  `${p2.lord}: participates in no yoga that this engine found present.`,
+                );
           }),
       ),
       { kind: 'notesArea', title: trProse('Notes on the running period', mode), lines: 4 },
@@ -792,55 +1011,67 @@ function activationSection(derived: KundliDerivedModel, mode: LabelMode): V2Sect
 
 function careerSection(derived: KundliDerivedModel, mode: LabelMode): V2Section {
   const c = derived.career;
-  const pct = `${Math.round(c.confidence.evidenceCoverage * 100)}%`;
+  const pct = `${readerNumber(Math.round(c.confidence.evidenceCoverage * 100), mode)}%`;
 
   const claimRows = (claims: typeof c.supportiveFactors) =>
-    claims.map((x) => [x.templateId ? trTemplate(x.templateId, x.templateParams || {}, mode, x.statement) : x.statement, x.evidenceIds.slice(0, 2).join(' · ') || '—']);
+    claims.map((x) => [
+      x.templateId ? trTemplate(x.templateId, x.templateParams || {}, mode, x.statement) : (mode === 'en' ? x.statement : localizeKnownText(x.statement, mode)),
+      x.evidenceIds.slice(0, 2).map((path) => readerEvidence(path, mode)).join(' · ') || '—',
+    ]);
 
   const blocks: V2Block[] = [
     title('Career — Reference Synthesis', renderTerm(TERMS.career, 'hi'), tr('PART A', mode), mode),
     p(trProse('Career is the one interpretive domain V40 builds end to end. Every factor below is listed with the evidence that produced it, including the factors that work against the reading and the factors that could not be evaluated at all.', mode), 'small', 'INTERPRETIVE_SYNTHESIS'),
 
     h3(tr('Natal indication', mode)),
-    bullets(c.natalPromise.map((x) => x.templateId ? trTemplate(x.templateId, x.templateParams || {}, mode, x.statement) : x.statement)),
+    bullets(c.natalPromise.map((x) => x.templateId ? trTemplate(x.templateId, x.templateParams || {}, mode, x.statement) : (mode === 'en' ? x.statement : localizeKnownText(x.statement, mode)))),
   ];
 
   if (c.supportiveFactors.length > 0) {
-    blocks.push(h3(`Supporting factors (${c.supportiveFactors.length})`));
+    blocks.push(h3(careerCountHeading('supportive', c.supportiveFactors.length, mode)));
     blocks.push({
       kind: 'table', headers: trAll(['Factor', 'Evidence'], mode), widths: [0.68, 0.32],
       rows: claimRows(c.supportiveFactors), contentType: 'DERIVED_JYOTISH_FACT',
     });
   }
   if (c.challengingFactors.length > 0) {
-    blocks.push(h3(`Challenging factors (${c.challengingFactors.length})`));
+    blocks.push(h3(careerCountHeading('challenging', c.challengingFactors.length, mode)));
     blocks.push({
       kind: 'table', headers: trAll(['Factor', 'Evidence'], mode), widths: [0.68, 0.32],
       rows: claimRows(c.challengingFactors), contentType: 'DERIVED_JYOTISH_FACT',
     });
   }
   if (c.mixedFactors.length > 0) {
-    blocks.push(h3(`Mixed and contextual factors (${c.mixedFactors.length})`));
-    blocks.push(bullets(c.mixedFactors.map((x) => x.templateId ? trTemplate(x.templateId, x.templateParams || {}, mode, x.statement) : x.statement)));
+    blocks.push(h3(careerCountHeading('mixed', c.mixedFactors.length, mode)));
+    blocks.push(bullets(c.mixedFactors.map((x) => x.templateId ? trTemplate(x.templateId, x.templateParams || {}, mode, x.statement) : (mode === 'en' ? x.statement : localizeKnownText(x.statement, mode)))));
   }
 
   blocks.push(h3(tr('Dasha activation', mode)));
-  blocks.push(bullets(c.dashaActivation.map((x) => x.templateId ? trTemplate(x.templateId, x.templateParams || {}, mode, x.statement) : x.statement)));
+  blocks.push(bullets(c.dashaActivation.map((x) => x.templateId ? trTemplate(x.templateId, x.templateParams || {}, mode, x.statement) : (mode === 'en' ? x.statement : localizeKnownText(x.statement, mode)))));
 
   blocks.push(h3(tr('Cross-chart confirmation', mode)));
-  blocks.push(bullets(c.vargaConfirmation.map((x) => (x.templateId ? trTemplate(x.templateId, x.templateParams || {}, mode, x.statement) : x.statement) + (x.notCalculatedReason ? ` (${x.notCalculatedReason})` : ''))));
+  blocks.push(bullets(c.vargaConfirmation.map((x) => {
+    const statement = x.templateId
+      ? trTemplate(x.templateId, x.templateParams || {}, mode, x.statement)
+      : mode === 'en' ? x.statement : localizeKnownText(x.statement, mode);
+    const reason = x.notCalculatedReason
+      ? (mode === 'en' ? x.notCalculatedReason : unavailableFactorReason('D10_CONFIRMATION', x.notCalculatedReason, mode))
+      : '';
+    return `${statement}${reason ? ` (${reason})` : ''}`;
+  })));
+
 
   blocks.push(h3(tr('Conclusion', mode)));
-  blocks.push(bullets(c.conclusion.statements.map((s) => s.templateId ? trTemplate(s.templateId, s.templateParams || {}, mode, s.text) : s.text), 'body'));
+  blocks.push(bullets(c.conclusion.statements.map((s) => s.templateId ? trTemplate(s.templateId, s.templateParams || {}, mode, s.text) : (mode === 'en' ? s.text : localizeKnownText(s.text, mode))), 'body'));
   blocks.push({
     kind: 'kvGrid',
     columns: 2,
     contentType: 'INTERPRETIVE_SYNTHESIS',
     items: [
-      { label: tr('Natal indication', mode), value: c.conclusion.natalIndication },
-      { label: tr('Current activation', mode), value: c.conclusion.currentActivation },
-      { label: tr('Evidence coverage', mode), value: `${pct} of the declared factor checklist` },
-      { label: tr('Rule agreement', mode), value: c.confidence.ruleAgreement },
+      { label: tr('Natal indication', mode), value: readerStatus(c.conclusion.natalIndication, mode) },
+      { label: tr('Current activation', mode), value: readerStatus(c.conclusion.currentActivation, mode) },
+      { label: tr('Evidence coverage', mode), value: mode === 'en' ? `${pct} of the declared factor checklist` : `${pct} घोषित कारक-सूची${mode === 'hi-en' ? ' / of the declared factor checklist' : ''}` },
+      { label: tr('Rule agreement', mode), value: localizedRuleAgreement(c.confidence.ruleAgreement, mode) },
     ],
   });
   blocks.push({
@@ -848,13 +1079,21 @@ function careerSection(derived: KundliDerivedModel, mode: LabelMode): V2Section 
     tone: 'limitation',
     title: trProse('Read this before reading the conclusion', mode),
     text:
-      `Evidence coverage ${pct} means ${c.confidence.resolvedFactors.length} of ${c.confidence.resolvedFactors.length + c.confidence.missingFactors.length} ` +
-      `declared factors produced evidence. ` + c.conclusion.explicitlyNotClaimed.join(' '),
+      trTemplate(
+        'CAREER_EVIDENCE_COVERAGE',
+        {
+          coverage: pct,
+          resolved: c.confidence.resolvedFactors.length,
+          total: c.confidence.resolvedFactors.length + c.confidence.missingFactors.length,
+        },
+        mode,
+        `Evidence coverage ${pct} means ${c.confidence.resolvedFactors.length} of ${c.confidence.resolvedFactors.length + c.confidence.missingFactors.length} declared factors produced evidence.`,
+      ) + ' ' + c.conclusion.explicitlyNotClaimed.map((claim) => trProse(claim, mode)).join(' '),
     contentType: 'NOT_CALCULATED',
   });
   blocks.push(h3(tr('Factors that could not be evaluated', mode)));
-  blocks.push(bullets(c.confidence.missingFactors.map((m) => `${factorName(m.factor)} — ${m.reason}`), 'small'));
-  blocks.push(p(`Birth-time sensitivity: ${c.confidence.birthTimeSensitivity}`, 'micro', 'PRACTICAL_REFLECTION'));
+  blocks.push(bullets(c.confidence.missingFactors.map((m) => `${factorName(m.factor, mode)} — ${unavailableFactorReason(m.factor, m.reason, mode)}`), 'small'));
+  blocks.push(p(trProse(`Birth-time sensitivity: ${c.confidence.birthTimeSensitivity}`, mode), 'micro', 'PRACTICAL_REFLECTION'));
 
   return { id: 'career-synthesis', title: trProse('Career Synthesis', mode), part: 'A', startsNewPage: true, status: 'READY', blocks };
 }
@@ -870,8 +1109,10 @@ function discussionSection(derived: KundliDerivedModel, mode: LabelMode): V2Sect
       title('Pandit Discussion Points', renderTerm(TERMS.discussionPoints, 'hi'), tr('PART A', mode), mode),
       p(trProse('Questions raised by structures that exist in this chart. They are prompts for the consultation, not predictions, and none of them answers itself.', mode), 'small', 'PRACTICAL_REFLECTION'),
       ...derived.discussionPoints.flatMap((d): V2Block[] => [
-        p(`\u2022  ${d.templateId ? trTemplate(d.templateId, d.templateParams || {}, mode, d.question) : d.question}`, 'body', 'PRACTICAL_REFLECTION'),
-        p(`      basis: ${d.basis}`, 'micro', 'DERIVED_JYOTISH_FACT'),
+        p(`\u2022  ${d.templateId ? trTemplate(d.templateId, d.templateParams || {}, mode, d.question) : (mode === 'en' ? d.question : localizeKnownText(d.question, mode))}`, 'body', 'PRACTICAL_REFLECTION'),
+        // Part A shows reader-facing chart evidence, never a fact-path address
+        // or a raw generator sentence. The technical lineage remains in B.
+        p(`      ${tr('Evidence', mode)}: ${d.evidenceIds.slice(0, 3).map((path) => readerEvidence(path, mode)).join(' · ') || '—'}`, 'micro', 'DERIVED_JYOTISH_FACT'),
       ]),
       spacer(3),
       {
@@ -914,7 +1155,7 @@ function howToReadSection(canonical: KundliCanonicalModel, derived: KundliDerive
     status: 'READY',
     blocks: [
       title('How to Read This Report', 'इस कुण्डली को कैसे पढ़ें', tr('PART A', mode), mode),
-      h3(tr('The kinds of statement in this report, kept apart', mode)),
+      h3(trProse('The kinds of statement in this report, kept apart', mode)),
       bullets([
         'CALCULATED FACT — produced by the astronomical calculation. A position, a bhava, a date.',
         'DERIVED FACT — a classical rule applied to those facts. A bhava lord, an aspect, a dignity.',
@@ -922,35 +1163,35 @@ function howToReadSection(canonical: KundliCanonicalModel, derived: KundliDerive
         'READING — reasoning over facts and rules. Always labelled, always backed by the evidence it used.',
         'REFLECTION — a question or a practical thought for the consultation. Never a prediction.',
         'NOT CALCULATED — the engine did not compute it. This is never rewritten as "absent".',
-      ], 'body'),
+      ].map((line) => trProse(line, mode)), 'body'),
       h3(tr('Status marks', mode)),
       {
         kind: 'statusList',
         contentType: 'CALCULATED_FACT',
         items: [
-          { label: tr('Present', mode), status: 'PRESENT', note: 'every condition of the rule evaluated true' },
-          { label: tr('Absent', mode), status: 'ABSENT', note: 'every condition evaluated, at least one false' },
-          { label: tr('Scholar judgement', mode), status: 'SCHOLAR_JUDGEMENT', note: 'the sources disagree; the variant is recorded, not adopted' },
-          { label: tr('Not calculated', mode), status: 'NOT_CALCULATED', note: 'not computed. Absence is not claimed' },
-          { label: tr('Validation pending', mode), status: 'VALIDATION_PENDING', note: 'computed but not yet trusted; shown, never used in a conclusion' },
+          { label: tr('Present', mode), status: 'PRESENT', statusText: statusCaption('PRESENT', mode), note: trProse('every condition of the rule evaluated true', mode) },
+          { label: tr('Absent', mode), status: 'ABSENT', statusText: statusCaption('ABSENT', mode), note: trProse('every condition evaluated, at least one false', mode) },
+          { label: tr('Scholar judgement', mode), status: 'SCHOLAR_JUDGEMENT', statusText: statusCaption('SCHOLAR_JUDGEMENT', mode), note: trProse('the sources disagree; the variant is recorded, not adopted', mode) },
+          { label: tr('Not calculated', mode), status: 'NOT_CALCULATED', statusText: statusCaption('NOT_CALCULATED', mode), note: trProse('not computed. Absence is not claimed', mode) },
+          { label: tr('Validation pending', mode), status: 'VALIDATION_PENDING', statusText: statusCaption('VALIDATION_PENDING', mode), note: trProse('computed but not yet trusted; shown, never used in a conclusion', mode) },
         ],
       },
       p(trProse('The mark is a shape, not a colour, so the page still reads correctly in black and white or in photocopy.', mode), 'micro', 'CALCULATED_FACT'),
-      h3(tr('What this report will never do', mode)),
+      h3(trProse('What this report will never do', mode)),
       bullets([
         'It will not predict death, disease, marriage, childbirth, a court result or a financial outcome.',
         'It will not give a percentage chance of anything. Coverage figures describe evidence, not probability.',
         'It will not silently mix Parashari, Jaimini and KP. Every rule states its system.',
         'It will not present an interpretation as a calculated fact.',
-      ], 'body'),
+      ].map((line) => trProse(line, mode)), 'body'),
       {
         kind: 'callout',
         tone: 'warning',
         title: trProse('Disclaimer', mode),
-        text:
-          'Jyotish is an interpretive discipline. This document states what was calculated, what a tradition says about it, and what was not calculated at all. ' +
-          'It is not a guarantee or a certainty about any future event, and it must not be used as the basis for medical, legal or financial decisions. ' +
-          '\u00A9 2026 CosmicTantra Technologies Pvt. Ltd.',
+        text: trProse(
+          'Jyotish is an interpretive discipline. This document states what was calculated, what a tradition says about it, and what was not calculated at all. It is not a guarantee or a certainty about any future event, and it must not be used as the basis for medical, legal or financial decisions. © 2026 CosmicTantra Technologies Pvt. Ltd.',
+          mode,
+        ),
         contentType: 'PRACTICAL_REFLECTION',
       },
     ],
@@ -1042,9 +1283,7 @@ function certificateSection(
       },
       h3(tr('Verification', mode)),
       p(
-        trProse('A report is verified by comparing four values: report ID, content hash, calculation version and report-model version. ', mode) +
-        'No QR code is printed: a verification endpoint has been specified but not built and security-tested, and a code that ' +
-        'resolves nowhere — or that carries birth details in a URL — would be worse than no code at all.',
+        trProse('A report is verified by comparing four values: report ID, content hash, calculation version and report-model version.', mode),
         'small', 'CALCULATED_FACT',
       ),
     ],

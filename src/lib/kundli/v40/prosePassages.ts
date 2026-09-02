@@ -147,6 +147,117 @@ export const PROSE_HI: Record<string, string> = {
   'Dasha / दशा': 'दशा',
   'Remedy / उपाय': 'उपाय',
   'Follow-up / अगली भेंट': 'अगली भेंट',
+
+  /* ---- Remaining Part A report-model copy ---- */
+  'Degrees are shown in degrees and arc-minutes; the exact decimal longitude is retained in the machine record and printed in the Scholar Appendix. A status appears only when the engine actually calculated it.':
+    'अंश और कला में स्थिति दी गई है; सटीक दशमलव देशान्तर गणना-अभिलेख और विद्वत्-परिशिष्ट में सुरक्षित है। कोई अवस्था तभी दिखाई जाती है जब गणक ने उसका वास्तविक निर्धारण किया हो।',
+
+  'Functional position is what the graha rules FOR THIS LAGNA. It is kept apart from natural character, which is printed in the Scholar Appendix. No maraka verdict is issued by this engine.':
+    'कार्यात्मक स्थिति बताती है कि यह ग्रह इसी लग्न के लिए किन भावों का स्वामी है। इसे नैसर्गिक स्वभाव से अलग रखा गया है, जो विद्वत्-परिशिष्ट में दिया है। यह गणक कोई मारक निर्णय नहीं देता।',
+
+  'Rahu and Ketu are marked retrograde by the mean-node convention, not by observed motion.':
+    'राहु और केतु को मध्यम-नोड परिपाटी के अनुसार वक्री दिखाया गया है, प्रत्यक्ष गति के अनुसार नहीं।',
+
+  'Shadbala: validation pending — computed internally, not verified, and used in no conclusion.':
+    'षड्बल: सत्यापन प्रगति में है — भीतर से गणित है, स्वतंत्र रूप से सत्यापित नहीं, और किसी निष्कर्ष में प्रयुक्त नहीं।',
+
+  'Drishti listed is full Parashari graha drishti only. Bhava strength (bhava bala) is NOT calculated for this report — see the Scholar Appendix.':
+    'यहाँ केवल पूर्ण पराशरी ग्रह-दृष्टि दी गई है। इस रिपोर्ट के लिए भाव-बल की गणना नहीं की गई — विवरण विद्वत्-परिशिष्ट में है।',
+
+  'This rule variant is recorded but not adopted; no verdict is issued.':
+    'नियम का यह प्रकार दर्ज है पर अपनाया नहीं गया; कोई निर्णय नहीं दिया गया है।',
+
+  'This rule was not calculated; absence is not claimed.':
+    'इस नियम की गणना नहीं हुई; अनुपस्थिति का दावा नहीं किया गया है।',
+
+  'Mars is not in bhava 1/4/7/8/12.':
+    'मंगल प्रथम, चतुर्थ, सप्तम, अष्टम अथवा द्वादश भाव में नहीं है।',
+
+  'Natal check only: Saturn\'s sign relative to the Moon at birth. This is not a transit search over the client\'s life.':
+    'यह केवल जन्मकालीन जाँच है: जन्म के समय चन्द्र से शनि की राशि-स्थिति। यह जीवन भर के गोचर की खोज नहीं है।',
+
+  'No rule definition adopted; absence is not claimed.':
+    'कोई नियम-परिभाषा नहीं अपनाई गई; अनुपस्थिति का दावा नहीं किया गया है।',
+
+  'A report is verified by comparing four values: report ID, content hash, calculation version and report-model version.':
+    'रिपोर्ट की जाँच चार मानों की तुलना से होती है: रिपोर्ट पहचान, विषय-वस्तु हैश, गणना संस्करण और रिपोर्ट-मॉडल संस्करण।',
+
+  'The kinds of statement in this report, kept apart':
+    'इस रिपोर्ट के कथनों के प्रकार, अलग-अलग',
+
+  'CALCULATED FACT — produced by the astronomical calculation. A position, a bhava, a date.':
+    'गणित तथ्य — खगोलीय गणना से निकला तथ्य; जैसे स्थिति, भाव या दिनांक।',
+  'DERIVED FACT — a classical rule applied to those facts. A bhava lord, an aspect, a dignity.':
+    'व्युत्पन्न तथ्य — इन तथ्यों पर लागू शास्त्रीय नियम; जैसे भावेश, दृष्टि या अवस्था।',
+  'TRADITIONAL RULE — a named yoga or dosha, with its conditions and its verdict.':
+    'पारम्परिक नियम — नामित योग या दोष, उसकी शर्तों और निर्णय सहित।',
+  'READING — reasoning over facts and rules. Always labelled, always backed by the evidence it used.':
+    'पाठ — तथ्यों और नियमों पर विचार। इसे सदा अलग चिह्नित किया जाता है और प्रयुक्त प्रमाण साथ रहता है।',
+  'REFLECTION — a question or a practical thought for the consultation. Never a prediction.':
+    'परामर्श-विचार — परामर्श के लिए प्रश्न या व्यावहारिक विचार; कभी भविष्यवाणी नहीं।',
+  'NOT CALCULATED — the engine did not compute it. This is never rewritten as "absent".':
+    'गणना नहीं — गणक ने इसका निर्धारण नहीं किया। इसे कभी “अनुपस्थित” नहीं लिखा जाता।',
+
+  'every condition of the rule evaluated true':
+    'नियम की प्रत्येक शर्त सत्य निकली',
+  'every condition evaluated, at least one false':
+    'प्रत्येक शर्त जाँची गई, कम-से-कम एक असत्य निकली',
+  'the sources disagree; the variant is recorded, not adopted':
+    'स्रोतों में मतभेद है; प्रकार दर्ज है, अपनाया नहीं गया',
+  'not computed. Absence is not claimed':
+    'गणना नहीं हुई; अनुपस्थिति का दावा नहीं',
+  'computed but not yet trusted; shown, never used in a conclusion':
+    'गणित है पर अभी सत्यापित नहीं; दिखाया गया है, निष्कर्ष में प्रयुक्त नहीं',
+
+  'What this report will never do':
+    'यह रिपोर्ट कभी क्या नहीं करेगी',
+  'It will not predict death, disease, marriage, childbirth, a court result or a financial outcome.':
+    'यह मृत्यु, रोग, विवाह, सन्तान, न्यायालय के परिणाम या धन-संबंधी फल की भविष्यवाणी नहीं करेगी।',
+  'It will not give a percentage chance of anything. Coverage figures describe evidence, not probability.':
+    'यह किसी बात की प्रतिशत संभावना नहीं बताएगी। व्याप्ति के आँकड़े प्रमाण बताते हैं, संभावना नहीं।',
+  'It will not silently mix Parashari, Jaimini and KP. Every rule states its system.':
+    'यह पराशरी, जैमिनि और केपी पद्धतियों को चुपचाप नहीं मिलाएगी। प्रत्येक नियम अपनी पद्धति बताता है।',
+  'It will not present an interpretation as a calculated fact.':
+    'यह व्याख्या को गणित तथ्य के रूप में प्रस्तुत नहीं करेगी।',
+
+  'Jyotish is an interpretive discipline. This document states what was calculated, what a tradition says about it, and what was not calculated at all. It is not a guarantee or a certainty about any future event, and it must not be used as the basis for medical, legal or financial decisions. © 2026 CosmicTantra Technologies Pvt. Ltd.':
+    'ज्योतिष एक व्याख्यात्मक विद्या है। यह दस्तावेज़ बताता है कि क्या गणित हुआ, परम्परा उसके विषय में क्या कहती है, और क्या बिल्कुल गणित नहीं हुआ। यह किसी भावी घटना की गारंटी या निश्चितता नहीं है और इसे चिकित्सा, विधिक अथवा वित्तीय निर्णय का आधार नहीं बनाया जाना चाहिए। © २०२६ कॉस्मिकतन्त्र टेक्नोलॉजीज़ प्रा. लि.',
+
+  'The resolved factors agree; none contradicts the others.':
+    'निर्धारित कारक एकमत हैं; कोई दूसरे का विरोध नहीं करता।',
+  'The resolved factors agree in the negative direction.':
+    'निर्धारित कारक प्रतिकूल दिशा में एकमत हैं।',
+  'No resolved factors are available to compare.':
+    'तुलना के लिए कोई निर्धारित कारक उपलब्ध नहीं है।',
+
+  'No profession, employer, salary, promotion or business outcome is named.':
+    'किसी पेशे, नियोक्ता, वेतन, पदोन्नति या व्यापार-फल का नाम नहीं दिया गया है।',
+  'No date of a career event is given.':
+    'कर्म-सम्बन्धी घटना की कोई तारीख नहीं दी गई है।',
+  'Evidence coverage is the fraction of the declared factor checklist that produced evidence. It is not a probability of success.':
+    'प्रमाण-व्याप्ति घोषित कारक-सूची का वह अंश है जिससे प्रमाण मिला। यह सफलता की संभावना नहीं है।',
+  'D10, shadbala and transits did not contribute to this reading.':
+    'दशांश, षड्बल और गोचर ने इस पाठ में कोई योगदान नहीं दिया है।',
+
+  'D10 is quarantined — see the Scholar Appendix.':
+    'दशांश पृथक रखा गया है — विवरण विद्वत्-परिशिष्ट में है।',
+  'Gochara rules are not validated for this report.':
+    'इस रिपोर्ट के लिए गोचर-नियम सत्यापित नहीं हैं।',
+  'Reported as not calculated; absence is not claimed.':
+    'गणना नहीं के रूप में दर्ज; अनुपस्थिति का दावा नहीं।',
+
+  /* ---- Consultation-density summaries ---- */
+  'Highlights are selected by declared salience rules over the calculated chart. The rule behind each line is listed in the Scholar Appendix.':
+    'मुख्य बिन्दु गणित कुण्डली के घोषित महत्त्व-नियमों से चुने गए हैं। हर पंक्ति का नियम विद्वत्-परिशिष्ट में दिया है।',
+  'Degrees are shown in degrees and arc-minutes. Exact decimal longitudes are in the Scholar Appendix.':
+    'स्थिति अंश और कला में दी गई है। सटीक दशमलव देशान्तर विद्वत्-परिशिष्ट में है।',
+  'Source status for every rule above: traditional attribution, verification pending. Full provenance is in the Scholar Appendix.':
+    'ऊपर के प्रत्येक नियम का स्रोत-स्थिति: पारम्परिक आरोपण, सत्यापन शेष। पूरा स्रोत-विवरण विद्वत्-परिशिष्ट में है।',
+  'Source status for every rule above: traditional attribution — verification pending. The full provenance statement for each rule, including which locators have not been checked against a held edition, is in the Scholar Appendix.':
+    'ऊपर के प्रत्येक नियम का स्रोत-स्थिति पारम्परिक आरोपण और सत्यापन शेष है। हर नियम का पूरा स्रोत-विवरण, जिसमें अप्रतिपादित संदर्भ भी हैं, विद्वत्-परिशिष्ट में है।',
+  'D10 has not been compared against an external reference, so it is displayed for reference only and is used in no conclusion.':
+    'दशांश का बाहरी प्रमाण से मिलान नहीं हुआ है; यह केवल संदर्भ के लिए दिखाया गया है और किसी निष्कर्ष में प्रयुक्त नहीं।',
+
 };
 
 /**

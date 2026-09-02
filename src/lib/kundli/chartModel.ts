@@ -15,6 +15,7 @@ import { KundliError } from './errors';
 import { navamshaSignOf, signOfLongitude } from './consistencyGate';
 import type { KundliCanonicalModel } from './types';
 import { numeral, numeralPolicyFor } from './v40/numerals';
+import { dm } from './v40/format';
 
 export const CHART_MODEL_VERSION = 'chart-model-v1';
 
@@ -65,6 +66,23 @@ export const signLabel = (
     (devanagariNumerals ?? mode === 'HI') ? 'hi' : 'en',
   ));
 
+/**
+ * Formats a compact degree-and-minute value for a chart house. This is part of
+ * the render model, not a renderer concern: every PDF, SVG and accessible text
+ * surface must be able to display the same placement label without redoing a
+ * rounding or numeral-script decision.
+ */
+export function chartDegreeLabel(
+  degreeInSign: number,
+  mode: ChartLabelMode,
+  devanagariNumerals?: boolean,
+): string {
+  return numeral(
+    dm(degreeInSign),
+    numeralPolicyFor((devanagariNumerals ?? mode === 'HI') ? 'hi' : 'en'),
+  );
+}
+
 export interface ChartPlacement {
   /** 1 for D1 Rashi, 9 for D9 Navamsha. */
   division: ChartDivision;
@@ -76,8 +94,13 @@ export interface ChartPlacement {
   planetId?: PlanetId;
   /** Display name in the requested language. */
   displayName?: string;
-  /** Abbreviation drawn inside the house. */
+  /** Traditional graha abbreviation, retained for semantic consumers. */
   abbreviation?: string;
+  /**
+   * Complete compact label drawn inside the house, e.g. `Ve 11°43′`.
+   * It is authored by the chart render-model builder so renderers only draw it.
+   */
+  displayLabel?: string;
   retrograde?: boolean;
   /** Degrees within the sign, when the canonical model carries it. */
   degreeInSign?: number;
@@ -94,7 +117,7 @@ export interface ChartRenderModel {
   chartNameHi: string;
   chartSystem: 'NORTH_INDIAN';
   labelMode: ChartLabelMode;
-  /** §4 numeral script for house/sign numbers. Defaults to labelMode === 'HI'. */
+  /** §4 numeral script for house/sign numbers and compact DMS labels. Defaults to labelMode === 'HI'. */
   devanagariNumerals?: boolean;
   /** Sign occupying house 1, 1..12. */
   lagnaSignNumber: number;
@@ -142,7 +165,9 @@ export function buildChartRenderModel(
   canonical: KundliCanonicalModel,
   division: ChartDivision,
   labelMode: ChartLabelMode = 'EN',
+  options: { devanagariNumerals?: boolean } = {},
 ): ChartRenderModel {
+  const devanagariNumerals = options.devanagariNumerals ?? labelMode === 'HI';
   const fail = (message: string, details: Record<string, unknown> = {}): never => {
     throw new KundliError('KUNDLI_CHART_INVALID', message, { division, ...details });
   };
@@ -288,6 +313,13 @@ export function buildChartRenderModel(
           ? `${abbrev.full.en} / ${abbrev.full.hi}`
           : abbrev.full.en,
       abbreviation: labelMode === 'HI' ? abbrev.hi : labelMode === 'BILINGUAL' ? `${abbrev.en}/${abbrev.hi}` : abbrev.en,
+      // The renderer receives a finished label rather than a degree it has to
+      // round or a numeral script it has to select.
+      displayLabel: `${labelMode === 'HI' ? abbrev.hi : labelMode === 'BILINGUAL' ? `${abbrev.en}/${abbrev.hi}` : abbrev.en} ${chartDegreeLabel(
+        planet.degreeInSign,
+        labelMode,
+        devanagariNumerals,
+      )}`,
       retrograde: !!planet.retrograde,
       degreeInSign: planet.degreeInSign,
       sourcePath: `planets.${planet.id}`,
@@ -348,6 +380,7 @@ export function buildChartRenderModel(
     chartNameHi: division === 1 ? 'डी१ राशि' : 'डी९ नवमांश',
     chartSystem: 'NORTH_INDIAN',
     labelMode,
+    devanagariNumerals,
     lagnaSignNumber: chartLagnaSign,
     lagnaEvidenceId: `CHART-D${division}-LAGNA`,
     houses,
@@ -399,7 +432,7 @@ export function chartTextualEquivalent(model: ChartRenderModel): string[] {
       for (const p of occupants) {
         const retro = p.retrograde ? ', retrograde' : '';
         lines.push(
-          `House ${house.houseNumber}: sign ${house.signNumber} — ${p.displayName}${retro} (${p.evidenceId})`,
+          `House ${house.houseNumber}: sign ${house.signNumber} — ${p.displayLabel ?? p.displayName}${retro} (${p.evidenceId})`,
         );
       }
     }

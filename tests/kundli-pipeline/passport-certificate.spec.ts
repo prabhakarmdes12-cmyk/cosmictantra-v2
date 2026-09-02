@@ -311,10 +311,10 @@ test.describe('Calculation certificate', () => {
     expect(text).toMatch(/not a guarantee/i);
   });
 
-  test('has no QR code and says why', () => {
+  test('keeps verification practical without QR-code explanation copy', () => {
     const text = textOf(buildKundliReportModel(model(), 'en'), 'calculation-certificate');
-    expect(text).toMatch(/no QR code/i);
-    expect(text).toMatch(/no such verification destination has been built and tested/i);
+    expect(text).toMatch(/Compare the report ID, content hash, calculation version and report-model version/i);
+    expect(text).not.toMatch(/\bQR(?:[ -]?code)?\b/i);
   });
 
   test('separates what was calculated from what was interpreted', () => {
@@ -362,7 +362,7 @@ test.describe('The gate guards the passport and certificate', () => {
     const cert = report.sections.find((s: any) => s.id === 'calculation-certificate');
     cert.blocks = cert.blocks.filter((b: any) => {
       const json = JSON.stringify(b);
-      return !/NOT calculated|unverified|interpretive|QR/i.test(json);
+      return !/NOT calculated|unverified|interpretive/i.test(json);
     });
     const r = checkReportConsistency(m, report);
     expect(r.ok).toBe(false);

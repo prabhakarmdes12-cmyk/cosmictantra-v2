@@ -479,8 +479,8 @@ function buildPassport(m: KundliCanonicalModel, locale: 'en' | 'hi'): ReportSect
  *
  * States what was calculated, what was interpreted, what was NOT calculated,
  * which source locators remain unverified, and that Jyotish is interpretive.
- * There is deliberately NO QR code: a QR would imply a verification
- * destination, and no tested one exists.
+ * The certificate provides the report identity values needed for an
+ * independent comparison without presenting an unimplemented verification flow.
  */
 function buildCertificate(
   m: KundliCanonicalModel,
@@ -577,11 +577,9 @@ function buildCertificate(
     ));
   }
 
-  blocks.push(heading('Verification and QR code', 3));
+  blocks.push(heading('Verification', 3));
   blocks.push(para(
-    'There is deliberately no QR code on this report. A QR code would imply a place where this document can be verified, ' +
-    'and no such verification destination has been built and tested. A decorative code that resolves nowhere, or that ' +
-    'exposes birth data in a URL, would be worse than no code at all.',
+    'Compare the report ID, content hash, calculation version and report-model version when independently checking this document.',
   ));
 
   blocks.push(heading('Status of this document', 3));

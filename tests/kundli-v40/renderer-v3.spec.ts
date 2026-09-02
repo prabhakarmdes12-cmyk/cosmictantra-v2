@@ -71,9 +71,13 @@ test('the density transform moves presentation, never facts', async () => {
 test('pagination is deterministic', async () => {
   const { result, inspection } = await goldenV3Artifact();
   expect(inspection.pageCount).toBe(result.metrics!.pageCount);
-  // A stable page count is what makes visual baselines meaningful; if this
-  // moves, review the baselines rather than editing the number.
-  expect(inspection.pageCount).toBe(39);
+  // The 38-page baseline was deliberately reviewed on 2026-09-02 after the
+  // qualified V41 PDF slice (chart DMS labels, QR-copy removal and reader
+  // presentation updates). All sections remain present; semantic, geometry,
+  // font and rendered-page audits pass; and the nine committed visual
+  // baselines were replaced from this exact artifact. A stable page count is
+  // what makes those baselines meaningful: review them before changing this.
+  expect(inspection.pageCount).toBe(38);
   for (const page of inspection.pages) {
     expect(Math.round(page.widthPt)).toBe(595);
     expect(Math.round(page.heightPt)).toBe(842);

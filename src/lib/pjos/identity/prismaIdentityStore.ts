@@ -22,6 +22,11 @@ import type {
 
 /** Minimal shape of the Prisma delegates this adapter touches. */
 type Delegate = {
+  // Prisma delegates are generic methods whose argument types are narrower
+  // than `unknown`; `unknown` makes a real generated PrismaClient fail this
+  // structural adapter under strictFunctionTypes. This boundary is deliberately
+  // untyped (the repository contract below supplies the useful guarantees), so
+  // use `any` only here to accept the generated delegate methods.
   create: (args: any) => Promise<any>;
   findUnique: (args: any) => Promise<any>;
   findFirst: (args: any) => Promise<any>;

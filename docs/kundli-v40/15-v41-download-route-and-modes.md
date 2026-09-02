@@ -59,7 +59,7 @@ Response headers make the lineage checkable without opening the document:
 X-Kundli-Report-Model: kundli-report-v2
 X-Kundli-Renderer:     kundli-pdf-renderer-v3
 X-Kundli-Mode:         SCHOLAR
-X-Kundli-Pages:        39
+X-Kundli-Pages:        38
 ```
 
 The route is rate limited (12/min/client, house `createRateLimiter`). Rendering
@@ -68,9 +68,23 @@ endpoint in the app, reachable by one unauthenticated POST. A 429 is surfaced to
 the user as a wait-and-retry message, not as "render failed", because telling
 someone their chart is broken when it is fine is its own defect.
 
+### Download and Print are one artifact flow
+
+The report toolbar exposes **English**, **हिन्दी** and **हि + EN** at every
+viewport, including the mobile toolbar. The chosen locale is posted as the
+public `locale` field; `GET /api/kundli/pdf` advertises all three values.
+
+Both actions call the same `requestQualifiedPdf()` helper and receive the same
+qualified V3 Blob. Download saves it. Print opens that Blob in a native PDF
+viewer so its own Print command operates on the exact file, never on the
+interactive HTML. If a popup is blocked, the same Blob is downloaded with an
+instruction to print it. If a browser has no PDF viewer and turns Blob
+navigation into a download, the preparatory blank tab is closed and the same
+instruction is shown instead.
+
 ### `DOWNLOAD_KUNDLI_CURRENT_RENDERER`
 
-`tests/kundli-v40/download-route.spec.ts` — 16 assertions against **the bytes
+`tests/kundli-v40/download-route.spec.ts` — 18 assertions against **the bytes
 the exported `POST` handler actually returns**. Not the pipeline in isolation:
 the pipeline was already passing 981 tests while the product shipped the wrong
 document. That distinction is the entire point of the gate.
@@ -83,10 +97,10 @@ document. That distinction is the entire point of the gate.
 | DKCR-03 | Embedded faces are Garamond/Noto, **not** jsPDF's Helvetica |
 | DKCR-04 | Page count ≠ the v1 19-page shape |
 | DKCR-05..08 | Mode selection, ordering, appendix confined to SCHOLAR |
-| DKCR-09 | The locale parameter reaches the renderer |
+| DKCR-09, 09b | The locale reaches the renderer; public `hi-en` is a third, bilingual PDF rather than an English fallback |
 | DKCR-10, 11 | Bad input and malformed JSON never yield a document |
-| DKCR-12 | `GET` advertises the contract without generating |
-| DKCR-13 | The report page calls `/api/kundli/pdf` and **not** `generateKundliPdf(` |
+| DKCR-12 | `GET` advertises the contract and all three public locales without generating |
+| DKCR-13, 13b | The report page calls `/api/kundli/pdf` and **not** `generateKundliPdf(`; Print opens that same Blob in the native PDF viewer, and the `hi-en` selector remains reachable on mobile |
 | DKCR-14 | v1 files still exist |
 | DKCR-15 | The endpoint is rate limited, and cheap rejections still count |
 
@@ -106,7 +120,7 @@ contradict.
 |---|---|---|---|
 | CLIENT | 12 | no | 10–14 ✓ |
 | PANDIT | 17 | no | 14–20 ✓ |
-| SCHOLAR | 39 | yes | default |
+| SCHOLAR | 38 | yes | default |
 
 Both land inside the brief's ranges without tuning for page count, which §5
 explicitly warns against.
@@ -254,9 +268,12 @@ above alters it:
 
 - The validation register `EV-01…EV-15` is **entirely `NOT_ATTEMPTED`**.
 - **No Pandit has read this document.**
-- §2/§3 Hindi coverage is ~4%. The `hi` cover is still literally the `en` cover.
-- §5 Part A is missing Panchanga, Relationships and Finance/Education/Home.
-- §10 charts still carry no DMS beside each graha abbreviation.
+- The historical Hindi/DMS statements formerly listed here are superseded by
+  the later qualified PDF slice: the formal Hindi-completeness suite passes,
+  `hi-en` is a public route locale, and compact DMS labels are rendered inside
+  the D1/D9 chart houses.
+- §5 Part A scope has not been expanded by the delivery work.
 
-This is not production-ready. It is a correctly-wired download of a document
-that has not yet been checked by a human who practises Jyotish.
+The public delivery path is now a correctly-wired V3 artifact flow. It still
+must not be represented as independently validated or Pandit-reviewed until
+those human verification steps occur.

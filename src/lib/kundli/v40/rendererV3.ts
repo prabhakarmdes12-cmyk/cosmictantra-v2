@@ -38,7 +38,7 @@ import type {
   TableBlockV2, KvGridBlock, StatusListBlock, TimelineBlock, NotesAreaBlock,
   CalloutBlockV2, ChartBlockV2, CoverBlock, PartDividerBlock, SectionTitleBlock,
 } from './reportBlocks';
-import { dms, dm } from './format';
+import { dms } from './format';
 
 export const RENDERER_V3_VERSION = 'kundli-pdf-renderer-v3';
 
@@ -704,12 +704,12 @@ export async function renderKundliPdfV3(
         size: V3.typography.sizes.small, style: period.current ? SERIF_BOLD : SERIF,
         color: V3.colors.ink, lineMm: V3.spacing.tightLineMm,
       });
-      drawText(`${period.start} to ${period.end}`, ML + labelW, y + 0.3, dateW, {
+      drawText(period.rangeLabel ?? `${period.start} to ${period.end}`, ML + labelW, y + 0.3, dateW, {
         size: V3.typography.sizes.micro, style: SANS, color: V3.colors.inkSoft, lineMm: V3.spacing.microLineMm,
       });
       const w = Math.max(1.5, (period.years / maxYears) * barMax);
       s.fillRect(barX, y + 1.1, w, 2.4, period.current ? V3.colors.vermilion : V3.colors.goldFaint);
-      drawText(`${period.years.toFixed(0)}y`, barX + w + 1.6, y + 0.3, 12, {
+      drawText(period.durationLabel ?? `${period.years.toFixed(0)}y`, barX + w + 1.6, y + 0.3, 12, {
         size: V3.typography.sizes.micro, style: SANS, color: V3.colors.inkFaint, lineMm: V3.spacing.microLineMm,
       });
       controller.advance(h);
@@ -822,17 +822,6 @@ export async function renderKundliPdfV3(
         text: 'The chart render model was incomplete, so no diagram was drawn. This is reported rather than approximated.',
       });
     }
-    
-    // Inject Degrees and Minutes into planet abbreviations
-    const model: ChartRenderModel = {
-      ...rawModel,
-      placements: rawModel.placements.map((p) => ({
-        ...p,
-        abbreviation: p.abbreviation && p.degreeInSign !== undefined
-          ? `${p.abbreviation} ${dm(p.degreeInSign)}`
-          : p.abbreviation,
-      })),
-    };
 
     const side = b.size === 'hero' ? V3.chart.heroSizeMm : V3.chart.inlineSizeMm;
     // The facts line is measured, not assumed to be one line. A bilingual
@@ -852,7 +841,7 @@ export async function renderKundliPdfV3(
     const left = ML + (CW - side) / 2;
     const top = controller.cursorY + 3;
 
-    drawChartToPdf(chartSurface(), model, left, top, {
+    drawChartToPdf(chartSurface(), rawModel, left, top, {
       size: side,
       baseFontSize: V3.chart.baseFontSize,
       minFontSize: V3.chart.minFontSize,

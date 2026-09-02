@@ -117,7 +117,16 @@ export interface StatusListBlock extends V2BlockBase {
 export interface TimelineBlock extends V2BlockBase {
   kind: 'timeline';
   caption: string;
-  periods: { label: string; start: string; end: string; years: number; current: boolean }[];
+  periods: {
+    label: string;
+    start: string;
+    end: string;
+    years: number;
+    current: boolean;
+    /** Fully localised display strings; renderers do not author English connectors. */
+    rangeLabel?: string;
+    durationLabel?: string;
+  }[];
 }
 
 export interface NotesAreaBlock extends V2BlockBase {

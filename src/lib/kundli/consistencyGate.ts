@@ -743,7 +743,7 @@ export function checkReportConsistency(
     c.assert('CG_CERTIFICATE_SCOPE', /was NOT calculated|not calculated/i.test(text), 'report.calculation-certificate', 'not calculated', 'the certificate does not declare any uncalculated item');
     c.assert('CG_CERTIFICATE_SCOPE', /unverified/i.test(text), 'report.calculation-certificate', 'unverified locators', 'the certificate does not disclose unverified source locators');
     c.assert('CG_CERTIFICATE_SCOPE', /interpretive/i.test(text) && /not a guarantee/i.test(text), 'report.calculation-certificate', 'interpretive status', 'the certificate does not state that Jyotish is interpretive and not a guarantee');
-    c.assert('CG_CERTIFICATE_QR', /no QR code/i.test(text), 'report.calculation-certificate', 'QR statement', 'the certificate must state plainly that no QR code is present and why');
+    c.assert('CG_CERTIFICATE_NO_QR', !/\bQR(?:[ -]?code)?\b/i.test(text), 'report.calculation-certificate', 'QR-free certificate', 'the certificate must not contain QR-code explanation copy');
   }
 
   return c.report();
