@@ -569,13 +569,12 @@ export default function FloatingAIGuruAvatar() {
           interpretation: 'काशी सहायक • भाव-संवेदनशील व प्रत्यक्ष दृक्-गणित'
         },
         quickChips: [
-          { label: '😌 मन शांत व प्रसन्न है', action: 'MOOD_CALM' },
-          { label: '😟 चिन्ता या डर लग रहा है', action: 'MOOD_ANXIOUS' },
-          { label: '😔 मन उदास / भारी है', action: 'MOOD_SAD' },
+          ...MOOD_OPTIONS.map((m) => ({ label: m.chipLabel, action: m.id })),
           { label: '✨ आज का शुभ समय', action: 'INTENT_ABHIJIT' },
           { label: '🕒 आज का राहुकाल', action: 'INTENT_RAHU' },
           { label: '🙏 अगली एकादशी', action: 'INTENT_NEXT_EKADASHI' },
           { label: '📅 कल का पञ्चाङ्ग', action: 'INTENT_PANCHANG_TOMORROW' },
+          { label: '⏩ सीधे विषय पर चलें', action: 'SKIP_MOOD' },
         ],
       };
 
@@ -1205,6 +1204,10 @@ export default function FloatingAIGuruAvatar() {
     } else if (chip.action === 'SELECT_TIME_SAMPLE') {
       if (intakeStep !== 'ASK_BIRTH_TIME') return;
       processTimeInput(chip.label, true);
+    } else {
+      // Universal safety net: if any chip action has no dedicated handler,
+      // dispatch it to postGuru so the conversation never stalls!
+      void postGuru(chip.label);
     }
   };
 
