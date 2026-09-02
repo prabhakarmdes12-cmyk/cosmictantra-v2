@@ -262,7 +262,7 @@ function executeDeterministicKashiIntent(
   // 5. Intent: RAHUKAAL ("आज राहुकाल कब है?", "राहुकाल?", "और कल?")
   if (
     query.includes('राहुकाल') || query.includes('rahu kaal') || query.includes('rahu') ||
-    dateRes.inheritedIntent === 'GET_RAHUKAAL'
+    (dateRes.inheritedIntent === 'GET_RAHUKAAL' && !query.includes('पञ्चाङ्ग') && !query.includes('पंचांग'))
   ) {
     const rTime = bundle.timings.rahuKalam;
     const aTime = bundle.timings.abhijitMuhurat;

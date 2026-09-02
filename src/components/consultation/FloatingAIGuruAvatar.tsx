@@ -168,6 +168,24 @@ const CAPABILITY_CHIPS: Array<{ label: string; action: string; href?: string }> 
   { label: '📜 विद्वान् ज्योतिषी से परामर्श', action: 'INTENT_SCHOLAR' },
 ];
 
+// Deterministic intent chips that must keep the conversation moving. These map
+// to the exact phrases the Kashi intent engine resolves, so every one of them
+// (greeting chips AND engine follow-up chips) produces a verified guru reply
+// with fresh quick-chips instead of silently stalling.
+const GATEWAY_INTENT_PHRASES: Record<string, string> = {
+  INTENT_ABHIJIT: 'आज का शुभ अभिजित मुहूर्त',
+  INTENT_RAHU: 'आज का राहुकाल',
+  INTENT_RAHU_TOMORROW: 'कल का राहुकाल',
+  INTENT_NEXT_EKADASHI: 'अगली एकादशी कब है?',
+  INTENT_NEXT_PRADOSH: 'अगला प्रदोष कब है?',
+  INTENT_NEXT_PURNIMA: 'अगली पूर्णिमा कब है?',
+  INTENT_SACRED_DAYS: 'पास में कौन से प्रमुख व्रत हैं?',
+  INTENT_NAKSHATRA: 'आज का नक्षत्र क्या है?',
+  INTENT_MOON_SIGN: 'आज चन्द्र राशि क्या है?',
+  INTENT_TITHI: 'आज की तिथि क्या है?',
+  INTENT_PANCHANG_TOMORROW: 'कल का पञ्चाङ्ग',
+};
+
 // -------------------------------------------------------------
 // Sacred Shrine Registry (Direct Live Streams & Sanctums)
 // -------------------------------------------------------------
@@ -556,6 +574,7 @@ export default function FloatingAIGuruAvatar() {
           { label: '✨ आज का शुभ समय', action: 'INTENT_ABHIJIT' },
           { label: '🕒 आज का राहुकाल', action: 'INTENT_RAHU' },
           { label: '🙏 अगली एकादशी', action: 'INTENT_NEXT_EKADASHI' },
+          { label: '📅 कल का पञ्चाङ्ग', action: 'INTENT_PANCHANG_TOMORROW' },
         ],
       };
 
@@ -1075,6 +1094,15 @@ export default function FloatingAIGuruAvatar() {
 
     if (chip.action === 'INTENT_SCHOLAR') {
       handleScholarQuery();
+      return;
+    }
+
+    // Deterministic intent chips (greeting + engine follow-up chips): route
+    // them through the gateway so each one yields a verified guru reply with
+    // fresh quick-chips. Without this, tapping these chips stalls the flow.
+    const gatewayPhrase = GATEWAY_INTENT_PHRASES[chip.action];
+    if (gatewayPhrase) {
+      void postGuru(gatewayPhrase);
       return;
     }
 
