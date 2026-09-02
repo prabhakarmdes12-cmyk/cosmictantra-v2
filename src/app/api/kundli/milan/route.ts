@@ -15,7 +15,7 @@
 import { NextResponse } from 'next/server';
 import { createRateLimiter, clientKeyFor } from '@/lib/rateLimit';
 import { calculateMilan, milanInputFromSnapshot, milanContextFromSnapshot, isValidMilanInput, type MilanPersonInput, type MilanChartContext, type MilanOptions } from '@/lib/kundli/v42/milan/milanEngine';
-import { generateMilanPdf, MILAN_RENDERER_VERSION, type MilanPdfMode } from '@/lib/kundli/v42/milan/milanPdf';
+import { generateMilanPdf, countMilanPdfPages, MILAN_RENDERER_VERSION, type MilanPdfMode } from '@/lib/kundli/v42/milan/milanPdf';
 import { getCanonicalJyotishSnapshot } from '@/lib/jyotish/canonicalSnapshot';
 
 export const runtime = 'nodejs';
@@ -154,8 +154,10 @@ export async function POST(request: Request) {
   }
 
   let pdf: Uint8Array;
+  let pageCount = 0;
   try {
     pdf = await generateMilanPdf(calc, { mode, locale });
+    pageCount = await countMilanPdfPages(pdf);
   } catch (err) {
     console.error('[milan/pdf] threw', err);
     return NextResponse.json(
@@ -174,7 +176,7 @@ export async function POST(request: Request) {
       'X-Milan-Renderer': MILAN_RENDERER_VERSION,
       'X-Milan-Mode': mode,
       'X-Milan-Locale': locale,
-      'X-Milan-Pages': '0',
+      'X-Milan-Pages': String(pageCount),
     },
   });
 }

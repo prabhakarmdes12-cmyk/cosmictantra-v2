@@ -143,6 +143,63 @@ test.describe('Milan engine — classical 36-guna tables', () => {
     expect(r.synthesis.navamsha.status).toBe('ALIGNED');
     expect(r.synthesis.seventhHouse.status).toBe('STRONG');
   });
+
+  test('Mangal Dosha is cancelled by own/exalted/debilitated Mars and Jupiter aspect', () => {
+    const own = calculateMilan(taurusRohini1, taurusRohini2, {
+      brideCtx: {
+        lagnaRashiId: 1, mars: { rashiId: 1, house: 7, rashiName: 'Aries' },
+        planetsArray: [{ name: 'Mars', rashiId: 1, house: 7 }, { name: 'Jupiter', rashiId: 9 }],
+        manglik: { isManglik: true, isCancelled: false, causeHouse: 7, severity: 'HIGH' },
+      },
+    });
+    const ownMangal = own.supplementalDoshas.find((d) => d.id === 'mangal')!;
+    expect(ownMangal.active).toBe(false);
+    expect(ownMangal.cancelled).toBe(true);
+
+    const jupiter = calculateMilan(taurusRohini1, taurusRohini2, {
+      brideCtx: {
+        lagnaRashiId: 1, mars: { rashiId: 7, house: 7, rashiName: 'Libra' },
+        planetsArray: [{ name: 'Mars', rashiId: 7, house: 7 }, { name: 'Jupiter', rashiId: 1 }],
+        manglik: { isManglik: true, isCancelled: false, causeHouse: 7, severity: 'HIGH' },
+      },
+    });
+    const jupiterMangal = jupiter.supplementalDoshas.find((d) => d.id === 'mangal')!;
+    expect(jupiterMangal.active).toBe(false);
+    expect(jupiterMangal.cancelled).toBe(true);
+    expect(jupiterMangal.reason).toMatch(/Jupiter/);
+  });
+
+  test('Mangal Dosha remains active when no Bhanga condition applies', () => {
+    const r = calculateMilan(taurusRohini1, taurusRohini2, {
+      brideCtx: {
+        lagnaRashiId: 1, mars: { rashiId: 7, house: 7, rashiName: 'Libra' },
+        planetsArray: [{ name: 'Mars', rashiId: 7, house: 7 }, { name: 'Jupiter', rashiId: 9 }, { name: 'Venus', rashiId: 2 }],
+        manglik: { isManglik: true, isCancelled: false, causeHouse: 7, severity: 'HIGH' },
+      },
+    });
+    const mangal = r.supplementalDoshas.find((d) => d.id === 'mangal')!;
+    expect(mangal.active).toBe(true);
+    expect(mangal.cancelled).toBe(false);
+    expect(mangal.weight).toBe('MEDIUM');
+  });
+
+  test('mutual Manglik is reported as a cancellation for both charts', () => {
+    const r = calculateMilan(taurusRohini1, taurusRohini2, {
+      brideCtx: {
+        lagnaRashiId: 1,
+        mars: { rashiId: 7, house: 7, rashiName: 'Libra' },
+        planetsArray: [{ name: 'Mars', rashiId: 7, house: 7 }],
+        manglik: { isManglik: true, isCancelled: false, causeHouse: 7, severity: 'HIGH' },
+      },
+      groomCtx: {
+        lagnaRashiId: 5,
+        mars: { rashiId: 7, house: 1, rashiName: 'Libra' },
+        planetsArray: [{ name: 'Mars', rashiId: 7, house: 1 }],
+        manglik: { isManglik: true, isCancelled: false, causeHouse: 1, severity: 'MEDIUM' },
+      },
+    });
+    expect(r.supplementalDoshas.some((d) => d.id === 'mangal' && !d.active && d.cancelled)).toBe(true);
+  });
 });
 
 test.describe('Milan engine — derived helpers', () => {

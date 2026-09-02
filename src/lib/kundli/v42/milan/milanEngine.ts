@@ -87,11 +87,21 @@ export interface MilanChartContext {
     causeHouse?: number | null;
     description?: string;
   };
-  /**
-   * Optional full planetsArray. Used for the Kala Sarpa axis check. For a
-   * browser/client call that already has the snapshot, this is available.
-   */
+  /** Optional full planetsArray. Used for the Kala Sarpa axis check. For a
+   * browser/client call that already has the snapshot, this is available. */
   planetsArray?: any[];
+  /** Mars detail (for the Mangal Dosha cancellation matrix). */
+  mars?: {
+    name?: string;
+    house?: number;
+    rashiName?: string;
+    rashiId?: number;
+    dignity?: string;
+    longitude?: number;
+    isRetrograde?: boolean;
+    navamshaRashiName?: string;
+    navamshaRashiId?: number;
+  };
   /** D9 Navamsha Moon rashi (from snapshot.vargas.d9Navamsha). */
   d9MoonRashiName?: string;
   d9MoonRashiId?: number;
@@ -556,39 +566,32 @@ function buildSupplementalDoshas(
 ): DoshaResult[] {
   const out: DoshaResult[] = [];
 
-  // Mangal Dosha (per-person; both charts can carry it).
-  const bMang = mangalResultFor('bride', brideCtx);
-  const gMang = mangalResultFor('groom', groomCtx);
-  if (bMang || gMang) {
-    const active = Boolean(bMang || gMang);
-    out.push({
-      id: 'mangal',
-      name: 'Mangal Dosha',
-      nameHi: 'मंगल दोष',
-      active,
-      cancelled: Boolean((bMang && !bMang.active) || (gMang && !gMang.active)),
-      weight: active ? 'MEDIUM' : 'LOW',
-      reason: [
-        bMang ? `Bride ${bMang.reason}` : '',
-        gMang ? `Groom ${gMang.reason}` : '',
-      ].filter(Boolean).join('; ') || 'Mars is well-placed in both charts.',
-      reasonHi: [
-        bMang ? `वधू ${bMang.reasonHi}` : '',
-        gMang ? `वर ${gMang.reasonHi}` : '',
-      ].filter(Boolean).join('; ') || 'दोनों कुंडलियों में मंगल सुदृढ़ है।',
-    });
-  } else {
-    out.push({
-      id: 'mangal',
-      name: 'Mangal Dosha',
-      nameHi: 'मंगल दोष',
-      active: false,
-      cancelled: false,
-      weight: 'LOW',
-      reason: 'Mangal Dosha was not flagged in the provided chart context.',
-      reasonHi: 'उपलब्ध कुंडली सन्दर्भ में मंगल दोष चिह्नित नहीं हुआ।',
-    });
-  }
+  // Mangal Dosha (per-person; both charts can carry it, and mutual Manglik
+  // is itself a cancellation rule).
+  const bMang = mangalResultFor('bride', brideCtx, groomCtx);
+  const gMang = mangalResultFor('groom', groomCtx, brideCtx);
+  const anyReduced = Boolean((bMang && bMang.reduced) || (gMang && gMang.reduced));
+  const mangalActive = Boolean(bMang?.active || gMang?.active);
+  // Cancelled across the pair means there is no unresolved Mangal Dosha;
+  // an active dosha in either chart is never reported as cancelled.
+  const mangalCancelled = !mangalActive;
+  const mangalWeight: DoshaResult['weight'] = mangalActive && anyReduced ? 'LOW' : mangalActive ? 'MEDIUM' : 'LOW';
+  out.push({
+    id: 'mangal',
+    name: 'Mangal Dosha',
+    nameHi: 'मंगल दोष',
+    active: mangalActive,
+    cancelled: mangalCancelled,
+    weight: mangalWeight,
+    reason: [
+      bMang ? `Bride ${bMang.reason}` : '',
+      gMang ? `Groom ${gMang.reason}` : '',
+    ].filter(Boolean).join('; ') || 'Mars is well-placed in both charts.',
+    reasonHi: [
+      bMang ? `वधू ${bMang.reasonHi}` : '',
+      gMang ? `वर ${gMang.reasonHi}` : '',
+    ].filter(Boolean).join('; ') || 'दोनों कुंडलियों में मंगल सुदृढ़ है।',
+  });
 
   // Rajju (South-Indian / Porutham). Same body zone = active unless cancelled.
   const bRaj = rajjuOf(bride.nakshatraName);
@@ -659,29 +662,134 @@ function buildSupplementalDoshas(
   return out;
 }
 
+interface MangalResult {
+  active: boolean;
+  cancelled: boolean;
+  reduced: boolean;
+  reason: string;
+  reasonHi: string;
+  reasons: string[];
+}
+
+/** Classical Mangal Dosha Bhanga (cancellation / softening) conditions.
+ *
+ * Sources: Jataka Parijata (own/exaltation), Muhurta Chintamani (Jupiter
+ * association), BPHS commentary and the standard sign-in-house lists. Where a
+ * source is contested, the condition is reported as a rule with a caution,
+ * never as an absolute promise.
+ */
 function mangalResultFor(
   label: 'bride' | 'groom',
-  ctx: MilanChartContext
-): { active: boolean; reason: string; reasonHi: string } | null {
+  ctx: MilanChartContext,
+  partnerCtx: MilanChartContext
+): MangalResult {
+  const reasons: string[] = [];
+  let cancelled = false;
+  let reduced = false;
+
+  // 1. Canonical snapshot verdict (if available) is the leading signal.
   const mang = ctx.manglik;
-  if (mang && mang.isManglik !== undefined) {
-    const active = mang.isManglik && !mang.isCancelled;
+  const houseFlags = [ctx.marsHouse, ctx.marsFromMoonHouse, ctx.marsFromVenusHouse].filter((h): h is number => typeof h === 'number');
+  const flaggedHouses = houseFlags.filter((h) => MANGAL_HOUSES.includes(h));
+  const canonicalActive = mang ? (mang.isManglik && !mang.isCancelled) : flaggedHouses.length > 0;
+  if (!canonicalActive) {
+    const reason = mang && mang.isManglik && mang.isCancelled
+      ? 'the canonical snapshot already marks this Mangal Dosha as cancelled'
+      : `${label}'s Mars is outside the traditional Mangal houses`;
     return {
-      active,
-      reason: `${label} has ${active ? 'an active' : 'a'} Mangal Dosha${mang.causeHouse ? ` from House ${mang.causeHouse}` : ''}${mang.isCancelled ? ' (cancelled)' : ''}.`,
-      reasonHi: `${label === 'bride' ? 'वधू' : 'वर'} की कुंडली में मंगल दोष${mang.causeHouse ? ` भाव ${mang.causeHouse} से` : ''}${mang.isCancelled ? ' (निरस्त)' : ''} है।`,
+      active: false,
+      cancelled: true,
+      reduced: false,
+      reason: `${label}'s Mars is outside the traditional Mangal houses.`,
+      reasonHi: `${label === 'bride' ? 'वधू' : 'वर'} का मंगल पारंपरिक मंगल भावों से बाहर है।`,
+      reasons: [reason],
     };
   }
-  const houses = [ctx.marsHouse, ctx.marsFromMoonHouse, ctx.marsFromVenusHouse].filter((h): h is number => typeof h === 'number');
-  const flagged = houses.filter((h) => MANGAL_HOUSES.includes(h));
-  if (flagged.length > 0) {
-    return {
-      active: true,
-      reason: `${label} has Mars in ${flagged.join(', ')} from Lagna/Moon/Venus.`,
-      reasonHi: `${label === 'bride' ? 'वधू' : 'वर'} के मंगल भाव ${flagged.join(', ')} (लग्न/चन्द्र/शुक्र से) में हैं।`,
-    };
+
+  const mars = ctx.mars;
+  const marsId = mars?.rashiId ?? 0;
+  const marsHouse = mars?.house ?? ctx.marsHouse ?? 0;
+  const lagnaId = ctx.lagnaRashiId ?? 0;
+
+  // Mars own / exalted / debilitated.
+  if (marsId === 1 || marsId === 8) {
+    reasons.push('Mars in own sign (Aries/Scorpio)'); cancelled = true;
+  } else if (marsId === 10) {
+    reasons.push('Mars exalted in Capricorn'); cancelled = true;
+  } else if (marsId === 4) {
+    reasons.push('Mars debilitated in Cancer'); cancelled = true;
   }
-  if (houses.length > 0) return { active: false, reason: `${label}'s Mars is outside the traditional Mangal houses.`, reasonHi: `${label === 'bride' ? 'वधू' : 'वर'} का मंगल पारंपरिक मंगल भावों से बाहर है।` };
+
+  // Yogakaraka Mars for Cancer/Leo lagna.
+  if (lagnaId === 4 || lagnaId === 5) {
+    reasons.push(`${englishRashiName(RASHIS[lagnaId - 1]?.en || '')} lagna makes Mars yogakaraka`); cancelled = true;
+  }
+
+  // Sign-and-house exceptions.
+  if (marsHouse === 2 && (marsId === 3 || marsId === 6)) {
+    reasons.push('Mars in 2nd house in a Mercury sign (Gemini/Virgo)'); cancelled = true;
+  }
+  if (marsHouse === 12 && (marsId === 2 || marsId === 7)) {
+    reasons.push('Mars in 12th house in a Venus sign (Taurus/Libra)'); cancelled = true;
+  }
+  if (marsHouse === 7 && (marsId === 4 || marsId === 10)) {
+    reasons.push('Mars in 7th house in Cancer/Capricorn'); cancelled = true;
+  }
+  if (marsHouse === 8 && (marsId === 2 || marsId === 9)) {
+    reasons.push('Mars in 8th house in Sagittarius/Pisces'); cancelled = true;
+  }
+
+  // Jupiter conjunct or aspecting Mars.
+  const jupiter = marsAspectFrom(ctx, 'Jupiter', marsId, [5, 7, 9]);
+  if (jupiter) {
+    reasons.push(jupiter); cancelled = true;
+  }
+
+  // Moon conjunct/softening.
+  const moonNote = marsAspectFrom(ctx, 'Moon', marsId, [1]);
+  if (moonNote) {
+    reasons.push(moonNote); reduced = true;
+  }
+
+  // D9 navamsha own/exaltation softens.
+  const d9 = mars?.navamshaRashiId ?? 0;
+  if (d9 === 1 || d9 === 8 || d9 === 10) {
+    reasons.push('Mars own/exalted in Navamsha (D9)'); reduced = true;
+  }
+
+  // Mutual Manglik: both partners active and uncancelled cancel together.
+  const partnerActive = (() => {
+    const p = partnerCtx?.manglik;
+    const pHouses = [partnerCtx?.marsHouse, partnerCtx?.marsFromMoonHouse, partnerCtx?.marsFromVenusHouse].filter((h): h is number => typeof h === 'number');
+    return p ? (p.isManglik && !p.isCancelled) : pHouses.some((h) => MANGAL_HOUSES.includes(h));
+  })();
+  if (!cancelled && partnerActive) {
+    reasons.push('Both partners are Manglik — mutual cancellation'); cancelled = true;
+  }
+
+  const active = !cancelled;
+  const reason = reasons.join('; ')
+    ? `${label}'s Mangal Dosha — ${reasons.join('; ')}${cancelled ? ' (cancelled)' : reduced ? ' (significantly reduced)' : ' (active)'}.`
+    : `${label}'s Mars is in a Mangal house (${flaggedHouses.join(', ')}) from Lagna/Moon/Venus.`;
+  const reasonHi = reasons.join('; ')
+    ? `${label === 'bride' ? 'वधू' : 'वर'} का मंगल दोष — ${reasons.join('; ')}${cancelled ? ' (निरस्त)' : reduced ? ' (काफी कम)' : ' (सक्रिय)'}.`
+    : `${label === 'bride' ? 'वधू' : 'वर'} का मंगल मंगल भावों (${flaggedHouses.join(', ')}) में लग्न/चन्द्र/शुक्र से है।`;
+
+  return { active, cancelled, reduced, reason, reasonHi, reasons };
+}
+
+/** True if `planets` sits in the classical aspect distance from Mars (or a
+ * conjunction when distance 1) and returns a human note. */
+function marsAspectFrom(ctx: MilanChartContext, planetName: 'Jupiter' | 'Moon', marsId: number, aspects: number[]): string | null {
+  const planets = Array.isArray(ctx.planetsArray) ? ctx.planetsArray : [];
+  const p = planets.find((x: any) => x.name === planetName);
+  if (!p) return null;
+  const pId = Number(p.rashiId);
+  if (!pId || !marsId) return null;
+  const dist = rashiDistance(pId, marsId);
+  if (aspects.includes(dist) || aspects.includes(rashiDistance(marsId, pId))) {
+    return `${planetName} ${dist === 1 ? 'conjunct' : 'aspects'} Mars ${planetName === 'Jupiter' ? '(major cancellation)' : '(softens)'}`;
+  }
   return null;
 }
 
@@ -924,10 +1032,23 @@ export function milanContextFromSnapshot(snapshot: any): MilanChartContext {
 
   if (mars) {
     if (typeof mars.house === 'number') ctx.marsHouse = mars.house;
+    const marsId = Number(mars.rashiId) || 0;
     const moonId = Number(snapshot?.planets?.Moon?.rashiId) || (snapshot?.planetsArray?.find?.((p: any) => p.name === 'Moon')?.rashiId) || 0;
-    if (moonId) ctx.marsFromMoonHouse = rashiDistance(moonId, Number(mars.rashiId) || 1);
+    if (moonId && marsId) ctx.marsFromMoonHouse = rashiDistance(moonId, marsId);
     const venus = planets.find((p: any) => p.name === 'Venus');
-    if (venus) ctx.marsFromVenusHouse = rashiDistance(Number(venus.rashiId) || 1, Number(mars.rashiId) || 1);
+    if (venus && marsId) ctx.marsFromVenusHouse = rashiDistance(Number(venus.rashiId) || 1, marsId);
+    const marsNav = snapshot?.vargas?.d9Navamsha?.find?.((v: any) => v.planet === 'Mars');
+    ctx.mars = {
+      name: mars.name,
+      house: typeof mars.house === 'number' ? mars.house : undefined,
+      rashiName: englishRashiName(mars.rashiEn || mars.rasiName || mars.rashiName || ''),
+      rashiId: marsId || undefined,
+      dignity: mars.dignity || mars.status || undefined,
+      longitude: typeof mars.longitude === 'number' ? mars.longitude : undefined,
+      isRetrograde: Boolean(mars.isRetrograde),
+      navamshaRashiName: marsNav ? englishRashiName(marsNav.navamshaRashi) : undefined,
+      navamshaRashiId: marsNav ? marsNav.navamshaRashiId : undefined,
+    };
   }
 
   ctx.lagnaRashiId = lagnaId;

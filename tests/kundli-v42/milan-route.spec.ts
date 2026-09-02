@@ -42,6 +42,11 @@ test.describe('MILAN_KUNDLI_CURRENT_RENDERER', () => {
     const bytes = new Uint8Array(await res.arrayBuffer());
     expect(Buffer.from(bytes.slice(0, 5)).toString('latin1')).toBe('%PDF-');
     expect(res.headers.get('X-Milan-Renderer')).toBe(MILAN_RENDERER_VERSION);
+    // QA gate: the page count must be a positive real PDF page count.
+    const headerPages = Number(res.headers.get('X-Milan-Pages') ?? '0');
+    expect(headerPages).toBeGreaterThan(0);
+    const inspected = await inspectPdf(bytes);
+    expect(inspected.pageCount).toBe(headerPages);
   });
 
   test('MR-02: default edition is SCHOLAR and all editions download', async () => {

@@ -26,6 +26,17 @@ const SANS_BOLD: RunStyle = { family: 'sans', bold: true };
 
 export const MILAN_RENDERER_VERSION = 'kundli-milan-report-renderer-v1';
 
+/** Count pages of a Milan PDF using the same MuPDF build as the QA toolkit. */
+export async function countMilanPdfPages(buffer: Uint8Array | Buffer): Promise<number> {
+  try {
+    const mupdf = (await import('mupdf')) as any;
+    const doc = mupdf.Document.openDocument(Buffer.from(buffer), 'application/pdf');
+    return doc.countPages() || 0;
+  } catch {
+    return 0;
+  }
+}
+
 export interface MilanPdfOptions {
   locale?: 'en' | 'hi' | 'hi-en';
   mode?: 'CLIENT' | 'PANDIT' | 'SCHOLAR';
