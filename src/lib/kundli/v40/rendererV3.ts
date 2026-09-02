@@ -339,7 +339,7 @@ export async function renderKundliPdfV3(
       color: V3.colors.vermilion, align: 'center', lineMm: 14,
     });
     y += 3;
-    drawLabel('Master Kundli · Pandit Workbench Edition', ML, y, CW, V3.colors.inkSoft, 'center');
+    drawLabel(b.editionLabel || 'Kundli', ML, y, CW, V3.colors.inkSoft, 'center');
     y += 13;
 
     s.line(ML + 32, y, PW - MR - 32, y, V3.colors.rule, V3.rule.hairlineMm);

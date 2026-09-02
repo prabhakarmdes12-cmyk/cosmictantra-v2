@@ -262,6 +262,9 @@ function coverSection(
         invocation: TERMS.invocation.hi,
         brand: 'CosmicTantra',
         documentTitle: renderTerm(TERMS.janmaKundli, mode),
+        // The audience edition is applied after the model is built
+        // (`applyReportMode`); this is a safe default until then.
+        editionLabel: mode === 'hi' ? 'कुण्डली' : 'Kundli',
         subjectName: s.name,
         birthLines: [
           `${trDate(longDate(s.birthDate), mode)}${wd ? `  ·  ${tr(wd.en, mode)}` : ''}`,

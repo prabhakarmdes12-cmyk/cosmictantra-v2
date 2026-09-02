@@ -116,6 +116,7 @@ export function buildTypographyFixture(): KundliReportModelV2 {
           invocation: '॥ श्री गणेशाय नमः ॥',
           brand: 'CosmicTantra',
           documentTitle: 'जन्म कुण्डली',
+          editionLabel: 'Typography Validation Fixture',
           subjectName: 'Typography Validation Fixture',
           birthLines: ['सिंह लग्न — Leo Ascendant', '11°43′12″ · 1995-06-15'],
           identityLines: [

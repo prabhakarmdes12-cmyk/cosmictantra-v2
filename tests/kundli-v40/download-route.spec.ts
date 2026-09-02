@@ -274,4 +274,38 @@ test.describe('DOWNLOAD_KUNDLI_CURRENT_RENDERER', () => {
     expect(reportHref).toContain('birthContext.timezone');
     expect(src, 'the header action must use the context-aware URL').toContain('href={reportHref}');
   });
+
+  test('DKCR-17: the cover names the edition actually downloaded', async () => {
+    // Cover labels come from the mode, not the renderer default. A Client
+    // Reading printed as "Pandit Workbench Edition" tells a novice the
+    // document is not for them before they read a single line.
+    const cases = [
+      ['CLIENT', 'en', 'CLIENT READING'],
+      ['PANDIT', 'en', 'PANDIT WORKBENCH'],
+      ['SCHOLAR', 'en', 'SCHOLAR EDITION'],
+      ['CLIENT', 'hi', 'जातक पाठ'],
+      ['SCHOLAR', 'hi-en', /शास्त्री संस्करण.*SCHOLAR EDITION|SCHOLAR EDITION.*शास्त्री संस्करण/],
+    ] as const;
+    for (const [mode, locale, expectLabel] of cases) {
+      const bytes = (await downloadBytes({ birth: GOLDEN_BIRTH_INPUT, mode, locale })).bytes;
+      const doc = await inspectPdf(bytes);
+      const cover = doc.pages[0].text;
+      if (expectLabel instanceof RegExp) {
+        expect(cover, `${mode}/${locale} cover label`).toMatch(expectLabel);
+      } else {
+        expect(cover, `${mode}/${locale} cover label`).toContain(expectLabel);
+      }
+    }
+  });
+
+  test('DKCR-18: no appendix xref survives in editions that omit the appendix', async () => {
+    const appendixPattern = /(Appendix|APPENDIX|परिशिष्ट)/i;
+    for (const mode of ['CLIENT', 'PANDIT'] as const) {
+      for (const locale of ['en', 'hi', 'hi-en'] as const) {
+        const bytes = (await downloadBytes({ birth: GOLDEN_BIRTH_INPUT, mode, locale })).bytes;
+        const text = (await inspectPdf(bytes)).allText;
+        expect(text, `${mode}/${locale} must not point at an absent appendix`).not.toMatch(appendixPattern);
+      }
+    }
+  });
 });

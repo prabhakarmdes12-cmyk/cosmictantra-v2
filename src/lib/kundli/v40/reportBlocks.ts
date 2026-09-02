@@ -24,6 +24,8 @@ export interface CoverBlock extends V2BlockBase {
   invocation: string;
   brand: string;
   documentTitle: string;
+  /** Which public edition produced this document, e.g. "Client Reading". */
+  editionLabel: string;
   subjectName: string;
   birthLines: string[];
   identityLines: string[];

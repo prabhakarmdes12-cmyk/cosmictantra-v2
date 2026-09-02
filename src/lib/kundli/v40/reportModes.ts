@@ -18,7 +18,107 @@
  * model already built.
  */
 
-import type { KundliReportModelV2, V2Section } from './reportBlocks';
+import type { KundliReportModelV2, V2Block, V2Section } from './reportBlocks';
+
+/**
+ * English → non-scholar rewrite for sentences that promise the reader a
+ * "Scholar Appendix". CLIENT and PANDIT deliberately carry no appendix, so a
+ * reference that survives mode selection is a dead pointer in the reader's
+ * hand. The replacement keeps the factual content of the sentence and drops
+ * only the promise that cannot be kept.
+ */
+const EN_APPENDIX_REWRITES: Array<[RegExp, string]> = [
+  [/ The purnimanta name is reported as not calculated — see the Scholar Appendix for why the two conventions are not treated as interchangeable here\.$/,
+    ' The purnimanta name is not written here; the two month conventions are not treated as interchangeable.'],
+  [/ The rule that produced each line is listed in the Scholar Appendix\.$/,
+    ' The rule that produced each line is retained in the calculation record.'],
+  [/ The exact decimal longitude is retained in the machine record and printed in the Scholar Appendix\.$/,
+    ' The exact decimal longitude is retained in the machine record.'],
+  [/ which is printed in the Scholar Appendix\.$/,
+    ' which is not needed to read the chart.'],
+  [/ — see the Scholar Appendix\.$/, ' — not calculated for this report.'],
+  [/ Full reasoning in the Scholar Appendix\.$/, ' Full reasoning is not printed in this edition.'],
+  [/ Full provenance is in the Scholar Appendix\.$/, ' Full provenance is not printed in this edition.'],
+  [/ The full provenance statement for each rule, including which locators have not been checked against a held edition, is in the Scholar Appendix\.$/,
+    ' The full provenance statement for each rule is not printed in this edition.'],
+  [/ Full provenance is in the Scholar Appendix\.$/, ' Full provenance is not printed in this edition.'],
+  [/(\s*)Scholar Appendix(\s*)?/g, '$1'],
+];
+
+/**
+ * Hindi equivalents of the same promises. Hindi prose is the locale body for
+ * `hi` and `hi-en`; the bilingual edition still carries these sentences in
+ * Hindi (see `prosePassages.ts`), so both scripts must be scrubbed.
+ */
+const HI_APPENDIX_REWRITES: Array<[RegExp, string]> = [
+  [/ दोनों परिपाटियों को यहाँ एक-दूसरे का पर्याय क्यों नहीं माना जाता, यह विद्वत्-परिशिष्ट में है।$/, ' दोनों परिपाटियों को यहाँ एक-दूसरे का पर्याय नहीं माना जाता।'],
+  [/ हर पंक्ति किस नियम से बनी, यह विद्वत्-परिशिष्ट में दर्ज है।$/, ' हर पंक्ति किस नियम से बनी, यह गणना-अभिलेख में दर्ज है।'],
+  [/ सटीक दशमलव देशान्तर गणना-अभिलेख और विद्वत्-परिशिष्ट में सुरक्षित है।$/, ' सटीक दशमलव देशान्तर गणना-अभिलेख में सुरक्षित है।'],
+  [/ जो विद्वत्-परिशिष्ट में दिया है।$/, ' जो पढ़ने के लिए आवश्यक नहीं है।'],
+  [/ — विवरण विद्वत्-परिशिष्ट में है।$/, ' — इस रिपोर्ट में गणना नहीं की गई।'],
+  [/ विवरण विद्वत्-परिशिष्ट में है।$/, ' विवरण इस संस्करण में नहीं दिया गया।'],
+  [/ पूरा स्रोत-विवरण विद्वत्-परिशिष्ट में है。$/, ' पूरा स्रोत-विवरण इस संस्करण में नहीं दिया गया।'],
+  [/ (\s*)विद्वत्-परिशिष्ट(\s*)?/g, '$1'],
+];
+
+function scrubAppendixText(text: string): string {
+  let out = text;
+  for (const [re, replace] of EN_APPENDIX_REWRITES) out = out.replace(re, replace);
+  for (const [re, replace] of HI_APPENDIX_REWRITES) out = out.replace(re, replace);
+  // Last-resort: any surviving pointer to an absent appendix is removed. This
+  // is deliberately narrow (the two exact strings) so it never rewrites a
+  // sentence unrelated to the appendix.
+  out = out.replace(/ see the Scholar Appendix/g, '').replace(/ विद्वत्-परिशिष्ट/g, '');
+  return out.replace(/ {2,}/g, ' ').trim();
+}
+
+/** Recursively rewrites every string reachable from `node`, in place. */
+function rewriteValues(node: unknown): void {
+  if (typeof node === 'string') return;
+  if (!node || typeof node !== 'object') return;
+  const obj = node as Record<string, unknown>;
+  for (const key of Object.keys(obj)) {
+    const value = obj[key];
+    if (typeof value === 'string') {
+      obj[key] = scrubAppendixText(value);
+    } else if (Array.isArray(value)) {
+      for (let i = 0; i < value.length; i += 1) {
+        const entry = value[i];
+        if (typeof entry === 'string') value[i] = scrubAppendixText(entry);
+        else rewriteValues(entry);
+      }
+    } else {
+      rewriteValues(value);
+    }
+  }
+}
+
+/**
+ * Walks every string the renderer will draw and removes references to the
+ * Scholar Appendix in editions that drop it. Also clears status-list xrefs
+ * such as "SEE APPENDIX Y-01", which would otherwise point nowhere.
+ */
+function scrubAppendixReferences(report: KundliReportModelV2): void {
+  for (const section of report.sections) {
+    for (const block of section.blocks) {
+      if (block.kind === 'statusList' && Array.isArray(block.items)) {
+        for (const item of block.items) {
+          if ('xref' in item) item.xref = undefined;
+        }
+      }
+      rewriteValues(block);
+    }
+  }
+}
+
+/** Edition words the cover should state, matching what the mode actually is. */
+function editionLabel(mode: ReportMode, locale: string): string {
+  const label = MODE_DEFINITIONS[mode].label;
+  if (locale === 'hi') return label.hi;
+  if (locale === 'hi-en') return `${label.hi} · ${label.en}`;
+  return label.en;
+}
+
 
 export const REPORT_MODES_VERSION = 'kundli-report-modes-v1';
 
@@ -173,6 +273,20 @@ export function applyReportMode(source: KundliReportModelV2, mode: ReportMode): 
   }
 
   report.sections = kept;
+
+  // Cover: the printed edition must never say "Pandit Workbench Edition" when
+  // the reader asked for a Client Reading — the cover is the one line a novice
+  // actually reads before deciding the document is for them.
+  const cover = report.sections
+    .find((s) => s.id === 'cover')
+    ?.blocks.find((b) => b.kind === 'cover');
+  if (cover) cover.editionLabel = editionLabel(mode, String(report.locale));
+
+  // When the appendix is not in this document, every pointer to it is a broken
+  // promise. CLIENT and PANDIT must never print "SEE APPENDIX Y-01" that is
+  // not there; SCHOLAR keeps every xref intact for the reader who needs it.
+  if (mode !== 'SCHOLAR') scrubAppendixReferences(report);
+
   return {
     report,
     application: {
