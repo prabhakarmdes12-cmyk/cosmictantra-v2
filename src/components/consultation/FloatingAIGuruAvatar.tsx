@@ -168,6 +168,24 @@ const CAPABILITY_CHIPS: Array<{ label: string; action: string; href?: string }> 
   { label: '📜 विद्वान् ज्योतिषी से परामर्श', action: 'INTENT_SCHOLAR' },
 ];
 
+// Deterministic intent chips that must keep the conversation moving. These map
+// to the exact phrases the Kashi intent engine resolves, so every one of them
+// (greeting chips AND engine follow-up chips) produces a verified guru reply
+// with fresh quick-chips instead of silently stalling.
+const GATEWAY_INTENT_PHRASES: Record<string, string> = {
+  INTENT_ABHIJIT: 'आज का शुभ अभिजित मुहूर्त',
+  INTENT_RAHU: 'आज का राहुकाल',
+  INTENT_RAHU_TOMORROW: 'कल का राहुकाल',
+  INTENT_NEXT_EKADASHI: 'अगली एकादशी कब है?',
+  INTENT_NEXT_PRADOSH: 'अगला प्रदोष कब है?',
+  INTENT_NEXT_PURNIMA: 'अगली पूर्णिमा कब है?',
+  INTENT_SACRED_DAYS: 'पास में कौन से प्रमुख व्रत हैं?',
+  INTENT_NAKSHATRA: 'आज का नक्षत्र क्या है?',
+  INTENT_MOON_SIGN: 'आज चन्द्र राशि क्या है?',
+  INTENT_TITHI: 'आज की तिथि क्या है?',
+  INTENT_PANCHANG_TOMORROW: 'कल का पञ्चाङ्ग',
+};
+
 // -------------------------------------------------------------
 // Sacred Shrine Registry (Direct Live Streams & Sanctums)
 // -------------------------------------------------------------
@@ -529,13 +547,14 @@ export default function FloatingAIGuruAvatar() {
 
       const greetingText =
         `हर हर महादेव! 🙏\n\n` +
-        `आज आप कैसा महसूस कर रहे हैं? मन में कोई चिन्ता, दुविधा या संशय हो, अथवा आज के पञ्चाङ्ग, शुभ समय या किसी कार्य के लिए मार्गदर्शन चाहिए — निसंकोच कहें। मैं आपके साथ हूँ।\n\n` +
+        `आज आप कैसा महसूस कर रहे हैं? मन में कोई चिन्ता, दुविधा या संशय हो, अथवा आज के पञ्चाङ्ग, शुभ समय या किसी कार्य के लिए मार्गदर्शन चाहिए — निसंकोच कहें। मैं आपके साथ हूँ, पूरे ध्यान से सुन रही हूँ।\n\n` +
+        `जिज्ञासा हो या चिन्ता — काशी में कोई प्रश्न छोटा नहीं। पहले मन की स्थिति बताइए, फिर विषय चुनिए या लिखिए।\n\n` +
         `आज की मुख्य खगोलीय स्थिति (${locLabel}):\n` +
         `• तिथि: ${bundle.tithi.fullNameHi}\n` +
         `• राहुकाल: ${bundle.timings.rahuKalam}\n` +
         `• शुभ अभिजित मुहूर्त: ${bundle.timings.abhijitMuhurat}`;
 
-      const speakGreeting = `हर हर महादेव! आज आप कैसा महसूस कर रहे हैं? मन में कोई चिंता हो या आज के पंचांग और शुभ समय की जानकारी चाहिए, निसंकोच बताइए।`;
+      const speakGreeting = `हर हर महादेव! आज आप कैसा महसूस कर रहे हैं? मन में कोई चिंता हो या आज के पंचांग और शुभ समय की जानकारी चाहिए, निसंकोच बताइए। मैं पूरे ध्यान से सुन रही हूँ।`;
 
       const initialMsg: ChatMessage = {
         id: 'welcome-1',
@@ -556,6 +575,7 @@ export default function FloatingAIGuruAvatar() {
           { label: '✨ आज का शुभ समय', action: 'INTENT_ABHIJIT' },
           { label: '🕒 आज का राहुकाल', action: 'INTENT_RAHU' },
           { label: '🙏 अगली एकादशी', action: 'INTENT_NEXT_EKADASHI' },
+          { label: '📅 कल का पञ्चाङ्ग', action: 'INTENT_PANCHANG_TOMORROW' },
         ],
       };
 
@@ -1007,7 +1027,7 @@ export default function FloatingAIGuruAvatar() {
         {
           id: `g-${Date.now()}`,
           sender: 'GURU',
-          text: `${acknowledgement}\n\nऔर बताइए — इस भावना के साथ आज किस विषय में सहायता चाहिए? नीचे से चुन सकते हैं या अपनी बात सीधे लिख सकते हैं:`,
+          text: `${acknowledgement}\n\nमैं इस भावना को पूरी सहानुभूति से समझती हूँ — और यही काशी की परम्परा है, पहले मन की बात सुनो, तब मार्ग बताओ।\n\nऔर बताइए — इस भावना के साथ आज किस विषय में सहायता चाहिए? नीचे से चुन सकते हैं या अपनी बात सीधे लिख सकते हैं। जब तक मन हल्का न हो, चलते रहिए।`,
           speakText,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           ...(shouldAttachScriptureCard ? { scriptureCard: insight } : {}),
@@ -1075,6 +1095,15 @@ export default function FloatingAIGuruAvatar() {
 
     if (chip.action === 'INTENT_SCHOLAR') {
       handleScholarQuery();
+      return;
+    }
+
+    // Deterministic intent chips (greeting + engine follow-up chips): route
+    // them through the gateway so each one yields a verified guru reply with
+    // fresh quick-chips. Without this, tapping these chips stalls the flow.
+    const gatewayPhrase = GATEWAY_INTENT_PHRASES[chip.action];
+    if (gatewayPhrase) {
+      void postGuru(gatewayPhrase);
       return;
     }
 

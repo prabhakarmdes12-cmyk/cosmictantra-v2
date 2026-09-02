@@ -35,6 +35,31 @@ const HINDI_HOURS: Record<number, string> = {
   11: 'ग्यारह', 12: 'बारह'
 };
 
+/**
+ * Warm, "talkative-companion" closing lines that make Kashi Sahayak feel less
+ * like a FAQ bot and more like a patient, understanding Kashi guru. Chosen to be
+ * factual-safe (no invented numbers) and appliable to every deterministic intent.
+ *
+ * The primary purpose: once the astrological truth is delivered, gently invite
+ * the seeker to continue — proving Kashi Sahayak listens and welcomes follow-ups.
+ */
+const WARM_CLOSERS: string[] = [
+  'मैं आपके साथ हूँ — जिज्ञासा हो या चिन्ता, तब तक चलते रहिए जब तक मन पूर्णतया शांत न हो।',
+  'आपके प्रश्न सार्थक हैं — शंका में ही शास्त्रार्थ का द्वार खुलता है। और पूछिए!',
+  'यह सब आपके भले के लिए है। अगर मन में किसी बात को लेकर डर या उलझन हो, तो उसे भी साझा कीजिए।',
+  'बस याद रखिए — काशी में कोई भी प्रश्न छोटा नहीं होता। और पूछिए, मैं पूरे ध्यान से सुन रही हूँ।',
+  'मन को इसी संतोष में रखिए; आगे के मुहूर्त तथा व्रत सब आपके कल्याण हेतु हैं। नीचे के विकल्प चुनिए या सीधे लिखिए।'
+];
+
+/** Picks a warm closing line deterministically (stable per query string). */
+function pickWarmCloser(query: string): string {
+  let h = 0;
+  for (let i = 0; i < query.length; i++) {
+    h = (h * 31 + query.charCodeAt(i)) >>> 0;
+  }
+  return WARM_CLOSERS[h % WARM_CLOSERS.length];
+}
+
 const HINDI_MINUTES: Record<number, string> = {
   1: 'एक', 2: 'दो', 3: 'तीन', 4: 'चार', 5: 'पाँच', 6: 'छह', 7: 'सात', 8: 'आठ', 9: 'नौ', 10: 'दस',
   11: 'ग्यारह', 12: 'बारह', 13: 'तेरह', 14: 'चौदह', 15: 'पंद्रह', 16: 'सोलह', 17: 'सत्रह', 18: 'अठारह', 19: 'उन्नीस', 20: 'बीस',
@@ -171,11 +196,13 @@ function executeDeterministicKashiIntent(
       `तुलनात्मक पञ्चाङ्ग अवलोकन (${locNameHi}):\n\n` +
       `• ${day1Name} (${bundle.weekdayNameHi}): ${t1}, राहुकाल: ${r1}, अभिजित: ${a1}\n` +
       `• ${day2Name} (${compBundle.weekdayNameHi}): ${t2}, राहुकाल: ${r2}, अभिजित: ${a2}\n\n` +
-      `शास्त्रानुसार पूजा हेतु अभिजित मुहूर्त व राहुकाल से मुक्त काल श्रेष्ठ माना जाता है।`;
+      `शास्त्रानुसार पूजा हेतु अभिजित मुहूर्त व राहुकाल से मुक्त काल श्रेष्ठ माना जाता है।\n\n` +
+      pickWarmCloser(query);
 
     const speakText = 
       `${locNameHi} में ${day1Name} को ${t1} और राहुकाल ${timeRangeToSpokenHindi(r1)} है। ` +
-      `${day2Name} को ${t2} और राहुकाल ${timeRangeToSpokenHindi(r2)} है।`;
+      `${day2Name} को ${t2} और राहुकाल ${timeRangeToSpokenHindi(r2)} है।। ` +
+      `जिस कार्य की चिन्ता है उसे भी बताइए, मिलकर शुभ समय सुनिश्चित करेंगे।`;
 
     updatedContext.conversationalFocus = { type: 'MUHURTA', lastIntent: 'COMPARE_DATES' };
 
@@ -203,10 +230,11 @@ function executeDeterministicKashiIntent(
         `अगली ${nextObs.nameHi} ${nextObs.dateStr} (${targetBundle.weekdayNameHi}) को है — यह ${nextObs.daysAwayTextHi} है।\n\n` +
         `• तिथि: ${targetBundle.tithi.fullNameHi}\n` +
         `• नक्षत्र: ${targetBundle.nakshatra.nameHi}\n` +
-        `• महत्त्व: ${nextObs.significance}`;
+        `• महत्त्व: ${nextObs.significance}\n\n` +
+        pickWarmCloser(query);
 
       const speakText = 
-        `अगली ${nextObs.nameHi} ${nextObs.daysAwayTextHi}, ${nextObs.dateStr} को है। उस दिन ${targetBundle.tithi.fullNameHi} रहेगी।`;
+        `अगली ${nextObs.nameHi} ${nextObs.daysAwayTextHi}, ${nextObs.dateStr} को है। उस दिन ${targetBundle.tithi.fullNameHi} रहेगी। आपके कल्याण हेतु सदा साथ हूँ — और पूछिए, निसंकोच।`;
 
       updatedContext.referenceDate = nextObs.dateStr;
       updatedContext.conversationalFocus = { type: 'FAST_FESTIVAL', lastIntent: 'GET_NEXT_OBSERVANCE' };
@@ -262,7 +290,7 @@ function executeDeterministicKashiIntent(
   // 5. Intent: RAHUKAAL ("आज राहुकाल कब है?", "राहुकाल?", "और कल?")
   if (
     query.includes('राहुकाल') || query.includes('rahu kaal') || query.includes('rahu') ||
-    dateRes.inheritedIntent === 'GET_RAHUKAAL'
+    (dateRes.inheritedIntent === 'GET_RAHUKAAL' && !query.includes('पञ्चाङ्ग') && !query.includes('पंचांग'))
   ) {
     const rTime = bundle.timings.rahuKalam;
     const aTime = bundle.timings.abhijitMuhurat;
@@ -277,7 +305,8 @@ function executeDeterministicKashiIntent(
 
     const speakText = 
       `${dateLabelHi} ${locNameHi} में राहुकाल ${timeRangeToSpokenHindi(rTime)} है। ` +
-      `पूजा के लिए शुभ अभिजित मुहूर्त ${timeRangeToSpokenHindi(aTime)} रहेगा।`;
+      `पूजा के लिए शुभ अभिजित मुहूर्त ${timeRangeToSpokenHindi(aTime)} रहेगा। ` +
+      `चिन्ता नहीं — उचित समय पर कार्य कीजिए; कोई प्रश्न हो तो निसंकोच पूछिए।`;
 
     updatedContext.conversationalFocus = { type: 'RAHUKAAL', lastIntent: 'GET_RAHUKAAL' };
 
@@ -318,9 +347,10 @@ function executeDeterministicKashiIntent(
       `${dateLabelHi} ${locNameHi} में ब्रह्म मुहूर्त ${brahmaTime} है।\n\n` +
       `ब्रह्म मुहूर्त सूर्योदय (${bundle.sun.sunrise}) से लगभग 1 घंटा 36 मिनट पूर्व प्रारम्भ होता है। यह काल ध्यान, ईश्वर आराधना, मन्त्र जप एवं विद्याध्ययन हेतु सर्वोत्कृष्ट माना गया है।\n\n` +
       `• सूर्योदय: ${bundle.sun.sunrise}\n` +
-      `• अभिजित मुहूर्त: ${bundle.timings.abhijitMuhurat}`;
+      `• अभिजित मुहूर्त: ${bundle.timings.abhijitMuhurat}\n\n` +
+      pickWarmCloser(query);
 
-    const speakText = `${dateLabelHi} ${locNameHi} में ब्रह्म मुहूर्त प्रातः ${timeRangeToSpokenHindi(brahmaTime)} है। यह ध्यान और पूजा के लिए सर्वोत्तम समय है।`;
+    const speakText = `${dateLabelHi} ${locNameHi} में ब्रह्म मुहूर्त प्रातः ${timeRangeToSpokenHindi(brahmaTime)} है। यह ध्यान और पूजा के लिए सर्वोत्तम समय है। मैं आपके जप-ध्यान व मन की शांति हेतु साथ हूँ।`;
 
     updatedContext.conversationalFocus = { type: 'MUHURTA', lastIntent: 'GET_BRAHMA_MUHURTA' };
 
@@ -353,10 +383,12 @@ function executeDeterministicKashiIntent(
     const text = 
       `${dateLabelHi} ${locNameHi} में शुभ अभिजित मुहूर्त ${aTime} है।\n\n` +
       `• ब्रह्म मुहूर्त: ${brahmaTime} (प्रातः ध्यान व जप हेतु)${wedCaveat}\n` +
-      `• राहुकाल: ${bundle.timings.rahuKalam} (त्याज्य काल)`;
+      `• राहुकाल: ${bundle.timings.rahuKalam} (त्याज्य काल)\n\n` +
+      pickWarmCloser(query);
 
     const speakText = 
-      `${dateLabelHi} ${locNameHi} में पूजा के लिए अभिजित मुहूर्त ${timeRangeToSpokenHindi(aTime)} है।`;
+      `${dateLabelHi} ${locNameHi} में पूजा के लिए अभिजित मुहूर्त ${timeRangeToSpokenHindi(aTime)} है। ` +
+      `आपके मन या कार्य की किसी भी चिन्ता के बारे में निसंकोच बताइए।`;
 
     updatedContext.conversationalFocus = { type: 'ABHIJIT', lastIntent: 'GET_ABHIJIT' };
 
@@ -392,11 +424,11 @@ function executeDeterministicKashiIntent(
       text += `\n\n${trans.summaryHi}`;
     }
 
-    text += `\n\n• पक्ष: ${bundle.tithi.pakshaHi}\n• चान्द्र मास: ${bundle.masa.nameHi} (${bundle.samvat.vikram} वि.सं.)`;
+    text += `\n\n• पक्ष: ${bundle.tithi.pakshaHi}\n• चान्द्र मास: ${bundle.masa.nameHi} (${bundle.samvat.vikram} वि.सं.)\n\n` + pickWarmCloser(query);
 
     const speakText = trans
-      ? `${locNameHi} में ${trans.summaryHi}`
-      : `${dateLabelHi} ${locNameHi} में तिथि ${bundle.tithi.fullNameHi} है।`;
+      ? `${locNameHi} में ${trans.summaryHi} मैं आपके साथ हूँ, और पूछिए।`
+      : `${dateLabelHi} ${locNameHi} में तिथि ${bundle.tithi.fullNameHi} है। किसी भी विषय की चिन्ता हो तो बताइए।`;
 
     updatedContext.conversationalFocus = { type: 'TITHI', lastIntent: intentName };
 
@@ -425,11 +457,11 @@ function executeDeterministicKashiIntent(
       text += `\n\n${trans.summaryHi}`;
     }
 
-    text += `\n\n• स्वामी ग्रह: ${bundle.nakshatra.lordHi || bundle.nakshatra.lord}\n• देवता: ${bundle.nakshatra.deity}\n• चन्द्र राशि: ${bundle.moon.moonSignHi} (${bundle.moon.moonSign})`;
+    text += `\n\n• स्वामी ग्रह: ${bundle.nakshatra.lordHi || bundle.nakshatra.lord}\n• देवता: ${bundle.nakshatra.deity}\n• चन्द्र राशि: ${bundle.moon.moonSignHi} (${bundle.moon.moonSign})\n\n` + pickWarmCloser(query);
 
     const speakText = trans
-      ? `${locNameHi} में ${trans.summaryHi} स्वामी ग्रह ${bundle.nakshatra.lordHi} है।`
-      : `${dateLabelHi} ${locNameHi} में नक्षत्र ${bundle.nakshatra.nameHi} पाद ${bundle.nakshatra.pada} है।`;
+      ? `${locNameHi} में ${trans.summaryHi} स्वामी ग्रह ${bundle.nakshatra.lordHi} है। जिज्ञासा हो तो अवश्य पूछिए।`
+      : `${dateLabelHi} ${locNameHi} में नक्षत्र ${bundle.nakshatra.nameHi} पाद ${bundle.nakshatra.pada} है। मैं सुन रही हूँ, और बताइए।`;
 
     updatedContext.conversationalFocus = { type: 'NAKSHATRA', lastIntent: 'GET_NAKSHATRA' };
 
@@ -455,9 +487,10 @@ function executeDeterministicKashiIntent(
       `${dateLabelHi} चन्द्रमा ${bundle.moon.moonSignHi} राशि (${bundle.moon.moonSign}) में संचरण कर रहे हैं।\n\n` +
       `• स्पष्ट भोगांश: ${bundle.moon.siderealLongitude}°\n` +
       `• नक्षत्र: ${bundle.nakshatra.nameHi} (पाद ${bundle.nakshatra.pada})\n` +
-      `• चन्द्र कला: ${bundle.moon.phase} (${bundle.moon.illumination}% प्रकाश)`;
+      `• चन्द्र कला: ${bundle.moon.phase} (${bundle.moon.illumination}% प्रकाश)\n\n` +
+      pickWarmCloser(query);
 
-    const speakText = `${dateLabelHi} चन्द्रमा ${bundle.moon.moonSignHi} राशि में नक्षत्र ${bundle.nakshatra.nameHi} पर विराजमान हैं।`;
+    const speakText = `${dateLabelHi} चन्द्रमा ${bundle.moon.moonSignHi} राशि में नक्षत्र ${bundle.nakshatra.nameHi} पर विराजमान हैं। आपकी चिन्ता या प्रश्न सुनने को तत्पर हूँ।`;
 
     updatedContext.conversationalFocus = { type: 'NAKSHATRA', lastIntent: 'GET_MOON_SIGN' };
 
@@ -488,11 +521,12 @@ function executeDeterministicKashiIntent(
     const text = 
       `${locNameHi} क्षेत्र हेतु आगामी प्रमुख व्रत व पावन तिथियाँ:\n\n` +
       (itemsText || 'आगामी दिनों में कोई विशिष्ट प्रमुख व्रत नहीं है।') +
-      `\n\n[तिथि व संकल्प अनुसार अनुष्ठान का विधान]`;
+      `\n\n[तिथि व संकल्प अनुसार अनुष्ठान का विधान]\n\n` +
+      pickWarmCloser(query);
 
     const speakText = nearby.length > 0
-      ? `पास के प्रमुख व्रतों में ${nearby[0].daysAwayTextHi} ${nearby[0].nameHi} और ${nearby[1] ? nearby[1].daysAwayTextHi + ' ' + nearby[1].nameHi : ''} है।`
-      : 'आगामी दिनों का पंचांग विवरण उपलब्ध है।';
+      ? `पास के प्रमुख व्रतों में ${nearby[0].daysAwayTextHi} ${nearby[0].nameHi} और ${nearby[1] ? nearby[1].daysAwayTextHi + ' ' + nearby[1].nameHi : ''} है। आपके मन के विषय भी साझा कीजिए, मैं सुन रही हूँ।`
+      : 'आगामी दिनों का पंचांग विवरण उपलब्ध है। फिर भी जिज्ञासा हो तो निसंकोच पूछिए।';
 
     updatedContext.conversationalFocus = { type: 'FAST_FESTIVAL', lastIntent: 'GET_IMPORTANT_DAYS' };
 
@@ -525,11 +559,12 @@ function executeDeterministicKashiIntent(
       `• करण: ${bundle.karana.nameHi} (${bundle.karana.typeHi})\n` +
       `• वार: ${bundle.weekdayNameHi}\n\n` +
       `सूर्योदय: ${bundle.sun.sunrise} • सूर्यास्त: ${bundle.sun.sunset}\n` +
-      `राहुकाल: ${bundle.timings.rahuKalam} • अभिजित: ${bundle.timings.abhijitMuhurat}`;
+      `राहुकाल: ${bundle.timings.rahuKalam} • अभिजित: ${bundle.timings.abhijitMuhurat}\n\n` +
+      pickWarmCloser(query);
 
     const speakText = 
       `${dateLabelHi} ${locNameHi} में तिथि ${bundle.tithi.fullNameHi}, नक्षत्र ${bundle.nakshatra.nameHi} और वार ${bundle.weekdayNameHi} है। ` +
-      `राहुकाल ${timeRangeToSpokenHindi(bundle.timings.rahuKalam)} रहेगा।`;
+      `राहुकाल ${timeRangeToSpokenHindi(bundle.timings.rahuKalam)} रहेगा। और पूछिए, मैं पूरे ध्यान से सुन रही हूँ।`;
 
     updatedContext.conversationalFocus = { type: 'DATE', lastIntent: 'GET_FULL_PANCHANG' };
 
@@ -570,9 +605,10 @@ function executeDeterministicKashiIntent(
       `• सूर्योदय: ${bundle.sun.sunrise}\n` +
       `• सूर्यास्त: ${bundle.sun.sunset}\n` +
       `• दिनमान: लगभग 12 घंटे 32 मिनट\n` +
-      `• सूर्य राशि: ${bundle.sun.sunSignHi} (${bundle.sun.sunSign})`;
+      `• सूर्य राशि: ${bundle.sun.sunSignHi} (${bundle.sun.sunSign})\n\n` +
+      pickWarmCloser(query);
 
-    const speakText = `${dateLabelHi} ${locNameHi} में सूर्योदय प्रातः ${timeToSpokenHindi(bundle.sun.sunrise)} और सूर्यास्त सायं ${timeToSpokenHindi(bundle.sun.sunset)} पर होगा।`;
+    const speakText = `${dateLabelHi} ${locNameHi} में सूर्योदय प्रातः ${timeToSpokenHindi(bundle.sun.sunrise)} और सूर्यास्त सायं ${timeToSpokenHindi(bundle.sun.sunset)} पर होगा। और जानना चाहें तो निसंकोच पूछिए।`;
 
     updatedContext.conversationalFocus = { type: 'DATE', lastIntent: 'GET_SUNRISE' };
 

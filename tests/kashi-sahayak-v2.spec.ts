@@ -174,6 +174,77 @@ test.describe('KASHI SAHAYAK V2 — Panchang-Aware Conversation, Date Intelligen
     expect(spokenRange).toBe('सुबह पौने बारह बजे से दोपहर एक बजकर अठारह मिनट तक');
   });
 
+  test('Quick-chip intent map: every greeting/engine chip phrase resolves to its deterministic intent (no dead chips)', async () => {
+    const ctx = {
+      referenceDate: '2026-09-02',
+      location: DEFAULT_LOCATION,
+      source: 'COSMIC_NOW' as const
+    };
+
+    const cases: Array<[string, string]> = [
+      // greeting + engine follow-up chips → expected deterministic intent
+      ['आज का शुभ अभिजित मुहूर्त', 'GET_ABHIJIT'],
+      ['आज का राहुकाल', 'GET_RAHUKAAL'],
+      ['कल का राहुकाल', 'GET_RAHUKAAL'],
+      ['अगली एकादशी कब है?', 'GET_NEXT_OBSERVANCE'],
+      ['अगला प्रदोष कब है?', 'GET_NEXT_OBSERVANCE'],
+      ['अगली पूर्णिमा कब है?', 'GET_NEXT_OBSERVANCE'],
+      ['पास में कौन से प्रमुख व्रत हैं?', 'GET_IMPORTANT_DAYS'],
+      ['आज का नक्षत्र क्या है?', 'GET_NAKSHATRA'],
+      ['आज चन्द्र राशि क्या है?', 'GET_MOON_SIGN'],
+      ['आज की तिथि क्या है?', 'GET_TITHI'],
+    ];
+
+    for (const [phrase, expected] of cases) {
+      const res = resolveDeterministicKashiIntent(phrase, null, ctx);
+      expect(res, `Phrase failed to resolve: "${phrase}"`).not.toBeNull();
+      expect(res?.intent, `Wrong intent for "${phrase}"`).toBe(expected);
+    }
+  });
+
+  test('CHIP_PRECEDENCE_001: "कल का पञ्चाङ्ग" resolves to tomorrow full panchang, not inherited Rahukaal', async () => {
+    const ctx = {
+      referenceDate: '2026-09-02',
+      location: DEFAULT_LOCATION,
+      source: 'COSMIC_NOW' as const
+    };
+
+    const res = resolveDeterministicKashiIntent('कल का पञ्चाङ्ग', null, ctx);
+    expect(res).not.toBeNull();
+    expect(res?.intent).toBe('GET_FULL_PANCHANG');
+    expect(res?.panchangContext?.referenceDate).toBe('2026-09-03');
+    expect(res?.displayText).toContain('पञ्चाङ्ग');
+  });
+
+  test('WARMTH_001: Kashi Sahayak stays factual yet talkative — warm invite follows verified data', async () => {
+    const ctx = {
+      referenceDate: '2026-09-02',
+      location: DEFAULT_LOCATION,
+      source: 'COSMIC_NOW' as const
+    };
+
+    const inputs: Array<[string, string]> = [
+      ['आज का राहुकाल', 'GET_RAHUKAAL'],
+      ['आज का पंचांग', 'GET_FULL_PANCHANG'],
+      ['शुभ अभिजित मुहूर्त', 'GET_ABHIJIT'],
+      ['अगली एकादशी कब है?', 'GET_NEXT_OBSERVANCE'],
+      ['आज की तिथि क्या है?', 'GET_TITHI'],
+      ['आज का नक्षत्र क्या है?', 'GET_NAKSHATRA'],
+      ['पास में कौन से प्रमुख व्रत हैं?', 'GET_IMPORTANT_DAYS'],
+    ];
+
+    for (const [phrase, expectedIntent] of inputs) {
+      const res = resolveDeterministicKashiIntent(phrase, null, ctx);
+      expect(res, `Warmth probe failed to resolve: "${phrase}"`).not.toBeNull();
+      expect(res?.intent).toBe(expectedIntent);
+      // Understanding companion never leaves the seeker hanging — invites continuation.
+      expect(
+        sanitizeChatOutput(res!.speakText),
+        `speakText should invite continuation for "${phrase}"`
+      ).toMatch(/पूछिए|बताइए|सुन रही|सुन रहा|सुन रहा हूँ|निसंकोच|कीजिए/);
+    }
+  });
+
   test('Date Comparison Intent: objectively evaluates two dates for auspicious activities', async () => {
     const query = 'आज और कल में नया काम शुरू करने के लिए कौन सा दिन बेहतर है?';
     const ctx = {
