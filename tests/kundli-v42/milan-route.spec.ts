@@ -93,9 +93,13 @@ test.describe('MILAN_KUNDLI_CURRENT_RENDERER', () => {
     expect(body.contract.maxTotal).toBe(36);
     expect(body.contract.kootas).toContain('Nadi:8');
     expect(body.contract.modes).toContain('SCHOLAR');
+    // Runtime QA gate: mupdf must stay external to the Next server bundle so
+    // the live route can count real PDF pages (not just direct-handler tests).
+    const cfg = (await import('../../../next.config.mjs')).default;
+    expect(cfg?.experimental?.serverComponentsExternalPackages).toContain('mupdf');
   });
 
-  test('MR-07: the report page exposes editions and the consultation gate', async ({ page }) => {
+  test('MR-07: the report page exposes tabs, editions and the consultation gate', async ({ page }) => {
     await page.goto('/milan');
     await expect(page.getByRole('heading', { name: 'Ashtakoota Milan' })).toBeVisible();
     await expect(page.getByRole('group', { name: 'Qualified PDF edition' })).toBeVisible();
@@ -103,7 +107,13 @@ test.describe('MILAN_KUNDLI_CURRENT_RENDERER', () => {
     // The paid-consultation gate is only rendered after a calculation; the
     // sample-data form is present and the CTA is reachable after computing.
     await page.getByRole('button', { name: /Fill sample/i }).click();
-    await page.getByRole('button', { name: /Calculate Milan/i }).click();
+    await page.getByRole('button', { name: /Calculate Milan/i }).click({ timeout: 20_000 });
+    // Chart-first Overview tab (Master report parity), then the Folio reading.
+    await expect(page.getByRole('tab', { name: /Overview/i })).toBeVisible();
+    await expect(page.getByRole('tab', { name: /Folio/i })).toBeVisible();
+    await expect(page.getByRole('tab', { name: /Workbench/i })).toBeVisible();
+    await page.getByRole('tab', { name: /Folio/i }).click();
+    await expect(page.getByRole('group', { name: 'Reading depth' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Traditional reading — explanation, motivation, then ask' })).toBeVisible({ timeout: 20_000 });
     await expect(page.getByRole('button', { name: /Book consultation/i })).toBeVisible();
   });

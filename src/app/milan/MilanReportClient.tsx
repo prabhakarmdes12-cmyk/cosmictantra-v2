@@ -5,11 +5,13 @@ import { useRouter } from 'next/navigation';
 import {
   Download, Printer, Shield, Sparkles, CheckCircle2, ArrowRight,
   Edit3, AlertTriangle, Heart, BookOpen, FileText, Phone, Star,
+  LayoutDashboard, Layers, Workflow,
 } from 'lucide-react';
 import { getCanonicalJyotishSnapshot } from '@/lib/jyotish/canonicalSnapshot';
 import { calculateMilan, milanInputFromSnapshot, milanContextFromSnapshot, MilanCalculation, MilanPersonInput } from '@/lib/kundli/v42/milan/milanEngine';
 import GlobalHeader from '@/components/layout/GlobalHeader';
 import LanguageSelectorModal from '@/components/layout/LanguageSelectorModal';
+import NorthIndianChart from '@/components/NorthIndianChart';
 import { chitiSensory } from '@/lib/chitiAudio';
 
 type PdfMode = 'CLIENT' | 'PANDIT' | 'SCHOLAR';
@@ -46,8 +48,20 @@ export default function MilanReportClient() {
   const [pdfNotice, setPdfNotice] = useState<string | null>(null);
   const [failSafe, setFailSafe] = useState<{ message: string; code: string } | null>(null);
   const [lastPdfMeta, setLastPdfMeta] = useState<{ pages: number; kb: number } | null>(null);
+  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'FOLIO' | 'WORKBENCH'>('OVERVIEW');
+  const [selectedKootaId, setSelectedKootaId] = useState<string>('varna');
+  const [chartData, setChartData] = useState<{ bride: any; groom: any } | null>(null);
+  const [readingDepth, setReadingDepth] = useState<'SIMPLE' | 'DETAILED' | 'PANDIT'>('DETAILED');
 
   const hi = lang === 'hi';
+
+  const chartFor = (snap: any) => (snap ? { lagna: snap.lagna, houses: snap.houses, planets: snap.planets } : null);
+
+  const visiblePredictions = calc
+    ? readingDepth === 'SIMPLE'
+      ? calc.predictions.filter((p) => p.id === 'resonance' || p.id === 'dosha')
+      : calc.predictions
+    : [];
 
   useEffect(() => {
     try {
@@ -108,6 +122,8 @@ export default function MilanReportClient() {
         milanInputFromSnapshot(snapA),
         { brideCtx: milanContextFromSnapshot(snapB), groomCtx: milanContextFromSnapshot(snapA) }
       );
+      setChartData({ bride: snapB, groom: snapA });
+      setSelectedKootaId(result.kootas[0]?.id || 'varna');
       setCalc(result);
       setUsingDemo(false);
     } catch (err) {
@@ -323,7 +339,157 @@ export default function MilanReportClient() {
 
         {calc && (
           <>
-            {/* Verdict */}
+            {/* Section tabs (parity with Master Kundli report's O / FOLIO / WORKBENCH) */}
+            <section className="bg-white dark:bg-[#121422] rounded-2xl border border-[#E5D7BC] dark:border-white/10 shadow-sm p-3 print:hidden">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5" role="tablist" aria-label="Milan report section">
+                  {([
+                    ['OVERVIEW', 'Overview', LayoutDashboard, hi ? 'अवलोकन' : ''],
+                    ['FOLIO', 'Folio', Layers, hi ? 'फोलियो' : ''],
+                    ['WORKBENCH', 'Workbench', Workflow, hi ? 'कार्यक्षेत्र' : ''],
+                  ] as const).map(([id, label, Icon, labelHi]) => (
+                    <button
+                      key={id} type="button" role="tab" aria-selected={activeTab === id}
+                      onClick={() => { chitiSensory.playTick(); setActiveTab(id); }}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${activeTab === id ? 'bg-[#1C1917] dark:bg-[#D4AF37] text-[#FDFBF7] dark:text-[#060709] shadow-sm' : 'text-[#78716C] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#EFECE6]'}`}
+                    >
+                      <Icon className="w-3.5 h-3.5" /> {hi && labelHi ? labelHi : label}
+                    </button>
+                  ))}
+                </div>
+                {activeTab === 'FOLIO' && (
+                  <div className="flex items-center gap-1" role="group" aria-label="Reading depth">
+                    {(['SIMPLE', 'DETAILED', 'PANDIT'] as const).map((depth) => (
+                      <button key={depth} type="button" aria-pressed={readingDepth === depth} onClick={() => { chitiSensory.playTick(); setReadingDepth(depth); }}
+                        className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${readingDepth === depth ? 'bg-[#8E6F1D] text-white shadow-xs' : 'text-[#78716C] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#EFECE6]'}`}>
+                        {depth === 'SIMPLE' ? (hi ? 'सरल' : 'Simple') : depth === 'DETAILED' ? (hi ? 'विस्तृत' : 'Detailed') : (hi ? 'पण्डित' : 'Pandit')}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {activeTab === 'OVERVIEW' && (
+              <section className="space-y-5">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                  {[
+                    { id: 'groom', title: hi ? 'वर (D1)' : 'Groom (D1)', who: groom.name || (hi ? 'वर' : 'Groom') },
+                    { id: 'bride', title: hi ? 'वधू (D1)' : 'Bride (D1)', who: bride.name || (hi ? 'वधू' : 'Bride') },
+                  ].map((c) => {
+                    const snap = c.id === 'bride' ? chartData?.bride : chartData?.groom;
+                    const lagna = snap?.lagna?.rashiName || snap?.lagna?.rasiName || '';
+                    return (
+                      <div key={c.id} className="bg-white dark:bg-[#121422] rounded-2xl p-5 border border-[#E5D7BC] dark:border-white/10 shadow-sm space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968] flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5" /> {c.title}
+                          </h3>
+                          <span className="text-[10px] font-mono-data text-[#78716C] dark:text-[#A8A29E]">{lagna ? `Lagna ${lagna}` : '—'}</span>
+                        </div>
+                        {snap ? (
+                          <div className="flex flex-col items-center gap-2">
+                            <NorthIndianChart kundali={chartFor(snap)} theme={theme} size={300} />
+                            <p className="text-[10px] text-[#78716C] dark:text-[#A8A29E] font-mono-data -mt-1">{c.who}</p>
+                          </div>
+                        ) : (
+                          <div className="h-72 flex items-center justify-center text-xs text-[#78716C]">{hi ? 'चार्ट उपलब्ध नहीं' : 'Chart unavailable'}</div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="bg-white dark:bg-[#121422] rounded-2xl border border-[#E5D7BC] dark:border-white/10 shadow-sm p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                    <div className="text-center md:border-r md:border-[#F0E6D2] dark:border-white/5">
+                      <div className="text-[10px] uppercase tracking-[0.2em] text-[#78716C] dark:text-[#A8A29E] font-bold">{hi ? 'शास्त्रीय योग' : 'Classical score'}</div>
+                      <div className="font-serif font-bold text-5xl text-[#8E6F1D] dark:text-[#F0C968] mt-1">{calc.total}<span className="text-xl text-[#78716C]">/{calc.maxTotal}</span></div>
+                    </div>
+                    <div className="md:col-span-2">
+                      <h2 className="text-lg font-serif font-bold">{calc.verdict.titleHi && hi ? calc.verdict.titleHi : calc.verdict.title}</h2>
+                      <p className="text-xs text-[#57534E] dark:text-[#D1C9BF] leading-relaxed mt-1">{calc.verdict.summaryHi && hi ? calc.verdict.summaryHi : calc.verdict.summary}</p>
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {calc.doshas.map((d) => (
+                          <span key={d.id} className={`px-2 py-1 rounded-lg text-[10px] font-bold border ${d.cancelled ? 'bg-amber-50 text-amber-800 border-amber-300' : d.active ? 'bg-rose-50 text-rose-700 border-rose-300' : 'bg-emerald-50 text-emerald-700 border-emerald-300'}`}>
+                            {d.name}: {d.cancelled ? (hi ? 'निरस्त' : 'Cancelled') : d.active ? (hi ? 'सक्रिय' : 'Active') : (hi ? 'शुद्ध' : 'Clear')}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <button onClick={() => { chitiSensory.playTick(); setActiveTab('FOLIO'); }} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-[#8E6F1D]/30 text-[#8E6F1D] dark:text-[#F0C968]">
+                      <BookOpen className="w-3.5 h-3.5" /> {hi ? 'पूरा पाठ देखें' : 'Open full reading'}
+                    </button>
+                    <button onClick={() => router.push('/ask?focus=milan&mode=detailed')} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-[#8E6F1D] text-white">
+                      <Phone className="w-3.5 h-3.5" /> {hi ? 'परामर्श बुक करें' : 'Book consultation'}
+                    </button>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {activeTab === 'WORKBENCH' && (
+              <section className="space-y-5">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                  <div className="bg-white dark:bg-[#121422] rounded-2xl border border-[#E5D7BC] dark:border-white/10 shadow-sm overflow-hidden">
+                    <div className="px-5 py-3 border-b border-[#F0E6D2] dark:border-white/5 bg-[#FAF6EF] dark:bg-[#161828]">
+                      <h2 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968]">{hi ? 'कूट कार्यक्षेत्र' : 'Koota workbench'}</h2>
+                    </div>
+                    <div className="divide-y divide-[#F0E6D2] dark:divide-white/5">
+                      {calc.kootas.map((k) => (
+                        <button key={k.id} type="button" onClick={() => { chitiSensory.playTick(); setSelectedKootaId(k.id); }}
+                          className={`w-full flex items-center gap-2 px-5 py-3 text-xs text-left transition-colors ${selectedKootaId === k.id ? 'bg-amber-50/70 dark:bg-[#D4AF37]/10' : 'hover:bg-[#FAF6EF] dark:hover:bg-[#161828]'}`}>
+                          <div className="w-28 font-bold">{k.sanskrit || k.name}</div>
+                          <div className="flex-1 text-[#57534E] dark:text-[#D1C9BF] truncate">{k.detail}</div>
+                          <div className="font-bold text-[#8E6F1D] dark:text-[#F0C968]">{k.points}/{k.maxPoints}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="bg-white dark:bg-[#121422] rounded-2xl border border-[#E5D7BC] dark:border-white/10 shadow-sm p-5">
+                    {(() => {
+                      const k = calc.kootas.find((x) => x.id === selectedKootaId) || calc.kootas[0];
+                      if (!k) return null;
+                      return (
+                        <div className="space-y-3">
+                          <div>
+                            <span className="text-[10px] uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E] font-bold">{hi ? 'चयनित कूट' : 'Selected koota'}</span>
+                            <h3 className="text-base font-serif font-bold">{k.sanskrit || k.name} <span className="text-xs text-[#78716C] font-normal">· {k.name}</span></h3>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="font-serif font-bold text-3xl text-[#8E6F1D] dark:text-[#F0C968]">{k.points}<span className="text-base text-[#78716C]">/{k.maxPoints}</span></span>
+                            <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold ${k.verdict === 'Dosha' ? 'bg-rose-50 text-rose-700' : k.verdict === 'Low' ? 'bg-amber-50 text-amber-800' : 'bg-emerald-50 text-emerald-700'}`}>{k.verdict}</span>
+                          </div>
+                          <p className="text-xs leading-relaxed text-[#44403C] dark:text-[#D1C9BF]">{k.detail}</p>
+                          <p className="text-xs leading-relaxed text-[#57534E] dark:text-[#A8A29E]">{k.detailHi}</p>
+                        </div>
+                      );
+                    })()}
+                    <div className="mt-5 pt-4 border-t border-[#F0E6D2] dark:border-white/5">
+                      <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968] mb-2">{hi ? 'पूरक दोष' : 'Supplemental doshas'}</h3>
+                      <div className="space-y-2">
+                        {calc.supplementalDoshas.map((d) => (
+                          <button key={d.id} type="button" className="w-full text-left rounded-xl border border-[#F0E6D2] dark:border-white/10 p-3 bg-[#FAF7F2] dark:bg-[#0E101D]">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs font-bold">{d.name}</span>
+                              <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border ${d.cancelled ? 'bg-amber-50 text-amber-800 border-amber-300' : d.active ? 'bg-rose-50 text-rose-700 border-rose-300' : 'bg-emerald-50 text-emerald-700 border-emerald-300'}`}>
+                                {d.cancelled ? (hi ? 'निरस्त' : 'Cancelled') : d.active ? (hi ? 'सक्रिय' : 'Active') : (hi ? 'शुद्ध' : 'Clear')}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-[#57534E] dark:text-[#D1C9BF] mt-1">{hi && d.reasonHi ? d.reasonHi : d.reason}</p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {activeTab === 'FOLIO' && (
+              <>
             <section className="bg-white dark:bg-[#121422] rounded-2xl border border-[#E5D7BC] dark:border-white/10 shadow-sm p-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                 <div className="text-center md:border-r md:border-[#F0E6D2] dark:border-white/5">
@@ -416,7 +582,7 @@ export default function MilanReportClient() {
                   <p className="font-semibold mt-1">{topKoota.sanskrit || topKoota.name} — {topKoota.points}/{topKoota.maxPoints} · {topKoota.detail}</p>
                 </div>
               )}
-              {calc.predictions.map((p) => (
+              {visiblePredictions.map((p) => (
                 <div key={p.id} className="bg-white dark:bg-[#121422] rounded-2xl border border-[#E5D7BC] dark:border-white/10 shadow-sm p-5">
                   <h3 className="text-base font-serif font-bold">{hi && p.titleHi ? p.titleHi : p.title}</h3>
                   <div className="mt-3 space-y-3 text-xs leading-relaxed text-[#44403C] dark:text-[#D1C9BF]">
@@ -465,6 +631,8 @@ export default function MilanReportClient() {
                 </button>
               </div>
             </section>
+              </>
+            )}
           </>
         )}
       </main>

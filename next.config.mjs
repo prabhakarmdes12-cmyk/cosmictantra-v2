@@ -2,6 +2,12 @@
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false, // Security: Hide Next.js banner
+  // mupdf is a native ESM package used server-side for PDF page-count QA
+  // (and the Kundli PDF inspect toolkit). Keep it external to the server
+  // bundle so `import('mupdf')` resolves at runtime instead of being wrapped.
+  experimental: {
+    serverComponentsExternalPackages: ['mupdf'],
+  },
   async headers() {
     return [
       {
