@@ -7,7 +7,7 @@ Coverage compares the stored corpus against a per-edition manifest. It is **not*
 | Book | Edition | Status | Stored rows | Verses stored | Expected verses | Missing | Extra | Corrupt |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | श्रीमद्भगवद्गीता (Shrimad Bhagavad Gita) | `ct-gita-bundled-devanagari-hi-2026-08-31` | COMPLETE_FOR_EDITION | 770 | 701 | 701 | 0 | 0 | 0 |
-| श्री रामचरितमानस (Shri Ramcharitmanas) | `unversioned:ramcharitmanas` | NO_EDITION_MANIFEST | 14 | 0 | unknown | 0 | 0 | 0 |
+| श्री रामचरितमानस (Shri Ramcharitmanas) | `ct-ramcharitmanas-dharamicdata-odbl-snapshot-2026-09-02` | COMPLETE_FOR_EDITION | 2247 | 2247 | 2247 | 0 | 0 | 0 |
 | श्री शिव महापुराण (Shri Shiva Mahapuran) | `unversioned:shiva-mahapuran` | NO_EDITION_MANIFEST | 11 | 1 | unknown | 0 | 0 | 0 |
 | श्रीमद् देवी भागवत महापुराण (Shrimad Devi Bhagavata Mahapuran) | `unversioned:devi-bhagavata` | NO_EDITION_MANIFEST | 6 | 0 | unknown | 0 | 0 | 0 |
 
@@ -67,11 +67,37 @@ Coverage compares the stored corpus against a per-edition manifest. It is **not*
 
 ## श्री रामचरितमानस (Shri Ramcharitmanas) (`ramcharitmanas`)
 
-- Edition: Unversioned stored text (Goswami Tulsidas (Sanatan Awadhi & Sanskrit Mangalacharan))
-- Status: **NO_EDITION_MANIFEST**
-- Stored: 14 rows — 0 verses, 0 grouped, 0 speaker labels, 9 invocation/paratext, 5 unclassified
+- Edition: श्री रामचरितमानस — DharmicData (ODbL-1.0) Awadhi/Sanskrit mūla snapshot (granth_raw/ramcharitmanas/)
+- Status: **COMPLETE_FOR_EDITION**
+- Stored: 2247 rows — 2247 verses, 0 grouped, 0 speaker labels, 0 invocation/paratext, 0 unclassified
+- Provenance kind: REPOSITORY_BUNDLED_SNAPSHOT
+- Independent collation: NO
+- Rights status: ODbL-1.0
+  - `granth_raw/ramcharitmanas/1_बाल_काण्ड_data.json` — 612320 bytes, sha256 `d6308090bfe04a6e…`
+  - `granth_raw/ramcharitmanas/2_अयोध्या_काण्ड_data.json` — 520271 bytes, sha256 `d2fdc393cfe0bf4c…`
+  - `granth_raw/ramcharitmanas/3_अरण्य_काण्ड_data.json` — 105125 bytes, sha256 `02e8e56c71b08766…`
+  - `granth_raw/ramcharitmanas/4_किष्किन्धा_काण्ड_data.json` — 56964 bytes, sha256 `e3010b24655ebb4d…`
+  - `granth_raw/ramcharitmanas/5_सुंदर_काण्ड_data.json` — 102972 bytes, sha256 `373d3c60acec2dd6…`
+  - `granth_raw/ramcharitmanas/6_लंका_काण्ड_data.json` — 245432 bytes, sha256 `58c53a7723397454…`
+  - `granth_raw/ramcharitmanas/7_उत्तर_काण्ड_data.json` — 261657 bytes, sha256 `099a77de786bb947…`
 
-> No edition manifest: expected units are unknown, so this book cannot be reported as complete. Stored fragments only.
+| Ch | Expected verses | Stored verses | Stored rows | Missing | Complete |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 760 | 760 | 760 | — | yes |
+| 2 | 664 | 664 | 664 | — | yes |
+| 3 | 98 | 98 | 98 | — | yes |
+| 4 | 61 | 61 | 61 | — | yes |
+| 5 | 121 | 121 | 121 | — | yes |
+| 6 | 273 | 273 | 273 | — | yes |
+| 7 | 270 | 270 | 270 | — | yes |
+
+> Chapter 1: 760 verse(s) lack the stored Hindi anuvāda.
+> Chapter 2: 664 verse(s) lack the stored Hindi anuvāda.
+> Chapter 3: 98 verse(s) lack the stored Hindi anuvāda.
+> Chapter 4: 61 verse(s) lack the stored Hindi anuvāda.
+> Chapter 5: 121 verse(s) lack the stored Hindi anuvāda.
+> Chapter 6: 273 verse(s) lack the stored Hindi anuvāda.
+> Chapter 7: 270 verse(s) lack the stored Hindi anuvāda.
 > Coverage is measured against the bundled repository snapshot, not against a printed/critical edition.
 
 ## श्री शिव महापुराण (Shri Shiva Mahapuran) (`shiva-mahapuran`)
@@ -94,7 +120,7 @@ Coverage compares the stored corpus against a per-edition manifest. It is **not*
 
 ## Totals
 
-- Books: 4 (with edition manifest: 1)
-- Stored rows: 801
+- Books: 4 (with edition manifest: 2)
+- Stored rows: 3034
 - Missing verses vs manifest: 0
 - Rows flagged corrupt: 0

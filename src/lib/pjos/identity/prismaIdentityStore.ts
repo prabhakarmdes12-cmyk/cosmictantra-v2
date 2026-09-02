@@ -22,13 +22,14 @@ import type {
 
 /** Minimal shape of the Prisma delegates this adapter touches. */
 type Delegate = {
-  create: (args: unknown) => Promise<unknown>;
-  findUnique: (args: unknown) => Promise<unknown>;
-  findFirst: (args: unknown) => Promise<unknown>;
-  findMany: (args: unknown) => Promise<unknown[]>;
-  update: (args: unknown) => Promise<unknown>;
-  updateMany: (args: unknown) => Promise<{ count: number }>;
-  delete: (args: unknown) => Promise<unknown>;
+  create: (args: any) => Promise<any>;
+  findUnique: (args: any) => Promise<any>;
+  findFirst: (args: any) => Promise<any>;
+  findMany: (args: any) => Promise<any[]>;
+  update: (args: any) => Promise<any>;
+  updateMany: (args: any) => Promise<{ count: number }>;
+  delete: (args: any) => Promise<any>;
+  deleteMany?: (args: any) => Promise<{ count: number }>;
 };
 
 export interface PrismaLike {

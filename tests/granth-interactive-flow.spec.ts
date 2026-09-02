@@ -21,13 +21,24 @@ test('a stored chapter is read from the shared library and reported complete for
   expect(r.text).toContain('कर्मण्येवाधिकारस्ते');
 });
 
+test('a kāṇḍa-numbered Ramcharitmanas verse resolves from the shared library', async () => {
+  const r = await readScriptureText({ grantha: 'ramcharitmanas', mode: 'verse', chapter: 5, verse: 1 });
+  expect(r.found).toBe(true);
+  expect(r.code).toBeUndefined();
+  expect(r.editionId).toContain('ramcharitmanas');
+  expect(r.chapter).toBe(5);
+  expect(r.verse).toBe(1);
+  expect(r.passages?.[0]?.locator).toMatchObject({ chapter: 5, verse: 1 });
+  expect(r.text).toContain('5.1');
+});
+
 // Distinct failure modes. None of these may masquerade as stored scripture.
 for (const [label, request, code] of [
   ['chapter outside the edition', { grantha: 'gita', mode: 'chapter' as const, chapter: 25 }, 'INVALID_CHAPTER'],
   ['verse outside the chapter', { grantha: 'gita', mode: 'verse' as const, chapter: 2, verse: 999 }, 'INVALID_VERSE'],
   ['unregistered book', { grantha: 'madhurashtakam', mode: 'full' as const }, 'UNKNOWN_BOOK'],
   ['unknown book id', { grantha: 'unknown', mode: 'section' as const, sectionId: 'invented' }, 'UNKNOWN_BOOK'],
-  ['unmapped numbering', { grantha: 'ramcharitmanas', mode: 'verse' as const, chapter: 2, verse: 47 }, 'UNSUPPORTED_SCOPE'],
+  ['unmapped numbering', { grantha: 'devi-bhagavata', mode: 'verse' as const, chapter: 1, verse: 1 }, 'UNSUPPORTED_SCOPE'],
   ['concept retrieval not implemented', { grantha: 'gita', mode: 'condition' as const, condition: 'sadness' }, 'UNSUPPORTED_SCOPE'],
 ] as const) {
   test(`honest distinct failure — ${label}`, async () => {

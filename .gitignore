@@ -41,3 +41,4 @@ test-results/
 
 # Generated verification artifacts (PDFs, rasters, extracted text)
 artifacts/
+granth_raw/

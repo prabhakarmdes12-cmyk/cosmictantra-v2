@@ -2,14 +2,14 @@
 // Source: scripts/extract-granth-library.cjs
 // Regenerate with: node scripts/extract-granth-library.cjs
 // Checksum of the canonical JSON serialisation (see data/manifest.ts):
-//   0d1ae2e0d003336139cd1b02d14e6745b3f0fe2f705b37267e9a4359893178e7
+//   550e94470164f469e4002e68ceb9534577c034085a5e09e94706637bc2afa1e3
 import type { DataIndex } from '../types';
 
 const document: DataIndex = {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-31T19:54:50.343Z",
+  "generatedAt": "2026-09-02T01:41:39.704Z",
   "generatedBy": "scripts/extract-granth-library.cjs",
-  "sourceOfTruth": "src/app/aarti-stotra/page.tsx",
+  "sourceOfTruth": "src/lib/granth/data/*.ts (self-extraction)",
   "granths": [
     {
       "id": 1,
@@ -104,23 +104,39 @@ const document: DataIndex = {
       "slug": "ramcharitmanas",
       "category": "granth",
       "title": "श्री रामचरितमानस (Shri Ramcharitmanas)",
-      "source": "Goswami Tulsidas (Sanatan Awadhi & Sanskrit Mangalacharan)",
+      "source": "Goswami Tulsidas — Awadhi mūla; snapshot: bhavykhatri/DharmicData (ODbL-1.0)",
       "verified": true,
       "sections": [
         {
-          "id": "manas-mangalacharan",
-          "rows": 7
+          "id": "manas-kanda-1",
+          "rows": 760
         },
         {
-          "id": "manas-sundarkand-full",
-          "rows": 5
+          "id": "manas-kanda-2",
+          "rows": 664
         },
         {
-          "id": "manas-uttarkand-ramrajya",
-          "rows": 2
+          "id": "manas-kanda-3",
+          "rows": 98
+        },
+        {
+          "id": "manas-kanda-4",
+          "rows": 61
+        },
+        {
+          "id": "manas-kanda-5",
+          "rows": 121
+        },
+        {
+          "id": "manas-kanda-6",
+          "rows": 273
+        },
+        {
+          "id": "manas-kanda-7",
+          "rows": 270
         }
       ],
-      "rows": 14,
+      "rows": 2247,
       "dataFile": "granths/ramcharitmanas.json"
     },
     {

@@ -11,11 +11,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: false, error: 'phone required' }, { status: 400 });
   }
 
-  const repo = new PrismaIdentityStore(db);
-  const identityService = new IdentityService(repo);
+  const repo = new PrismaIdentityStore(db as any);
 
   try {
-    const identity = await identityService.resolveIdentity('PHONE', phone);
+    const identity = await repo.findIdentity('PHONE_OTP', phone);
     if (!identity) {
       return NextResponse.json({
         success: true,
@@ -29,7 +28,8 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    const relationships = await identityService.listRelationships(identity.account.id);
+    const account = await repo.getAccount(identity.accountId);
+    const relationships = await repo.listRelationships(identity.accountId);
     const familyMembers = await Promise.all(
       relationships.map(async (r) => {
         const p = await repo.getPerson(r.personId);
@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
       success: true,
       profile: {
         whatsappPhone: phone,
-        fullName: identity.account.displayName,
+        fullName: account?.displayName || null,
         consentGiven: true, // simplified
         otpVerified: true,
         familyMembers,
@@ -69,17 +69,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'whatsappPhone required' }, { status: 400 });
     }
 
-    const repo = new PrismaIdentityStore(db);
+    const repo = new PrismaIdentityStore(db as any);
     const identityService = new IdentityService(repo);
     
     // In a real flow, OTP should be verified first. Here we assume we can claim directly for the demo
     const result = await identityService.claimSession({
       tokenHash: 'dummy_hash_for_direct_post', // Normally comes from cookie
-      channel: 'PHONE',
+      channel: 'PHONE_OTP',
       subject: whatsappPhone,
       verified: true, // assume verified
       displayName: fullName,
-      sensitivity: 'PII_SENSITIVE'
+      sensitivity: 'PERSONAL_ASTROLOGY'
     });
 
     return NextResponse.json({ 

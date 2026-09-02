@@ -19,9 +19,13 @@ import { retrieveDurableConsultationMemory } from '../sabha/orchestrator';
 import { readScriptureText, parseScriptureReadRequest, handleReaderCommand } from './granthReader';
 import { reviveVerifiedSession, saveServerSession } from '@/lib/granth/session';
 import type { ReadingSession } from '@/lib/granth/session';
+import { resolveDeterministicKashiIntent } from './kashiIntentEngine';
+import { sanitizeChatOutput } from './outputSanitizer';
+import type { ConversationPanchangContext } from './dateIntelligence';
 
 export interface KashiSahayakResponse {
   text: string;
+  speakText?: string;
   intent: string;
   confidence: number;
   provenance: ProvenanceDetails;
@@ -33,6 +37,7 @@ export interface KashiSahayakResponse {
   readingSession?: ReadingSession | null;
   /** Cancellation tokens the client must use to drop stale audio/results. */
   cancelledReadingTokens?: string[];
+  panchangContext?: ConversationPanchangContext;
 }
 
 /**
@@ -50,14 +55,60 @@ export async function processKashiSahayakQuery(
     lang?: string;
     /** Serialized reading session from the client (device-local). */
     readingSession?: unknown;
+    panchangContext?: Partial<ConversationPanchangContext>;
+  } = {}
+): Promise<KashiSahayakResponse> {
+  const result = await processKashiSahayakQueryInternal(userQuery, history, userContext);
+  return sanitizeChatOutput(result);
+}
+
+async function processKashiSahayakQueryInternal(
+  userQuery: string,
+  history: Array<{ role: string; content: string }> = [],
+  userContext: {
+    city?: string;
+    profileName?: string;
+    cosmicId?: string;
+    lang?: string;
+    readingSession?: unknown;
+    panchangContext?: Partial<ConversationPanchangContext>;
   } = {}
 ): Promise<KashiSahayakResponse> {
   const query = (userQuery || '').trim();
-  const city = userContext.city || 'Varanasi';
+  const city = userContext.city || userContext.panchangContext?.location?.name || 'Varanasi';
   const lang = (userContext.lang === 'en' ? 'en' : 'hi') as 'hi' | 'en';
   const sessionId = `sess_${Date.now()}`;
 
   KashiSahayakTelemetry.log('CHAT_OPENED', sessionId, { query });
+
+  // =========================================================================
+  // 0. DETERMINISTIC PANCHANG, DATE & SACRED DAYS ENGINE (KASHI_INV_002)
+  // =========================================================================
+  const deterministicPanchang = resolveDeterministicKashiIntent(query, {
+    ...(userContext.panchangContext || {}),
+    location: userContext.panchangContext?.location || { name: city, lat: 25.3176, lng: 82.9739, tz: 5.5 }
+  });
+
+  if (deterministicPanchang) {
+    KashiSahayakTelemetry.log('INTENT_RESOLVED', sessionId, { intent: deterministicPanchang.intent });
+    KashiSahayakTelemetry.log('FREE_RESULT_SHOWN', sessionId, { intent: deterministicPanchang.intent });
+
+    return {
+      text: deterministicPanchang.text,
+      speakText: deterministicPanchang.speakText,
+      intent: deterministicPanchang.intent,
+      confidence: deterministicPanchang.confidence,
+      provenance: createCalculatedProvenance(
+        deterministicPanchang.provenance.calculation || 'CosmicTantra Lahiri Ephemeris Engine',
+        deterministicPanchang.provenance.location || city,
+        deterministicPanchang.provenance.source || 'Drik Ganita'
+      ),
+      structuredCard: deterministicPanchang.structuredCard,
+      quickChips: deterministicPanchang.quickChips,
+      toolCallsExecuted: ['canonical_panchang_bundle'],
+      panchangContext: deterministicPanchang.context
+    };
+  }
 
   // =========================================================================
   // 1. SAFETY-CRITICAL EVALUATION (Priority 0)

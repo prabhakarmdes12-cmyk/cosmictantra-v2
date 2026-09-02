@@ -352,14 +352,6 @@ export function useKashiVoice() {
     };
   }, [clearKeepAlive]);
 
-  const stop = useCallback(() => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    sessionRef.current += 1;
-    clearKeepAlive();
-    window.speechSynthesis.cancel();
-    setIsSpeaking(false);
-  }, [clearKeepAlive]);
-
   /**
    * Speak `text`.
    *
@@ -455,6 +447,42 @@ export function useKashiVoice() {
     [clearKeepAlive, startKeepAlive]
   );
 
+  const [isPaused, setIsPaused] = useState(false);
+
+  const pause = useCallback(() => {
+    try {
+      if (typeof window !== 'undefined' && window.speechSynthesis?.speaking) {
+        window.speechSynthesis.pause();
+        setIsPaused(true);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const resume = useCallback(() => {
+    try {
+      if (typeof window !== 'undefined' && window.speechSynthesis?.paused) {
+        window.speechSynthesis.resume();
+        setIsPaused(false);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const stop = useCallback(() => {
+    sessionRef.current += 1;
+    clearKeepAlive();
+    try {
+      window.speechSynthesis?.cancel();
+    } catch {
+      // ignore
+    }
+    setIsSpeaking(false);
+    setIsPaused(false);
+  }, [clearKeepAlive]);
+
   const toggleVoice = useCallback(() => {
     setVoiceEnabled((prev) => {
       const next = !prev;
@@ -468,6 +496,7 @@ export function useKashiVoice() {
           // ignore
         }
         setIsSpeaking(false);
+        setIsPaused(false);
       }
       try {
         window.localStorage.setItem(STORAGE_KEY, next ? '1' : '0');
@@ -478,7 +507,15 @@ export function useKashiVoice() {
     });
   }, [clearKeepAlive]);
 
-  return { speak, stop, toggleVoice, voiceEnabled, isSpeaking };
+  return { speak, stop, pause, resume, toggleVoice, voiceEnabled, isSpeaking, isPaused };
+}
+
+export interface VoicePlaybackState {
+  activeMessageId?: string;
+  lastSpeakableMessageId?: string;
+  state: 'IDLE' | 'PLAYING' | 'PAUSED';
+  currentOffset?: number;
 }
 
 export type KashiVoiceApi = ReturnType<typeof useKashiVoice>;
+

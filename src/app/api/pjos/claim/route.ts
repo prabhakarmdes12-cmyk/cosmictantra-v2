@@ -39,7 +39,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'Invalid OTP' }, { status: 403 });
     }
     
-    const repo = new PrismaIdentityStore(db);
+    const repo = new PrismaIdentityStore(db as any);
     const identityService = new IdentityService(repo);
     
     const claimResult = await identityService.claimSession({

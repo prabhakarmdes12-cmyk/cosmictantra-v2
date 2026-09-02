@@ -29,23 +29,13 @@
 import { NextResponse } from 'next/server';
 import { createRateLimiter, clientKeyFor } from '@/lib/rateLimit';
 import { generateKundliV41Pdf } from '@/lib/kundli/v40/pipelineV3';
-import { parseReportMode, MODE_DEFINITIONS, type ReportMode } from '@/lib/kundli/v40/reportModes';
+import { parseReportMode, MODE_DEFINITIONS, DOWNLOAD_CONTRACT, type ReportMode } from '@/lib/kundli/v40/reportModes';
 import type { RawBirthInput } from '@/lib/kundli/types';
 
 /** pdfkit, fontkit and `node:fs` — this cannot run on the edge. */
 export const runtime = 'nodejs';
 /** Every response is derived from the request body; nothing is cacheable. */
 export const dynamic = 'force-dynamic';
-
-/**
- * The contract this route guarantees. Asserted by the release gate rather
- * than merely documented, because the whole point of §0 is that documentation
- * did not stop the regression.
- */
-export const DOWNLOAD_CONTRACT = {
-  reportModelVersion: 'kundli-report-v2',
-  rendererVersion: 'kundli-pdf-renderer-v3',
-} as const;
 
 /**
  * Rendering a Scholar edition is ~2s of CPU, nine font faces and a 39-page

@@ -162,7 +162,14 @@ function summariseItem(item) {
 
 function main() {
   const data = readCollections();
-  fs.rmSync(OUT_DIR, { recursive: true, force: true });
+  // Remove generated data but NOT data/editions/: per-edition manifests are
+  // emitted by their own scripts (build-gita-edition-manifest.cjs,
+  // build-ramcharitmanas-edition.cjs) and must survive an extraction.
+  fs.rmSync(GRANTH_DIR, { recursive: true, force: true });
+  fs.rmSync(COLLECTION_DIR, { recursive: true, force: true });
+  for (const generated of ['index.ts', 'manifest.ts']) {
+    fs.rmSync(path.join(OUT_DIR, generated), { force: true });
+  }
   const files = [];
   const granthFiles = {};
 

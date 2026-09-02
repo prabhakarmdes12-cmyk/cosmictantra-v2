@@ -140,12 +140,29 @@ test('chapter, range, verse and section lookups return stored records with prove
   expect(dhyanam.passages.every((p) => p.kind === 'invocation')).toBe(true);
 });
 
+test('kāṇḍa-numbered Ramcharitmanas rows resolve through the edition manifest', async () => {
+  const verse = await lookupVerse('ramcharitmanas', 1, 1);
+  expect(verse.status).toBe('FOUND');
+  if (verse.status !== 'FOUND') return;
+  expect(verse.isCompleteScope).toBe(true);
+  expect(verse.verseNumbers).toEqual([1]);
+  expect(verse.passages[0].locator).toMatchObject({ chapter: 1, verse: 1 });
+  expect(verse.passages[0].original).toContain('वर्णानामर्थसंघानां');
+  expect(verse.passages[0].meaning).toBeUndefined();
+
+  const chapter = await lookupChapter('ramcharitmanas', 5);
+  expect(chapter.status).toBe('FOUND');
+  if (chapter.status !== 'FOUND') return;
+  expect(chapter.isCompleteScope).toBe(true);
+  expect(chapter.verseNumbers).toHaveLength(121);
+});
+
 test('a valid-but-unstored unit is never returned as stored content', async () => {
-  // Simulated by pointing at a book whose numbering is unmapped, and by an
+  // Simulated by pointing at a verse outside the edition, and by an
   // out-of-edition reference: both must fail with distinct codes.
-  const unmapped = await lookupVerse('ramcharitmanas', 1, 1);
-  expect(unmapped.status).toBe('FAILURE');
-  if (unmapped.status === 'FAILURE') expect(unmapped.code).toBe('UNSUPPORTED_SCOPE');
+  const outsideEdition = await lookupVerse('ramcharitmanas', 1, 999);
+  expect(outsideEdition.status).toBe('FAILURE');
+  if (outsideEdition.status === 'FAILURE') expect(outsideEdition.code).toBe('INVALID_VERSE');
 
   const impossible = await lookupRange('gita', 2, 60, 40);
   expect(impossible.status).toBe('FAILURE');
@@ -222,7 +239,16 @@ test('the extracted modules still match the pre-migration page literals byte for
     `${MIGRATION_BASELINE} must declare all four data literals`,
   ).toEqual(['aartisData', 'granthsData', 'siddhaStutiData', 'stotrasData']);
 
-  expect(JSON.stringify(GRANTHS_DATA)).toBe(JSON.stringify(wanted.granthsData));
+  // The three collections and the books still sourced from the page must match
+  // the pre-migration literals byte for byte. Ramcharitmanas is deliberately
+  // EXCLUDED here: it was upgraded on purpose (14 curated fragment rows ->
+  // the full 7-kāṇḍa ODbL DharmicData snapshot), so its stored text moves away
+  // from the page literal; the next test verifies the upgrade against the
+  // snapshot itself instead.
+  const keepFromPage = new Set(['bhagavad-gita', 'shiva-mahapuran', 'devi-bhagavata']);
+  const comparable = (items: any[]) => items.filter((g) => keepFromPage.has(g.slug));
+
+  expect(JSON.stringify(comparable(GRANTHS_DATA))).toBe(JSON.stringify(comparable(wanted.granthsData)));
   expect(JSON.stringify(STOTRAS_DATA)).toBe(JSON.stringify(wanted.stotrasData));
   expect(JSON.stringify(AARTIS_DATA)).toBe(JSON.stringify(wanted.aartisData));
   expect(JSON.stringify(SIDDHA_STUTI_DATA)).toBe(JSON.stringify(wanted.siddhaStutiData));
@@ -230,6 +256,38 @@ test('the extracted modules still match the pre-migration page literals byte for
   // IDs, slugs and section ids used by bookmarks are unchanged.
   expect(GRANTHS_DATA.map((g) => [g.id, g.slug])).toEqual(wanted.granthsData.map((g: any) => [g.id, g.slug]));
   for (const [extracted, originalItem] of GRANTHS_DATA.map((g, i) => [g, wanted.granthsData[i]] as const)) {
+    if (!keepFromPage.has(extracted.slug)) continue;
     expect(extracted.sections.map((s) => s.id)).toEqual(originalItem.sections.map((s: any) => s.id));
   }
+});
+
+test('the ramcharitmanas corpus matches the DharmicData ODbL snapshot entry for entry', async () => {
+  __clearBookCache();
+  const book = await loadBook('ramcharitmanas');
+  const files = [
+    { file: '1_बाल_काण्ड_data.json', chapter: 1 },
+    { file: '2_अयोध्या_काण्ड_data.json', chapter: 2 },
+    { file: '3_अरण्य_काण्ड_data.json', chapter: 3 },
+    { file: '4_किष्किन्धा_काण्ड_data.json', chapter: 4 },
+    { file: '5_सुंदर_काण्ड_data.json', chapter: 5 },
+    { file: '6_लंका_काण्ड_data.json', chapter: 6 },
+    { file: '7_उत्तर_काण्ड_data.json', chapter: 7 },
+  ];
+  const RAW_DIR = path.resolve(__dirname, '../granth_raw/ramcharitmanas');
+  let compared = 0;
+  for (const { file, chapter } of files) {
+    const entries = JSON.parse(fs.readFileSync(path.join(RAW_DIR, file), 'utf8'));
+    const section = book.sections.find((s) => s.sectionId === `manas-kanda-${chapter}`);
+    expect(section, `${file} section`).toBeTruthy();
+    expect(section!.passages).toHaveLength(entries.length);
+    entries.forEach((entry: any, i: number) => {
+      const passage = section!.passages[i];
+      expect(passage.locator.chapter).toBe(chapter);
+      expect(passage.locator.verse).toBe(i + 1);
+      expect(passage.original).toBe(String(entry.content));
+      expect(passage.meaning).toBeUndefined();
+      compared += 1;
+    });
+  }
+  expect(compared).toBe(2247);
 });

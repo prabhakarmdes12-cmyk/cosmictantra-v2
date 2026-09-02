@@ -67,6 +67,14 @@ export default function CosmicNow({ lang = 'en' }: CosmicNowProps) {
     setSelectedCity(city);
     setShowCityDropdown(false);
     trackEvent('LOCATION_CHANGED', { city: city.name });
+    try {
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('cosmictantra_active_city', JSON.stringify(city));
+        window.dispatchEvent(new CustomEvent('cosmictantra:location_changed', { detail: { city } }));
+      }
+    } catch {
+      // ignore
+    }
   };
 
   if (!panchang) return null;

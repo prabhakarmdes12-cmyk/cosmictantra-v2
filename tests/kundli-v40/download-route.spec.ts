@@ -17,7 +17,8 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { POST, GET, DOWNLOAD_CONTRACT } from '../../src/app/api/kundli/pdf/route';
+import { POST, GET } from '../../src/app/api/kundli/pdf/route';
+import { DOWNLOAD_CONTRACT } from '../../src/lib/kundli/v40/reportModes';
 import { GOLDEN_BIRTH_INPUT } from './goldenCanonical';
 import { inspectPdf } from './qa/pdfInspect';
 

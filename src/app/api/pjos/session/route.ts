@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     
     const tokenHash = hashToken(token);
     
-    const repo = new PrismaIdentityStore(db);
+    const repo = new PrismaIdentityStore(db as any);
     const identityService = new IdentityService(repo);
     
     // 1. Begin or resume anonymous session

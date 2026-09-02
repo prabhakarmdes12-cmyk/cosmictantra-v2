@@ -39,22 +39,23 @@ const SHRINES_DB: Record<string, any> = {
   }
 };
 
+import { getCanonicalPanchangBundle } from '@/lib/panchangFactBundle';
+
 export async function executeVedicTool(name: string, args: Record<string, any>): Promise<any> {
   switch (name) {
     case 'get_panchang': {
-      const now = new Date();
-      const p = calculatePanchang(now, 25.3176, 82.9739, 5.5);
-      const dateStr = now.toLocaleDateString('hi-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      const targetDate = args.date ? new Date(args.date) : new Date();
+      const bundle = getCanonicalPanchangBundle(targetDate, args.city || args.location);
       return {
-        dateStr,
-        tithi: `${p.tithi?.paksha === 'Shukla Paksha' ? 'शुक्ल' : 'कृष्ण'} ${p.tithi?.name}`,
-        tithiPaksha: p.tithi?.paksha === 'Shukla Paksha' ? 'शुक्ल पक्ष (चान्द्र वृद्धि)' : 'कृष्ण पक्ष (चान्द्र क्षय)',
-        nakshatra: p.nakshatra?.name || 'शतभिषा',
-        pada: p.nakshatra?.pada || 1,
-        yoga: p.yoga?.name || 'शोभन',
-        karana: p.karana?.name || 'बव',
-        rahuKaal: `${p.rahuKala?.start} – ${p.rahuKala?.end}`,
-        abhijitMuhurat: '11:45 AM – 12:35 PM',
+        dateStr: bundle.date,
+        tithi: bundle.tithi.fullNameHi,
+        tithiPaksha: bundle.tithi.pakshaHi,
+        nakshatra: bundle.nakshatra.nameHi,
+        pada: bundle.nakshatra.pada,
+        yoga: bundle.yoga.nameHi,
+        karana: bundle.karana.nameHi,
+        rahuKaal: bundle.timings.rahuKalam,
+        abhijitMuhurat: bundle.timings.abhijitMuhurat,
         recommendation: 'सामान्य व शुभ कार्यों हेतु अनुकूल समय।'
       };
     }

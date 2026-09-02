@@ -1,14 +1,14 @@
 // GENERATED FILE — do not edit by hand.
-// Source: src/app/aarti-stotra/page.tsx
+// Source: src/lib/granth/data/*.ts (self-extraction)
 // Regenerate with: node scripts/extract-granth-library.cjs
 // Checksum of the canonical JSON serialisation (see data/manifest.ts):
-//   0cd941d1f4444a45b39ea25dd8f54ebc0059a0e3f58c91128498b7f378a82375
+//   b373e4c2d5bc010d1c0788d76ad2c9a5d5b2fb31c78f024a746ae34100f5c24c
 import type { BookDocument } from '../../types';
 
 const document: BookDocument = {
   "schemaVersion": 1,
-  "extractedAt": "2026-08-31T19:54:50.343Z",
-  "extractedFrom": "src/app/aarti-stotra/page.tsx",
+  "extractedAt": "2026-09-02T01:41:39.704Z",
+  "extractedFrom": "src/lib/granth/data/*.ts (self-extraction)",
   "category": "granth",
   "item": {
     "id": 1,

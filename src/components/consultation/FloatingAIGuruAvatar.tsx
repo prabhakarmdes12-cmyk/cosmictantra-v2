@@ -36,7 +36,8 @@ import { getActiveProfile, upsertProfile, setActiveProfileId } from '@/lib/profi
 import { parseBirthTime, parseBirthDate, resolveBirthCity, CityChoice } from '@/lib/ai/intakeParsing';
 import { CITIES } from '@/lib/cities';
 import { calculateKundali } from '@/lib/astrologyEngine';
-import { calculatePanchang } from '@/engines/panchang.js';
+import { getCanonicalPanchangBundle, DEFAULT_LOCATION } from '@/lib/panchangFactBundle';
+import type { ConversationPanchangContext } from '@/lib/ai/dateIntelligence';
 import { chitiSensory } from '@/lib/chitiAudio';
 import { ScriptureInsight, findScriptureInsight, SCRIPTURE_WISDOM_REGISTRY } from '@/lib/ai/scriptureMap';
 import { MOOD_OPTIONS, MOOD_QUESTION_HI, getMoodById } from '@/lib/ai/moodOptions';
@@ -73,6 +74,7 @@ interface ChatMessage {
   id: string;
   sender: 'GURU' | 'USER' | 'SYSTEM';
   text: string;
+  speakText?: string;
   timestamp: string;
   provenance?: ProvenanceMeta;
   scriptureCard?: ScriptureInsight;
@@ -322,6 +324,9 @@ export default function FloatingAIGuruAvatar() {
 
   const voice = useKashiVoice();
   const [inputVal, setInputVal] = useState('');
+  const [panchangContext, setPanchangContext] = useState<ConversationPanchangContext | null>(null);
+  const [lastSpeakableMsg, setLastSpeakableMsg] = useState<ChatMessage | null>(null);
+  const activeCityRef = useRef<any>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
   /** Mirrors isOpen for callbacks (speech completion) that outlive a render. */
   const isOpenRef = useRef(false);
@@ -329,6 +334,37 @@ export default function FloatingAIGuruAvatar() {
     isOpenRef.current = isOpen;
     if (!isOpen) readingAutoAdvanceRef.current = false;
   }, [isOpen]);
+
+  // Listen for Cosmic Now location changes
+  useEffect(() => {
+    const handleLoc = (e: any) => {
+      if (e.detail?.city) {
+        activeCityRef.current = e.detail.city;
+        setPanchangContext(prev => prev ? {
+          ...prev,
+          location: {
+            name: e.detail.city.name,
+            nameHi: e.detail.city.nameHi,
+            lat: e.detail.city.lat,
+            lng: e.detail.city.lon || e.detail.city.lng,
+            tz: e.detail.city.tz || 5.5
+          }
+        } : null);
+      }
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('cosmictantra:location_changed', handleLoc);
+      try {
+        const stored = window.localStorage.getItem('cosmictantra_active_city');
+        if (stored) activeCityRef.current = JSON.parse(stored);
+      } catch {}
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('cosmictantra:location_changed', handleLoc);
+      }
+    };
+  }, []);
 
   // Time-aware greeting — always capability-led and feeling-first so the
   // seeker instantly knows what Kashi Sahayak offers and feels invited to
@@ -486,54 +522,48 @@ export default function FloatingAIGuruAvatar() {
     setIsOpen(!isOpen);
 
     if (!isOpen && chatMessages.length === 0) {
-      const p = calculatePanchang(new Date(), 25.3176, 82.9739, 5.5);
-      const dateStr = new Date().toLocaleDateString('hi-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-
-      // Personalized, capability-led, feeling-first greeting:
-      // 1) who I am, 2) everything I can do for you (one breath),
-      // 3) today's cosmic snapshot as a value teaser,
-      // 4) emotional check-in — "आज आपका मन कैसा है?" — answered via mood chips.
-      const hour = new Date().getHours();
-      const daySalutation =
-        hour >= 5 && hour < 11 ? 'सुप्रभात'
-        : hour >= 11 && hour < 17 ? 'नमस्कार'
-        : hour >= 17 && hour < 22 ? 'शुभ संध्या'
-        : 'हर हर महादेव';
-      const nameHonorific = seekerData.name ? ` ${seekerData.name} जी` : '';
-      const pakshaHi = p.tithi?.paksha === 'Shukla Paksha' ? 'शुक्ल' : 'कृष्ण';
+      const activeLoc = activeCityRef.current || seekerData.birthCity || DEFAULT_LOCATION;
+      const bundle = getCanonicalPanchangBundle(new Date(), activeLoc);
+      const locLabel = bundle.location.nameHi || bundle.location.name;
 
       const greetingText =
-        `${daySalutation}${nameHonorific}! हर हर महादेव! 🙏\n\n` +
-        `मैं काशी सहायक हूँ — काशी विश्वनाथ की पावन धरा से आपकी वैदिक सहायिका।\n\n` +
-        `आपके लिए मैं ये सब कर सकती हूँ:\n` +
-        `• आज का पञ्चाङ्ग, राहुकाल व शुभ मुहूर्त\n` +
-        `• काशी विश्वनाथ सहित महातीर्थों के साक्षात् लाइव दर्शन\n` +
-        `• मन्त्र, स्तोत्र व १०८ जप माला\n` +
-        `• आपकी कुण्डली की प्रत्यक्ष खगोलीय गणना व दशा\n` +
-        `• और ज़रूरत हो तो काशी के सत्यापित विद्वान् ज्योतिषी से प्रत्यक्ष परामर्श\n\n` +
-        `आज ${dateStr} है — ${pakshaHi} ${p.tithi?.name}, नक्षत्र ${p.nakshatra?.name}।\n\n` +
-        MOOD_QUESTION_HI;
+        `हर हर महादेव! 🙏\n\n` +
+        `आज ${locLabel} का पञ्चाङ्ग मेरे पास है।\n` +
+        `आप तिथि, राहुकाल, शुभ समय, व्रत या किसी दूसरी तारीख के बारे में पूछ सकते हैं।\n\n` +
+        `• आज की तिथि: ${bundle.tithi.fullNameHi}\n` +
+        `• राहुकाल: ${bundle.timings.rahuKalam}\n` +
+        `• शुभ अभिजित मुहूर्त: ${bundle.timings.abhijitMuhurat}`;
 
-      setChatMessages([
-        {
-          id: 'welcome-1',
-          sender: 'GURU',
-          text: greetingText,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          provenance: {
-            calculation: 'CosmicTantra Lahiri Engine',
-            location: 'Varanasi (काशी)',
-            source: 'प्रामाणिक दृक् पञ्चाङ्ग',
-            interpretation: 'काशी सहायक • AI-Assisted'
-          },
-          quickChips: [
-            // Mood quick-check chips first — one tap tells Kashi Sahayak how
-            // the seeker feels today; capability chips follow in the reply.
-            ...MOOD_OPTIONS.map((m) => ({ label: m.chipLabel, action: m.id })),
-            { label: '⏩ सीधे विषय पर चलें', action: 'SKIP_MOOD' },
-          ],
+      const speakGreeting = `हर हर महादेव! आज ${locLabel} का पंचांग मेरे पास है। आप तिथि, राहुकाल, शुभ समय या व्रत के बारे में पूछ सकते हैं।`;
+
+      const initialMsg: ChatMessage = {
+        id: 'welcome-1',
+        sender: 'GURU',
+        text: greetingText,
+        speakText: speakGreeting,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        provenance: {
+          calculation: bundle.provenance.calculationEngine,
+          location: bundle.location.name,
+          source: bundle.provenance.source,
+          interpretation: 'काशी सहायक • प्रत्यक्ष दृक्-गणित'
         },
-      ]);
+        quickChips: [
+          { label: '✨ आज का शुभ समय', action: 'INTENT_ABHIJIT' },
+          { label: '🕒 आज का राहुकाल', action: 'INTENT_RAHU' },
+          { label: '🙏 अगली एकादशी', action: 'INTENT_NEXT_EKADASHI' },
+          { label: '📅 कल का पञ्चाङ्ग', action: 'INTENT_PANCHANG_TOMORROW' },
+          ...MOOD_OPTIONS.slice(0, 2).map((m) => ({ label: m.chipLabel, action: m.id })),
+        ],
+      };
+
+      setChatMessages([initialMsg]);
+      setLastSpeakableMsg(initialMsg);
+      setPanchangContext({
+        referenceDate: bundle.date,
+        location: bundle.location,
+        source: 'COSMIC_NOW'
+      });
     }
   };
 
@@ -642,13 +672,11 @@ export default function FloatingAIGuruAvatar() {
   // Intent Handlers (Deterministic Output Generation)
   // -------------------------------------------------------------
   const handlePanchangQuery = () => {
-    const now = new Date();
-    const p = calculatePanchang(now, 25.3176, 82.9739, 5.5);
-    const dateStr = now.toLocaleDateString('hi-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    
-    // Check Rahu Kaal window
-    const currentHour = now.getHours() + now.getMinutes() / 60;
-    const isRahuNow = currentHour >= 13.5 && currentHour <= 15.0; // 1:30 PM - 3:00 PM approx
+    const loc = panchangContext?.location || DEFAULT_LOCATION;
+    const date = panchangContext?.referenceDate ? new Date(`${panchangContext.referenceDate}T12:00:00`) : new Date();
+    const bundle = getCanonicalPanchangBundle(date, loc);
+    const dateStr = bundle.date;
+    const locNameHi = bundle.location.nameHi || bundle.location.name;
 
     setTimeout(() => {
       setChatMessages(prev => [
@@ -656,26 +684,27 @@ export default function FloatingAIGuruAvatar() {
         {
           id: `g-${Date.now()}`,
           sender: 'GURU',
-          text: `हर हर महादेव! 🙏 आज की प्रत्यक्ष खगोलीय गणना (काशी वेधशाला अनुसार):\n\nआज ${dateStr} है। तिथि: ${p.tithi?.paksha === 'Shukla Paksha' ? 'शुक्ल पक्ष' : 'कृष्ण पक्ष'} ${p.tithi?.name} (${p.tithi?.meaning})।\n\nराहुकाल: ${p.rahuKala?.start} से ${p.rahuKala?.end} बजे तक। अभिजित मुहूर्त: ११:४५ AM से १२:३५ PM तक।`,
+          text: `हर हर महादेव! 🙏 आज की प्रत्यक्ष खगोलीय गणना (${locNameHi} अनुसार):\n\nआज ${bundle.date} (${bundle.weekdayNameHi}) है। तिथि: ${bundle.tithi.fullNameHi}।\n\nराहुकाल: ${bundle.timings.rahuKalam}। अभिजित मुहूर्त: ${bundle.timings.abhijitMuhurat}।`,
+          speakText: `${locNameHi} में आज तिथि ${bundle.tithi.fullNameHi} है। राहुकाल ${bundle.timings.rahuKalam} रहेगा।`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           provenance: {
-            calculation: 'CosmicTantra Lahiri Engine',
-            location: 'Varanasi, UP',
-            source: 'प्रामाणिक दृक् पञ्चाङ्ग',
+            calculation: bundle.provenance.calculationEngine,
+            location: bundle.provenance.locationStr,
+            source: bundle.provenance.source,
             interpretation: 'काशी सहायक'
           },
           panchangCard: {
             dateStr,
-            tithi: `${p.tithi?.paksha === 'Shukla Paksha' ? 'शुक्ल' : 'कृष्ण'} ${p.tithi?.name}`,
-            tithiPaksha: p.tithi?.paksha === 'Shukla Paksha' ? 'शुक्ल पक्ष (चान्द्र वृद्धि)' : 'कृष्ण पक्ष (चान्द्र क्षय)',
-            nakshatra: p.nakshatra?.name || 'शतभिषा',
-            pada: p.nakshatra?.pada || 1,
-            yoga: p.yoga?.name || 'शोभन',
-            karana: p.karana?.name || 'बव',
-            rahuKaal: `${p.rahuKala?.start} – ${p.rahuKala?.end}`,
-            abhijitMuhurat: '11:45 AM – 12:35 PM',
-            isRahuNow,
-            recommendation: isRahuNow 
+            tithi: bundle.tithi.fullNameHi,
+            tithiPaksha: bundle.tithi.pakshaHi,
+            nakshatra: bundle.nakshatra.nameHi,
+            pada: bundle.nakshatra.pada,
+            yoga: bundle.yoga.nameHi,
+            karana: bundle.karana.nameHi,
+            rahuKaal: bundle.timings.rahuKalam,
+            abhijitMuhurat: bundle.timings.abhijitMuhurat,
+            isRahuNow: bundle.timings.isRahuNow,
+            recommendation: bundle.timings.isRahuNow 
               ? '⚠️ वर्तमान में राहुकाल सक्रिय है — नए समझौते या वित्तीय आरम्भ स्थगित रखें।' 
               : '🌟 वर्तमान समय सामान्य व शुभ कार्यों हेतु अनुकूल है।'
           },
@@ -1370,25 +1399,33 @@ export default function FloatingAIGuruAvatar() {
    */
   const postGuru = async (text: string): Promise<boolean> => {
     try {
+      const activeLoc = activeCityRef.current || seekerData.birthCity || 'Dhanbad, JH';
+      const cityName = panchangContext?.location?.name || (typeof activeLoc === 'string' ? activeLoc : activeLoc.name);
+
       const res = await fetch('/api/guru/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: text,
-          history: chatMessages.slice(-4).map(m => ({
+          history: chatMessages.slice(-6).map(m => ({
             role: m.sender === 'USER' ? 'user' : 'assistant',
             content: m.text
           })),
           context: {
-            city: seekerData.birthCity || 'Varanasi',
+            city: cityName,
             profileName: seekerData.name,
-            readingSession: readingSessionRef.current
+            readingSession: readingSessionRef.current,
+            panchangContext: panchangContext || undefined
           }
         })
       });
 
       if (!res.ok) return false;
       const data = await res.json();
+
+      if (data.panchangContext) {
+        setPanchangContext(data.panchangContext);
+      }
 
       // Stale-audio guard: any token the server invalidated must not keep
       // playing, so outstanding speech for the previous turn is stopped.
@@ -1411,23 +1448,24 @@ export default function FloatingAIGuruAvatar() {
       const passages = data.structuredCard?.granthReadCard?.passages ?? [];
       readingAutoAdvanceRef.current = shouldAutoAdvance(session, passages.length);
 
-      setChatMessages(prev => [
-        ...prev,
-        {
-          id: `g-${Date.now()}`,
-          sender: 'GURU',
-          text: data.text || 'हर हर महादेव! 🙏',
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          provenance: data.provenance,
-          ...(data.structuredCard || {}),
-          quickChips: data.quickChips || [
-            { label: '🕉️ आज का पञ्चाङ्ग व राहुकाल', action: 'INTENT_PANCHANG' },
-            { label: '🪔 काशी विश्वनाथ लाइव दर्शन', action: 'INTENT_DARSHAN_KASHI' },
-            { label: '🚩 काशी यात्रा परिपथ', action: 'INTENT_JOURNEY_KASHI' },
-            { label: '📜 विद्वान् ज्योतिषी परामर्श', action: 'INTENT_SCHOLAR' }
-          ]
-        }
-      ]);
+      const newMsg: ChatMessage = {
+        id: `g-${Date.now()}`,
+        sender: 'GURU',
+        text: data.text || 'हर हर महादेव! 🙏',
+        speakText: data.speakText,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        provenance: data.provenance,
+        ...(data.structuredCard || {}),
+        quickChips: data.quickChips || [
+          { label: '✨ आज का शुभ समय', action: 'INTENT_ABHIJIT' },
+          { label: '🕒 आज का राहुकाल', action: 'INTENT_RAHU' },
+          { label: '🙏 अगली एकादशी', action: 'INTENT_NEXT_EKADASHI' },
+          { label: '📜 विद्वान् ज्योतिषी परामर्श', action: 'INTENT_SCHOLAR', href: '/ask' }
+        ]
+      };
+
+      setChatMessages(prev => [...prev, newMsg]);
+      setLastSpeakableMsg(newMsg);
       return true;
     } catch (e) {
       console.warn('/api/guru/chat fetch fallback:', e);
@@ -1484,6 +1522,16 @@ export default function FloatingAIGuruAvatar() {
     const raw = commandText ?? inputVal;
     const text = raw.trim();
     if (!text) return;
+
+    // Check for local voice replay command (no network roundtrip, no duplicate message)
+    const isReplayCommand = /^(फिर से बोलो|दोबारा सुनाओ|दोबारा बोलो|फिर से सुनाओ|repeat|say that again|replay)$/i.test(text);
+    if (isReplayCommand) {
+      if (lastSpeakableMsg) {
+        voice.speak(lastSpeakableMsg.speakText || lastSpeakableMsg.text);
+      }
+      setInputVal('');
+      return;
+    }
 
     playClick();
     setInputVal('');
@@ -1631,16 +1679,15 @@ export default function FloatingAIGuruAvatar() {
     // -------------------------------------------------------------
     const matchedIntent = resolveIntent(text);
 
-    if (matchedIntent === 'INTENT_PANCHANG') {
-      handlePanchangQuery();
+    if (matchedIntent === 'INTENT_PANCHANG' || matchedIntent === 'INTENT_MUHURTA') {
+      void postGuru(text);
+      return;
     } else if (matchedIntent === 'INTENT_DARSHAN') {
       handleDarshanQuery(text);
     } else if (matchedIntent === 'INTENT_JOURNEY_KASHI') {
       handleKashiJourneyQuery();
     } else if (matchedIntent === 'INTENT_MANTRA') {
       handleMantraQuery(text);
-    } else if (matchedIntent === 'INTENT_MUHURTA') {
-      handleMuhurtaQuery();
     } else if (matchedIntent === 'INTENT_SCHOLAR') {
       handleScholarQuery();
     } else if (matchedIntent === 'INTENT_KUNDALI') {
@@ -1893,7 +1940,19 @@ export default function FloatingAIGuruAvatar() {
                         : 'bg-[#FAF7F2] dark:bg-[#151829] border border-black/10 dark:border-white/10 text-[#1C1917] dark:text-[#F3EFE6] rounded-bl-xs text-xs sm:text-[13px]'
                     }`}
                   >
-                    <p className="whitespace-pre-line">{msg.text}</p>
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="whitespace-pre-line flex-1">{msg.text}</p>
+                      {msg.sender === 'GURU' && (
+                        <button
+                          type="button"
+                          onClick={() => voice.speak(msg.speakText || msg.text)}
+                          className="p-1 rounded-md text-[#8E6F1D] dark:text-[#F0C968] hover:bg-black/5 dark:hover:bg-white/10 shrink-0 opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
+                          title="यह सन्देश सुनें"
+                        >
+                          <Volume2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
 
                     {/* Deterministic Real-Time Panchang Telemetry Card */}
                     {msg.panchangCard && (
@@ -2446,6 +2505,68 @@ export default function FloatingAIGuruAvatar() {
               }}
             />
           </div>
+
+          {/* Persistent Audio Replay Control Bar */}
+          {lastSpeakableMsg && (
+            <div className="px-3 py-1.5 bg-amber-500/10 dark:bg-amber-500/5 border-t border-amber-500/20 flex items-center justify-between text-xs font-mono-data">
+              <div className="flex items-center gap-1.5 text-[#8E6F1D] dark:text-[#F0C968] font-bold text-[11px]">
+                <Volume2 className="w-3.5 h-3.5" />
+                <span>वाणी नियंत्रण</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                {voice.isSpeaking ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => voice.pause()}
+                      className="px-2 py-0.5 rounded bg-white dark:bg-[#121522] border border-amber-500/30 hover:bg-amber-500/20 text-[#8E6F1D] dark:text-[#F0C968] text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      <Pause className="w-3 h-3" />
+                      <span>रोकें</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => voice.stop()}
+                      className="px-2 py-0.5 rounded bg-white dark:bg-[#121522] border border-black/10 text-rose-500 text-[10px] font-bold cursor-pointer"
+                    >
+                      बंद करें
+                    </button>
+                  </>
+                ) : voice.isPaused ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => voice.resume()}
+                      className="px-2 py-0.5 rounded bg-white dark:bg-[#121522] border border-amber-500/30 hover:bg-amber-500/20 text-[#8E6F1D] dark:text-[#F0C968] text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      <Play className="w-3 h-3" />
+                      <span>जारी रखें</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => voice.stop()}
+                      className="px-2 py-0.5 rounded bg-white dark:bg-[#121522] border border-black/10 text-rose-500 text-[10px] font-bold cursor-pointer"
+                    >
+                      बंद करें
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (lastSpeakableMsg) {
+                        voice.speak(lastSpeakableMsg.speakText || lastSpeakableMsg.text);
+                      }
+                    }}
+                    className="px-2 py-0.5 rounded bg-white dark:bg-[#121522] border border-amber-500/30 hover:bg-amber-500/20 text-[#8E6F1D] dark:text-[#F0C968] text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                  >
+                    <Volume2 className="w-3 h-3" />
+                    <span>🔊 फिर से सुनें</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleSendMessage} className="p-3 bg-[#FAF7F2] dark:bg-[#121526] border-t border-black/10 dark:border-white/10 flex items-center gap-2 shrink-0">
             <div className="flex-1">

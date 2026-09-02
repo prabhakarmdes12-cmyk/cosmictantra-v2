@@ -99,8 +99,27 @@ test('coverage report is generated and gated', async () => {
   expect(gita!.chapters).toHaveLength(18);
   for (const chapter of gita!.chapters) expect(chapter.complete).toBe(true);
 
-  // The three fragmentary Granths must never be reported as complete.
-  for (const bookId of ['ramcharitmanas', 'shiva-mahapuran', 'devi-bhagavata']) {
+  // Ramcharitmanas is complete for its ODbL (bhavykhatri/DharmicData) snapshot:
+  // every snapshot entry is stored as one row, so nothing is missing/extra. The
+  // snapshot is mūla-only, so every verse honestly lacks a stored Hindi anuvāda.
+  const manas = report.books.find((b) => b.bookId === 'ramcharitmanas');
+  expect(manas).toBeTruthy();
+  expect(manas!.hasEditionManifest).toBe(true);
+  expect(manas!.status).toBe('COMPLETE_FOR_EDITION');
+  expect(manas!.missingVerses).toEqual([]);
+  expect(manas!.extraVerses).toEqual([]);
+  expect(manas!.duplicatePassageIds).toEqual([]);
+  expect(manas!.corrupted).toEqual([]);
+  expect(manas!.expected.verses).toBe(2247);
+  expect(manas!.stored.rows).toBe(2247);
+  expect(manas!.chapters).toHaveLength(7);
+  for (const chapter of manas!.chapters) expect(chapter.complete).toBe(true);
+  expect(manas!.verificationNotes.join(' ')).toContain('lack the stored Hindi anuvāda');
+  expect(manas!.provenance?.rightsStatus).toBe('ODbL-1.0');
+
+  // Shiva Mahapuran and Devi Bhagavata have no verified full public source yet
+  // and must never be reported as complete.
+  for (const bookId of ['shiva-mahapuran', 'devi-bhagavata']) {
     const book = report.books.find((b) => b.bookId === bookId);
     expect(book).toBeTruthy();
     expect(book!.hasEditionManifest).toBe(false);
@@ -128,9 +147,9 @@ test('coverage report is generated and gated', async () => {
     },
     {
       bookId: 'ramcharitmanas',
-      status: 'NO_EDITION_MANIFEST',
-      stored: { rows: 14, verses: 0, groupedVerses: 0, speakers: 0, invocations: 9, unclassified: 5, sections: 3 },
-      expected: { verses: null, rows: null },
+      status: 'COMPLETE_FOR_EDITION',
+      stored: { rows: 2247, verses: 2247, groupedVerses: 0, speakers: 0, invocations: 0, unclassified: 0, sections: 7 },
+      expected: { verses: 2247, rows: 2247 },
       missingRanges: [],
       extraVerses: 0,
       duplicates: 0,

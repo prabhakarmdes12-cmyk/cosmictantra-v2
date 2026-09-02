@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-31T20:24:44.579Z",
+  "generatedAt": "2026-09-02T01:46:02.884Z",
   "generator": "src/lib/granth/coverage.ts",
   "books": [
     {
@@ -457,23 +457,86 @@
     {
       "bookId": "ramcharitmanas",
       "title": "श्री रामचरितमानस (Shri Ramcharitmanas)",
-      "editionId": "unversioned:ramcharitmanas",
-      "editionLabel": "Unversioned stored text (Goswami Tulsidas (Sanatan Awadhi & Sanskrit Mangalacharan))",
-      "hasEditionManifest": false,
-      "provenance": null,
-      "numbering": null,
+      "editionId": "ct-ramcharitmanas-dharamicdata-odbl-snapshot-2026-09-02",
+      "editionLabel": "श्री रामचरितमानस — DharmicData (ODbL-1.0) Awadhi/Sanskrit mūla snapshot (granth_raw/ramcharitmanas/)",
+      "hasEditionManifest": true,
+      "provenance": {
+        "kind": "REPOSITORY_BUNDLED_SNAPSHOT",
+        "sourceFiles": [
+          {
+            "path": "granth_raw/ramcharitmanas/1_बाल_काण्ड_data.json",
+            "role": "KANDA_1_MULA",
+            "bytes": 612320,
+            "sha256": "d6308090bfe04a6e8ef54d581b1c63c12b645d13b9367424e6a3adfb8edc4073"
+          },
+          {
+            "path": "granth_raw/ramcharitmanas/2_अयोध्या_काण्ड_data.json",
+            "role": "KANDA_2_MULA",
+            "bytes": 520271,
+            "sha256": "d2fdc393cfe0bf4c18601caa4faa850b85b33f05ab850f22ba74faa0e510d4ff"
+          },
+          {
+            "path": "granth_raw/ramcharitmanas/3_अरण्य_काण्ड_data.json",
+            "role": "KANDA_3_MULA",
+            "bytes": 105125,
+            "sha256": "02e8e56c71b08766ca32c4ca21cd2ad09b9e50171ce7ab61ba7619f13dc253e7"
+          },
+          {
+            "path": "granth_raw/ramcharitmanas/4_किष्किन्धा_काण्ड_data.json",
+            "role": "KANDA_4_MULA",
+            "bytes": 56964,
+            "sha256": "e3010b24655ebb4d4ffbb84bf4f3a4e2baf8ff3b2e222ce138c4935b45dd160a"
+          },
+          {
+            "path": "granth_raw/ramcharitmanas/5_सुंदर_काण्ड_data.json",
+            "role": "KANDA_5_MULA",
+            "bytes": 102972,
+            "sha256": "373d3c60acec2dd6f88d8d089a609874e6d9659c967ad9bd65f4567bd36b61ee"
+          },
+          {
+            "path": "granth_raw/ramcharitmanas/6_लंका_काण्ड_data.json",
+            "role": "KANDA_6_MULA",
+            "bytes": 245432,
+            "sha256": "58c53a7723397454efaabd52006c4b73808fb9521293305049f4df03245d74e5"
+          },
+          {
+            "path": "granth_raw/ramcharitmanas/7_उत्तर_काण्ड_data.json",
+            "role": "KANDA_7_MULA",
+            "bytes": 261657,
+            "sha256": "099a77de786bb947a3da52a2f8ad42f7964685ccac0b58856d35e2c4b153238c"
+          }
+        ],
+        "publisher": null,
+        "printedEdition": null,
+        "editorOrTranslator": null,
+        "independentCollation": false,
+        "rightsStatus": "ODbL-1.0",
+        "notes": [
+          "Source: bhavykhatri/DharmicData GitHub repository (licence ODbL-1.0), fetched 2026-09-02; files cached under granth_raw/ramcharitmanas/.",
+          "Checksums above cover the cached file bytes as stored in granth_raw/, not the upstream API serialisation.",
+          "Each stored row is ONE DharmicData entry. An entry bundles the one or more numbered dōhās/chaupāīs the dataset stores together.",
+          "Coverage proves the stored corpus matches this snapshot, not a printed/critical edition."
+        ]
+      },
+      "numbering": {
+        "convention": "kāṇḍa (chapter 1-7) + per-kāṇḍa ENTRY ordinal within the DharmicData snapshot",
+        "chapters": 7,
+        "numberedVerses": 2247,
+        "recensionNote": "A stored row is a DharmicData entry, not a printed dōhā/chaupāī verse: entry text contains its own internal ।।N।। markers and an entry may group several numbered dōhās. Do not equate row ordinals with printed Manas verse numbers.",
+        "dhyanamNote": "The seven mangalācaraṇa ślokas of Bāla Kāṇḍa are stored as entry 1 of kāṇḍa 1 (a single श्लोक entry), NOT as a separate invocation block."
+      },
       "stored": {
-        "rows": 14,
-        "verses": 0,
+        "rows": 2247,
+        "verses": 2247,
         "groupedVerses": 0,
         "speakers": 0,
-        "invocations": 9,
-        "unclassified": 5,
-        "sections": 3
+        "invocations": 0,
+        "unclassified": 0,
+        "sections": 7
       },
       "expected": {
-        "verses": null,
-        "rows": null
+        "verses": 2247,
+        "rows": 2247
       },
       "missingVerses": [],
       "missingRanges": [],
@@ -482,10 +545,94 @@
       "duplicateTexts": [],
       "repeatedParatext": [],
       "corrupted": [],
-      "chapters": [],
-      "status": "NO_EDITION_MANIFEST",
+      "chapters": [
+        {
+          "chapter": 1,
+          "sectionId": "manas-kanda-1",
+          "englishName": "Bala Kanda",
+          "expectedVerses": 760,
+          "storedVerses": 760,
+          "storedRows": 760,
+          "missingVerseNumbers": [],
+          "extraVerseNumbers": [],
+          "complete": true
+        },
+        {
+          "chapter": 2,
+          "sectionId": "manas-kanda-2",
+          "englishName": "Ayodhya Kanda",
+          "expectedVerses": 664,
+          "storedVerses": 664,
+          "storedRows": 664,
+          "missingVerseNumbers": [],
+          "extraVerseNumbers": [],
+          "complete": true
+        },
+        {
+          "chapter": 3,
+          "sectionId": "manas-kanda-3",
+          "englishName": "Aranya Kanda",
+          "expectedVerses": 98,
+          "storedVerses": 98,
+          "storedRows": 98,
+          "missingVerseNumbers": [],
+          "extraVerseNumbers": [],
+          "complete": true
+        },
+        {
+          "chapter": 4,
+          "sectionId": "manas-kanda-4",
+          "englishName": "Kishkindha Kanda",
+          "expectedVerses": 61,
+          "storedVerses": 61,
+          "storedRows": 61,
+          "missingVerseNumbers": [],
+          "extraVerseNumbers": [],
+          "complete": true
+        },
+        {
+          "chapter": 5,
+          "sectionId": "manas-kanda-5",
+          "englishName": "Sundara Kanda",
+          "expectedVerses": 121,
+          "storedVerses": 121,
+          "storedRows": 121,
+          "missingVerseNumbers": [],
+          "extraVerseNumbers": [],
+          "complete": true
+        },
+        {
+          "chapter": 6,
+          "sectionId": "manas-kanda-6",
+          "englishName": "Lanka Kanda",
+          "expectedVerses": 273,
+          "storedVerses": 273,
+          "storedRows": 273,
+          "missingVerseNumbers": [],
+          "extraVerseNumbers": [],
+          "complete": true
+        },
+        {
+          "chapter": 7,
+          "sectionId": "manas-kanda-7",
+          "englishName": "Uttara Kanda",
+          "expectedVerses": 270,
+          "storedVerses": 270,
+          "storedRows": 270,
+          "missingVerseNumbers": [],
+          "extraVerseNumbers": [],
+          "complete": true
+        }
+      ],
+      "status": "COMPLETE_FOR_EDITION",
       "verificationNotes": [
-        "No edition manifest: expected units are unknown, so this book cannot be reported as complete. Stored fragments only.",
+        "Chapter 1: 760 verse(s) lack the stored Hindi anuvāda.",
+        "Chapter 2: 664 verse(s) lack the stored Hindi anuvāda.",
+        "Chapter 3: 98 verse(s) lack the stored Hindi anuvāda.",
+        "Chapter 4: 61 verse(s) lack the stored Hindi anuvāda.",
+        "Chapter 5: 121 verse(s) lack the stored Hindi anuvāda.",
+        "Chapter 6: 273 verse(s) lack the stored Hindi anuvāda.",
+        "Chapter 7: 270 verse(s) lack the stored Hindi anuvāda.",
         "Coverage is measured against the bundled repository snapshot, not against a printed/critical edition."
       ]
     },
@@ -562,8 +709,8 @@
   ],
   "totals": {
     "books": 4,
-    "booksWithEditionManifest": 1,
-    "storedRows": 801,
+    "booksWithEditionManifest": 2,
+    "storedRows": 3034,
     "missingVerses": 0,
     "corruptedRows": 0
   }

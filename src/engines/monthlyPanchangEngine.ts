@@ -393,7 +393,7 @@ function formatHour(h: number): string {
 // -------------------------------------------------------------
 // Dynamic Festival & Vrat Resolver
 // -------------------------------------------------------------
-function resolveFestivals(
+export function resolveFestivals(
   date: Date,
   tithiIdx: number,
   sunSid: number,

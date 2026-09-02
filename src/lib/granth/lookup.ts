@@ -79,8 +79,11 @@ function fail(
   return { status: 'FAILURE', code, messageHi, messageEn, known };
 }
 
+/** Passages of a chapter, located via the edition manifest's section id. */
 function chapterPassages(book: Book, chapter: number): PassageRecord[] {
-  const sectionId = `gita-ch-${chapter}`;
+  const manifest = getEditionManifest(book.bookId);
+  const expected = manifest?.expected.chapters.find((c) => c.chapter === chapter);
+  const sectionId = expected?.sectionId ?? `gita-ch-${chapter}`;
   const section = book.sections.find((s) => s.sectionId === sectionId);
   return section ? section.passages : [];
 }
@@ -305,7 +308,7 @@ export async function lookupRange(
   return success(book, { kind: 'range', chapter, fromVerse, toVerse }, selected, missing);
 }
 
-/** Stored narrative/paratext section (e.g. `gita-dhyanam`, `manas-sundarkand-full`). */
+/** Stored narrative/paratext section (e.g. `gita-dhyanam`, `manas-kanda-5`). */
 export async function lookupSection(bookIdInput: string, sectionId: string): Promise<LookupResult> {
   const bookId = resolveBookId(bookIdInput);
   if (!bookId) {

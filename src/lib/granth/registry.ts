@@ -9,6 +9,7 @@ import type { Book, BookDocument, EditionManifest, RawItem, RawRow, PassageKind,
 import { sha256Hex, passageFingerprint } from './checksum';
 import dataIndex from './data/index';
 import gitaEdition from './data/editions/bhagavad-gita';
+import ramcharitmanasEdition from './data/editions/ramcharitmanas';
 
 type DataIndex = typeof dataIndex;
 
@@ -46,6 +47,7 @@ const BOOK_LOADERS: Record<string, () => Promise<{ default: BookDocument }>> = {
 
 const EDITION_MANIFESTS: Record<string, EditionManifest> = {
   'bhagavad-gita': gitaEdition,
+  ramcharitmanas: ramcharitmanasEdition,
 };
 
 /** Books that participate in conversational reading (the four primary Granths). */
@@ -126,6 +128,10 @@ function toAsciiDigits(value: string): string {
 
 const VERSE_RE = /^श्लोक\s*(\d+)\s*-\s*(\d+)\s*$/;
 const GROUPED_VERSE_RE = /^श्लोक\s*(\d+)\s*-\s*(\d+)\s*(?:[-–,]\s*(\d+))?\s*$/;
+// Kāṇḍa-labelled snapshot rows, e.g. `काण्ड 1 · दोहा/सोरठा 12`. The ordinal is
+// the DharmicData ENTRY number inside its kāṇḍa — not a traditional
+// dōhā/chaupāī count (the entry text bundles its own numbered lines).
+const KANDA_RE = /^काण्ड\s*(\d+)\s*[·•.:-]\s*(दोहा\/सोरठा|चौपाई|छंद|श्लोक)\s*(\d+)$/;
 // Covers both the unsandhied `… उवाच` form and the sandhied `…नुवाच`
 // (श्रीभगवानुवाच), where `उ` appears as the combining vowel sign U+0941.
 const SPEAKER_RE = /(?:उ|\u0941)वाच|बोले|कहते हैं|कहते हैं।/;
@@ -147,6 +153,11 @@ function classifyRow(row: RawRow, sectionId: string): { kind: PassageKind; locat
   const simpleMatch = VERSE_RE.exec(label);
   if (simpleMatch) {
     return { kind: 'verse', locator: { chapter: Number(simpleMatch[1]), verse: Number(simpleMatch[2]) } };
+  }
+
+  const kandaMatch = KANDA_RE.exec(label);
+  if (kandaMatch) {
+    return { kind: 'verse', locator: { chapter: Number(kandaMatch[1]), verse: Number(kandaMatch[3]) } };
   }
 
   if (SPEAKER_RE.test(label)) {

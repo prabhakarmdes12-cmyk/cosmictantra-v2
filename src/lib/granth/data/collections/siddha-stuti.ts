@@ -1,14 +1,14 @@
 // GENERATED FILE — do not edit by hand.
-// Source: src/app/aarti-stotra/page.tsx
+// Source: src/lib/granth/data/*.ts (self-extraction)
 // Regenerate with: node scripts/extract-granth-library.cjs
 // Checksum of the canonical JSON serialisation (see data/manifest.ts):
-//   cfaace6dfbfc633ce0594b491fd5de0f913de2529fba5849b2ee9cae2ed18a42
+//   4d89960ea3367ade40d0e2f3f8a2ce0ea1b2f58f5b6b9226ca0146b907916297
 import type { CollectionDocument } from '../../types';
 
 const document: CollectionDocument = {
   "schemaVersion": 1,
-  "extractedAt": "2026-08-31T19:54:50.343Z",
-  "extractedFrom": "src/app/aarti-stotra/page.tsx",
+  "extractedAt": "2026-09-02T01:41:39.704Z",
+  "extractedFrom": "src/lib/granth/data/*.ts (self-extraction)",
   "category": "siddha-stuti",
   "items": [
     {

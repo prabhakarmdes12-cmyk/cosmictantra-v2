@@ -166,11 +166,15 @@ test('stopping preserves the cursor and cancels outstanding audio', async () => 
 test('switching books cancels the previous session token', async () => {
   const gita = await handleReaderCommand('गीता अध्याय २ पढ़ो', 'hi', null);
   expect(gita.session?.bookId).toBe('bhagavad-gita');
-  const manasSection = await handleReaderCommand('रामचरितमानस पढ़ो', 'hi', gita.session ?? null);
-  // Ramcharitmanas has no chapter/verse mapping, so the request is declined
-  // honestly instead of inventing a starting point.
-  expect(manasSessionIsHonest(manasSection.text)).toBe(true);
-  expect(manasSection.cancelledTokens).toContain(gita.session?.cancellationToken);
+  const manasBook = await handleReaderCommand('पूरा रामचरितमानस पढ़ो', 'hi', gita.session ?? null);
+  // Ramcharitmanas has a full 7-kāṇḍa edition manifest now, so a whole-book
+  // request starts a real session with every snapshot entry queued.
+  expect(manasBook.session?.bookId).toBe('ramcharitmanas');
+  expect(manasBook.found).toBe(true);
+  expect(manasBook.provenance).toBe('SOURCE_DOCUMENTED');
+  expect(manasBook.session?.queue.length).toBe(2247);
+  expect(manasBook.session?.isCompleteScope).toBe(true);
+  expect(manasBook.cancelledTokens).toContain(gita.session?.cancellationToken);
 });
 
 test('an ambiguous bare verse number asks one question instead of guessing', async () => {
@@ -218,8 +222,3 @@ test('speech chunking is chunk-level and bounded, never word-level', async () =>
   expect(chunks.join(' ')).toContain('कर्मण्येवाधिकारस्ते');
   expect(describePosition(started.session)).toContain('श्रीमद्भगवद्गीता');
 });
-
-// Small helper so the intent of the assertion above stays readable.
-function manasSessionIsHonest(text: string): boolean {
-  return text.includes('अनुपलब्ध') || text.includes('अध्याय') || text.includes('अनुभाग');
-}

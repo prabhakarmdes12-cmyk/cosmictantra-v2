@@ -1,14 +1,14 @@
 // GENERATED FILE — do not edit by hand.
-// Source: src/app/aarti-stotra/page.tsx
+// Source: src/lib/granth/data/*.ts (self-extraction)
 // Regenerate with: node scripts/extract-granth-library.cjs
 // Checksum of the canonical JSON serialisation (see data/manifest.ts):
-//   53d965c5403569c2d9cd878f97a4fb6f4485f04242eaf9a5c5472980acba503e
+//   c282e45c39ce68bc1a1f5411c456fce375bcdc0d011344e95c8314f20e1a656f
 import type { CollectionDocument } from '../../types';
 
 const document: CollectionDocument = {
   "schemaVersion": 1,
-  "extractedAt": "2026-08-31T19:54:50.343Z",
-  "extractedFrom": "src/app/aarti-stotra/page.tsx",
+  "extractedAt": "2026-09-02T01:41:39.704Z",
+  "extractedFrom": "src/lib/granth/data/*.ts (self-extraction)",
   "category": "stotras",
   "items": [
     {
