@@ -147,28 +147,25 @@ export default function MilanReportClient() {
     );
   };
 
-  const compute = (e: React.FormEvent) => {
-    e.preventDefault();
+  const runCalculation = (gData = groom, bData = bride, isDemo = false) => {
     setError('');
-    chitiSensory.playTick();
     setComputing(true);
-    setCalc(null);
     try {
       const snapA = getCanonicalJyotishSnapshot({
-        birthDate: groom.birthDate,
-        birthTime: groom.birthTime,
-        latitude: Number(groom.latitude),
-        longitude: Number(groom.longitude),
-        timezone: Number(groom.timezone),
-        locationName: groom.locationName || groom.name,
+        birthDate: gData.birthDate,
+        birthTime: gData.birthTime,
+        latitude: Number(gData.latitude),
+        longitude: Number(gData.longitude),
+        timezone: Number(gData.timezone),
+        locationName: gData.locationName || gData.name,
       });
       const snapB = getCanonicalJyotishSnapshot({
-        birthDate: bride.birthDate,
-        birthTime: bride.birthTime,
-        latitude: Number(bride.latitude),
-        longitude: Number(bride.longitude),
-        timezone: Number(bride.timezone),
-        locationName: bride.locationName || bride.name,
+        birthDate: bData.birthDate,
+        birthTime: bData.birthTime,
+        latitude: Number(bData.latitude),
+        longitude: Number(bData.longitude),
+        timezone: Number(bData.timezone),
+        locationName: bData.locationName || bData.name,
       });
       const result = calculateMilan(
         milanInputFromSnapshot(snapB),
@@ -178,7 +175,7 @@ export default function MilanReportClient() {
       setChartData({ bride: snapB, groom: snapA });
       setSelectedKootaId(result.kootas[0]?.id || 'varna');
       setCalc(result);
-      setUsingDemo(false);
+      setUsingDemo(isDemo);
     } catch (err) {
       setError(String(err instanceof Error ? err.message : err));
     } finally {
@@ -186,13 +183,24 @@ export default function MilanReportClient() {
     }
   };
 
+  // Auto-compute on mount so the user immediately sees the 36-point report and PDF options
+  useEffect(() => {
+    runCalculation(DEMO_A, DEMO_B, true);
+  }, []);
+
+  const compute = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    chitiSensory.playTick();
+    runCalculation(groom, bride, false);
+  };
+
   const fillDemo = () => {
     chitiSensory.playTick();
     setGroom({ ...DEMO_A });
     setBride({ ...DEMO_B });
-    setUsingDemo(true);
-    setCalc(null);
+    runCalculation(DEMO_A, DEMO_B, true);
   };
+
 
   type Action = 'download' | 'print';
   const requestPdf = async (action: Action, printWindow?: Window | null) => {
@@ -451,6 +459,88 @@ export default function MilanReportClient() {
               </div>
             </section>
 
+            {/* Dedicated Milan PDF Granth Download Banner */}
+            <section className="rounded-2xl border-2 border-[#8E6F1D]/40 dark:border-[#D4AF37]/50 bg-gradient-to-br from-[#FFFDF9] via-[#FAF5EA] to-[#F3EAD3] dark:from-[#151726] dark:via-[#1A1E33] dark:to-[#0F111C] p-5 sm:p-6 shadow-xl print:hidden space-y-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-1.5 max-w-xl">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono-data font-bold bg-[#8E6F1D] text-white dark:bg-[#D4AF37] dark:text-[#060709] tracking-wider uppercase">
+                      {hi ? '६-पृष्ठीय प्रामाणिक ग्रंथ' : '6-Page Qualified Folio'}
+                    </span>
+                    <span className="text-[11px] font-mono-data text-[#8E6F1D] dark:text-[#F0C968] font-bold">
+                      {hi ? 'शुद्ध देवनागरी फ़ॉन्टकिट' : 'Fontkit Devanagari Shaped'}
+                    </span>
+                  </div>
+                  <h2 className="font-editorial text-xl sm:text-2xl font-bold text-[#1C1917] dark:text-white">
+                    {hi ? 'विस्तृत ३६-गुण कुण्डली मिलान ग्रन्थ (PDF)' : 'Complete Ashtakoota Milan Granth (PDF)'}
+                  </h2>
+                  <p className="text-xs text-[#57534E] dark:text-[#D1C9BF] leading-relaxed">
+                    {hi
+                      ? 'अष्टकूट ३६ गुण विवरण, नाड़ी दोष व परिहार, भकूट शुद्धि, मंगली विचार, नवांश D9 एवं सप्तम भाव का सूक्ष्म विश्लेषण सहित संपूर्ण ६-पृष्ठीय प्रिंट-योग्य पीडीएफ़ प्राप्त करें।'
+                      : 'Download the comprehensive 6-page classical folio with complete 36-point breakdown, Nadi Dosha Bhanga, Bhakoot cancellation, Mangal Dosha alignment & D9 Navamsha synthesis.'}
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+                  <button
+                    onClick={download}
+                    disabled={isGeneratingPdf || !calc}
+                    className="px-5 py-3 rounded-xl bg-gradient-to-r from-[#8E6F1D] via-[#A88424] to-[#8E6F1D] dark:from-[#D4AF37] dark:via-[#F0C968] dark:to-[#D4AF37] text-white dark:text-[#060709] font-bold text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#8E6F1D]/25 dark:shadow-[#D4AF37]/30 hover:scale-102 active:scale-98 transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>{isGeneratingPdf ? (hi ? 'पीडीएफ़ तैयार हो रहा है...' : 'Generating Folio...') : (hi ? 'डाउनलोड मिलान PDF (६ पृष्ठ)' : 'Download Milan PDF (6 Pages)')}</span>
+                  </button>
+                  <button
+                    onClick={print}
+                    disabled={isGeneratingPdf}
+                    className="px-4 py-3 rounded-xl bg-white dark:bg-[#121422] border border-[#8E6F1D]/30 dark:border-[#D4AF37]/40 text-[#8E6F1D] dark:text-[#F0C968] font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-[#FAF7F2] dark:hover:bg-[#1C2035] transition-all cursor-pointer"
+                  >
+                    <Printer className="w-4 h-4" />
+                    <span>{hi ? 'प्रिंट करें' : 'Print PDF'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Mode and Language Bar inside Banner */}
+              <div className="pt-3 border-t border-[#E5D7BC]/70 dark:border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-mono-data text-[#78716C] dark:text-[#A8A29E] font-bold">
+                    {hi ? 'संस्करण:' : 'Edition:'}
+                  </span>
+                  <div className="flex rounded-lg border border-[#8E6F1D]/30 dark:border-white/10 p-0.5 bg-white/70 dark:bg-[#0E101D]">
+                    {(['CLIENT', 'PANDIT', 'SCHOLAR'] as const).map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => { chitiSensory.playTick(); setPdfMode(m); }}
+                        className={`px-2.5 py-1 text-[10.5px] font-bold rounded-md transition-colors ${pdfMode === m ? 'bg-[#8E6F1D] text-white dark:bg-[#D4AF37] dark:text-[#060709]' : 'text-[#78716C] dark:text-[#A8A29E]'}`}
+                      >
+                        {m === 'CLIENT' ? (hi ? 'जातक' : 'Client') : m === 'PANDIT' ? (hi ? 'पण्डित' : 'Pandit') : (hi ? 'शास्त्री' : 'Scholar')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-mono-data text-[#78716C] dark:text-[#A8A29E] font-bold">
+                    {hi ? 'भाषा:' : 'Language:'}
+                  </span>
+                  <div className="flex rounded-lg border border-[#8E6F1D]/30 dark:border-white/10 p-0.5 bg-white/70 dark:bg-[#0E101D]">
+                    {([['en', 'English'], ['hi', 'हिन्दी'], ['hi-en', 'हि + EN']] as const).map(([l, label]) => (
+                      <button
+                        key={l}
+                        type="button"
+                        onClick={() => setPdfLocale(l as any)}
+                        className={`px-2.5 py-1 text-[10.5px] font-bold rounded-md transition-colors ${pdfLocale === l ? 'bg-[#8E6F1D] text-white dark:bg-[#D4AF37] dark:text-[#060709]' : 'text-[#78716C] dark:text-[#A8A29E]'}`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
+
             {/* Section tabs (parity with Master Kundli report's O / FOLIO / WORKBENCH) */}
             <section className="bg-white dark:bg-[#121422] rounded-2xl border border-[#E5D7BC] dark:border-white/10 shadow-sm p-3 print:hidden">
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -531,6 +621,14 @@ export default function MilanReportClient() {
                     </div>
                   </div>
                   <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={download}
+                      disabled={isGeneratingPdf || !calc}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg bg-gradient-to-r from-[#8E6F1D] to-[#A88424] dark:from-[#D4AF37] dark:to-[#F0C968] text-white dark:text-[#060709] shadow-sm hover:scale-102 transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>{isGeneratingPdf ? (hi ? 'पीडीएफ़ बन रहा है...' : 'Preparing PDF...') : (hi ? '६-पृष्ठीय ग्रन्थ (PDF) डाउनलोड' : 'Download 6-Page PDF')}</span>
+                    </button>
                     <button onClick={() => { chitiSensory.playTick(); setActiveTab('FOLIO'); }} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-[#8E6F1D]/30 text-[#8E6F1D] dark:text-[#F0C968]">
                       <BookOpen className="w-3.5 h-3.5" /> {hi ? 'पूरा पाठ देखें' : 'Open full reading'}
                     </button>

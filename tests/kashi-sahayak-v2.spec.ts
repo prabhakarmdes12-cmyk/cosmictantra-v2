@@ -17,14 +17,15 @@ test.describe('KASHI SAHAYAK V2 — Panchang-Aware Conversation, Date Intelligen
   };
 
   test('PANCHANG_INV_001: Cosmic Now and Kashi Sahayak share one deterministic truth source for Dhanbad Rahukaal', async () => {
-    const fixedDate = new Date('2026-09-02T12:00:00+05:30');
+    const nowDate = new Date();
+    const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(nowDate);
 
     // 1. Cosmic Now calculation
-    const cosmicNowPanchang: any = calculatePanchang(fixedDate, DHANBAD_LOC.latitude, DHANBAD_LOC.longitude, DHANBAD_LOC.timezone);
+    const cosmicNowPanchang: any = calculatePanchang(nowDate, DHANBAD_LOC.latitude, DHANBAD_LOC.longitude, DHANBAD_LOC.timezone);
     const expectedRahu = cosmicNowPanchang.timings.rahuKalam;
 
     // 2. Canonical Panchang Fact Bundle
-    const canonicalBundle = getCanonicalPanchangBundle(fixedDate, DHANBAD_LOC);
+    const canonicalBundle = getCanonicalPanchangBundle(nowDate, DHANBAD_LOC);
 
     expect(canonicalBundle.timings.rahuKalam).toBe(expectedRahu);
     expect(canonicalBundle.timings.rahuKalam).not.toContain('undefined');
@@ -32,7 +33,7 @@ test.describe('KASHI SAHAYAK V2 — Panchang-Aware Conversation, Date Intelligen
 
     // 3. Kashi Sahayak Intent Engine output
     const intentRes = resolveDeterministicKashiIntent('आज राहुकाल क्या है?', null, {
-      referenceDate: '2026-09-02',
+      referenceDate: todayStr,
       location: canonicalBundle.location,
       source: 'COSMIC_NOW'
     });
@@ -96,8 +97,13 @@ test.describe('KASHI SAHAYAK V2 — Panchang-Aware Conversation, Date Intelligen
   });
 
   test('Conversational Date Intelligence: Temporal Threading across multi-turn dialogue', async () => {
+    const now = new Date();
+    const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(now);
+    const tomorrowDate = new Date(now.getTime() + 86400000);
+    const tomorrowStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(tomorrowDate);
+
     let ctx = {
-      referenceDate: '2026-09-02',
+      referenceDate: todayStr,
       location: DEFAULT_LOCATION,
       lastTopic: undefined as string | undefined,
       lastIntent: undefined as any
@@ -105,7 +111,7 @@ test.describe('KASHI SAHAYAK V2 — Panchang-Aware Conversation, Date Intelligen
 
     // Turn 1: "आज राहुकाल क्या है?"
     const turn1 = resolveConversationalDate('आज राहुकाल क्या है?', ctx);
-    expect(turn1.resolvedDate).toBe('2026-09-02');
+    expect(turn1.resolvedDate).toBe(todayStr);
 
     const res1 = resolveDeterministicKashiIntent('आज राहुकाल क्या है?', null, ctx);
     expect(res1?.intent).toBe('GET_RAHUKAAL');
@@ -113,21 +119,21 @@ test.describe('KASHI SAHAYAK V2 — Panchang-Aware Conversation, Date Intelligen
 
     // Turn 2: "और कल?" (should retain GET_RAHUKAAL and advance date by 1)
     const turn2 = resolveConversationalDate('और कल?', ctx);
-    expect(turn2.resolvedDate).toBe('2026-09-03');
+    expect(turn2.resolvedDate).toBe(tomorrowStr);
     expect(turn2.inheritedIntent).toBe('GET_RAHUKAAL');
 
     const res2 = resolveDeterministicKashiIntent('और कल?', null, ctx);
     expect(res2?.intent).toBe('GET_RAHUKAAL');
-    expect(res2?.panchangContext?.referenceDate).toBe('2026-09-03');
+    expect(res2?.panchangContext?.referenceDate).toBe(tomorrowStr);
     ctx = (res2?.panchangContext as any) || ctx;
 
-    // Turn 3: "उस दिन तिथि क्या है?" (should query Tithi on 2026-09-03)
+    // Turn 3: "उस दिन तिथि क्या है?" (should query Tithi on tomorrow)
     const turn3 = resolveConversationalDate('उस दिन तिथि क्या है?', ctx);
-    expect(turn3.resolvedDate).toBe('2026-09-03');
+    expect(turn3.resolvedDate).toBe(tomorrowStr);
 
     const res3 = resolveDeterministicKashiIntent('उस दिन तिथि क्या है?', null, ctx);
     expect(res3?.intent).toBe('GET_TITHI');
-    expect(res3?.panchangContext?.referenceDate).toBe('2026-09-03');
+    expect(res3?.panchangContext?.referenceDate).toBe(tomorrowStr);
     ctx = (res3?.panchangContext as any) || ctx;
 
     // Turn 4: "कब बदलेगी?" (Transition query on current context)

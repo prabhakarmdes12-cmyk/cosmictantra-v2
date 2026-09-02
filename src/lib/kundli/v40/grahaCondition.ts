@@ -278,14 +278,15 @@ export function buildGrahaConditions(
       pada: p.nakshatra.pada,
 
       dignity: {
-        category: DIGNITY_MAP[p.dignity] ?? 'NOT_CALCULATED',
-        canonicalValue: p.dignity,
+        category: NODES.includes(p.id) ? 'NOT_CALCULATED' : (DIGNITY_MAP[p.dignity] ?? 'NOT_CALCULATED'),
+        canonicalValue: NODES.includes(p.id) ? 'TRADITION_DEPENDENT' : p.dignity,
         evidenceIds: [FACT.planetDignity(p.id), FACT.planetSignId(p.id)],
         compoundRelationship: {
           status: 'NOT_CALCULATED',
-          reason:
-            'The calculation engine reports one dignity label per graha and collapses "neutral / enemy" into a single value, ' +
-            'so the five-fold panchadha grades GREAT_FRIEND and GREAT_ENEMY cannot be recovered without a second, unverified derivation.',
+          reason: NODES.includes(p.id)
+            ? 'Node dignity (Rahu/Ketu exaltation, moolatrikona, rulership) is tradition-dependent and contested across classical texts (Parashara vs Jaimini vs Phaladeepika); no single verdict is declared.'
+            : 'The calculation engine reports one dignity label per graha and collapses "neutral / enemy" into a single value, ' +
+              'so the five-fold panchadha grades GREAT_FRIEND and GREAT_ENEMY cannot be recovered without a second, unverified derivation.',
         },
       },
 

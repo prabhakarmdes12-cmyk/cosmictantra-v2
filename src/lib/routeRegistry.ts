@@ -139,13 +139,30 @@ export const ROUTE_REGISTRY: Record<string, RouteConfig> = {
   },
   '/kundali-milan': {
     path: '/kundali-milan',
-    title: 'Ashta-Koota 36-Point Kundali Milan | CosmicTantra',
-    description: 'Classical 36-guna Vedic marital compatibility, Mangal Dosha analysis, and planetary harmony evaluation.',
+    title: 'Ashta-Koota 36-Point Kundali Milan & PDF Report | CosmicTantra',
+    description: 'Classical 36-guna Vedic marital compatibility, Mangal Dosha analysis, and downloadable 6-page PDF report.',
     category: 'Tools',
     breadcrumbs: [
       { label: 'Home', href: '/' },
       { label: 'Tools', href: '/kundali-milan' },
       { label: 'Kundali Milan', href: '/kundali-milan' }
+    ],
+    shellMode: 'public',
+    footerMode: 'full',
+    indexable: true,
+    authRequired: false,
+    status: 'LIVE',
+    roomCharacter: 'instrument'
+  },
+  '/milan': {
+    path: '/milan',
+    title: 'Ashta-Koota 36-Point Kundali Milan & PDF Report | CosmicTantra',
+    description: 'Classical 36-guna Vedic marital compatibility, Mangal Dosha analysis, and downloadable 6-page PDF report.',
+    category: 'Tools',
+    breadcrumbs: [
+      { label: 'Home', href: '/' },
+      { label: 'Tools', href: '/kundali-milan' },
+      { label: 'Kundali Milan', href: '/milan' }
     ],
     shellMode: 'public',
     footerMode: 'full',

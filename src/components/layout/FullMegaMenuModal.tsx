@@ -146,11 +146,12 @@ const MEGA_MENU_TILES: NavTile[] = [
     category: 'CONSULTATION'
   },
   {
-    title: '36-Point Kundali Milan',
-    titleHi: '३६-गुण कुण्डली मिलान',
+    title: '36-Point Kundali Milan & PDF Report',
+    titleHi: '३६-गुण कुण्डली मिलान व PDF रिपोर्ट',
     href: '/kundali-milan',
     icon: '💍',
-    description: 'Ashta-Koota compatibility, Nadi Dosha cancellation, and planetary harmony evaluation.',
+    badge: 'REPORT & PDF',
+    description: 'Classical 36-Guna matching, Nadi Dosha Bhanga, Manglik alignment & complete 6-page downloadable PDF report.',
     category: 'CONSULTATION'
   },
   {

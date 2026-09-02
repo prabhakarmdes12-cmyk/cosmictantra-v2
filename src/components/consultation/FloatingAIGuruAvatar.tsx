@@ -276,7 +276,7 @@ export default function FloatingAIGuruAvatar() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [showGreetingTooltip, setShowGreetingTooltip] = useState(false);
-  const [tooltipText, setTooltipText] = useState('हर हर महादेव! काशी सहायक से पूछें 🙏');
+  const [tooltipText, setTooltipText] = useState('हर हर महादेव! जय माँ तारा! काशी सहायक से पूछें 🙏');
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isPlayingOm, setIsPlayingOm] = useState(false);
   const [offeredDiyaMsgIds, setOfferedDiyaMsgIds] = useState<Record<string, boolean>>({});
@@ -389,15 +389,15 @@ export default function FloatingAIGuruAvatar() {
   // share their inner state before any question.
   useEffect(() => {
     const hour = new Date().getHours();
-    let salutation = 'हर हर महादेव! 🙏 पञ्चाङ्ग • दर्शन • कुण्डली • विद्वान् परामर्श — बताइए, आज मन कैसा है?';
+    let salutation = 'हर हर महादेव! जय माँ तारा! 🙏 पञ्चाङ्ग • दर्शन • कुण्डली • विद्वान् परामर्श — बताइए, आज मन कैसा है?';
     if (hour >= 5 && hour < 11) {
-      salutation = 'सुप्रभात! ☀️ आज का पञ्चाङ्ग व ब्रह्म मुहूर्त तैयार है 🙏 बताइए, आज मन कैसा है?';
+      salutation = 'सुप्रभात! ☀️ जय माँ तारा! आज का पञ्चाङ्ग व ब्रह्म मुहूर्त तैयार है 🙏 बताइए, आज मन कैसा है?';
     } else if (hour >= 11 && hour < 17) {
-      salutation = 'नमस्कार! ⚡ राहुकाल • शुभ मुहूर्त • विद्वान् परामर्श — आज आपका मन कैसा है? 🙏';
+      salutation = 'नमस्कार! ⚡ जय माँ तारा! राहुकाल • शुभ मुहूर्त • विद्वान् परामर्श — आज आपका मन कैसा है? 🙏';
     } else if (hour >= 17 && hour < 22) {
-      salutation = 'शुभ संध्या! 🪔 गंगा महाआरती लाइव दर्शन व मन की बात — आज आप कैसा महसूस कर रहे हैं?';
+      salutation = 'शुभ संध्या! 🪔 जय माँ तारा! गंगा महाआरती लाइव दर्शन व मन की बात — आज आप कैसा महसूस कर रहे हैं?';
     } else {
-      salutation = 'हर हर महादेव! 🌙 कल का पञ्चाङ्ग, ग्रह स्थिति व विद्वान् मार्गदर्शन — मन की बात कहिए 🙏';
+      salutation = 'हर हर महादेव! जय माँ तारा! 🌙 कल का पञ्चाङ्ग, ग्रह स्थिति व विद्वान् मार्गदर्शन — मन की बात कहिए 🙏';
     }
     setTooltipText(salutation);
 
@@ -546,7 +546,7 @@ export default function FloatingAIGuruAvatar() {
       const locLabel = bundle.location.nameHi || bundle.location.name;
 
       const greetingText =
-        `हर हर महादेव! 🙏\n\n` +
+        `हर हर महादेव! जय माँ तारा! 🙏\n\n` +
         `आज आप कैसा महसूस कर रहे हैं? मन में कोई चिन्ता, दुविधा या संशय हो, अथवा आज के पञ्चाङ्ग, शुभ समय या किसी कार्य के लिए मार्गदर्शन चाहिए — निसंकोच कहें। मैं आपके साथ हूँ, पूरे ध्यान से सुन रही हूँ।\n\n` +
         `जिज्ञासा हो या चिन्ता — काशी में कोई प्रश्न छोटा नहीं। पहले मन की स्थिति बताइए, फिर विषय चुनिए या लिखिए।\n\n` +
         `आज की मुख्य खगोलीय स्थिति (${locLabel}):\n` +
@@ -554,7 +554,7 @@ export default function FloatingAIGuruAvatar() {
         `• राहुकाल: ${bundle.timings.rahuKalam}\n` +
         `• शुभ अभिजित मुहूर्त: ${bundle.timings.abhijitMuhurat}`;
 
-      const speakGreeting = `हर हर महादेव! आज आप कैसा महसूस कर रहे हैं? मन में कोई चिंता हो या आज के पंचांग और शुभ समय की जानकारी चाहिए, निसंकोच बताइए। मैं पूरे ध्यान से सुन रही हूँ।`;
+      const speakGreeting = `हर हर महादेव! जय माँ तारा! आज आप कैसा महसूस कर रहे हैं? मन में कोई चिंता हो या आज के पंचांग और शुभ समय की जानकारी चाहिए, निसंकोच बताइए। मैं पूरे ध्यान से सुन रही हूँ।`;
 
       const initialMsg: ChatMessage = {
         id: 'welcome-1',

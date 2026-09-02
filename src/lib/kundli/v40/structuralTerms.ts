@@ -114,7 +114,8 @@ export const STRUCTURAL_HI: Record<string, string> = {
   'Manglik': 'मांगलिक',
   'Kalsarpa': 'कालसर्प',
   'Sade Sati': 'साढ़े साती',
-  'Sade Sati (natal Saturn from Moon)': 'साढ़े साती (चन्द्र से शनि)',
+  'Natal Saturn–Moon positional check': 'जन्मकालिक शनि-चन्द्र स्थिति जांच',
+  'Sade Sati (natal Saturn from Moon)': 'जन्मकालिक शनि-चन्द्र स्थिति (साढ़े साती जांच)',
   'Observed': 'गणना अनुसार',
 
   /* ---- sub-headings ---- */

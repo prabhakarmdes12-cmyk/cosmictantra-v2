@@ -470,10 +470,12 @@ function saarSection(
     }
     if (d.id === 'sadeSati' && 'active' in d.result) {
       statusItems.push({
-        label: tr('Sade Sati (natal Saturn from Moon)', mode),
+        label: tr('Natal Saturn–Moon positional check', mode),
         status: d.result.active ? 'PRESENT' : 'ABSENT',
         statusText: statusCaption(d.result.active ? 'PRESENT' : 'ABSENT', mode),
-        note: d.result.active ? readerStatus(d.result.phase ?? 'not active at birth', mode) : localizeKnownText('not active at birth', mode),
+        note: d.result.active
+          ? `${readerStatus(d.result.phase ?? 'not active at birth', mode)} (${mode === 'hi' ? 'जन्म समय' : 'at birth'})`
+          : localizeKnownText('not active at birth', mode),
         xref: 'D-02',
       });
     }
@@ -516,7 +518,8 @@ function saarSection(
           { label: label('mahadasha', mode), value: `${planetLabel(canonical.dashas.current.mahadasha, mode)} (${readerDateValue(canonical.dashas.current.startDate, mode)} \u2013 ${readerDateValue(canonical.dashas.current.endDate, mode)})` },
           { label: label('antardasha', mode), value: planetLabel(canonical.dashas.current.antardasha, mode) },
           { label: label('pratyantardasha', mode), value: canonical.dashas.current.pratyantardasha ? planetLabel(canonical.dashas.current.pratyantardasha, mode) : '—' },
-          { label: label('nextTransition', mode), value: derived.dasha.nextTransition ? `${planetLabel(derived.dasha.nextTransition.lord, mode)} \u2014 ${readerDateValue(derived.dasha.nextTransition.onDate, mode)}` : '—' },
+          { label: label('nextAntardasha', mode), value: derived.dasha.nextAntardashaTransition ? `${planetLabel(derived.dasha.nextAntardashaTransition.lord, mode)} \u2014 ${readerDateValue(derived.dasha.nextAntardashaTransition.onDate, mode)}` : '—' },
+          { label: label('nextMahadasha', mode), value: derived.dasha.nextMahadashaTransition ? `${planetLabel(derived.dasha.nextMahadashaTransition.lord, mode)} \u2014 ${readerDateValue(derived.dasha.nextMahadashaTransition.onDate, mode)}` : '—' },
           { label: label('balanceAtBirth', mode), value: bal.status === 'CALCULATED' ? `${planetLabel(bal.lord, mode)} — ${readerYmd(bal.ymd, mode)}` : tr('not calculated', mode) },
         ],
       },
@@ -657,7 +660,9 @@ function grahaDossierSection(
       nakshatraLabel(c.nakshatra, mode),
       readerNumber(c.pada, mode),
       motionMark(c.motion.retrograde, mode),
-      readerDignity(c.dignity.category, mode),
+      ['Rahu', 'Ketu'].includes(c.graha)
+        ? (mode === 'hi' ? 'परम्परा-आधारित' : mode === 'hi-en' ? 'परम्परा-आधारित / Tradition-dependent' : 'Tradition-dependent')
+        : readerDignity(c.dignity.category, mode),
       marks.join(' · ') || '—',
     ];
   });
@@ -825,10 +830,10 @@ function yogaDashboardSection(canonical: KundliCanonicalModel, derived: KundliDe
     }
     if (d.id === 'sadeSati' && 'active' in d.result) {
       doshaItems.push({
-        label: tr('Sade Sati', mode),
+        label: tr('Natal Saturn–Moon positional check', mode),
         status: d.result.active ? 'PRESENT' : 'ABSENT',
         statusText: statusCaption(d.result.active ? 'PRESENT' : 'ABSENT', mode),
-        note: trProse('Natal check only: Saturn\'s sign relative to the Moon at birth. This is not a transit search over the client\'s life.', mode),
+        note: trProse('Natal check only: Saturn\'s sign relative to the Moon at birth instant. This is not a transit (Gochara) search over the client\'s current life.', mode),
         xref: appendixRef('D-02', mode),
       });
     }
@@ -912,7 +917,8 @@ function vimshottariSection(canonical: KundliCanonicalModel, derived: KundliDeri
           { label: label('mahadasha', mode), value: `${readerPlanet(cur.mahadasha, mode)} (${dateRange(cur.startDate, cur.endDate)})` },
           { label: label('antardasha', mode), value: readerPlanet(cur.antardasha, mode) },
           { label: label('pratyantardasha', mode), value: cur.pratyantardasha ? readerPlanet(cur.pratyantardasha, mode) : '—' },
-          { label: label('nextTransition', mode), value: derived.dasha.nextTransition ? `${planetLabel(derived.dasha.nextTransition.lord, mode)} \u2014 ${readerDateValue(derived.dasha.nextTransition.onDate, mode)}` : '—' },
+          { label: label('nextAntardasha', mode), value: derived.dasha.nextAntardashaTransition ? `${planetLabel(derived.dasha.nextAntardashaTransition.lord, mode)} \u2014 ${readerDateValue(derived.dasha.nextAntardashaTransition.onDate, mode)}` : '—' },
+          { label: label('nextMahadasha', mode), value: derived.dasha.nextMahadashaTransition ? `${planetLabel(derived.dasha.nextMahadashaTransition.lord, mode)} \u2014 ${readerDateValue(derived.dasha.nextMahadashaTransition.onDate, mode)}` : '—' },
         ],
       },
       {
@@ -1368,7 +1374,7 @@ function doshaEvidenceSection(canonical: KundliCanonicalModel): V2Section {
       });
     }
     if (d.id === 'sadeSati' && 'active' in d.result) {
-      blocks.push(h3(`D-02  Sade Sati  —  ${d.result.active ? 'ACTIVE AT BIRTH' : 'NOT ACTIVE AT BIRTH'}`));
+      blocks.push(h3(`D-02  Natal Saturn–Moon Positional Check (Birth Sade Sati)  —  ${d.result.active ? 'ACTIVE AT BIRTH' : 'NOT ACTIVE AT BIRTH'}`));
       blocks.push({
         kind: 'kvGrid', columns: 1, contentType: 'TRADITIONAL_RULE', system: 'PARASHARI',
         items: [

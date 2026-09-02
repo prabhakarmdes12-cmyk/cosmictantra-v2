@@ -170,7 +170,11 @@ export interface DashaActivation {
     startDate: string;
     endDate: string;
   };
+  /** Next antardasha boundary after the current one. */
+  nextAntardashaTransition: { lord: string; onDate: string } | null;
   /** Next mahadasha boundary after the current one. */
+  nextMahadashaTransition: { lord: string; onDate: string } | null;
+  /** Legacy alias: points to nextAntardashaTransition. */
   nextTransition: { lord: string; onDate: string } | null;
   profiles: ActivationProfile[];
   /** Themes shared by two or more active lords, stated as bhava overlaps. */
@@ -254,10 +258,36 @@ export function buildDashaActivation(
     profileFor('PRATYANTARDASHA', cur.pratyantardasha, canonical, conditions),
   ];
 
-  const currentIndex = canonical.dashas.mahadashas.findIndex((m) => m.isCurrent);
-  const next = currentIndex >= 0 && currentIndex + 1 < canonical.dashas.mahadashas.length
-    ? canonical.dashas.mahadashas[currentIndex + 1]
+  const curMdIndex = canonical.dashas.mahadashas.findIndex(
+    (m) => m.isCurrent || m.planet === cur.mahadasha
+  );
+  const curMd = curMdIndex >= 0 ? canonical.dashas.mahadashas[curMdIndex] : null;
+
+  // Next Mahadasha boundary
+  const nextMd = curMdIndex >= 0 && curMdIndex + 1 < canonical.dashas.mahadashas.length
+    ? canonical.dashas.mahadashas[curMdIndex + 1]
     : null;
+  const nextMahadashaTransition = nextMd ? { lord: nextMd.planet, onDate: nextMd.startDate } : null;
+
+  // Next Antardasha boundary: calculated from active mahadasha's antardasha schedule
+  let nextAntardashaTransition: { lord: string; onDate: string } | null = null;
+  if (curMd && Array.isArray(curMd.antardashas) && curMd.antardashas.length > 0) {
+    const curAdIndex = curMd.antardashas.findIndex(
+      (ad) => ad.planet === cur.antardasha
+    );
+    if (curAdIndex >= 0 && curAdIndex + 1 < curMd.antardashas.length) {
+      const nextAd = curMd.antardashas[curAdIndex + 1];
+      nextAntardashaTransition = { lord: nextAd.planet, onDate: nextAd.startDate };
+    } else if (nextMd) {
+      const firstAd = nextMd.antardashas?.[0];
+      nextAntardashaTransition = {
+        lord: firstAd?.planet ?? nextMd.planet,
+        onDate: nextMd.startDate,
+      };
+    }
+  } else if (nextMd) {
+    nextAntardashaTransition = { lord: nextMd.planet, onDate: nextMd.startDate };
+  }
 
   // Overlapping themes: bhavas that two or more active lords touch, either by
   // occupation, ownership or full drishti. Stated as an overlap of structures,
@@ -289,7 +319,9 @@ export function buildDashaActivation(
     engineVersion: DASHA_ACTIVATION_VERSION,
     balanceAtBirth: computeVimshottariBalance(canonical),
     current: cur,
-    nextTransition: next ? { lord: next.planet, onDate: next.startDate } : null,
+    nextAntardashaTransition,
+    nextMahadashaTransition,
+    nextTransition: nextAntardashaTransition ?? nextMahadashaTransition,
     profiles,
     overlappingThemes,
     timingNote:

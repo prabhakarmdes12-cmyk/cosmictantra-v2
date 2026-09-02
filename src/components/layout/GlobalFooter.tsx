@@ -60,7 +60,7 @@ export default function GlobalFooter({ mode = 'full', lang = 'en' }: GlobalFoote
             <ul className="space-y-3 text-sm text-[#696256] dark:text-[#AAA397]">
               <li><Link href="/report" className="inline-flex min-h-11 items-center hover:text-[#8E6F1D] dark:hover:text-white">Master Kundli</Link></li>
               <li><Link href="/dashboard" className="inline-flex min-h-11 items-center hover:text-[#8E6F1D] dark:hover:text-white">My Space</Link></li>
-              <li><Link href="/kundali-milan" className="inline-flex min-h-11 items-center hover:text-[#8E6F1D] dark:hover:text-white">Kundali matching</Link></li>
+              <li><Link href="/kundali-milan" className="inline-flex min-h-11 items-center hover:text-[#8E6F1D] dark:hover:text-white font-bold">💍 Kundali Milan & PDF Report</Link></li>
             </ul>
           </div>
 

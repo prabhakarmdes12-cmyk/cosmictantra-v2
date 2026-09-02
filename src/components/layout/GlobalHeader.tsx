@@ -221,6 +221,18 @@ export default function GlobalHeader({
 
           {/* RIGHT COLUMN: Minimal Action & Luxury Mega Menu Trigger */}
           <div className="flex items-center justify-end gap-1.5 sm:gap-3 shrink-0">
+            {/* Quick Kundali Milan CTA */}
+            <Link
+              href="/kundali-milan"
+              onClick={() => chitiSensory.playTick()}
+              className="hidden md:inline-flex min-h-11 items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs font-mono-data font-bold bg-amber-500/10 hover:bg-amber-500/20 dark:bg-amber-500/15 dark:hover:bg-amber-500/25 text-[#8E6F1D] dark:text-[#F0C968] border border-amber-500/30 hover:border-amber-500 transition-all shrink-0 cursor-pointer shadow-xs active:scale-95"
+              title="36-Guna Kundali Milan & PDF Report"
+            >
+              <span className="text-sm">💍</span>
+              <span>{lang === 'hi' ? 'कुण्डली मिलान' : 'Kundali Milan'}</span>
+              <span className="text-[9px] px-1.5 py-0.5 bg-[#8E6F1D] text-white dark:bg-[#D4AF37] dark:text-[#060709] rounded-full font-bold uppercase tracking-wider">PDF</span>
+            </Link>
+
             {/* Quick Consultation CTA */}
             <Link
               href="/ask"

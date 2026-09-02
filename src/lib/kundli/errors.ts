@@ -10,6 +10,7 @@
 export type KundliErrorCode =
   | 'KUNDLI_INPUT_INVALID'
   | 'KUNDLI_LOCATION_UNRESOLVED'
+  | 'KUNDLI_LOCATION_COHERENCE_FAILED'
   | 'KUNDLI_COORDINATES_INVALID'
   | 'KUNDLI_FALLBACK_NOT_APPROVED'
   | 'KUNDLI_TIMEZONE_INVALID'
@@ -41,6 +42,8 @@ export class KundliError extends Error {
 export const KUNDLI_SAFE_MESSAGES: Record<KundliErrorCode, string> = {
   KUNDLI_LOCATION_UNRESOLVED:
     'We could not identify the birth place. Please enter the city of birth or its exact coordinates and try again.',
+  KUNDLI_LOCATION_COHERENCE_FAILED:
+    'The entered birth place name does not match the provided geographic coordinates. To prevent incorrect astrological calculations, please select the city from the list or update your coordinates.',
   KUNDLI_INPUT_INVALID:
     'We could not complete this Kundli because some birth details are missing or not in the expected format. Please verify the date, time, and place of birth and try again.',
   KUNDLI_COORDINATES_INVALID:

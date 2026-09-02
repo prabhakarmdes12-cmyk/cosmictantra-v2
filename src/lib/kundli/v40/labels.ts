@@ -106,6 +106,8 @@ export const TERMS = {
   antardasha: T('अन्तर्दशा', 'Antardasha'),
   pratyantardasha: T('प्रत्यन्तर्दशा', 'Pratyantardasha'),
   balanceAtBirth: T('जन्म समय दशा शेष', 'Balance at Birth'),
+  nextAntardasha: T('अगली अन्तर्दशा', 'Next Antardasha'),
+  nextMahadasha: T('अगली महादशा', 'Next Mahadasha'),
   nextTransition: T('अगला परिवर्तन', 'Next Transition'),
   currentPeriod: T('वर्तमान दशा', 'Current Period'),
 

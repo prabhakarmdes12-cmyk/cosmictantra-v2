@@ -11,8 +11,8 @@ test.describe('CosmicTantra — CallMe4 E2EE & Pandit Onboarding Suite', () => {
     await expect(page.getByText(/विद्वान् ज्योतिषी परामर्श|VEDIC SCHOLAR BENCH/i).first()).toBeVisible();
 
     // 4 Service Tiers
-    await expect(page.getByText(/लिखित विद्वत्-परामर्श पत्र/i)).toBeVisible();
-    await expect(page.getByText(/गोपनीय प्रत्यक्ष वॉयस कॉल/i)).toBeVisible();
+    await expect(page.getByText(/कुण्डली \+ 10-15 मिनट व्याख्या|लिखित विद्वत्-परामर्श पत्र/i)).toBeVisible();
+    await expect(page.getByText(/गोपनीय प्रत्यक्ष वॉयस (सभा|कॉल)/i)).toBeVisible();
     await expect(page.getByText(/साक्षात् वीडियो दर्शन/i)).toBeVisible();
     await expect(page.getByText(/पारिवारिक कुण्डली महा-सत्र/i)).toBeVisible();
   });

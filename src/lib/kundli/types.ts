@@ -12,7 +12,7 @@
 /* Input & subject                                                     */
 /* ------------------------------------------------------------------ */
 
-export type CoordinateProvenance = 'MANUAL' | 'GEOCODED' | 'PROFILE' | 'FALLBACK';
+export type CoordinateProvenance = 'MANUAL' | 'GEOCODED' | 'PROFILE' | 'FALLBACK' | 'EXPLICIT_GPS_OVERRIDE';
 
 export interface RawBirthInput {
   /** Subject name — required for report generation (personal document). */

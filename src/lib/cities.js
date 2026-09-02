@@ -603,12 +603,28 @@ export const CITIES_BY_STATE = CITIES.reduce((acc, city) => {
 export function searchCities(query) {
   if (!query || !query.trim()) return CITIES.slice(0, 30);
   const q = query.toLowerCase().trim();
-  return CITIES.filter(c => 
-    c.name.toLowerCase().includes(q) ||
-    c.state.toLowerCase().includes(q) ||
-    (c.nameHi && c.nameHi.includes(q)) ||
-    c.country.toLowerCase().includes(q)
-  );
+  const tokens = q.split(/[\s,]+/).filter((t) => t.length > 0);
+  return CITIES.filter((c) => {
+    const nameLower = c.name.toLowerCase();
+    const stateLower = c.state.toLowerCase();
+    const nameHi = c.nameHi || '';
+    const countryLower = c.country.toLowerCase();
+    if (
+      nameLower.includes(q) ||
+      stateLower.includes(q) ||
+      nameHi.includes(q) ||
+      countryLower.includes(q)
+    ) {
+      return true;
+    }
+    return tokens.every(
+      (tok) =>
+        nameLower.includes(tok) ||
+        stateLower.includes(tok) ||
+        nameHi.includes(tok) ||
+        countryLower.includes(tok)
+    );
+  });
 }
 
 export function findCityById(id) {

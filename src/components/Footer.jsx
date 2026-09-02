@@ -131,7 +131,7 @@ export default function Footer({ onOpenCapabilityModal, onOpenConsultation, onNa
               <li><Link href="/numerology/name" className="hover:text-black dark:hover:text-white transition-colors">Name Numerology</Link></li>
               <li><Link href="/numerology/business-name" className="hover:text-black dark:hover:text-white transition-colors">Business Name Check</Link></li>
               <li><Link href="/numerology/baby-names" className="hover:text-black dark:hover:text-white transition-colors">Baby Names by Star</Link></li>
-              <li><Link href="/kundali-milan" className="hover:text-black dark:hover:text-white transition-colors">Kundali Milan</Link></li>
+              <li><Link href="/kundali-milan" className="hover:text-black dark:hover:text-white transition-colors font-bold text-[#8E6F1D] dark:text-[#D4AF37]">💍 Kundali Milan & PDF Report</Link></li>
               <li><Link href="/my-calendar" className="hover:text-black dark:hover:text-white transition-colors">My Vedic Calendar</Link></li>
               <li><Link href="/family" className="hover:text-black dark:hover:text-white transition-colors">Family Profiles</Link></li>
               <li><Link href="/darshan" className="hover:text-black dark:hover:text-white transition-colors">Live Darshan</Link></li>

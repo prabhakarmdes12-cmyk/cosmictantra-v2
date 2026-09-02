@@ -11,6 +11,7 @@
 
 import { KundliError } from './errors';
 import { KUNDLI_PIPELINE_CONFIG } from './config';
+import { searchCities } from '../cities';
 import type {
   RawBirthInput, NormalizedBirthProfile, BirthCoordinates,
   ResolvedTimezone, KundliCanonicalModel, KundliReportModel, SectionStatus,
@@ -105,6 +106,31 @@ export function validateBirthInput(raw: RawBirthInput, options?: { allowFallback
     if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
       throw new KundliError('KUNDLI_COORDINATES_INVALID', 'coordinates out of range', { latitude: lat, longitude: lng });
     }
+
+    // GATE 1c — BIRTH_LOCATION_COHERENCE
+    // A location name must never be accepted independently from its resolved coordinates.
+    // If a known city name is entered, the coordinates must be coherent with that place.
+    if (locationNameRaw && provenance !== 'EXPLICIT_GPS_OVERRIDE') {
+      const candidates = searchCities(locationNameRaw);
+      const queryTokens = locationNameRaw.toLowerCase().split(/[\s,]+/);
+      const exactOrPrefix = candidates.filter(c => {
+        const cName = c.name.toLowerCase();
+        return queryTokens.some(tok => tok.length >= 3 && (cName.includes(tok) || tok.includes(cName)));
+      });
+
+      if (exactOrPrefix.length > 0) {
+        const minDelta = Math.min(...exactOrPrefix.map(c => Math.hypot(c.lat - lat, c.lng - lng)));
+        if (minDelta > 1.5) {
+          const expected = exactOrPrefix[0];
+          throw new KundliError(
+            'KUNDLI_LOCATION_COHERENCE_FAILED',
+            `Birth place "${locationNameRaw}" does not match coordinates (${lat.toFixed(4)}°, ${lng.toFixed(4)}°). Expected coordinates near ${expected.name}, ${expected.state} (${expected.lat.toFixed(4)}°, ${expected.lng.toFixed(4)}°).`,
+            { locationName: locationNameRaw, providedLat: lat, providedLng: lng, expectedLat: expected.lat, expectedLng: expected.lng }
+          );
+        }
+      }
+    }
+
     return {
       name, birthDate, birthTime, locationName,
       coordinates: { latitude: lat, longitude: lng, provenance },

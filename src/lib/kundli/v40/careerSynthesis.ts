@@ -350,10 +350,10 @@ export function buildCareerSynthesis(
         ));
       }
       if (c.combustion.status === 'COMBUST') {
-        challenging.push(claim(
+        mixed.push(claim(
           `CAREER_COMBUST_${g}`,
-          `${g} is combust — ${dm(c.combustion.angularDistance ?? 0)} from the Sun against an orb of ${dm(c.combustion.orbUsed ?? 0)}.`,
-          'CHALLENGING',
+          `${g} is combust — ${dm(c.combustion.angularDistance ?? 0)} from the Sun against an orb of ${dm(c.combustion.orbUsed ?? 0)}. Solar conjunction fuses graha significations; traditions evaluate visible combustion differently, so it is recorded as a mixed structural factor.`,
+          'MIXED',
           c.combustion.evidenceIds,
           'DERIVED_JYOTISH_FACT',
           'CAREER_COMBUST',

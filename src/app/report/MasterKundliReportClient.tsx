@@ -43,6 +43,8 @@ import { getActiveProfile } from '@/lib/profileStore';
 import { KUNDLI_SAFE_MESSAGES } from '@/lib/kundli/errors';
 import { searchCities } from '@/lib/cities';
 import type { PipelineState, RawBirthInput } from '@/lib/kundli/types';
+import ExecutiveLifeGaugeDashboard from '@/components/kundli/ExecutiveLifeGaugeDashboard';
+import { computeExecutiveLifeDimensions, computeGrahaArchetypeCards } from '@/lib/jyotish/executiveLifeGauge';
 
 /**
  * Kundli UI chrome localization — the selected language drives the report
@@ -200,6 +202,23 @@ function DashaTimeline({ mahadashas, currentAD, selectedIndex, onSelect }: {
   );
 }
 
+function resolveCoherentCoordinates(locName: string, curLat: number, curLng: number, curTz: number) {
+  if (!locName || !locName.trim()) return { lat: curLat, lng: curLng, tz: curTz, resolvedLoc: locName };
+  const candidates = searchCities(locName);
+  const queryTokens = locName.toLowerCase().split(/[\s,]+/);
+  const matched = candidates.find(c => {
+    const cName = c.name.toLowerCase();
+    return queryTokens.some(tok => tok.length >= 3 && (cName.includes(tok) || tok.includes(cName)));
+  });
+  if (matched) {
+    const delta = (!Number.isFinite(curLat) || !Number.isFinite(curLng)) ? 999 : Math.hypot(matched.lat - curLat, matched.lng - curLng);
+    if (delta > 1.5) {
+      return { lat: matched.lat, lng: matched.lng, tz: matched.tz ?? 5.5, resolvedLoc: `${matched.name}, ${matched.state}` };
+    }
+  }
+  return { lat: curLat, lng: curLng, tz: curTz, resolvedLoc: locName };
+}
+
 export default function MasterKundliReportClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -327,25 +346,36 @@ export default function MasterKundliReportClient() {
     if (urlProvided) {
       // Display state keeps the legacy look, but the RAW input preserves
       // the caller's true values — including what is MISSING.
+      let initialLat = paramLat ? parseFloat(paramLat) : Number.NaN;
+      let initialLng = paramLng ? parseFloat(paramLng) : Number.NaN;
+      let initialTz = paramTz ? parseFloat(paramTz) : Number.NaN;
+      let initialCity = paramCity || '';
+
+      const coherent = resolveCoherentCoordinates(initialCity, initialLat, initialLng, initialTz);
+      initialLat = coherent.lat;
+      initialLng = coherent.lng;
+      initialTz = coherent.tz;
+      initialCity = coherent.resolvedLoc;
+
       rawInputRef.current = {
         ...(paramName ? { name: paramName } : {}),
         ...(paramDob ? { birthDate: paramDob } : {}),
         ...(paramTob ? { birthTime: paramTob } : {}),
-        ...(paramCity ? { locationName: paramCity } : {}),
-        ...(paramLat ? { latitude: parseFloat(paramLat) } : {}),
-        ...(paramLng ? { longitude: parseFloat(paramLng) } : {}),
-        ...(paramTz ? { utcOffsetHours: parseFloat(paramTz) } : {}),
+        ...(initialCity ? { locationName: initialCity } : {}),
+        ...(Number.isFinite(initialLat) ? { latitude: initialLat } : {}),
+        ...(Number.isFinite(initialLng) ? { longitude: initialLng } : {}),
+        ...(Number.isFinite(initialTz) ? { utcOffsetHours: initialTz } : {}),
         ...(paramTzId ? { timezoneId: paramTzId } : {}),
-        coordinateProvenance: (paramLat && paramLng) ? 'MANUAL' : undefined
+        coordinateProvenance: (Number.isFinite(initialLat) && Number.isFinite(initialLng)) ? 'MANUAL' : undefined
       };
       setBirthState({
         name: paramName || '',
         birthDate: paramDob || '',
         birthTime: paramTob || '',
-        latitude: paramLat ? parseFloat(paramLat) : Number.NaN,
-        longitude: paramLng ? parseFloat(paramLng) : Number.NaN,
-        timezone: paramTz ? parseFloat(paramTz) : Number.NaN,
-        locationName: paramCity || ''
+        latitude: initialLat,
+        longitude: initialLng,
+        timezone: initialTz,
+        locationName: initialCity
       });
       setIsDemoProfile(false);
       return;
@@ -358,16 +388,24 @@ export default function MasterKundliReportClient() {
         const parsed = JSON.parse(saved);
         const hasComplete = parsed.birthDate && parsed.birthTime && (parsed.latitude !== undefined || parsed.birthLat !== undefined) && (parsed.longitude !== undefined || parsed.birthLon !== undefined || parsed.lng !== undefined);
         if (hasComplete) {
-          const lat = Number(parsed.latitude ?? parsed.birthLat);
-          const lng = Number(parsed.longitude ?? parsed.birthLon ?? parsed.lng);
+          let lat = Number(parsed.latitude ?? parsed.birthLat);
+          let lng = Number(parsed.longitude ?? parsed.birthLon ?? parsed.lng);
+          let tz = Number(parsed.timezone) || 5.5;
+          let loc = parsed.city || parsed.locationName || 'India';
+          const coherent = resolveCoherentCoordinates(loc, lat, lng, tz);
+          lat = coherent.lat;
+          lng = coherent.lng;
+          tz = coherent.tz;
+          loc = coherent.resolvedLoc;
+
           rawInputRef.current = {
             name: parsed.name || 'Seeker',
             birthDate: parsed.birthDate,
             birthTime: parsed.birthTime,
-            locationName: parsed.city || parsed.locationName || '',
+            locationName: loc,
             latitude: lat,
             longitude: lng,
-            ...(parsed.timezone ? { utcOffsetHours: Number(parsed.timezone) } : {}),
+            utcOffsetHours: tz,
             coordinateProvenance: 'PROFILE'
           };
           setBirthState({
@@ -376,8 +414,8 @@ export default function MasterKundliReportClient() {
             birthTime: parsed.birthTime,
             latitude: lat,
             longitude: lng,
-            timezone: Number(parsed.timezone) || 5.5,
-            locationName: parsed.city || parsed.locationName || 'India'
+            timezone: tz,
+            locationName: loc
           });
           setIsDemoProfile(false);
           return;
@@ -389,8 +427,16 @@ export default function MasterKundliReportClient() {
     try {
       const active = getActiveProfile();
       if (active && active.birthDate && active.birthTime && (active.lat !== undefined || active.latitude !== undefined) && (active.lng !== undefined || active.longitude !== undefined)) {
-        const lat = Number(active.lat ?? active.latitude);
-        const lng = Number(active.lng ?? active.longitude);
+        let lat = Number(active.lat ?? active.latitude);
+        let lng = Number(active.lng ?? active.longitude);
+        let tz = Number(active.tz ?? active.timezone) || 5.5;
+        let loc = active.birthCity || active.city || active.locationName || 'India';
+        const coherent = resolveCoherentCoordinates(loc, lat, lng, tz);
+        lat = coherent.lat;
+        lng = coherent.lng;
+        tz = coherent.tz;
+        loc = coherent.resolvedLoc;
+
         if (Number.isFinite(lat) && Number.isFinite(lng)) {
           const profilePayload = {
             name: active.name || 'Seeker',
@@ -398,8 +444,8 @@ export default function MasterKundliReportClient() {
             birthTime: active.birthTime,
             latitude: lat,
             longitude: lng,
-            timezone: Number(active.tz ?? active.timezone) || 5.5,
-            locationName: active.birthCity || active.city || active.locationName || 'India'
+            timezone: tz,
+            locationName: loc
           };
           rawInputRef.current = {
             ...profilePayload,
@@ -447,6 +493,20 @@ export default function MasterKundliReportClient() {
     } else {
       if (b.latitude < -90 || b.latitude > 90) e.lat = 'Latitude must be -90…90.';
       if (b.longitude < -180 || b.longitude > 180) e.lng = 'Longitude must be -180…180.';
+      if (b.locationName) {
+        const candidates = searchCities(b.locationName);
+        const queryTokens = b.locationName.toLowerCase().split(/[\s,]+/);
+        const matched = candidates.filter(c => {
+          const cName = c.name.toLowerCase();
+          return queryTokens.some(tok => tok.length >= 3 && (cName.includes(tok) || tok.includes(cName)));
+        });
+        if (matched.length > 0) {
+          const minDelta = Math.min(...matched.map(c => Math.hypot(c.lat - b.latitude, c.lng - b.longitude)));
+          if (minDelta > 1.5) {
+            e.lat = `Coordinates do not match "${b.locationName}". Select from suggestions to update.`;
+          }
+        }
+      }
     }
     return e;
   };
@@ -532,6 +592,14 @@ export default function MasterKundliReportClient() {
     houses: snapshot.houses,
     planets: snapshot.planets
   }), [snapshot]);
+
+  const executiveLifeDimensions = useMemo(() => {
+    return computeExecutiveLifeDimensions(snapshot);
+  }, [snapshot]);
+
+  const grahaArchetypeCards = useMemo(() => {
+    return computeGrahaArchetypeCards(snapshot);
+  }, [snapshot]);
 
   const chartD9Obj = useMemo(() => {
     const v9 = snapshot.vargas?.shodashavarga?.[9];
@@ -1124,7 +1192,14 @@ export default function MasterKundliReportClient() {
         /* ================================================================ */
         /* MODE O: OVERVIEW — chart-first, progressive disclosure           */
         /* ================================================================ */
-        <main className="max-w-5xl mx-auto px-4 lg:px-8 py-8 space-y-6">
+        <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-8">
+          {/* Executive 6-Dimension Life Gauge & 4-Quadrant Graha Archetype Dashboard */}
+          <ExecutiveLifeGaugeDashboard
+            dimensions={executiveLifeDimensions}
+            archetypeCards={grahaArchetypeCards}
+            lang={lang}
+          />
+
           {/* Row 1: D1 chart + current period */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-white dark:bg-[#121422] rounded-2xl p-5 border border-[#E5D7BC] dark:border-white/10 shadow-sm space-y-3">
@@ -1721,6 +1796,14 @@ export default function MasterKundliReportClient() {
                     type="text"
                     value={cityQuery}
                     onChange={(e) => cityAutocomplete(e.target.value)}
+                    onBlur={() => {
+                      if (cityQuery.trim()) {
+                        const hits = searchCities(cityQuery.trim());
+                        if (hits.length > 0) {
+                          pickCity(hits[0]);
+                        }
+                      }
+                    }}
                     onFocus={() => cityQuery.trim() && setShowCitySuggestions(true)}
                     placeholder={birthState.locationName || 'e.g. Patna, Varanasi, Mumbai…'}
                     className="w-full px-3 py-2 rounded-xl bg-[#FAF7F2] dark:bg-[#0E101D] border border-[#E5D7BC] dark:border-white/10 text-xs font-semibold focus:outline-none focus:border-[#8E6F1D]"
@@ -1744,7 +1827,7 @@ export default function MasterKundliReportClient() {
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-[10px] text-[#78716C] dark:text-[#A8A29E] leading-relaxed">
-                    Coordinates drive the calculation; the city name is used for display.
+                    Coordinates are irrevocably bound to the birth place for astrological precision.
                   </p>
                   <button
                     type="button"
@@ -1829,23 +1912,52 @@ export default function MasterKundliReportClient() {
                 type="button"
                 disabled={Object.keys(fieldErrors).length > 0}
                 onClick={() => {
-                  const errs = validateLive(birthState);
+                  let stateToUse = { ...birthState };
+                  if (cityQuery.trim()) {
+                    const hits = searchCities(cityQuery.trim());
+                    if (hits.length > 0) {
+                      const c = hits[0];
+                      stateToUse = {
+                        ...stateToUse,
+                        locationName: `${c.name}, ${c.state}`,
+                        latitude: c.lat,
+                        longitude: c.lng,
+                        timezone: c.tz
+                      };
+                      setBirthState(stateToUse);
+                      setCityQuery('');
+                    }
+                  } else if (stateToUse.locationName) {
+                    const coherent = resolveCoherentCoordinates(stateToUse.locationName, stateToUse.latitude, stateToUse.longitude, stateToUse.timezone);
+                    if (coherent.lat !== stateToUse.latitude || coherent.lng !== stateToUse.longitude) {
+                      stateToUse = {
+                        ...stateToUse,
+                        locationName: coherent.resolvedLoc,
+                        latitude: coherent.lat,
+                        longitude: coherent.lng,
+                        timezone: coherent.tz
+                      };
+                      setBirthState(stateToUse);
+                    }
+                  }
+
+                  const errs = validateLive(stateToUse);
                   setFieldErrors(errs);
                   if (Object.keys(errs).length > 0) return;
                   chitiSensory.playTick();
                   try {
-                    localStorage.setItem('cosmictantra_active_kundli', JSON.stringify(birthState));
+                    localStorage.setItem('cosmictantra_active_kundli', JSON.stringify(stateToUse));
                   } catch {}
                   // Rebuild RAW input from the modal's edited values and
                   // dry-run the pipeline so validation failures surface NOW.
                   const editedRaw: RawBirthInput = {
-                    name: birthState.name.trim() || undefined,
-                    birthDate: birthState.birthDate || undefined,
-                    birthTime: birthState.birthTime || undefined,
-                    locationName: birthState.locationName.trim() || undefined,
-                    latitude: Number.isFinite(birthState.latitude) ? birthState.latitude : undefined,
-                    longitude: Number.isFinite(birthState.longitude) ? birthState.longitude : undefined,
-                    utcOffsetHours: Number.isFinite(birthState.timezone) ? birthState.timezone : undefined,
+                    name: stateToUse.name.trim() || undefined,
+                    birthDate: stateToUse.birthDate || undefined,
+                    birthTime: stateToUse.birthTime || undefined,
+                    locationName: stateToUse.locationName.trim() || undefined,
+                    latitude: Number.isFinite(stateToUse.latitude) ? stateToUse.latitude : undefined,
+                    longitude: Number.isFinite(stateToUse.longitude) ? stateToUse.longitude : undefined,
+                    utcOffsetHours: Number.isFinite(stateToUse.timezone) ? stateToUse.timezone : undefined,
                     coordinateProvenance: 'MANUAL'
                   };
                   rawInputRef.current = editedRaw;
