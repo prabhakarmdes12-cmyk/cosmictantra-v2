@@ -160,6 +160,7 @@ test('STRUCTURAL — the pack holds its geometry, ruled lines included', () => {
 test('the pack is shorter than the full report', () => {
   // If dropping eleven appendix sections did not shorten it, something was
   // silently kept.
-  expect(inspection.pageCount).toBeLessThan(39);
+  // The qualified Scholar fixture is deliberately baselined at 38 pages.
+  expect(inspection.pageCount).toBeLessThan(38);
   expect(inspection.pageCount).toBeGreaterThanOrEqual(14);
 });

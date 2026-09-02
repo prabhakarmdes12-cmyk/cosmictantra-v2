@@ -66,7 +66,7 @@ embedding, deterministic pagination, selectable text and vector graphics.*
 | Mixed Latin + Devanagari | `FontStack.runsFor()` splits a string into maximal same-face runs at script boundaries, never inside a syllable | `shaping.spec.ts` |
 | Unicode symbols | a coverage-checked fallback to DejaVu Sans | `typography.spec.ts` |
 | Font embedding | pdfkit subsets and embeds every face | `structuralAudit` rejects any face outside the allow-list |
-| Deterministic pagination | `PaginationController`, fixed `creationDate` | `renderer-v3.spec.ts` pins 39 pages |
+| Deterministic pagination | `PaginationController`, fixed `creationDate` | `renderer-v3.spec.ts` pins the reviewed 38-page qualified fixture |
 | Selectable text | real text operators, not outlines | every page yields extractable lines |
 | Vector graphics | charts and rules are drawn paths | `visual.spec.ts` measures ink inside the chart square |
 

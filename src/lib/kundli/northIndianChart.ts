@@ -253,7 +253,7 @@ export function layoutChart(
       rows = Math.ceil(occupants.length / columns);
       fontSize = Math.min(u(opt.baseFontSize), provisionalSpace / (rows * 1.25));
       colW = availableW / columns;
-      const longest = Math.max(...occupants.map((p) => (p.abbreviation ?? '').length));
+      const longest = Math.max(...occupants.map((p) => (p.displayLabel ?? p.abbreviation ?? '').length));
       fontSize = Math.min(fontSize, colW / Math.max(1, longest * 0.58));
       fontSize = Math.max(u(opt.minFontSize), fontSize);
       step = fontSize * 1.25;
@@ -292,7 +292,7 @@ export function layoutChart(
       const col = Math.floor(idx / rows);
       const row = idx % rows;
       const p: ChartPlacement = occupants[idx];
-      const text = p.abbreviation ?? '';
+      const text = p.displayLabel ?? p.abbreviation ?? '';
       const w = textWidth(text, fontSize);
       const x = cx - availableW / 2 + colW * (col + 0.5);
       const y = bottom + GAP + fontSize * 0.8 + row * step;

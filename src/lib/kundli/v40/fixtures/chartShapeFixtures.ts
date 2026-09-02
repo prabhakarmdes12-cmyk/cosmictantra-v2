@@ -20,7 +20,7 @@
  */
 
 import {
-  CHART_MODEL_VERSION, PLANET_ABBREVIATIONS, placementEvidenceId,
+  CHART_MODEL_VERSION, PLANET_ABBREVIATIONS, placementEvidenceId, chartDegreeLabel,
   type ChartRenderModel, type ChartPlacement, type PlanetId,
 } from '../../chartModel';
 import type { KundliReportModelV2, V2Block, V2Section } from '../reportBlocks';
@@ -70,6 +70,7 @@ function buildChart(shape: ChartShape, division: 1 | 9, labelMode: 'EN' | 'HI' |
         planetId,
         displayName: labelMode === 'HI' ? abbr.full.hi : abbr.full.en,
         abbreviation: labelMode === 'HI' ? abbr.hi : abbr.en,
+        displayLabel: `${labelMode === 'HI' ? abbr.hi : abbr.en} ${chartDegreeLabel(12.5, labelMode)}`,
         // Every graha retrograde in the EDGE case: the marker is a drawn rule
         // under the abbreviation, and nine of them at once is the stress case.
         retrograde: shape === 'EDGE' || planetId === 'Rahu' || planetId === 'Ketu',
@@ -87,6 +88,7 @@ function buildChart(shape: ChartShape, division: 1 | 9, labelMode: 'EN' | 'HI' |
     chartNameHi: division === 1 ? 'जन्म कुण्डली (D1)' : 'नवांश (D9)',
     chartSystem: 'NORTH_INDIAN',
     labelMode,
+    devanagariNumerals: labelMode === 'HI',
     lagnaSignNumber: lagnaSign,
     lagnaEvidenceId: placementEvidenceId(division, 1),
     houses,

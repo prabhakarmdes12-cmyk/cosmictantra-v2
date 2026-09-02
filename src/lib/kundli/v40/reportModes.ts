@@ -35,6 +35,17 @@ export const DOWNLOAD_CONTRACT = {
 } as const;
 
 /**
+ * Stable public-PDF lineage promised by the download API. It lives outside the
+ * Next.js route module because Route Handler modules may export only handlers
+ * and Next route configuration — exporting this value from the handler makes
+ * `next build` reject the route.
+ */
+export const DOWNLOAD_CONTRACT = {
+  reportModelVersion: 'kundli-report-v2',
+  rendererVersion: 'kundli-pdf-renderer-v3',
+} as const;
+
+/**
  * Sections CLIENT does not receive, each with the reason.
  *
  * The reason matters. "Too technical" is not a reason — everything in a Kundli

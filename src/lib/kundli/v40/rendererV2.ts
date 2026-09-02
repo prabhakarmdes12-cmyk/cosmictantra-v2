@@ -733,13 +733,13 @@ export async function renderKundliPdfV2(
       drawText(period.label, ML, y, labelW, {
         size: T.typography.sizes.small, bold: period.current, color: T.colors.ink, lineMm: T.spacing.tightLineMm,
       });
-      drawText(`${period.start} to ${period.end}`, ML + labelW, y, dateW, {
+      drawText(period.rangeLabel ?? `${period.start} to ${period.end}`, ML + labelW, y, dateW, {
         size: T.typography.sizes.micro, color: T.colors.inkSoft, lineMm: 3.4,
       });
       const w = Math.max(1.5, (period.years / maxYears) * barMax);
       fill(period.current ? T.colors.vermilion : T.colors.goldFaint);
       doc.rect(barX, y + 0.7, w, 2.6, 'F');
-      drawText(`${period.years.toFixed(0)}y`, barX + w + 1.5, y, 12, {
+      drawText(period.durationLabel ?? `${period.years.toFixed(0)}y`, barX + w + 1.5, y, 12, {
         size: T.typography.sizes.micro, color: T.colors.inkFaint, lineMm: 3.4,
       });
       controller.advance(h);

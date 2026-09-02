@@ -38,7 +38,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
- * Rendering a Scholar edition is ~2s of CPU, nine font faces and a 39-page
+ * Rendering a Scholar edition is ~2s of CPU, nine font faces and a 38-page
  * layout — comfortably the most expensive endpoint in the app, and it takes
  * one unauthenticated POST to start one. Twelve per minute is far above what
  * a person clicking Download can produce (they must wait for each file) and
@@ -54,7 +54,13 @@ interface DownloadRequest {
   inspect?: boolean;
 }
 
-const asLocale = (v: unknown): 'en' | 'hi' => (String(v ?? 'en') === 'hi' ? 'hi' : 'en');
+/** Public PDF language contract. `hi-en` is a first-class report locale, not
+ * a UI alias that quietly falls back to English. */
+type DownloadLocale = 'en' | 'hi' | 'hi-en';
+const asLocale = (v: unknown): DownloadLocale => {
+  const locale = String(v ?? 'en');
+  return locale === 'hi' || locale === 'hi-en' ? locale : 'en';
+};
 
 function filename(name: string | null | undefined, date: string | null | undefined, mode: ReportMode): string {
   const safe = (name || 'Kundli').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'Kundli';
@@ -147,6 +153,7 @@ export async function POST(request: Request) {
       'X-Kundli-Report-Model': result.report?.reportModelVersion ?? 'unknown',
       'X-Kundli-Renderer': result.rendererVersion,
       'X-Kundli-Mode': result.mode,
+      'X-Kundli-Locale': locale,
       'X-Kundli-Pages': String(result.metrics?.pageCount ?? 0),
     },
   });
@@ -164,6 +171,6 @@ export async function GET() {
       includesAppendix: m.includesAppendix,
       expectedPages: m.expectedPages,
     })),
-    locales: ['en', 'hi'],
+    locales: ['en', 'hi', 'hi-en'],
   });
 }

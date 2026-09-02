@@ -1,4 +1,5 @@
 import type { LabelMode } from './labels';
+import { localizeTemplateValue } from './reportPresentation';
 
 export const TEMPLATES_HI: Record<string, string> = {
   // structuralHighlights
@@ -24,9 +25,9 @@ export const TEMPLATES_HI: Record<string, string> = {
   'CAREER_LAGNESHA_IN_TENTH': 'लग्नेश {{lagnesha}} दशम भाव में स्थित है, जो स्वयं को सीधे कर्म भाव में स्थापित करता है।',
   'CAREER_LAGNESHA_RELATION': 'लग्नेश {{lagnesha}} ({{lagnaHouse}} भाव) और दशमेश {{tenthLord}} ({{tenthHouse}} भाव) प्रत्यक्ष रूप से युति या स्थान परिवर्तन से नहीं जुड़े हैं।',
   'CAREER_ARTHA_TRIKONA': 'अर्थ त्रिकोण 2 / 6 / 10 / 11 के स्वामी {{lords}} हैं; {{occupancy}}',
-  'CAREER_FUNCTIONAL': '{{graha}} — {{functionalStatement}}। नैसर्गिक स्वभाव: {{natural}}।',
+  'CAREER_FUNCTIONAL': '{{graha}} — {{functionalStatement}} नैसर्गिक स्वभाव: {{natural}}।',
   'CAREER_DIGNITY': '{{graha}} {{dignity}} ({{sign}}) है।',
-  'CAREER_COMBUST': '{{graha}} अस्त है — सूर्य से {{distance}}, दीप्तांश (orb) {{orb}}।',
+  'CAREER_COMBUST': '{{graha}} अस्त है — सूर्य से {{distance}}, दीप्तांश {{orb}}।',
   'CAREER_NEAR_COMBUST': '{{graha}} सूर्य के समीप है ({{distance}}, दीप्तांश {{orb}}) परन्तु अस्त होने की सीमा से बाहर है।',
   'CAREER_RETROGRADE': '{{graha}} जन्म के समय वक्री है। परम्परा में वक्री ग्रह के बल या निर्बलता पर मतभेद है, अतः इसे मिश्रित कारक के रूप में दर्ज किया गया है।',
   'CAREER_TENTH_NO_DRISHTI': 'अपनाई गई दृष्टि-पद्धति के अन्तर्गत दशम भाव पर कोई पूर्ण पराशरी दृष्टि नहीं पड़ती।',
@@ -39,7 +40,7 @@ export const TEMPLATES_HI: Record<string, string> = {
   'CAREER_ACTIVATION_TOUCH': '{{level}} स्वामी {{lord}} अर्थ भाव(ओं) {{houses}} को स्थिति, स्वामित्व या पूर्ण दृष्टि द्वारा स्पर्श करता है।',
   'CAREER_ACTIVATION_KEY': '{{level}} स्वामी {{lord}} स्वयं इस कुण्डली का एक कर्म-ग्रह है, यद्यपि वह किसी अर्थ भाव को सीधे स्पर्श नहीं करता।',
   'CAREER_ACTIVATION_NONE': '{{level}} स्वामी {{lord}} किसी भी अर्थ भाव (2/6/10/11) को स्थिति, स्वामित्व या पूर्ण दृष्टि से स्पर्श नहीं करता।',
-  'CAREER_TRANSIT': 'गोचर (transit) इस रिपोर्ट का भाग नहीं है।',
+  'CAREER_TRANSIT': 'गोचर इस रिपोर्ट का भाग नहीं है।',
   'CAREER_CONCLUSION_1': 'कर्म को यहाँ {{sign}} में दशम भाव, उसके स्वामी {{lord}}, और उसे स्पर्श या देखने वाले ग्रहों से पढ़ा गया है।',
   'CAREER_CONCLUSION_2': '{{support}} कारक कर्म भाव का समर्थन करते हैं और {{challenge}} इसके विरुद्ध कार्य करते हैं; दोनों सूचियाँ ऊपर पूर्ण रूप से दी गई हैं ताकि सन्तुलन की जाँच की जा सके।',
   'CAREER_CONCLUSION_3': 'चल रही {{mahadasha}} महादशा / {{antardasha}} अन्तर्दशा के अन्तर्गत, कर्म फल का सक्रियण दशा खण्ड में सूचीबद्ध स्तर तक है — दशा समय बताती है, फल नहीं।',
@@ -47,13 +48,24 @@ export const TEMPLATES_HI: Record<string, string> = {
   // consultationQuestions
   'CQ_CONCENTRATION': '{{grahas}} का {{house}} भाव में संकेन्द्रण है। ग्रहों के बल और D10 पर विचार करने के बाद इस संकेन्द्रण का क्या फल कहना चाहिए?',
   'CQ_YOGA': '{{name}} नियम से उपस्थित है। ग्रह की अपनी स्थिति तौलने के बाद यह यहाँ कितनी प्रबलता से कार्य करता है?',
-  'CQ_MANGLIK': 'मंगल के {{house}} भाव में होने से विवाह के फल पर क्या प्रभाव पड़ेगा, और क्या परिवार की परम्परा इसे रद्द (cancellation) मानती है?',
+  'CQ_MANGLIK': 'मंगल के {{house}} भाव में होने से विवाह के फल पर क्या प्रभाव पड़ेगा, और क्या परिवार की परम्परा इसे रद्दीकरण मानती है?',
   'CQ_CURRENT_PERIOD': 'चल रही {{mahadasha}} / {{antardasha}} दशा में वास्तव में कौन से विषय सक्रिय हैं{{overlapText}}?',
   'CQ_CAREER_CONTRADICTION': 'कर्म के कारक परस्पर असहमत हैं ({{support}} समर्थन में, {{challenge}} विरोध में)। इस कुण्डली के लिए पण्डित जी किस पक्ष को अधिक महत्व देंगे, और किस शास्त्रीय आधार पर?',
   'CQ_DUSTHANA_LORD_ANGULAR': '{{house}} भाव का स्वामी {{lord}} {{lordHouse}} भाव ({{kendraTrikona}}) में स्थित है। अपनाई जा रही परम्परा में इसे विपरीत राजयोग माना जाएगा, या अधिष्ठित भाव का पीड़ित होना?',
   'CQ_RETROGRADE': '{{grahas}} जन्म के समय वक्री {{verb}}। पण्डित जी यहाँ वक्री ग्रह का कौन सा फल लागू करेंगे?',
-  'CQ_NEAR_COMBUST': '{{grahas}} अपनाई गई अस्त (combustion) सीमा के ठीक बाहर स्थित हैं। क्या पण्डित जी की अपनी दीप्तांश (orb) सारणी के अनुसार यह अस्त माना जाएगा?',
-  'CQ_BIRTH_TIME': 'लग्न {{sign}} के {{degree}}° पर है। परिवार को दर्ज जन्म समय पर कितना विश्वास है, और क्या भाव-स्तर के फल कहने से पहले जन्म समय संशोधन (rectification) आवश्यक है?',
+  'CQ_NEAR_COMBUST': '{{grahas}} अपनाई गई अस्तता-सीमा के ठीक बाहर स्थित हैं। क्या पण्डित जी की अपनी दीप्तांश-सारणी के अनुसार यह अस्त माना जाएगा?',
+  'CQ_BIRTH_TIME': 'लग्न {{sign}} के {{degree}}° पर है। परिवार को दर्ज जन्म समय पर कितना विश्वास है, और क्या भाव-स्तर के फल कहने से पहले जन्म-समय संशोधन आवश्यक है?',
+
+
+  // report-model presentation (not astrology derivation)
+  'GRAHA_COMBUST': '{{graha}} अस्त है: सूर्य से दूरी {{distance}}, अपनाया हुआ दीप्तांश {{orb}}।',
+  'GRAHA_NEAR_COMBUST': '{{graha}} सूर्य से {{distance}} दूर है, जो अपनाए हुए {{orb}} दीप्तांश के ठीक बाहर है; इस नियम में ग्रह अस्त नहीं है।',
+  'GRAHA_WAR': '{{graha}} की ग्रहयुद्ध में {{opponent}} से युति है (अन्तर {{separation}})। विजेता की गणना नहीं की गई है।',
+  'DASHA_SCHEDULE': 'चालू {{mahadasha}} महादशा के भीतर अन्तर्दशा क्रम',
+  'DASHA_YOGA_PRESENT': '{{lord}}: {{yogas}} में सहभागिता है।',
+  'DASHA_YOGA_NONE': '{{lord}}: इस गणक को कोई उपस्थित योग-सहभागिता नहीं मिली।',
+  'YOGA_RULE_COUNT': 'इस संस्करण में {{count}} योग-नियम पंजीकृत हैं। जो योग यहाँ नहीं है, उसे अनुपस्थित नहीं कहा जा रहा — उसकी परीक्षा ही नहीं हुई।',
+  'CAREER_EVIDENCE_COVERAGE': 'प्रमाण-व्याप्ति {{coverage}} का अर्थ है कि घोषित {{total}} कारकों में से {{resolved}} कारकों से प्रमाण मिला।',
 
   // dashaActivation
   'DASHA_OVERLAP': 'भाव {{house}} चालू दशा में {{lords}} द्वारा — स्थिति, स्वामित्व या पूर्ण दृष्टि से — स्पर्श किया जा रहा है।',
@@ -77,6 +89,8 @@ export function trTemplate(id: string, params: Record<string, string | number>, 
   }
   
   return text.replace(/{{(\w+)}}/g, (_, key) => {
-    return params[key] !== undefined ? String(params[key]) : `{{${key}}}`;
+    return params[key] !== undefined
+      ? localizeTemplateValue(key, params[key], mode)
+      : `{{${key}}}`;
   });
 }

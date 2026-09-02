@@ -77,10 +77,11 @@ check can be defeated by a renderer that synthesises its own strings.
 
 ## Result
 
-Part A is pages 1–16 of 39: cover, passport, saar, D1, D9, graha dossier, bhava
-matrix, yoga/dosha, Vimshottari, dasha activation, career, discussion points,
-Pandit notes. Everything an implementation detail — 23 pages of it — is behind
-the Part B divider, where a Pandit reaches it only on purpose.
+Part A is pages 1–15 of the qualified 38-page fixture: cover, passport, saar,
+D1, D9, graha dossier, bhava matrix, yoga/dosha, Vimshottari, dasha activation,
+career, discussion points and Pandit notes. Everything an implementation detail
+— 23 pages of it — is behind the Part B divider, where a Pandit reaches it only
+on purpose.
 
 ---
 
