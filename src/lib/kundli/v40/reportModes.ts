@@ -29,11 +29,6 @@ export const REPORT_MODES: ReportMode[] = ['CLIENT', 'PANDIT', 'SCHOLAR'];
 /** What the public download produces when nothing is specified. */
 export const DEFAULT_REPORT_MODE: ReportMode = 'SCHOLAR';
 
-export const DOWNLOAD_CONTRACT = {
-  reportModelVersion: 'kundli-report-v2',
-  rendererVersion: 'kundli-pdf-renderer-v3',
-} as const;
-
 /**
  * Stable public-PDF lineage promised by the download API. It lives outside the
  * Next.js route module because Route Handler modules may export only handlers
