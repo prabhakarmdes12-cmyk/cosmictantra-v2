@@ -61,11 +61,16 @@ test.describe('Unified Single-Flow Kundli Generation & Master Workspace', () => 
     await d9Btn.click();
     await expect(page.locator('body')).toContainText('Division Active: D9');
 
-    // 5. Check Print & Download PDF buttons
-    const printBtn = page.locator('button:has-text("PRINT / SAVE PDF")').first();
-    const downloadPdfBtn = page.locator('button:has-text("DOWNLOAD PDF")').first();
-    await expect(printBtn).toBeVisible();
+    // 5. Check the two clean actions: Save Profile & Download PDF. The Print
+    // button was retired with the decluttered toolbar — the qualified PDF the
+    // visitor downloads carries its own Print command.
+    const saveProfileBtn = page.locator('[data-testid="report-save-profile"]').first();
+    const downloadPdfBtn = page.locator('[data-testid="report-download-pdf"]').first();
+    await expect(saveProfileBtn).toBeVisible();
     await expect(downloadPdfBtn).toBeVisible();
+    await expect(page.locator('button:has-text("PRINT / SAVE PDF")')).toHaveCount(0);
+    await expect(page.getByRole('group', { name: 'Qualified PDF edition' })).toHaveCount(0);
+    await expect(page.getByRole('group', { name: 'Qualified PDF language' })).toHaveCount(0);
   });
 
   test('Sample Kundlis Showcase on homepage allows 1-click preview of Golden References', async ({ page }) => {

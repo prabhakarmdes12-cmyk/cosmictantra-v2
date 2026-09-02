@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { 
   Download, 
-  Printer, 
+  Save, 
   Shield, 
   Compass, 
   BookOpen, 
@@ -39,7 +39,16 @@ import LanguageSelectorModal from '@/components/layout/LanguageSelectorModal';
 import { CosmicTantraEmblem } from '@/components/visual/CosmicTantraLogo';
 import { chitiSensory } from '@/lib/chitiAudio';
 import { generateKundliV40Pdf } from '@/lib/kundli/v40/pipelineV2';
-import { getActiveProfile } from '@/lib/profileStore';
+import { getActiveProfile, upsertProfile, setActiveProfileId } from '@/lib/profileStore';
+import {
+  PDF_EDITION,
+  pdfLocaleForLang,
+  resolveDownloadInput,
+  rawFromDisplay,
+  missingFieldsMessage,
+  REQUIRED_FIELD_LABELS,
+  type RequiredDownloadField,
+} from '@/lib/kundli/downloadPolicy';
 import { KUNDLI_SAFE_MESSAGES } from '@/lib/kundli/errors';
 import { searchCities } from '@/lib/cities';
 import type { PipelineState, RawBirthInput } from '@/lib/kundli/types';
@@ -72,8 +81,30 @@ const KUNDLI_UI: Record<string, { en: string; hi: string }> = {
   scholarEdition: { en: 'Scholar Edition — workbook + evidence appendix', hi: 'शास्त्री संस्करण — कार्यपत्र + प्रमाण परिशिष्ट' },
   editDetails: { en: 'Edit Details', hi: 'विवरण बदलें' },
   editTitle: { en: 'Edit Birth Details', hi: 'जन्म विवरण बदलें' },
-  print: { en: 'PRINT / SAVE PDF', hi: 'प्रिंट / पीडीएफ़ सेव करें' },
   download: { en: 'DOWNLOAD PDF', hi: 'पीडीएफ़ डाउनलोड' },
+  saveProfile: { en: 'SAVE PROFILE', hi: 'प्रोफ़ाइल सहेजें' },
+  saveProfileShort: { en: 'Save', hi: 'सहेजें' },
+  saveProfileTitle: {
+    en: 'Keep these birth details on this device',
+    hi: 'ये जन्म विवरण इसी डिवाइस पर सहेजें'
+  },
+  profileSaved: {
+    en: 'Profile saved — every page now reads this chart.',
+    hi: 'प्रोफ़ाइल सहेज ली गई — अब हर पृष्ठ इसी कुण्डली को पढ़ेगा।'
+  },
+  profileSaveFailed: {
+    en: 'This browser blocked local storage, so the profile could not be saved.',
+    hi: 'यह ब्राउज़र लोकल स्टोरेज रोक रहा है, इसलिए प्रोफ़ाइल सहेजी नहीं जा सकी।'
+  },
+  needDetails: {
+    en: 'The qualified PDF was not requested: complete the highlighted birth details first.',
+    hi: 'पीडीएफ़ का अनुरोध नहीं भेजा गया: पहले चिह्नित जन्म विवरण पूर्ण करें।'
+  },
+  tabOverview: { en: 'Overview', hi: 'सारांश' },
+  tabBook: { en: '17-Part Book', hi: '१७-खण्ड ग्रन्थ' },
+  tabBookShort: { en: 'Book', hi: 'ग्रन्थ' },
+  tabCharts: { en: 'Charts & Ephemeris', hi: 'कुण्डली चक्र' },
+  tabChartsShort: { en: 'Charts', hi: 'चक्र' },
   validating: { en: 'VALIDATING…', hi: 'जाँच हो रही है…' },
   gen: { en: 'Kundli generation', hi: 'कुण्डली निर्माण' },
   stInput: { en: 'Birth details validated', hi: 'जन्म विवरण सत्यापित' },
@@ -235,13 +266,15 @@ export default function MasterKundliReportClient() {
   const [activeDivision, setActiveDivision] = useState<number>(1); // 1 = D1, 9 = D9, 10 = D10, 60 = D60
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [lang, setLang] = useState('en');
-  // PDF language is intentionally narrower than the site-wide chrome locale:
-  // the qualified V3 report currently supports these three authored editions.
-  const [pdfLocale, setPdfLocale] = useState<'en' | 'hi' | 'hi-en'>('en');
-  // Audience edition for the qualified PDF. Default remains SCHOLAR so that a
-  // first-time reader gets the full, verifiable document, but a novice can now
-  // choose the 11-page Client Reading instead of never seeing it.
-  const [pdfMode, setPdfMode] = useState<'CLIENT' | 'PANDIT' | 'SCHOLAR'>('SCHOLAR');
+  /**
+   * PDF locale and edition are no longer toolbar state.
+   *
+   * The language follows the sitewide language the Global Header already owns
+   * (`pdfLocaleForLang`), and the edition is always the complete qualified
+   * folio (`PDF_EDITION`). Two pills that changed one request payload are gone
+   * — see src/lib/kundli/downloadPolicy.ts for the whole policy.
+   */
+  const pdfLocale = pdfLocaleForLang(lang);
   const [isLangModalOpen, setIsLangModalOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
@@ -275,9 +308,9 @@ export default function MasterKundliReportClient() {
   const t = (key: keyof typeof KUNDLI_UI) => KUNDLI_UI[key][lang === 'hi' ? 'hi' : 'en'];
   const handleSelectLang = (code: string) => {
     setLang(code);
-    // A global Hindi/English choice should be reflected in the next generated
-    // PDF, while an explicit bilingual PDF choice remains intact.
-    if (code === 'hi' || code === 'en') setPdfLocale(code);
+    // The qualified PDF locale is derived from this choice (pdfLocaleForLang),
+    // so a sitewide language switch is reflected in the next download without
+    // a second control to keep in sync.
     document.documentElement.lang = code;
     try { localStorage.setItem('cosmictantra_lang', code); } catch {}
   };
@@ -307,6 +340,21 @@ export default function MasterKundliReportClient() {
   const [failSafe, setFailSafe] = useState<{ message: string; code: string } | null>(null);
   const [lastPdfMeta, setLastPdfMeta] = useState<{ pageCount: number; fileSizeKB: number } | null>(null);
   const [pdfNotice, setPdfNotice] = useState<string | null>(null);
+  /**
+   * Transient confirmation strip (Save Profile, held download). Deliberately
+   * separate from `failSafe`: a fail-safe is a statement that no document was
+   * issued and stays until the visitor acts, while a toast is an acknowledgement
+   * that fades on its own.
+   */
+  const [toast, setToast] = useState<{ text: string; tone: 'ok' | 'warn' } | null>(null);
+
+  // A confirmation that never fades is a badge nobody reads after the first
+  // time. 4s is long enough to read one sentence in either language.
+  useEffect(() => {
+    if (!toast) return;
+    const id = window.setTimeout(() => setToast(null), 4000);
+    return () => window.clearTimeout(id);
+  }, [toast]);
 
   // RAW input that faithfully reflects what the caller actually supplied.
   // NO silent default substitution happens here — the pipeline validates it.
@@ -327,7 +375,6 @@ export default function MasterKundliReportClient() {
     const savedLanguage = localStorage.getItem('cosmictantra_lang');
     if (savedLanguage) {
       setLang(savedLanguage);
-      if (savedLanguage === 'hi' || savedLanguage === 'en') setPdfLocale(savedLanguage);
       document.documentElement.lang = savedLanguage;
     }
 
@@ -467,6 +514,27 @@ export default function MasterKundliReportClient() {
     rawInputRef.current = { ...DEMO_PROFILE, coordinateProvenance: 'PROFILE' };
     setIsDemoProfile(true);
   }, [searchParams]);
+
+  /**
+   * Keep the download payload bound to what the visitor is looking at.
+   *
+   * `rawInputRef` used to be written in four places (URL params, localStorage,
+   * the unified profile store, the edit modal) and read in one. Any edit that
+   * did not also rewrite the ref — a city picked from the autocomplete, a
+   * corrected birth time — left the ref holding the PREVIOUS record while the
+   * screen showed the new one, and the download then issued a chart for
+   * coordinates nobody could see. That mismatch is the single most common cause
+   * of "the PDF failed" / "the PDF is not my chart".
+   *
+   * The ref is now derived from `birthState` on every change through the shared
+   * resolver, which keeps the fidelity rule intact: a field the visitor has not
+   * supplied stays absent rather than being padded with a default.
+   */
+  useEffect(() => {
+    const previousProvenance = rawInputRef.current?.coordinateProvenance;
+    const provenance = previousProvenance ?? (isDemoProfile ? 'PROFILE' : 'MANUAL');
+    rawInputRef.current = rawFromDisplay(birthState, provenance);
+  }, [birthState, isDemoProfile]);
 
   // Whether the display input is complete enough to run the chart workspace.
   // (The qualified PDF pipeline performs its own strict validation; this flag
@@ -684,8 +752,6 @@ export default function MasterKundliReportClient() {
     });
   };
 
-  type PdfAction = 'download' | 'print';
-
   /** Start a browser download from the one qualified V3 response. */
   const savePdfBlob = (blob: Blob, objectUrl: string, name: string) => {
     const anchor = document.createElement('a');
@@ -702,16 +768,15 @@ export default function MasterKundliReportClient() {
   /**
    * The sole client path for a qualified report artifact.
    *
-   * Download and Print deliberately POST the identical birth/mode/locale
-   * payload to `/api/kundli/pdf`. Print never prints the interactive HTML: it
-   * opens the returned V3 PDF in the browser's native PDF viewer, whose Print
-   * command is the same file the Download action saves.
+   * There is ONE action now: download. The Print button used to open a second
+   * tab and hand the same bytes to the browser's own PDF viewer, whose Print
+   * command is identical to the one inside the file the visitor just
+   * downloaded — so the button bought a popup (which several browsers block)
+   * and a second code path to keep honest. The payload is unchanged: the same
+   * birth record, the same qualified edition, the same locale, rendered by
+   * `kundli-pdf-renderer-v3`. There is no fallback and no client-side render.
    */
-  const requestQualifiedPdf = async (
-    action: PdfAction,
-    printWindow?: Window | null,
-  ) => {
-    let printDelivered = false;
+  const requestQualifiedPdf = async () => {
     setIsGeneratingPdf(true);
     setFailSafe(null);
     setPdfNotice(null);
@@ -726,7 +791,7 @@ export default function MasterKundliReportClient() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           birth: raw,
-          mode: pdfMode,
+          mode: PDF_EDITION,
           locale: pdfLocale,
         }),
       });
@@ -764,39 +829,7 @@ export default function MasterKundliReportClient() {
       const name = match?.[1] ?? `Kundli_${safeName}_${dob}.pdf`;
       const objectUrl = URL.createObjectURL(blob);
 
-      if (action === 'print' && printWindow && !printWindow.closed) {
-        // The tab was opened synchronously in the click handler. That preserves
-        // popup permission while the server renders; navigating it to a Blob
-        // keeps the browser's PDF print controls bound to this exact response.
-        printWindow.location.replace(objectUrl);
-        printDelivered = true;
-        window.setTimeout(() => URL.revokeObjectURL(objectUrl), 5 * 60_000);
-
-        // A browser with its PDF viewer disabled can turn a Blob navigation
-        // into a download and leave the preparatory popup at about:blank. Do
-        // not leave a misleading empty tab behind: the already-issued file is
-        // still the same qualified Blob, and the visitor is told to print it
-        // from their download viewer. A native PDF viewer navigates away from
-        // about:blank (or becomes cross-origin), so it is never interrupted.
-        window.setTimeout(() => {
-          try {
-            if (!printWindow.closed && printWindow.location.href === 'about:blank') {
-              printWindow.close();
-              setPdfNotice('Your browser downloaded the qualified PDF instead of opening a print viewer. Open the downloaded PDF and choose Print.');
-            }
-          } catch {
-            // A native PDF viewer may use its own origin. That is a successful
-            // hand-off, so there is deliberately nothing to do.
-          }
-        }, 4_000);
-      } else {
-        // Popup blockers must never downgrade the report. Save the same Blob
-        // and let the visitor print it from their PDF viewer instead.
-        savePdfBlob(blob, objectUrl, name);
-        if (action === 'print') {
-          setPdfNotice('Your browser blocked the PDF print tab. The qualified PDF was downloaded; open it and choose Print.');
-        }
-      }
+      savePdfBlob(blob, objectUrl, name);
 
       setPipelineState('READY_FOR_DELIVERY');
       setLastPdfMeta({
@@ -810,32 +843,103 @@ export default function MasterKundliReportClient() {
         code: 'KUNDLI_PDF_RENDER_FAILED',
       });
     } finally {
-      if (printWindow && !printWindow.closed && action === 'print' && !printDelivered) {
-        // Error responses should not leave a misleading blank preparation tab.
-        printWindow.close();
-      }
       setIsGeneratingPdf(false);
       window.setTimeout(() => setPipelineState(null), 1200);
     }
   };
 
+  /**
+   * DOWNLOAD GATE — resolve, validate, then request.
+   *
+   * A payload missing a name, a date, a time or coherent coordinates cannot be
+   * issued: the server refuses it (400) or the release gates refuse it (422),
+   * and the visitor is left with "failed to generate" and nothing to act on.
+   * So the click is intercepted FIRST: the same fields GATE 1 requires are
+   * checked locally, the edit modal opens with those fields highlighted, and
+   * the guidance strip names exactly what is missing. No doomed request is
+   * ever sent.
+   */
   const handleDownloadPDF = () => {
+    const resolved = resolveDownloadInput(birthState, rawInputRef.current?.coordinateProvenance);
+    rawInputRef.current = resolved.raw;
+
+    if (!resolved.ready) {
+      chitiSensory.playTick();
+      const hi = lang === 'hi';
+      const labels = resolved.missing
+        .map((f: RequiredDownloadField) => (hi ? REQUIRED_FIELD_LABELS[f].hi : REQUIRED_FIELD_LABELS[f].en));
+      setFieldErrors(validateLive(birthState));
+      setFailSafe({
+        message: missingFieldsMessage(resolved.missing, hi ? 'hi' : 'en'),
+        code: 'KUNDLI_INPUT_INVALID',
+      });
+      setPdfNotice(null);
+      setIsEditModalOpen(true);
+      setToast({
+        tone: 'warn',
+        text: hi
+          ? `डाउनलोड रोक दिया गया — आवश्यक: ${labels.join(', ')}`
+          : `Download held — required: ${labels.join(', ')}`,
+      });
+      return;
+    }
+
     chitiSensory.playTick();
-    void requestQualifiedPdf('download');
+    void requestQualifiedPdf();
   };
 
-  const handlePrint = () => {
+  /**
+   * SAVE PROFILE — one tap makes the chart on screen the device's active
+   * profile, so /daily, /dashboard, /calendar and every Kundli surface read
+   * the same birth record instead of the sample data. It writes both stores the
+   * rest of the site already reads (localStorage + the unified profile store)
+   * and says plainly whether it worked: a browser in private mode can refuse
+   * storage, and a silent failure here would look like a saved profile.
+   */
+  const handleSaveProfile = () => {
     chitiSensory.playTick();
-    // Opening before the first await makes this robust against popup blockers.
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      try {
-        printWindow.opener = null;
-        printWindow.document.title = 'Preparing Kundli PDF';
-        printWindow.document.body.innerHTML = '<p style="font-family:system-ui;padding:24px">Preparing your qualified Kundli PDF…</p>';
-      } catch { /* A restrictive browser can still navigate the tab below. */ }
+    const hi = lang === 'hi';
+    const resolved = resolveDownloadInput(birthState, rawInputRef.current?.coordinateProvenance);
+    rawInputRef.current = resolved.raw;
+
+    if (!resolved.ready) {
+      setFieldErrors(validateLive(birthState));
+      setIsEditModalOpen(true);
+      setFailSafe({
+        message: missingFieldsMessage(resolved.missing, hi ? 'hi' : 'en'),
+        code: 'KUNDLI_INPUT_INVALID',
+      });
+      setToast({
+        tone: 'warn',
+        text: hi ? 'पहले अधूरे विवरण भरें, फिर सहेजें।' : 'Complete the highlighted details, then save.',
+      });
+      return;
     }
-    void requestQualifiedPdf('print', printWindow);
+
+    try {
+      localStorage.setItem('cosmictantra_active_kundli', JSON.stringify(birthState));
+      const existing = getActiveProfile();
+      const samePerson =
+        !!existing?.name && existing.name.trim().toLowerCase() === birthState.name.trim().toLowerCase() &&
+        existing.birthDate === birthState.birthDate && existing.birthTime === birthState.birthTime;
+      const saved = upsertProfile({
+        id: samePerson ? existing!.id : undefined,
+        name: birthState.name.trim(),
+        relation: samePerson ? existing!.relation || 'Self' : 'Self',
+        birthDate: birthState.birthDate,
+        birthTime: birthState.birthTime,
+        birthCity: birthState.locationName,
+        lat: birthState.latitude,
+        lng: birthState.longitude,
+        tz: Number.isFinite(birthState.timezone) ? birthState.timezone : 5.5,
+      } as never);
+      setActiveProfileId(saved.id);
+      setIsDemoProfile(false);
+      setToast({ tone: 'ok', text: t('profileSaved') });
+    } catch (err) {
+      console.warn('[report] profile save failed', err);
+      setToast({ tone: 'warn', text: t('profileSaveFailed') });
+    }
   };
 
   return (
@@ -882,43 +986,55 @@ export default function MasterKundliReportClient() {
           </div>
         </div>
 
-        {/* Center: Mode Switcher (Overview / Folio / Workbench) */}
-        <div className="flex items-center gap-1 bg-[#F5EFE6] dark:bg-[#1C1E27] p-1 rounded-xl border border-[#E5D7BC] dark:border-white/10">
-          <button
-            onClick={() => {
-              chitiSensory.playTick();
-              setActiveTab('OVERVIEW');
-            }}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${activeTab === 'OVERVIEW' ? 'bg-[#1C1917] dark:bg-[#D4AF37] text-[#FDFBF7] dark:text-[#060709] shadow-sm' : 'text-[#78716C] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#EFECE6]'}`}
-          >
-            <LayoutDashboard className="w-3.5 h-3.5" />
-            <span>{t('overview')}</span>
-          </button>
-          <button
-            onClick={() => {
-              chitiSensory.playTick();
-              setActiveTab('FOLIO');
-            }}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${activeTab === 'FOLIO' ? 'bg-[#1C1917] dark:bg-[#D4AF37] text-[#FDFBF7] dark:text-[#060709] shadow-sm' : 'text-[#78716C] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#EFECE6]'}`}
-          >
-            <BookOpen className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{t('book17')}</span>
-            <span className="sm:hidden">{t('book')}</span>
-          </button>
-          <button
-            onClick={() => {
-              chitiSensory.playTick();
-              setActiveTab('WORKBENCH');
-            }}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${activeTab === 'WORKBENCH' ? 'bg-[#1C1917] dark:bg-[#D4AF37] text-[#FDFBF7] dark:text-[#060709] shadow-sm' : 'text-[#78716C] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#EFECE6]'}`}
-          >
-            <Grid className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{t('workbench')}</span>
-            <span className="sm:hidden">{t('charts')}</span>
-          </button>
+        {/* Center: Mode Switcher — the three ways to read the same chart.
+            Harmonized on the site's glass tokens: one translucent rail, a
+            gold-leaf active thumb, Devanagari labels beside the English so a
+            Hindi reader is not translating navigation to use it. */}
+        <div
+          role="tablist"
+          aria-label={lang === 'hi' ? 'कुण्डली दृश्य' : 'Kundli views'}
+          className="flex items-center gap-1 p-1 rounded-2xl border border-[#E5D7BC]/80 dark:border-white/10 bg-white/55 dark:bg-white/[0.04] backdrop-blur-md shadow-[0_1px_2px_rgba(28,25,23,0.06)]"
+        >
+          {([
+            ['OVERVIEW', LayoutDashboard, t('tabOverview'), t('tabOverview'), '📊'],
+            ['FOLIO', BookOpen, t('tabBook'), t('tabBookShort'), '📖'],
+            ['WORKBENCH', Grid, t('tabCharts'), t('tabChartsShort'), '🪐'],
+          ] as const).map(([tab, Icon, fullLabel, shortLabel, emblem]) => {
+            const isActive = activeTab === tab;
+            return (
+              <button
+                key={tab}
+                role="tab"
+                type="button"
+                id={`report-tab-${tab.toLowerCase()}`}
+                aria-selected={isActive}
+                aria-controls={`report-panel-${tab.toLowerCase()}`}
+                onClick={() => {
+                  chitiSensory.playTick();
+                  setActiveTab(tab);
+                }}
+                title={fullLabel}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all flex items-center gap-1.5 border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8E6F1D] focus-visible:ring-offset-1 ${
+                  isActive
+                    ? 'bg-gradient-to-b from-[#8E6F1D] to-[#6E5514] dark:from-[#F0C968] dark:to-[#C9A227] text-[#FDFBF7] dark:text-[#060709] border-[#8E6F1D]/60 dark:border-[#D4AF37]/60 shadow-[0_2px_8px_rgba(142,111,29,0.35)]'
+                    : 'text-[#78716C] dark:text-[#A8A29E] border-transparent hover:text-[#1C1917] dark:hover:text-[#EFECE6] hover:bg-white/70 dark:hover:bg-white/[0.06]'
+                }`}
+              >
+                <span aria-hidden="true" className="text-[11px] leading-none">{emblem}</span>
+                <Icon className="w-3.5 h-3.5" aria-hidden="true" />
+                <span className="hidden sm:inline">{fullLabel}</span>
+                <span className="sm:hidden">{shortLabel}</span>
+              </button>
+            );
+          })}
         </div>
 
-        {/* Right: Actions (Depth, Print, Download, Edit) */}
+        {/* Right: Actions — the only three things worth a click here:
+            reading depth (in the Book), Save Profile, Download PDF.
+            Print is gone (the downloaded PDF carries its own Print command),
+            and so are the edition and PDF-language pills: the edition is always
+            the complete qualified folio and the language follows the Global
+            Header's sitewide switch (see lib/kundli/downloadPolicy.ts). */}
         <div className="flex items-center gap-2">
           {activeTab === 'FOLIO' && (
             <div className="hidden sm:flex items-center gap-1 bg-[#F5EFE6] dark:bg-[#1C1E27] p-1 rounded-lg border border-[#E5D7BC] dark:border-white/10 text-xs">
@@ -934,64 +1050,6 @@ export default function MasterKundliReportClient() {
             </div>
           )}
 
-          {/* Audience edition for the qualified server PDF. This is the gate
-              that decides whether a novice receives the 11-page Client Reading
-              or a 38-page Scholar workbook, so it must stay reachable on
-              mobile exactly as the language selector does. */}
-          <div
-            className="flex shrink-0 items-center rounded-lg border border-[#E5D7BC] dark:border-white/10 bg-white dark:bg-[#121422] p-0.5"
-            role="group"
-            aria-label="Qualified PDF edition"
-          >
-            {([
-              ['CLIENT', t('client'), t('clientEdition')],
-              ['PANDIT', t('pandit'), t('panditEdition')],
-              ['SCHOLAR', t('scholar'), t('scholarEdition')],
-            ] as const).map(([mode, label, accessibleLabel]) => (
-              <button
-                key={mode}
-                type="button"
-                onClick={() => { chitiSensory.playTick(); setPdfMode(mode); }}
-                aria-label={accessibleLabel}
-                aria-pressed={pdfMode === mode}
-                title={accessibleLabel}
-                className={`px-2 py-1 text-[10px] font-bold rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8E6F1D] focus-visible:ring-offset-1 ${pdfMode === mode ? 'bg-[#8E6F1D] text-white dark:bg-[#D4AF37] dark:text-[#060709]' : 'text-[#78716C] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#EFECE6]'}`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {/* 
-            Keep this selector in the mobile toolbar as well as on desktop.
-            `hi-en` changes the qualified server-PDF payload; it is not a
-            display-only translation toggle, so hiding it below `md` made the
-            public bilingual report inaccessible to phone users.
-          */}
-          <div
-            className="flex shrink-0 items-center rounded-lg border border-[#E5D7BC] dark:border-white/10 bg-white dark:bg-[#121422] p-0.5"
-            role="group"
-            aria-label="Qualified PDF language"
-          >
-            {([
-              ['en', 'EN', 'English PDF'],
-              ['hi', 'हिन्दी', 'Hindi PDF'],
-              ['hi-en', 'हि + EN', 'Hindi-English bilingual PDF'],
-            ] as const).map(([locale, label, accessibleLabel]) => (
-              <button
-                key={locale}
-                type="button"
-                onClick={() => setPdfLocale(locale)}
-                aria-label={accessibleLabel}
-                aria-pressed={pdfLocale === locale}
-                title={accessibleLabel}
-                className={`px-2 py-1 text-[10px] font-bold rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8E6F1D] focus-visible:ring-offset-1 ${pdfLocale === locale ? 'bg-[#8E6F1D] text-white dark:bg-[#D4AF37] dark:text-[#060709]' : 'text-[#78716C] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#EFECE6]'}`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
           <button
             onClick={() => setIsEditModalOpen(true)}
             className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-[#E5D7BC] dark:border-white/10 bg-white dark:bg-[#121422] hover:bg-[#F5EFE6] dark:bg-[#1C1E27] dark:hover:bg-[#1C1E27] transition-colors"
@@ -1002,17 +1060,23 @@ export default function MasterKundliReportClient() {
           </button>
 
           <button
-            onClick={handlePrint}
-            disabled={isGeneratingPdf}
+            type="button"
+            onClick={handleSaveProfile}
+            title={t('saveProfileTitle')}
+            aria-label={t('saveProfileTitle')}
+            data-testid="report-save-profile"
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-[#8E6F1D]/30 bg-white dark:bg-[#121422] hover:bg-[#F5EFE6] dark:bg-[#1C1E27] dark:hover:bg-[#1C1E27] text-[#8E6F1D] dark:text-[#F0C968] transition-colors shadow-xs"
           >
-            <Printer className="w-3.5 h-3.5" />
-            <span>{t('print')}</span>
+            <Save className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{t('saveProfile')}</span>
+            <span className="sm:hidden">{t('saveProfileShort')}</span>
           </button>
 
           <button
+            type="button"
             onClick={handleDownloadPDF}
             disabled={isGeneratingPdf}
+            data-testid="report-download-pdf"
             className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#8E6F1D] hover:bg-[#785E18] text-white transition-colors shadow-sm disabled:opacity-60 disabled:cursor-wait"
           >
             <Download className="w-3.5 h-3.5" />
@@ -1020,7 +1084,6 @@ export default function MasterKundliReportClient() {
             <span className="sr-only">{t('download')}</span>
           </button>
         </div>
-
       </header>
 
       {/* Generation progress / fail-safe strip (real backend states only) */}
@@ -1087,6 +1150,37 @@ export default function MasterKundliReportClient() {
               <p className="text-xs font-semibold text-[#1C1917] dark:text-[#EFECE6]">{pdfNotice}</p>
             </div>
           ) : null}
+        </div>
+      )}
+
+      {/* 1a2. Confirmation toast — Save Profile, or a download held at the gate */}
+      {toast && (
+        <div
+          role="status"
+          aria-live="polite"
+          data-testid="report-toast"
+          className={`max-w-7xl mx-auto px-4 lg:px-8 pt-3 print:hidden`}
+        >
+          <div
+            className={`flex items-start gap-2.5 px-4 py-2.5 rounded-xl border text-xs font-semibold shadow-sm ${
+              toast.tone === 'ok'
+                ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-400/30 text-[#15803D] dark:text-emerald-300'
+                : 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-400/30 text-[#B45309] dark:text-amber-300'
+            }`}
+          >
+            {toast.tone === 'ok'
+              ? <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+              : <Info className="w-4 h-4 shrink-0 mt-0.5" />}
+            <span>{toast.text}</span>
+            <button
+              type="button"
+              onClick={() => setToast(null)}
+              className="ml-auto text-current/70 hover:text-current shrink-0"
+              aria-label={t('cancel')}
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       )}
 
@@ -1192,7 +1286,11 @@ export default function MasterKundliReportClient() {
         /* ================================================================ */
         /* MODE O: OVERVIEW — chart-first, progressive disclosure           */
         /* ================================================================ */
-        <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-8">
+        <main
+          id="report-panel-overview"
+          role="tabpanel"
+          aria-labelledby="report-tab-overview"
+          className="max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-8">
           {/* Executive 6-Dimension Life Gauge & 4-Quadrant Graha Archetype Dashboard */}
           <ExecutiveLifeGaugeDashboard
             dimensions={executiveLifeDimensions}
@@ -1371,32 +1469,40 @@ export default function MasterKundliReportClient() {
             </div>
           </details>
 
-          {/* Row 5: PDF actions */}
+          {/* Row 5: PDF actions — Save Profile, explore the folio, download.
+              The Print button is gone: the qualified PDF the visitor downloads
+              carries its own Print command, and a second path to the same bytes
+              only added a popup some browsers block. */}
           <div className="bg-white dark:bg-[#121422] rounded-2xl p-5 border border-[#E5D7BC] dark:border-white/10 shadow-sm flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968]">Your Kundli PDF</h3>
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968]">{lang === 'hi' ? 'आपकी कुण्डली पीडीएफ़' : 'Your Kundli PDF'}</h3>
               <p className="text-[11px] text-[#78716C] dark:text-[#A8A29E] mt-0.5">
-                Qualified V3 PDF. Choose a {t('edition').toLowerCase()} ({t('client')} / {t('pandit')} / {t('scholar')}) and a language.
-                {lastPdfMeta && <span className="text-[#15803D] dark:text-emerald-400 font-semibold"> Last: {lastPdfMeta.pageCount} pages · {lastPdfMeta.fileSizeKB} KB · PASS</span>}
+                {lang === 'hi'
+                  ? 'सम्पूर्ण शास्त्री संस्करण — परामर्श पत्रिका एवं सम्पूर्ण प्रमाण परिशिष्ट। भाषा ऊपर वैश्विक हेडर से बदलें।'
+                  : 'The complete Scholar folio — consultation pages plus the full evidence appendix. Change the language from the site header.'}
+                {lastPdfMeta && <span className="text-[#15803D] dark:text-emerald-400 font-semibold"> {lang === 'hi' ? 'पिछली:' : 'Last:'} {lastPdfMeta.pageCount} {lang === 'hi' ? 'पृष्ठ' : 'pages'} · {lastPdfMeta.fileSizeKB} KB · PASS</span>}
               </p>
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={handlePrint}
-                disabled={isGeneratingPdf}
+                type="button"
+                onClick={handleSaveProfile}
+                data-testid="report-save-profile-bottom"
                 className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-[#8E6F1D]/30 bg-white dark:bg-[#121422] hover:bg-[#F5EFE6] dark:bg-[#1C1E27] dark:hover:bg-[#1C1E27] text-[#8E6F1D] dark:text-[#F0C968] transition-colors"
               >
-                <Printer className="w-3.5 h-3.5" /> Print
+                <Save className="w-3.5 h-3.5" /> {t('saveProfile')}
               </button>
               <button
                 onClick={() => setActiveTab('FOLIO')}
                 className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-[#E5D7BC] dark:border-white/10 bg-white dark:bg-[#121422] hover:bg-[#F5EFE6] dark:bg-[#1C1E27] dark:hover:bg-[#1C1E27] text-[#1C1917] dark:text-[#EFECE6] transition-colors"
               >
-                <BookOpen className="w-3.5 h-3.5" /> Explore 17-Volume Book
+                <BookOpen className="w-3.5 h-3.5" /> {lang === 'hi' ? '१७-खण्ड ग्रन्थ पढ़ें' : 'Explore 17-Volume Book'}
               </button>
               <button
+                type="button"
                 onClick={handleDownloadPDF}
                 disabled={isGeneratingPdf}
+                data-testid="report-download-pdf-bottom"
                 className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg bg-[#8E6F1D] hover:bg-[#785E18] text-white transition-colors shadow-sm disabled:opacity-60 disabled:cursor-wait"
               >
                 <Download className="w-3.5 h-3.5" />
@@ -1409,7 +1515,11 @@ export default function MasterKundliReportClient() {
         /* ================================================================ */
         /* MODE A: 17-VOLUME ENCYCLOPEDIC FOLIO                             */
         /* ================================================================ */
-                <main className="max-w-5xl mx-auto px-4 lg:px-8 py-8 space-y-3">
+                <main
+          id="report-panel-folio"
+          role="tabpanel"
+          aria-labelledby="report-tab-folio"
+          className="max-w-5xl mx-auto px-4 lg:px-8 py-8 space-y-3">
           <div className="text-[11px] font-bold uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E] px-1 pb-1">
             {t('volumes')}
           </div>
@@ -1555,7 +1665,11 @@ export default function MasterKundliReportClient() {
         /* ================================================================ */
         /* MODE B: INTERACTIVE VISUAL WORKBENCH                             */
         /* ================================================================ */
-        <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-8">
+        <main
+          id="report-panel-workbench"
+          role="tabpanel"
+          aria-labelledby="report-tab-workbench"
+          className="max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-8">
           
           {/* Top Workbench Row: Divisional Chart Matrix & Live Inspector */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">

@@ -215,46 +215,54 @@ test.describe('DOWNLOAD_KUNDLI_CURRENT_RENDERER', () => {
     const src = await fs.readFile('src/app/report/MasterKundliReportClient.tsx', 'utf8');
     const requestStart = src.indexOf('const requestQualifiedPdf');
     const request = src.slice(requestStart, src.indexOf('const handleDownloadPDF', requestStart));
-    const handler = src.slice(
-      src.indexOf('const handleDownloadPDF'),
-      src.indexOf('const handlePrint'),
-    );
+    const handlerStart = src.indexOf('const handleDownloadPDF');
+    const handler = src.slice(handlerStart, src.indexOf('const handleSaveProfile', handlerStart));
 
-    // Download and Print share one request helper. Assert at that actual
-    // boundary rather than assuming the click handler owns the fetch itself.
-    expect(handler, 'the download handler must call the qualified request helper').toContain("requestQualifiedPdf('download')");
+    // One request helper, one click handler. Assert at that actual boundary
+    // rather than assuming the click handler owns the fetch itself.
+    expect(handler, 'the download handler must call the qualified request helper').toContain('requestQualifiedPdf()');
     expect(request, 'the qualified request helper must call the API route').toContain('/api/kundli/pdf');
     expect(request, 'the qualified request helper must not call the v1 pipeline').not.toContain('generateKundliPdf(');
   });
 
-  test('DKCR-13b: Print uses the exact qualified PDF response and the bilingual selector is mobile-reachable', async () => {
+  test('DKCR-13b: the toolbar is decluttered — one edition, one language source, no print path', async () => {
     const fs = await import('node:fs/promises');
     const src = await fs.readFile('src/app/report/MasterKundliReportClient.tsx', 'utf8');
     const sharedRequest = src.slice(
       src.indexOf('const requestQualifiedPdf'),
       src.indexOf('const handleDownloadPDF'),
     );
-    const printStart = src.indexOf('const handlePrint');
-    const printHandler = src.slice(printStart, src.indexOf('return (', printStart));
-    const localeSelector = src.slice(src.indexOf('aria-label="Qualified PDF language"') - 500, src.indexOf('aria-label="Qualified PDF language"') + 1800);
-    const editionSelector = src.slice(src.indexOf('aria-label="Qualified PDF edition"') - 500, src.indexOf('aria-label="Qualified PDF edition"') + 2000);
 
+    // The download still goes through the qualified route with a real payload.
     expect(sharedRequest).toContain("fetch('/api/kundli/pdf'");
     expect(sharedRequest).toContain('locale: pdfLocale');
-    expect(sharedRequest).toContain('mode: pdfMode');
-    expect(sharedRequest).toContain('printWindow.location.replace(objectUrl)');
-    expect(printHandler).toContain("requestQualifiedPdf('print', printWindow)");
-    expect(src).not.toContain('window.print()');
-    expect(localeSelector).toContain('flex shrink-0 items-center');
-    expect(localeSelector).not.toContain('hidden md:flex');
-    expect(localeSelector).toContain("['hi-en', 'हि + EN', 'Hindi-English bilingual PDF']");
-    // A novice must be able to choose the Client Reading from the toolbar; the
-    // mode is a real request-payload switch, not a display-only toggle.
-    expect(editionSelector).toContain('aria-label="Qualified PDF edition"');
-    expect(editionSelector).toContain('setPdfMode');
-    expect(editionSelector).toContain("['CLIENT'");
-    expect(editionSelector).toContain("['SCHOLAR'");
-    expect(editionSelector).not.toContain('hidden md:flex');
+    expect(sharedRequest).toContain('mode: PDF_EDITION');
+
+    // No second path to the same bytes. Printing the interactive HTML was never
+    // allowed (it is not the qualified document), and the PDF the visitor
+    // downloads carries its own Print command.
+    expect(src, 'no browser print dialog').not.toContain('window.print()');
+    expect(src, 'no print handler').not.toContain('const handlePrint');
+    expect(src, 'no print window hand-off').not.toContain('printWindow');
+    expect(src, 'no printer icon in the toolbar').not.toMatch(/^\s*Printer,/m);
+
+    // Edition and language are policy, not toolbar state: the edition is the
+    // complete qualified folio and the locale follows the sitewide language the
+    // Global Header already owns. Both live in lib/kundli/downloadPolicy.ts.
+    expect(src).not.toContain('aria-label="Qualified PDF edition"');
+    expect(src).not.toContain('aria-label="Qualified PDF language"');
+    expect(src).not.toContain('setPdfMode');
+    expect(src).not.toContain('setPdfLocale');
+    expect(src).toContain('const pdfLocale = pdfLocaleForLang(lang)');
+    expect(src).toContain("from '@/lib/kundli/downloadPolicy'");
+
+    // What the visitor keeps: save the profile, download the document.
+    expect(src).toContain('handleSaveProfile');
+    expect(src).toContain('data-testid="report-download-pdf"');
+
+    const policy = await fs.readFile('src/lib/kundli/downloadPolicy.ts', 'utf8');
+    expect(policy).toContain("export const PDF_EDITION = 'SCHOLAR'");
+    expect(policy).toContain("'hi-en'");
   });
 
   test('DKCR-14: v1 is preserved, not deleted', async () => {
