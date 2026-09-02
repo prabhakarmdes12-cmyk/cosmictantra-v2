@@ -304,30 +304,51 @@ export async function generateMilanPdf(
   }
 
   y += 4;
-  y = drawLabel(s, 'SUPPLEMENTAL DOSHA LAYER (MANGAL · RAJJU · VEDHA · KALA SARPA)', ML, y) + 2;
+  y = drawLabel(s, locale === 'hi' ? 'पूर्ण शास्त्रीय दोष परत (मंगल · रज्जु · वेध · कालसर्प)' : 'COMPLETE CLASSICAL DOSHA LAYER (MANGAL · RAJJU · VEDHA · KALA SARPA)', ML, y) + 2;
   for (const d of calc.supplementalDoshas) {
     if (y + 14 > BOTTOM) {
-      footer(s, calc, 'Supplemental dosha layer', s.pageCount);
+      footer(s, calc, 'Complete classical dosha layer', s.pageCount);
       s.addPage();
       s.fillRect(0, 0, PW, PH, V3.colors.parchment);
       y = 24;
     }
     const status = d.active ? (d.cancelled ? 'CANCELLED' : 'ACTIVE') : 'CLEAR';
     const color = d.active ? (d.cancelled ? V3.colors.gold : V3.colors.vermilion) : V3.colors.inkSoft;
-    y = drawParagraph(s, `${d.name} — ${status.toUpperCase()}`, ML, y, CW, V3.typography.sizes.h3, SANS_BOLD, color) + 1;
+    y = drawParagraph(s, `${d.nameHi && isHindi ? d.nameHi : d.name} — ${status.toUpperCase()}`, ML, y, CW, V3.typography.sizes.h3, SANS_BOLD, color) + 1;
     y = drawParagraph(s, locale === 'hi' && d.reasonHi ? d.reasonHi : d.reason, ML, y, CW, V3.typography.sizes.body, SERIF) + 3;
   }
+  y = drawParagraph(
+    s,
+    locale === 'hi'
+      ? 'इन चार दोषों को अकेले नहीं, पूरी कुंडली के साथ पढ़ा जाता है। दोष का अर्थ विनाश नहीं; उसे समझें और हमारे ज्योतिषी से सत्यापित करें।'
+      : 'These four doshas are read together with the full chart, never alone. A dosha does not mean doom; understand it and verify it with our astrologer.',
+    ML, y, CW, V3.typography.sizes.body, SERIF, V3.colors.inkSoft,
+  ) + V3.spacing.blockGapMm;
 
   y += 4;
-  y = drawLabel(s, 'DEEPER-CHART SYNTHESIS', ML, y) + 2;
+  y = drawLabel(s, locale === 'hi' ? 'गहरी कुंडली संश्लेषण — D9 · सप्तम भाव · कारक' : 'DEEPER-CHART SYNTHESIS — D9 · 7TH HOUSE · KARAKAS', ML, y) + 2;
   y = drawParagraph(s, locale === 'hi' && calc.synthesis.summaryHi ? calc.synthesis.summaryHi : calc.synthesis.summary, ML, y, CW, V3.typography.sizes.body, SERIF) + V3.spacing.blockGapMm;
-  if (y + 24 < BOTTOM) {
-    const s7 = calc.synthesis.seventhHouse;
-    if (s7.brideSign && s7.groomSign) {
-      y = drawParagraph(s, `${s7.brideSign} — ${s7.groomSign}`, ML, y, CW, V3.typography.sizes.small, SANS_BOLD, V3.colors.inkSoft) + 2;
-    }
+  const s7 = calc.synthesis.seventhHouse;
+  const sN = calc.synthesis.navamsha;
+  const sK = calc.synthesis.marriageKaraka;
+  const sKa = calc.synthesis.kalaSarpa;
+  const synthLine = [
+    sN?.brideD9 && sN?.groomD9 ? `D9 Moon ${sN.brideD9} / ${sN.groomD9} · ${sN.status}` : '',
+    s7?.brideSign && s7?.groomSign ? `7th house ${s7.brideSign} / ${s7.groomSign} · ${s7.status}` : '',
+    sK?.brideVenus || sK?.groomVenus ? `Venus ${sK.brideVenus || '—'} / ${sK.groomVenus || '—'} · ${sK.status}` : '',
+    `Kala Sarpa ${sKa?.brideActive || sKa?.groomActive ? 'flagged' : 'clear'}`,
+  ].filter(Boolean).join(' · ');
+  if (synthLine) {
+    y = drawParagraph(s, synthLine, ML, y, CW, V3.typography.sizes.small, SANS_BOLD, V3.colors.inkSoft) + 3;
   }
-  footer(s, calc, 'Koota breakdown + synthesis', s.pageCount);
+  y = drawParagraph(
+    s,
+    locale === 'hi'
+      ? 'यह संश्लेषण वर्तमान विभाजन-डेटा तक सीमित है। पूर्ण नवांश, सप्तम भाव, शुक्र/बृहस्पति, दशा और उपाय के लिए हमारे ज्योतिषी से परामर्श लें।'
+      : 'This synthesis is limited to the divisional data now provided. Ask our astrologer for the full Navamsha, seventh-house, Venus / Jupiter, dasha and remedy reading.',
+    ML, y, CW, V3.typography.sizes.body, SERIF, V3.colors.gold,
+  ) + V3.spacing.blockGapMm;
+  footer(s, calc, 'Koota breakdown + dosha synthesis', s.pageCount);
 
   /* ------------------------- PAGE 3+: PREDICTIONS ------------------------- */
   s.addPage();

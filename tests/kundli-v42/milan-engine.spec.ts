@@ -98,12 +98,26 @@ test.describe('Milan engine — classical 36-guna tables', () => {
     );
     const rajju = r.supplementalDoshas.find((d) => d.id === 'rajju')!;
     const vedha = r.supplementalDoshas.find((d) => d.id === 'vedha')!;
+    const mangal = r.supplementalDoshas.find((d) => d.id === 'mangal')!;
+    const kalaSarpa = r.supplementalDoshas.find((d) => d.id === 'kalsarpa')!;
     // Rohini = Kantha, Swati = Kantha => active Rajju.
     expect(rajju.active).toBe(true);
     // Rohini ↔ Swati is a classical Vedha pair.
     expect(vedha.active).toBe(true);
+    // The complete classical dosha layer is always present, with clear/active splits.
+    expect(mangal.id).toBe('mangal');
+    expect(kalaSarpa.id).toBe('kalsarpa');
+    expect(r.supplementalDoshas).toHaveLength(4);
     expect(r.synthesis.navamsha.status).toBe('UNKNOWN');
+    expect(r.synthesis.seventhHouse).toBeTruthy();
+    expect(r.synthesis.marriageKaraka).toBeTruthy();
+    expect(r.synthesis.kalaSarpa).toBeTruthy();
     expect(r.predictions.map((p) => p.id)).toContain('synthesis');
+    // Every prediction block carries the explain-to-astrologer gate in both languages.
+    for (const p of r.predictions) {
+      expect(p.askAstrologer).toContain('astrologer');
+      expect(p.askAstrologerHi).toContain('ज्योतिष');
+    }
   });
 
   test('same nakshatra different pada cancels Rajju in the same rashi', () => {

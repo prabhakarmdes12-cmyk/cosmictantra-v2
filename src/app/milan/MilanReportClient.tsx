@@ -427,6 +427,69 @@ export default function MilanReportClient() {
                     </button>
                   </div>
                 </div>
+
+                {/* Complete classical Milan dosha layer — visible first in Overview */}
+                <section className="rounded-2xl border border-[#E5D7BC] dark:border-white/10 bg-white dark:bg-[#121422] shadow-sm p-5 sm:p-6">
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <h2 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968] flex items-center gap-1.5">
+                      <Shield className="w-4 h-4" /> {hi ? 'पूर्ण शास्त्रीय दोष परत' : 'Complete classical Milan dosha layer'}
+                    </h2>
+                    <span className="text-[10px] font-mono-data text-[#78716C] dark:text-[#A8A29E]">Mangal · Rajju · Vedha · Kala Sarpa + D9 / 7th house</span>
+                  </div>
+                  <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      {calc.supplementalDoshas.map((d) => (
+                        <div key={d.id} className="rounded-xl border border-[#F0E6D2] dark:border-white/10 p-3 bg-[#FAF7F2] dark:bg-[#0E101D]">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs font-bold">{d.name}</span>
+                            <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border ${d.cancelled ? 'bg-amber-50 text-amber-800 border-amber-300' : d.active ? 'bg-rose-50 text-rose-700 border-rose-300' : 'bg-emerald-50 text-emerald-700 border-emerald-300'}`}>
+                              {d.cancelled ? (hi ? 'निरस्त' : 'Cancelled') : d.active ? (hi ? 'सक्रिय' : 'Active') : (hi ? 'शुद्ध' : 'Clear')}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-[#57534E] dark:text-[#D1C9BF] mt-1">{hi && d.reasonHi ? d.reasonHi : d.reason}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="rounded-xl border border-[#F0E6D2] dark:border-white/10 p-4 bg-[#FAF7F2] dark:bg-[#0E101D] space-y-2.5">
+                      <p className="text-xs leading-relaxed text-[#44403C] dark:text-[#D1C9BF]">{hi && calc.synthesis.summaryHi ? calc.synthesis.summaryHi : calc.synthesis.summary}</p>
+                      <div className="grid grid-cols-2 gap-2 text-[11px]">
+                        <div className="rounded-lg bg-white dark:bg-[#121422] border border-[#F0E6D2] dark:border-white/10 p-2">
+                          <div className="text-[9px] uppercase tracking-wider text-[#78716C] font-bold">D9 Moon</div>
+                          <div className="font-bold mt-0.5">{calc.synthesis.navamsha.brideD9 || '—'} & {calc.synthesis.navamsha.groomD9 || '—'}</div>
+                          <div className="text-[10px] text-[#8E6F1D] dark:text-[#F0C968]">{calc.synthesis.navamsha.status}</div>
+                        </div>
+                        <div className="rounded-lg bg-white dark:bg-[#121422] border border-[#F0E6D2] dark:border-white/10 p-2">
+                          <div className="text-[9px] uppercase tracking-wider text-[#78716C] font-bold">7th house</div>
+                          <div className="font-bold mt-0.5">{calc.synthesis.seventhHouse.brideSign || '—'} & {calc.synthesis.seventhHouse.groomSign || '—'}</div>
+                          <div className="text-[10px] text-[#8E6F1D] dark:text-[#F0C968]">{calc.synthesis.seventhHouse.status}</div>
+                        </div>
+                        <div className="rounded-lg bg-white dark:bg-[#121422] border border-[#F0E6D2] dark:border-white/10 p-2">
+                          <div className="text-[9px] uppercase tracking-wider text-[#78716C] font-bold">Marriage karaka</div>
+                          <div className="font-bold mt-0.5">{calc.synthesis.marriageKaraka.brideVenus || '—'} & {calc.synthesis.marriageKaraka.groomVenus || '—'}</div>
+                          <div className="text-[10px] text-[#8E6F1D] dark:text-[#F0C968]">{calc.synthesis.marriageKaraka.status}</div>
+                        </div>
+                        <div className="rounded-lg bg-white dark:bg-[#121422] border border-[#F0E6D2] dark:border-white/10 p-2">
+                          <div className="text-[9px] uppercase tracking-wider text-[#78716C] font-bold">Kala Sarpa</div>
+                          <div className="font-bold mt-0.5">{calc.synthesis.kalaSarpa.brideActive || calc.synthesis.kalaSarpa.groomActive ? (hi ? 'सक्रिय' : 'Active') : (hi ? 'शुद्ध' : 'Clear')}</div>
+                          <div className="text-[10px] text-[#8E6F1D] dark:text-[#F0C968]">{calc.synthesis.kalaSarpa.bothActive ? (hi ? 'दोनों में' : 'Both') : calc.synthesis.kalaSarpa.brideActive ? (hi ? 'वधू में' : 'Bride') : calc.synthesis.kalaSarpa.groomActive ? (hi ? 'वर में' : 'Groom') : '—'}</div>
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-[#57534E] dark:text-[#A8A29E] border-t border-[#F0E6D2] dark:border-white/5 pt-2.5">
+                        {hi
+                          ? 'दोष का अर्थ विनाश नहीं। शास्त्र कहते हैं — समझें, सावधानी रखें, और पूरी कुंडली के साथ ज्योतिषी से पूछें।'
+                          : 'A dosha does not equal doom. The classical texts say: understand it, respect it, and ask a qualified astrologer to read it with the full chart.'}
+                      </p>
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        <button onClick={() => { chitiSensory.playTick(); setActiveTab('WORKBENCH'); }} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-[#8E6F1D]/30 text-[#8E6F1D] dark:text-[#F0C968]">
+                          <Workflow className="w-3.5 h-3.5" /> {hi ? 'कार्यक्षेत्र में देखें' : 'Open in Workbench'}
+                        </button>
+                        <button onClick={() => router.push('/ask?focus=milan&mode=detailed')} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-[#8E6F1D] text-white">
+                          <Phone className="w-3.5 h-3.5" /> {hi ? 'परामर्श बुक करें' : 'Book consultation'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </section>
               </section>
             )}
 
@@ -481,6 +544,40 @@ export default function MilanReportClient() {
                             <p className="text-[11px] text-[#57534E] dark:text-[#D1C9BF] mt-1">{hi && d.reasonHi ? d.reasonHi : d.reason}</p>
                           </button>
                         ))}
+                      </div>
+                    </div>
+                    <div className="mt-5 pt-4 border-t border-[#F0E6D2] dark:border-white/5">
+                      <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968] mb-2">{hi ? 'गहरी कुंडली संश्लेषण' : 'Deeper-chart synthesis'}</h3>
+                      <p className="text-xs leading-relaxed text-[#44403C] dark:text-[#D1C9BF]">{hi && calc.synthesis.summaryHi ? calc.synthesis.summaryHi : calc.synthesis.summary}</p>
+                      <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
+                        <div className="rounded-lg bg-[#FAF7F2] dark:bg-[#0E101D] border border-[#F0E6D2] dark:border-white/10 p-2">
+                          <div className="text-[9px] uppercase tracking-wider text-[#78716C] font-bold">D9 Moon</div>
+                          <div className="font-bold mt-0.5">{calc.synthesis.navamsha.brideD9 || '—'} & {calc.synthesis.navamsha.groomD9 || '—'}</div>
+                          <div className="text-[10px] text-[#8E6F1D] dark:text-[#F0C968]">{calc.synthesis.navamsha.status}</div>
+                        </div>
+                        <div className="rounded-lg bg-[#FAF7F2] dark:bg-[#0E101D] border border-[#F0E6D2] dark:border-white/10 p-2">
+                          <div className="text-[9px] uppercase tracking-wider text-[#78716C] font-bold">7th house</div>
+                          <div className="font-bold mt-0.5">{calc.synthesis.seventhHouse.brideSign || '—'} & {calc.synthesis.seventhHouse.groomSign || '—'}</div>
+                          <div className="text-[10px] text-[#8E6F1D] dark:text-[#F0C968]">{calc.synthesis.seventhHouse.status}</div>
+                        </div>
+                        <div className="rounded-lg bg-[#FAF7F2] dark:bg-[#0E101D] border border-[#F0E6D2] dark:border-white/10 p-2">
+                          <div className="text-[9px] uppercase tracking-wider text-[#78716C] font-bold">Marriage karaka</div>
+                          <div className="font-bold mt-0.5">{calc.synthesis.marriageKaraka.brideVenus || '—'} & {calc.synthesis.marriageKaraka.groomVenus || '—'}</div>
+                          <div className="text-[10px] text-[#8E6F1D] dark:text-[#F0C968]">{calc.synthesis.marriageKaraka.status}</div>
+                        </div>
+                        <div className="rounded-lg bg-[#FAF7F2] dark:bg-[#0E101D] border border-[#F0E6D2] dark:border-white/10 p-2">
+                          <div className="text-[9px] uppercase tracking-wider text-[#78716C] font-bold">Kala Sarpa</div>
+                          <div className="font-bold mt-0.5">{calc.synthesis.kalaSarpa.brideActive || calc.synthesis.kalaSarpa.groomActive ? (hi ? 'सक्रिय' : 'Active') : (hi ? 'शुद्ध' : 'Clear')}</div>
+                          <div className="text-[10px] text-[#8E6F1D] dark:text-[#F0C968]">{calc.synthesis.kalaSarpa.bothActive ? (hi ? 'दोनों में' : 'Both') : calc.synthesis.kalaSarpa.brideActive ? (hi ? 'वधू में' : 'Bride') : calc.synthesis.kalaSarpa.groomActive ? (hi ? 'वर में' : 'Groom') : '—'}</div>
+                        </div>
+                      </div>
+                      <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-[#F0E6D2] dark:border-white/5 pt-3">
+                        <span className="text-[11px] font-semibold text-[#8E6F1D] dark:text-[#F0C968]">
+                          {hi ? 'ज्योतिषी से पूरी D9, सप्तम भाव और कारक एक साथ पढ़ें।' : 'Ask our astrologer to read the D9, 7th house and karakas together.'}
+                        </span>
+                        <button onClick={() => router.push('/ask?focus=milan&mode=detailed')} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-[#8E6F1D] text-white">
+                          <Phone className="w-3.5 h-3.5" /> {hi ? 'परामर्श' : 'Consult'}
+                        </button>
                       </div>
                     </div>
                   </div>

@@ -87,6 +87,18 @@ test.describe('MILAN_KUNDLI_CURRENT_RENDERER', () => {
     expect(res.headers.get('Content-Type') ?? '').not.toContain('application/pdf');
   });
 
+  test('MR-05b: canonical Sanskrit rashi names normalize into the English tables', async () => {
+    const res = await post({
+      bride: { rashiName: 'Mesha', nakshatraName: 'Ashwini', pada: 1 },
+      groom: { rashiName: 'Mesha', nakshatraName: 'Bharani', pada: 1 },
+      inspect: true,
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.kootas.length).toBe(8);
+    expect(body.kootas.find((k: any) => k.id === 'bhakoot')?.detail).toContain('Aries');
+  });
+
   test('MR-06: the route advertises its contract', async () => {
     const res = await GET();
     const body = await res.json();
@@ -95,7 +107,7 @@ test.describe('MILAN_KUNDLI_CURRENT_RENDERER', () => {
     expect(body.contract.modes).toContain('SCHOLAR');
     // Runtime QA gate: mupdf must stay external to the Next server bundle so
     // the live route can count real PDF pages (not just direct-handler tests).
-    const cfg = (await import('../../../next.config.mjs')).default;
+    const cfg = (await import('../../next.config.mjs')).default as any;
     expect(cfg?.experimental?.serverComponentsExternalPackages).toContain('mupdf');
   });
 
@@ -112,6 +124,11 @@ test.describe('MILAN_KUNDLI_CURRENT_RENDERER', () => {
     await expect(page.getByRole('tab', { name: /Overview/i })).toBeVisible();
     await expect(page.getByRole('tab', { name: /Folio/i })).toBeVisible();
     await expect(page.getByRole('tab', { name: /Workbench/i })).toBeVisible();
+    // Complete classical dosha layer is surfaced on Overview (not just Folio).
+    await expect(page.getByRole('heading', { name: /Complete classical Milan dosha layer/i })).toBeVisible({ timeout: 20_000 });
+    await page.getByRole('tab', { name: /Workbench/i }).click();
+    await expect(page.getByRole('heading', { name: /Koota workbench/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Deeper-chart synthesis/i })).toBeVisible();
     await page.getByRole('tab', { name: /Folio/i }).click();
     await expect(page.getByRole('group', { name: 'Reading depth' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Traditional reading — explanation, motivation, then ask' })).toBeVisible({ timeout: 20_000 });

@@ -179,11 +179,15 @@ export interface MilanOptions {
 }
 
 export function normalizePerson(input: Partial<MilanPersonInput>): MilanPersonInput {
+  // The canonical snapshot stores Sanskrit rashi names (Mesha, Vrishabha…),
+  // while the Milan tables are keyed by English names (Aries, Taurus…).
+  const rashi = RASHIS.find((r: any) => r.en === input.rashiName || r.name === input.rashiName);
+  const rashiName = rashi?.en || input.rashiName || '';
   return {
-    rashiName: input.rashiName || '',
+    rashiName,
     nakshatraName: input.nakshatraName || '',
     pada: input.pada && input.pada >= 1 && input.pada <= 4 ? input.pada : 1,
-    rashiLord: input.rashiLord || '',
+    rashiLord: input.rashiLord || rashi?.lord || '',
   };
 }
 
@@ -197,7 +201,7 @@ export function isValidMilanInput(input: Partial<MilanPersonInput>): boolean {
 }
 
 export function rashiLordByName(rashiName: string): string {
-  const rashi = RASHIS.find((r: any) => r.en.toLocaleLowerCase() === rashiName.toLocaleLowerCase());
+  const rashi = RASHIS.find((r: any) => r.en.toLocaleLowerCase() === rashiName.toLocaleLowerCase() || r.name.toLocaleLowerCase() === rashiName.toLocaleLowerCase());
   return rashi?.lord || '';
 }
 
