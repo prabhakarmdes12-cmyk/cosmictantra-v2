@@ -99,6 +99,26 @@ test.describe('MILAN_KUNDLI_CURRENT_RENDERER', () => {
     expect(body.kootas.find((k: any) => k.id === 'bhakoot')?.detail).toContain('Aries');
   });
 
+  test('MR-05c: full birth profiles reach the canonical dosha + synthesis layer', async () => {
+    const res = await post({
+      brideBirth: {
+        birthDate: '1992-11-08', birthTime: '14:45:00',
+        latitude: 25.5941, longitude: 85.1376, timezone: 5.5, locationName: 'Patna, Bihar, India',
+      },
+      groomBirth: {
+        birthDate: '1989-05-26', birthTime: '02:20:30',
+        latitude: 22.0797, longitude: 82.1391, timezone: 5.5, locationName: 'Bilaspur, Chhattisgarh, India',
+      },
+      inspect: true,
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.supplementalDoshas.length).toBe(4);
+    expect(body.synthesis.navamsha).toBeTruthy();
+    expect(body.synthesis.seventhHouse).toBeTruthy();
+    expect(body.synthesis.marriageKaraka).toBeTruthy();
+  });
+
   test('MR-06: the route advertises its contract', async () => {
     const res = await GET();
     const body = await res.json();
