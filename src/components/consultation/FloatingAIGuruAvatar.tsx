@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
   Sparkles, 
+  Menu,
   X, 
   Send, 
   ArrowRight, 
@@ -43,6 +44,10 @@ import { ScriptureInsight, findScriptureInsight, SCRIPTURE_WISDOM_REGISTRY } fro
 import { MOOD_OPTIONS, MOOD_QUESTION_HI, getMoodById } from '@/lib/ai/moodOptions';
 import { useKashiSahayak } from '@/hooks/useKashiSahayak';
 import { KashiComposer } from '@/components/kashi/KashiComposer';
+import {
+  GRANTH_RECITALS, recitalById, loadRecitalUnits, loadRecitalPassages, recitalSpeech,
+  type RecitalPassage,
+} from '@/lib/kashi/granthRecitals';
 import { KashiVerseCard } from '@/components/kashi/KashiVerseCard';
 import { KashiClarification, KashiQuickActions } from '@/components/kashi/KashiClarification';
 import type { EmotionId } from '@/lib/kashi/emotionalSupport';
@@ -145,6 +150,13 @@ interface ChatMessage {
     timings?: string;
   };
   inChatKundaliSvg?: boolean;
+  recitalCard?: {
+    recitalId: string;
+    recitalTitleHi: string;
+    unitLabelHi: string;
+    passages: RecitalPassage[];
+    readerHref?: string;
+  };
   quickChips?: Array<{ label: string; action: string; href?: string }>;
 }
 
@@ -166,6 +178,8 @@ const CAPABILITY_CHIPS: Array<{ label: string; action: string; href?: string }> 
   { label: '📿 महामृत्युंजय मन्त्र व १०८ जप', action: 'INTENT_MANTRA_MRITYUNJAYA' },
   { label: '🚩 काशी यात्रा योजना (Sacred Journey)', action: 'INTENT_JOURNEY_KASHI' },
   { label: '📜 विद्वान् ज्योतिषी से परामर्श', action: 'INTENT_SCHOLAR' },
+  { label: '📖 ग्रंथ पाठ व स्वर-वाचन (८ शास्त्र)', action: 'GRANTH_MENU' },
+  { label: '📞 पंडित जी से सीधी बात (VIP Concierge)', action: 'OPEN_CONCIERGE' },
 ];
 
 // Deterministic intent chips that must keep the conversation moving. These map
@@ -185,6 +199,24 @@ const GATEWAY_INTENT_PHRASES: Record<string, string> = {
   INTENT_TITHI: 'आज की तिथि क्या है?',
   INTENT_PANCHANG_TOMORROW: 'कल का पञ्चाङ्ग',
 };
+
+// -------------------------------------------------------------
+// VIP Concierge — the human handoff.
+//
+// The number is the hotline the consultation desk publishes. It appears in
+// exactly two places: the tel: link and the wa.me link, both derived from
+// these constants so a correction is a one-line change, never a hunt.
+// -------------------------------------------------------------
+const VIP_CONCIERGE_PHONE_DISPLAY = '+91 99729 34937';
+const VIP_CONCIERGE_TEL = 'tel:+919972934937';
+const VIP_CONCIERGE_WA = 'https://wa.me/919972934937';
+const VIP_CONCIERGE_ROADMAP_HI = [
+  'पंडित जी को कॉल या WhatsApp कीजिए — अपनी कुंडली व प्रश्न एक वाक्य में बताइए।',
+  'WhatsApp पर ही ₹501 का सुरक्षित भुगतान लिंक प्राप्त कीजिए (UPI / कार्ड)।',
+  'भुगतान के पश्चात पंडित जी का ग्रुप कॉल निश्चित होता है — आप, पंडित जी और सहायक।',
+  'कॉल के बाद आपकी कुंडली PDF तथा Google Drive ऑडियो रिकॉर्डिंग WhatsApp पर भेजी जाती है।',
+  'इसके पश्चात गोचर व दशा परिवर्तन पर निःशुल्क अपडेट संदेश मिलते रहते हैं।',
+];
 
 // -------------------------------------------------------------
 // Sacred Shrine Registry (Direct Live Streams & Sanctums)
@@ -343,6 +375,10 @@ export default function FloatingAIGuruAvatar() {
   const voice = useKashiVoice();
   const [inputVal, setInputVal] = useState('');
   const [panchangContext, setPanchangContext] = useState<ConversationPanchangContext | null>(null);
+  /** VIP concierge modal — the human handoff out of the chat. */
+  const [conciergeOpen, setConciergeOpen] = useState(false);
+  /** Which recital passage is currently speaking, so the card can show it. */
+  const [recitalPlay, setRecitalPlay] = useState<{ msgId: string; index: number } | null>(null);
   const [lastSpeakableMsg, setLastSpeakableMsg] = useState<ChatMessage | null>(null);
   const activeCityRef = useRef<any>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
@@ -1039,6 +1075,120 @@ export default function FloatingAIGuruAvatar() {
     }, 400);
   };
 
+  /* ---------------------------------------------------------------
+   * Main menu, granth recitation and the concierge handoff.
+   * --------------------------------------------------------------- */
+  const pushGuruMessage = (partial: { text: string } & Partial<ChatMessage>) => {
+    const msg: ChatMessage = {
+      id: `g-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      sender: 'GURU',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      ...partial,
+    };
+    setChatMessages(prev => [...prev, msg]);
+    return msg;
+  };
+
+  /** /report carries the seeker's own birth data, so the download opens on
+   *  THEIR chart rather than an empty form. */
+  const reportHrefForSeeker = () => {
+    const q = new URLSearchParams();
+    if (seekerData.name) q.set('name', seekerData.name);
+    if (seekerData.birthDate) q.set('birthDate', seekerData.birthDate);
+    if (seekerData.birthTime) q.set('birthTime', seekerData.birthTime);
+    if (seekerData.birthCity) q.set('locationName', seekerData.birthCity);
+    q.set('lat', String(seekerData.birthLat));
+    q.set('lng', String(seekerData.birthLon));
+    q.set('tz', 'Asia/Kolkata');
+    return `/report?${q.toString()}`;
+  };
+
+  const conciergeWhatsAppHref = () => {
+    const text = `हर हर महादेव 🙏 मैं ${seekerData.name || 'साधक'} हूँ। CosmicTantra कुंडली परामर्श हेतु ₹501 भुगतान लिंक व पंडित जी के कॉल का अनुरोध है। प्रश्न: ${seekerData.question || 'कुंडली विश्लेषण'}`;
+    return `${VIP_CONCIERGE_WA}?text=${encodeURIComponent(text)}`;
+  };
+
+  const postMainMenu = () => {
+    pushGuruMessage({
+      text: 'हर हर महादेव! 🙏 यह रहा मुख्य मेन्यू — काशी सहायक की हर सेवा एक tap पर:',
+      quickChips: [
+        { label: '📖 ग्रंथ पाठ व स्वर-वाचन (८ शास्त्र)', action: 'GRANTH_MENU' },
+        { label: '🔮 मेरी कुण्डली व दशा (Intake)', action: 'START_INTAKE' },
+        ...CAPABILITY_CHIPS.filter((c) => c.action !== 'START_INTAKE'),
+        { label: '📞 पंडित जी से सीधी बात (VIP Concierge)', action: 'OPEN_CONCIERGE' },
+      ],
+    });
+  };
+
+  const postGranthMenu = () => {
+    pushGuruMessage({
+      text: '📖 ग्रंथ पाठ कक्ष — आठ शास्त्र, प्रामाणिक मूल पाठ व स्वर-वाचन। किसे सुनना है?',
+      quickChips: GRANTH_RECITALS.map((r) => ({
+        label: `${r.titleHi} • ${r.structureHi}`,
+        action: `GRANTH_PICK_${r.id}`,
+      })),
+    });
+  };
+
+  const openRecital = async (recitalId: string, unitId?: string) => {
+    const recital = recitalById(recitalId);
+    if (!recital) return;
+    const units = await loadRecitalUnits(recitalId);
+    if (units.length === 0) {
+      pushGuruMessage({ text: `क्षमा करें ${seekerData.name || 'साधक'} जी — ${recital.titleHi} का पाठ इस समय उपलब्ध नहीं है। ग्रंथ सूची से दूसरा शास्त्र चुनिए।`, quickChips: [{ label: '📖 ग्रंथ सूची', action: 'GRANTH_MENU' }] });
+      return;
+    }
+    if (!unitId && units.length > 1) {
+      pushGuruMessage({
+        text: `${recital.titleHi} — ${recital.structureHi}। कौन सा खण्ड सुनना है?`,
+        quickChips: units.map((u) => ({ label: u.labelHi, action: `GRANTH_UNIT_${recitalId}__${u.id}` })),
+      });
+      return;
+    }
+    const unit = units.find((u) => u.id === unitId) ?? units[0];
+    const passages = await loadRecitalPassages(recitalId, unit.id, 2);
+    if (passages.length === 0) {
+      pushGuruMessage({ text: `${recital.titleHi} के इस खण्ड का पाठ अभी लोड नहीं हो सका। कृपया दूसरा खण्ड चुनिए।`, quickChips: [{ label: '📖 ग्रंथ सूची', action: 'GRANTH_MENU' }] });
+      return;
+    }
+    pushGuruMessage({
+      text: `🎧 ${recital.titleHi} • ${unit.labelHi} — मूल पाठ नीचे है; ▶ दबाइए और सुनिए:`,
+      recitalCard: {
+        recitalId,
+        recitalTitleHi: recital.titleHi,
+        unitLabelHi: unit.labelHi,
+        passages,
+        readerHref: recital.readerHref,
+      },
+      quickChips: [
+        { label: '📖 ग्रंथ सूची पर लौटें', action: 'GRANTH_MENU' },
+        ...(recital.readerHref ? [{ label: '📜 सम्पूर्ण पाठ पढ़ें', action: 'NAV_READER', href: recital.readerHref }] : []),
+        { label: '️ मुख्य मेन्यू', action: 'MAIN_MENU' },
+      ],
+    });
+  };
+
+  const playRecitalPassage = (msg: ChatMessage, index: number) => {
+    const p = msg.recitalCard?.passages[index];
+    if (!p) return;
+    playClick();
+    setRecitalPlay({ msgId: msg.id, index });
+    voice.speak(recitalSpeech(p), { rate: 0.8 });
+  };
+
+  const playRecitalNext = (msg: ChatMessage) => {
+    const total = msg.recitalCard?.passages.length ?? 0;
+    const current = recitalPlay && recitalPlay.msgId === msg.id ? recitalPlay.index : -1;
+    const next = current + 1 < total ? current + 1 : 0;
+    playRecitalPassage(msg, next);
+  };
+
+  const stopRecital = () => {
+    playClick();
+    voice.stop();
+    setRecitalPlay(null);
+  };
+
   const handleChipClick = (chip: { label: string; action: string; href?: string }) => {
     playClick();
 
@@ -1059,6 +1209,39 @@ export default function FloatingAIGuruAvatar() {
     // Emotional check-in chips (greeting flow)
     if (chip.action.startsWith('MOOD_') || chip.action === 'SKIP_MOOD') {
       handleMoodSelection(chip.action);
+      return;
+    }
+
+    if (chip.action === 'MAIN_MENU') {
+      playClick();
+      postMainMenu();
+      return;
+    }
+
+    if (chip.action === 'GRANTH_MENU') {
+      postGranthMenu();
+      return;
+    }
+
+    if (chip.action.startsWith('GRANTH_PICK_')) {
+      void openRecital(chip.action.slice('GRANTH_PICK_'.length));
+      return;
+    }
+
+    if (chip.action.startsWith('GRANTH_UNIT_')) {
+      const [recitalId, unitId] = chip.action.slice('GRANTH_UNIT_'.length).split('__');
+      void openRecital(recitalId, unitId);
+      return;
+    }
+
+    if (chip.action === 'OPEN_CONCIERGE') {
+      playClick();
+      setConciergeOpen(true);
+      return;
+    }
+
+    if (chip.action === 'NAV_READER' && chip.href) {
+      handleNavigate(chip.href);
       return;
     }
 
@@ -1972,6 +2155,17 @@ export default function FloatingAIGuruAvatar() {
             </div>
 
             <div className="flex items-center gap-1">
+              {/* Persistent Main Menu: one tap back to every offering, from
+                  any depth of the conversation. It never scrolls away. */}
+              <button
+                onClick={() => { playClick(); postMainMenu(); }}
+                className="px-2 py-1.5 rounded-xl bg-[#8E6F1D]/15 dark:bg-[#D4AF37]/15 border border-[#8E6F1D]/40 dark:border-[#D4AF37]/40 text-[#8E6F1D] dark:text-[#F0C968] text-[10px] font-bold flex items-center gap-1 cursor-pointer hover:bg-[#8E6F1D]/25 dark:hover:bg-[#D4AF37]/25"
+                title="मुख्य मेन्यू — सभी सेवाएँ एक tap पर"
+              >
+                <Menu className="w-3.5 h-3.5" />
+                <span>मुख्य मेन्यू</span>
+              </button>
+
               {/* Soothing OM Chant Audio Button */}
               <button
                 onClick={handlePlayOmChant}
@@ -2481,6 +2675,87 @@ export default function FloatingAIGuruAvatar() {
                         <p className="text-xs text-[#44403C] dark:text-[#D1C9BF] leading-relaxed italic bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20">
                           {msg.pulseCard.recommendation}
                         </p>
+
+                        {/* The two doors out of the pulse: the full qualified
+                            chart, or a human Pandit. Nothing else competes
+                            with them on this card. */}
+                        <div className="grid grid-cols-2 gap-1.5">
+                          <button
+                            onClick={() => handleNavigate(reportHrefForSeeker())}
+                            className="px-2 py-2 rounded-xl bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#080A10] text-[11px] font-bold cursor-pointer hover:opacity-90 active:scale-95 transition-all"
+                          >
+                            📥 पूर्ण कुण्डली देखें
+                          </button>
+                          <button
+                            onClick={() => { playClick(); setConciergeOpen(true); }}
+                            className="px-2 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold cursor-pointer active:scale-95 transition-all"
+                          >
+                            📞 ज्योतिषी से बात करें
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Granth Recitation Card: mūla text + playback */}
+                    {msg.recitalCard && (
+                      <div className="mt-3 p-3.5 rounded-2xl bg-[#FAF7F2] dark:bg-[#0A0C14] border border-[#8E6F1D]/40 space-y-2.5 text-left">
+                        <div className="flex items-center justify-between gap-2 border-b border-black/10 dark:border-white/10 pb-1.5">
+                          <span className="font-editorial text-xs sm:text-sm font-bold text-[#8E6F1D] dark:text-[#F0C968]">
+                            🎧 {msg.recitalCard.recitalTitleHi}
+                          </span>
+                          <span className="text-[10px] text-[#696256] dark:text-[#9E988D] shrink-0">
+                            {msg.recitalCard.unitLabelHi}
+                          </span>
+                        </div>
+
+                        {msg.recitalCard.passages.map((passage, pi) => {
+                          const active = recitalPlay?.msgId === msg.id && recitalPlay.index === pi;
+                          return (
+                            <div
+                              key={`${msg.id}-p${pi}`}
+                              className={`p-2.5 rounded-xl border transition-colors ${
+                                active
+                                  ? 'border-amber-500 bg-amber-500/10'
+                                  : 'border-black/10 dark:border-white/10 bg-white/60 dark:bg-white/5'
+                              }`}
+                            >
+                              <div className="text-[10px] font-bold text-[#8E6F1D] dark:text-[#F0C968]">{passage.ref}</div>
+                              <div className="font-serif text-[13px] leading-relaxed whitespace-pre-line text-[#1C1917] dark:text-white mt-0.5">
+                                {passage.sanskrit}
+                              </div>
+                              <div className="text-[11px] text-[#696256] dark:text-[#9E988D] mt-1 leading-relaxed">
+                                {passage.hindi}
+                              </div>
+                              <button
+                                onClick={() => (active ? stopRecital() : playRecitalPassage(msg, pi))}
+                                className="mt-1.5 px-2 py-1 rounded-lg bg-black/5 dark:bg-white/10 text-[10px] font-bold text-[#8E6F1D] dark:text-[#F0C968] cursor-pointer hover:bg-black/10 dark:hover:bg-white/15 active:scale-95 transition-all"
+                              >
+                                {active ? '⏹ इस पद को रोकें' : '▶ इस पद को सुनें'}
+                              </button>
+                            </div>
+                          );
+                        })}
+
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => playRecitalPassage(msg, 0)}
+                            className="px-2.5 py-1.5 rounded-xl bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#080A10] text-[10px] font-bold cursor-pointer active:scale-95"
+                          >
+                            ▶ पाठ आरम्भ
+                          </button>
+                          <button
+                            onClick={() => playRecitalNext(msg)}
+                            className="px-2.5 py-1.5 rounded-xl bg-black/5 dark:bg-white/10 text-[10px] font-bold text-[#1C1917] dark:text-white cursor-pointer active:scale-95"
+                          >
+                            ⏭ अगला पद
+                          </button>
+                          <button
+                            onClick={stopRecital}
+                            className="px-2.5 py-1.5 rounded-xl bg-black/5 dark:bg-white/10 text-[10px] font-bold text-[#1C1917] dark:text-white cursor-pointer active:scale-95"
+                          >
+                            ⏹ रोकें
+                          </button>
+                        </div>
                       </div>
                     )}
 
@@ -2732,6 +3007,75 @@ export default function FloatingAIGuruAvatar() {
             </button>
           </form>
 
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------------
+          VIP Concierge modal — the human handoff.
+          Call and WhatsApp first, then the five-step roadmap so a first-time
+          seeker knows exactly what ₹501 buys before paying anything.
+          ------------------------------------------------------------------ */}
+      {conciergeOpen && (
+        <div
+          className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setConciergeOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="VIP Concierge — पंडित जी से सीधी बात"
+        >
+          <div
+            className="w-full max-w-sm max-h-[85vh] overflow-y-auto rounded-3xl bg-white dark:bg-[#0C0E1A] border-2 border-[#D4AF37]/60 p-5 space-y-3 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <h3 className="font-editorial text-base font-bold text-[#1C1917] dark:text-white">
+                  📞 VIP Concierge — पंडित जी से सीधी बात
+                </h3>
+                <p className="text-[11px] text-[#696256] dark:text-[#9E988D] mt-0.5">
+                  काशी विद्वत् परिषद् • मानव ज्योतिषी, AI नहीं
+                </p>
+              </div>
+              <button
+                onClick={() => setConciergeOpen(false)}
+                className="p-1.5 rounded-xl bg-black/5 dark:bg-white/10 text-[#696256] dark:text-[#9E988D] cursor-pointer"
+                title="बंद करें"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <a
+              href={VIP_CONCIERGE_TEL}
+              className="flex items-center justify-center gap-2 px-3 py-3 rounded-2xl bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#080A10] text-sm font-bold hover:opacity-90 active:scale-95 transition-all"
+            >
+              📞 कॉल करें {VIP_CONCIERGE_PHONE_DISPLAY}
+            </a>
+            <a
+              href={conciergeWhatsAppHref()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 px-3 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold active:scale-95 transition-all"
+            >
+              💬 WhatsApp पर संदेश भेजें (पूर्व-भरा हुआ)
+            </a>
+
+            <div className="rounded-2xl bg-[#FAF7F2] dark:bg-[#121526] border border-black/10 dark:border-white/10 p-3">
+              <div className="text-[11px] font-bold text-[#8E6F1D] dark:text-[#F0C968] mb-1.5">
+                परामर्श की पाँच चरण यात्रा
+              </div>
+              <ol className="space-y-1.5 text-[11px] text-[#44403C] dark:text-[#D1C9BF] leading-relaxed list-decimal list-inside">
+                {VIP_CONCIERGE_ROADMAP_HI.map((step, i) => (
+                  <li key={i}>{step}</li>
+                ))}
+              </ol>
+            </div>
+
+            <p className="text-[10px] text-[#696256] dark:text-[#9E988D] leading-relaxed">
+              भुगतान केवल आधिकारिक WhatsApp लिंक पर ही कीजिए। काशी सहायक कभी भी OTP,
+              बैंक विवरण या किसी अन्य चैनल पर भुगतान नहीं माँगता।
+            </p>
+          </div>
         </div>
       )}
     </>

@@ -6,7 +6,6 @@ import {
   Sparkles, 
   Flame, 
   Volume2, 
-  VolumeX, 
   Share2, 
   Sun, 
   Moon, 
@@ -33,7 +32,6 @@ import {
   Phone,
   MapPin,
   Search,
-  Image as ImageIcon,
   ShieldCheck,
   Radio,
   Layers,
@@ -837,9 +835,7 @@ export default function DarshanPage() {
   const [isParikramaPlaying, setIsParikramaPlaying] = useState<boolean>(true);
   const [cycleSpeedSec, setCycleSpeedSec] = useState<number>(30);
   const [progressSec, setProgressSec] = useState<number>(0);
-  const [displayMode, setDisplayMode] = useState<'IMAGE' | 'VIDEO'>('IMAGE');
   const [videoStreamSource, setVideoStreamSource] = useState<'LOCAL' | 'YOUTUBE'>('YOUTUBE');
-  const [videoSoundOn, setVideoSoundOn] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [flowers, setFlowers] = useState<Array<{ id: number; x: number; icon: string; size: number; duration?: string; delay?: string; rot?: number }>>([]);
@@ -853,14 +849,8 @@ export default function DarshanPage() {
   const [copiedShare, setCopiedShare] = useState<boolean>(false);
   const [yatraCompleted, setYatraCompleted] = useState<boolean>(false);
   const [showSankalpaModal, setShowSankalpaModal] = useState<boolean>(false);
-  const [imgLoadError, setImgLoadError] = useState<boolean>(false);
 
   const cinemaStageRef = useRef<HTMLDivElement>(null);
-
-  // Reset img error on shrine change
-  useEffect(() => {
-    setImgLoadError(false);
-  }, [currentIndex, activeCategory]);
 
   // Active dataset based on category
   const baseDataset = useMemo(() => {
@@ -1036,7 +1026,6 @@ export default function DarshanPage() {
     setYatraCompleted(false);
     if (cat === 'SIDDHA_STUTI') {
       setCycleSpeedSec(180); // Default to 3-minute immersion for curated stutis & bhajans
-      setDisplayMode('VIDEO');
     }
   };
 
@@ -1402,30 +1391,7 @@ export default function DarshanPage() {
 
                   {/* Mode Toggle & Fullscreen Controls */}
                   <div className="flex items-center gap-1.5 shrink-0">
-                    {/* Mode Toggle (Image vs Video) */}
-                    <div className="inline-flex items-center rounded-xl bg-black/70 backdrop-blur-md border border-white/20 p-0.5 text-xs font-mono-data">
-                      <button
-                        onClick={() => { playTick(); setDisplayMode('IMAGE'); }}
-                        className={`px-2 py-0.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                          displayMode === 'IMAGE' ? 'bg-[#8E6F1D] text-white shadow-xs' : 'text-white/70 hover:text-white'
-                        }`}
-                      >
-                        <ImageIcon className="w-3 h-3" />
-                        <span className="hidden xs:inline">साक्षात् छवि</span>
-                      </button>
-                      <button
-                        onClick={() => { playTick(); setDisplayMode('VIDEO'); }}
-                        className={`px-2 py-0.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                          displayMode === 'VIDEO' ? 'bg-[#8E6F1D] text-white shadow-xs' : 'text-white/70 hover:text-white'
-                        }`}
-                      >
-                        <Play className="w-3 h-3" />
-                        <span className="hidden xs:inline">वीडियो / लाइव</span>
-                      </button>
-                    </div>
-
-                    {/* In Video Mode: Video Stream Source Switcher (Local HD vs YouTube Live) */}
-                    {displayMode === 'VIDEO' && (
+                    {/* Video Stream Source Switcher (Local HD vs YouTube Live) */}
                       <div className="hidden sm:inline-flex items-center rounded-xl bg-black/70 backdrop-blur-md border border-white/20 p-0.5 text-xs font-mono-data">
                         <button
                           onClick={() => { playTick(); setVideoStreamSource('LOCAL'); }}
@@ -1445,19 +1411,7 @@ export default function DarshanPage() {
                         >
                           🔴 यूट्यूब
                         </button>
-                        {videoStreamSource === 'YOUTUBE' && (
-                          <button
-                            onClick={() => { playTick(); setVideoSoundOn((s) => !s); }}
-                            className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
-                              videoSoundOn ? 'bg-emerald-600 text-white' : 'text-white/70 hover:text-white'
-                            }`}
-                            title={videoSoundOn ? 'ध्वनि बंद करें (Mute)' : 'ध्वनि चालू करें (Unmute)'}
-                          >
-                            {videoSoundOn ? '🔊 ध्वनि' : '🔇 मूक'}
-                          </button>
-                        )}
                       </div>
-                    )}
 
                     {/* Direct YouTube Link */}
                     {activeShrine.liveUrl && (
@@ -1487,48 +1441,6 @@ export default function DarshanPage() {
 
                 {/* Main Visual Screen: Real HD Photo OR Video Launcher */}
                 <div className="relative w-full flex-1 flex items-center justify-center overflow-hidden min-h-[340px] sm:min-h-[420px] lg:min-h-[460px] bg-black">
-                  {displayMode === 'IMAGE' ? (
-                    <div className="relative w-full h-full min-h-[340px] sm:min-h-[420px]">
-                      {!imgLoadError ? (
-                        <img
-                          src={activeShrine.imageUrl}
-                          alt={activeShrine.name}
-                          onError={() => setImgLoadError(true)}
-                          className="w-full h-full object-cover brightness-[0.88] transition-all duration-700"
-                        />
-                      ) : (
-                        /* Fail-safe Sacred Vedic Temple Sanctum SVG Art */
-                        <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-[#1a1308] via-[#0c0803] to-[#050301] p-6 text-center space-y-3">
-                          <div className="w-20 h-20 rounded-full border-2 border-amber-400/60 bg-amber-500/10 flex items-center justify-center shadow-2xl">
-                            <span className="text-3xl text-amber-300 font-serif">ॐ</span>
-                          </div>
-                          <div className="space-y-1">
-                            <h3 className="font-editorial text-2xl font-bold text-amber-200">
-                              {activeShrine.nameHi}
-                            </h3>
-                            <p className="text-xs font-mono-data text-amber-400/80">
-                              {activeShrine.locationHi} • {activeShrine.state}
-                            </p>
-                          </div>
-                          <div className="font-serif italic text-xs text-amber-100/90 max-w-md">
-                            "{activeShrine.shloka}"
-                          </div>
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-black/40 pointer-events-none" />
-
-                      {/* Sacred Shloka Overlay Subtitle */}
-                      <div className="absolute bottom-4 inset-x-2 sm:inset-x-6 z-20 pointer-events-none text-center space-y-0.5 max-w-3xl mx-auto drop-shadow-xl">
-                        <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-amber-400/30 text-amber-300 text-[10px] font-mono-data font-bold uppercase">
-                          <Flame className="w-2.5 h-2.5 text-amber-400 animate-bounce" />
-                          <span>{activeShrine.deityHi} • {activeShrine.locationHi}</span>
-                        </div>
-                        <p className="font-serif text-xs sm:text-base italic text-amber-100/95 font-medium leading-tight drop-shadow-md">
-                          "{activeShrine.shloka}"
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
                     /* Video / Live Stream Screen: Plays Real HD Aarti Video / YouTube Live */
                     <div className="relative w-full h-full min-h-[340px] sm:min-h-[420px] bg-black flex items-center justify-center overflow-hidden">
                       {videoStreamSource === 'LOCAL' ? (
@@ -1544,8 +1456,8 @@ export default function DarshanPage() {
                       ) : (
                         <div className="relative w-full h-full bg-black flex items-center justify-center">
                           <iframe
-                            key={`video-yt-${activeShrine.id}-${videoSoundOn ? 'sound' : 'muted'}`}
-                            src={`https://www.youtube-nocookie.com/embed/${activeShrine.videoId || 'Wu321m2SUKY'}?autoplay=1&mute=${videoSoundOn ? 0 : 1}&rel=0&playsinline=1&modestbranding=1`}
+                            key={`video-yt-${activeShrine.id}`}
+                            src={`https://www.youtube-nocookie.com/embed/${activeShrine.videoId || 'Wu321m2SUKY'}?autoplay=1&mute=1&rel=0&playsinline=1&modestbranding=1`}
                             className="w-full h-full border-0 absolute inset-0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                             allowFullScreen
@@ -1554,7 +1466,6 @@ export default function DarshanPage() {
                         </div>
                       )}
                     </div>
-                  )}
                 </div>
 
                 {/* Bottom Floating Cinema Glass Dock */}
