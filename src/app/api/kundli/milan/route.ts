@@ -14,7 +14,7 @@
  */
 import { NextResponse } from 'next/server';
 import { createRateLimiter, clientKeyFor } from '@/lib/rateLimit';
-import { calculateMilan, milanInputFromSnapshot, isValidMilanInput, type MilanPersonInput } from '@/lib/kundli/v42/milan/milanEngine';
+import { calculateMilan, milanInputFromSnapshot, milanContextFromSnapshot, isValidMilanInput, type MilanPersonInput, type MilanChartContext, type MilanOptions } from '@/lib/kundli/v42/milan/milanEngine';
 import { generateMilanPdf, MILAN_RENDERER_VERSION, type MilanPdfMode } from '@/lib/kundli/v42/milan/milanPdf';
 import { getCanonicalJyotishSnapshot } from '@/lib/jyotish/canonicalSnapshot';
 
@@ -40,14 +40,16 @@ interface MilanRequest {
   groom?: Partial<MilanPersonInput>;
   brideBirth?: Record<string, unknown>;
   groomBirth?: Record<string, unknown>;
+  brideCtx?: MilanChartContext;
+  groomCtx?: MilanChartContext;
   mode?: string;
   locale?: string;
   source?: string;
   inspect?: boolean;
 }
 
-/** Derive a Moon placement from a canonical snapshot (any object shape). */
-function moonFromBirthInput(birth: Record<string, unknown>): MilanPersonInput {
+/** Derive a Moon placement + chart context from a canonical snapshot. */
+function chartFromBirthInput(birth: Record<string, unknown>): { person: MilanPersonInput; ctx: MilanChartContext } {
   const snapshot = getCanonicalJyotishSnapshot({
     birthDate: String(birth.birthDate ?? ''),
     birthTime: String(birth.birthTime ?? '12:00'),
@@ -56,7 +58,7 @@ function moonFromBirthInput(birth: Record<string, unknown>): MilanPersonInput {
     timezone: Number(birth.timezone ?? birth.tz ?? birth.utcOffsetHours ?? 5.5),
     locationName: String(birth.locationName ?? birth.name ?? ''),
   });
-  return milanInputFromSnapshot(snapshot);
+  return { person: milanInputFromSnapshot(snapshot), ctx: milanContextFromSnapshot(snapshot) };
 }
 
 function filename(mode: MilanPdfMode): string {
@@ -82,10 +84,18 @@ export async function POST(request: Request) {
 
   let bride = body.bride;
   let groom = body.groom;
+  let brideCtx: MilanChartContext = body.brideCtx ?? {};
+  let groomCtx: MilanChartContext = body.groomCtx ?? {};
   try {
-    if (!bride || !groom) {
-      bride = bride ?? moonFromBirthInput(body.brideBirth ?? {});
-      groom = groom ?? moonFromBirthInput(body.groomBirth ?? {});
+    if (!bride) {
+      const r = chartFromBirthInput(body.brideBirth ?? {});
+      bride = r.person;
+      brideCtx = r.ctx;
+    }
+    if (!groom) {
+      const r = chartFromBirthInput(body.groomBirth ?? {});
+      groom = r.person;
+      groomCtx = r.ctx;
     }
   } catch (err) {
     return NextResponse.json(
@@ -112,7 +122,7 @@ export async function POST(request: Request) {
 
   let calc;
   try {
-    calc = calculateMilan(bride ?? {}, groom ?? {});
+    calc = calculateMilan(bride ?? {}, groom ?? {}, { brideCtx, groomCtx });
   } catch (err) {
     console.error('[milan] calculation threw', err);
     return NextResponse.json(
@@ -129,6 +139,8 @@ export async function POST(request: Request) {
       verdict: calc.verdict,
       kootas: calc.kootas,
       doshas: calc.doshas,
+      supplementalDoshas: calc.supplementalDoshas,
+      synthesis: calc.synthesis,
       nadiCancelled: calc.nadiCancelled,
       bhakootCancelled: calc.bhakootCancelled,
       nadiDoshaActive: calc.nadiDoshaActive,

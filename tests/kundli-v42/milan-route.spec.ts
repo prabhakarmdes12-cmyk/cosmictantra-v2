@@ -71,6 +71,8 @@ test.describe('MILAN_KUNDLI_CURRENT_RENDERER', () => {
     expect(body.maxTotal).toBe(36);
     expect(body.kootas.length).toBe(8);
     expect(body.predictions).toContain('dosha');
+    expect(body.supplementalDoshas.length).toBe(4);
+    expect(body.synthesis.navamsha).toBeTruthy();
     expect(body.rendererVersion).toBe(MILAN_RENDERER_VERSION);
   });
 

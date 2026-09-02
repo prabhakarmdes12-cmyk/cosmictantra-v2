@@ -150,23 +150,27 @@ function predictionBox(
   y: number,
   locale: string
 ): number {
+  const hasHi = locale === 'hi' || locale === 'hi-en';
+  const tx = (en: string, hi = '') => (hasHi && hi ? hi : en);
   const headingH = drawParagraph(
     s,
-    locale === 'hi' && p.titleHi ? p.titleHi : p.title,
+    tx(p.title, p.titleHi),
     ML, y, CW, V3.typography.sizes.h2, SERIF_BOLD,
   );
   y = headingH + V3.spacing.blockGapMm;
   s.fillRect(ML, y, 2.2, 4, V3.colors.gold);
-  y = drawParagraph(s, 'Traditional reading', ML + 4, y, CW - 4, V3.typography.sizes.micro, SANS_BOLD, V3.colors.gold) + 1;
-  y = drawParagraph(s, p.traditionalClaim, ML, y + 2, CW, V3.typography.sizes.body, SERIF) + 2;
-  y = drawParagraph(s, 'Why it matters', ML, y, CW, V3.typography.sizes.small, SANS_BOLD, V3.colors.inkSoft) + 1;
-  y = drawParagraph(s, p.explanation, ML, y, CW, V3.typography.sizes.body, SERIF) + 2;
-  y = drawParagraph(s, 'What it means for you', ML, y, CW, V3.typography.sizes.small, SANS_BOLD, V3.colors.inkSoft) + 1;
-  y = drawParagraph(s, p.motivation, ML, y, CW, V3.typography.sizes.body, SERIF) + 2;
-  y = drawParagraph(s, 'Please keep in mind', ML, y, CW, V3.typography.sizes.small, SANS_BOLD, V3.colors.vermilion) + 1;
-  y = drawParagraph(s, p.caution, ML, y, CW, V3.typography.sizes.body, SERIF) + 2;
-  y = drawParagraph(s, p.bestScenario, ML, y, CW, V3.typography.sizes.body, SERIF) + 2;
-  y = drawParagraph(s, p.askAstrologer, ML, y, CW, V3.typography.sizes.small, SANS_BOLD, V3.colors.gold) + V3.spacing.sectionGapMm;
+  y = drawParagraph(s, tx('Traditional reading', 'पारंपरिक पाठ'), ML + 4, y, CW - 4, V3.typography.sizes.micro, SANS_BOLD, V3.colors.gold) + 1;
+  y = drawParagraph(s, tx(p.traditionalClaim, p.traditionalClaimHi), ML, y + 2, CW, V3.typography.sizes.body, SERIF) + 2;
+  y = drawParagraph(s, tx('Why it matters', 'क्यों मायने रखता है'), ML, y, CW, V3.typography.sizes.small, SANS_BOLD, V3.colors.inkSoft) + 1;
+  y = drawParagraph(s, tx(p.explanation, p.explanationHi), ML, y, CW, V3.typography.sizes.body, SERIF) + 2;
+  y = drawParagraph(s, tx('What it means for you', 'आपके लिए अर्थ'), ML, y, CW, V3.typography.sizes.small, SANS_BOLD, V3.colors.inkSoft) + 1;
+  y = drawParagraph(s, tx(p.motivation, p.motivationHi), ML, y, CW, V3.typography.sizes.body, SERIF) + 2;
+  y = drawParagraph(s, tx('Please keep in mind', 'कृपया ध्यान रखें'), ML, y, CW, V3.typography.sizes.small, SANS_BOLD, V3.colors.vermilion) + 1;
+  y = drawParagraph(s, tx(p.caution, p.cautionHi), ML, y, CW, V3.typography.sizes.body, SERIF) + 2;
+  y = drawParagraph(s, tx('Best possible scenario', 'सर्वोत्तम संभव स्थिति'), ML, y, CW, V3.typography.sizes.small, SANS_BOLD, V3.colors.inkSoft) + 1;
+  y = drawParagraph(s, tx(p.bestScenario, p.bestScenarioHi), ML, y, CW, V3.typography.sizes.body, SERIF) + 2;
+  y = drawParagraph(s, tx('Ask our astrologer', 'हमारे ज्योतिषी से पूछें'), ML, y, CW, V3.typography.sizes.small, SANS_BOLD, V3.colors.gold) + 1;
+  y = drawParagraph(s, tx(p.askAstrologer, p.askAstrologerHi), ML, y, CW, V3.typography.sizes.body, SERIF, V3.colors.gold) + V3.spacing.sectionGapMm;
   return y;
 }
 
@@ -287,7 +291,32 @@ export async function generateMilanPdf(
     y = drawParagraph(s, `${d.name} — ${status.toUpperCase()}`, ML, y, CW, V3.typography.sizes.h3, SANS_BOLD, color) + 1;
     y = drawParagraph(s, locale === 'hi' && d.reasonHi ? d.reasonHi : d.reason, ML, y, CW, V3.typography.sizes.body, SERIF) + 3;
   }
-  footer(s, calc, 'Koota breakdown', s.pageCount);
+
+  y += 4;
+  y = drawLabel(s, 'SUPPLEMENTAL DOSHA LAYER (MANGAL · RAJJU · VEDHA · KALA SARPA)', ML, y) + 2;
+  for (const d of calc.supplementalDoshas) {
+    if (y + 14 > BOTTOM) {
+      footer(s, calc, 'Supplemental dosha layer', s.pageCount);
+      s.addPage();
+      s.fillRect(0, 0, PW, PH, V3.colors.parchment);
+      y = 24;
+    }
+    const status = d.active ? (d.cancelled ? 'CANCELLED' : 'ACTIVE') : 'CLEAR';
+    const color = d.active ? (d.cancelled ? V3.colors.gold : V3.colors.vermilion) : V3.colors.inkSoft;
+    y = drawParagraph(s, `${d.name} — ${status.toUpperCase()}`, ML, y, CW, V3.typography.sizes.h3, SANS_BOLD, color) + 1;
+    y = drawParagraph(s, locale === 'hi' && d.reasonHi ? d.reasonHi : d.reason, ML, y, CW, V3.typography.sizes.body, SERIF) + 3;
+  }
+
+  y += 4;
+  y = drawLabel(s, 'DEEPER-CHART SYNTHESIS', ML, y) + 2;
+  y = drawParagraph(s, locale === 'hi' && calc.synthesis.summaryHi ? calc.synthesis.summaryHi : calc.synthesis.summary, ML, y, CW, V3.typography.sizes.body, SERIF) + V3.spacing.blockGapMm;
+  if (y + 24 < BOTTOM) {
+    const s7 = calc.synthesis.seventhHouse;
+    if (s7.brideSign && s7.groomSign) {
+      y = drawParagraph(s, `${s7.brideSign} — ${s7.groomSign}`, ML, y, CW, V3.typography.sizes.small, SANS_BOLD, V3.colors.inkSoft) + 2;
+    }
+  }
+  footer(s, calc, 'Koota breakdown + synthesis', s.pageCount);
 
   /* ------------------------- PAGE 3+: PREDICTIONS ------------------------- */
   s.addPage();

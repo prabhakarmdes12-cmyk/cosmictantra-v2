@@ -7,7 +7,7 @@ import {
   Edit3, AlertTriangle, Heart, BookOpen, FileText, Phone, Star,
 } from 'lucide-react';
 import { getCanonicalJyotishSnapshot } from '@/lib/jyotish/canonicalSnapshot';
-import { calculateMilan, milanInputFromSnapshot, MilanCalculation, MilanPersonInput } from '@/lib/kundli/v42/milan/milanEngine';
+import { calculateMilan, milanInputFromSnapshot, milanContextFromSnapshot, MilanCalculation, MilanPersonInput } from '@/lib/kundli/v42/milan/milanEngine';
 import GlobalHeader from '@/components/layout/GlobalHeader';
 import LanguageSelectorModal from '@/components/layout/LanguageSelectorModal';
 import { chitiSensory } from '@/lib/chitiAudio';
@@ -103,7 +103,11 @@ export default function MilanReportClient() {
         timezone: Number(bride.timezone),
         locationName: bride.locationName || bride.name,
       });
-      const result = calculateMilan(milanInputFromSnapshot(snapB), milanInputFromSnapshot(snapA));
+      const result = calculateMilan(
+        milanInputFromSnapshot(snapB),
+        milanInputFromSnapshot(snapA),
+        { brideCtx: milanContextFromSnapshot(snapB), groomCtx: milanContextFromSnapshot(snapA) }
+      );
       setCalc(result);
       setUsingDemo(false);
     } catch (err) {
@@ -331,8 +335,8 @@ export default function MilanReportClient() {
                   <p className="text-xs text-[#57534E] dark:text-[#D1C9BF] leading-relaxed mt-1">{calc.verdict.summaryHi && hi ? calc.verdict.summaryHi : calc.verdict.summary}</p>
                   <div className="flex flex-wrap gap-1.5 mt-2">
                     {calc.doshas.map((d) => (
-                      <span key={d.id} className={`px-2 py-1 rounded-lg text-[10px] font-bold border ${d.active ? (d.cancelled ? 'bg-amber-50 text-amber-800 border-amber-300' : 'bg-rose-50 text-rose-700 border-rose-300') : 'bg-emerald-50 text-emerald-700 border-emerald-300'}`}>
-                        {d.name}: {d.active ? (d.cancelled ? (hi ? 'निरस्त' : 'Cancelled') : (hi ? 'सक्रिय' : 'Active')) : (hi ? 'शुद्ध' : 'Clear')}
+                      <span key={d.id} className={`px-2 py-1 rounded-lg text-[10px] font-bold border ${d.cancelled ? 'bg-amber-50 text-amber-800 border-amber-300' : d.active ? 'bg-rose-50 text-rose-700 border-rose-300' : 'bg-emerald-50 text-emerald-700 border-emerald-300'}`}>
+                        {d.name}: {d.cancelled ? (hi ? 'निरस्त' : 'Cancelled') : d.active ? (hi ? 'सक्रिय' : 'Active') : (hi ? 'शुद्ध' : 'Clear')}
                       </span>
                     ))}
                   </div>
@@ -360,6 +364,46 @@ export default function MilanReportClient() {
               </div>
             </section>
 
+            {/* Supplemental dosha layer */}
+            <section className="bg-white dark:bg-[#121422] rounded-2xl border border-[#E5D7BC] dark:border-white/10 shadow-sm p-5 sm:p-6">
+              <h2 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968] flex items-center gap-1.5">
+                <Shield className="w-4 h-4" /> {hi ? 'पूरक दोष परत' : 'Supplemental Dosha layer'} <span className="text-[9px] text-[#78716C] font-normal normal-case">(Mangal · Rajju · Vedha · Kala Sarpa)</span>
+              </h2>
+              <div className="mt-3 space-y-2.5">
+                {calc.supplementalDoshas.map((d) => (
+                  <div key={d.id} className="rounded-xl border border-[#F0E6D2] dark:border-white/10 p-3 bg-[#FAF7F2] dark:bg-[#0E101D]">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-bold">{d.name}</span>
+                      <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border ${d.cancelled ? 'bg-amber-50 text-amber-800 border-amber-300' : d.active ? 'bg-rose-50 text-rose-700 border-rose-300' : 'bg-emerald-50 text-emerald-700 border-emerald-300'}`}>
+                        {d.cancelled ? (hi ? 'निरस्त' : 'Cancelled') : d.active ? (hi ? 'सक्रिय' : 'Active') : (hi ? 'शुद्ध' : 'Clear')}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-[#57534E] dark:text-[#D1C9BF] mt-1">{hi && d.reasonHi ? d.reasonHi : d.reason}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Deeper-chart synthesis */}
+            <section className="bg-white dark:bg-[#121422] rounded-2xl border border-[#E5D7BC] dark:border-white/10 shadow-sm p-5 sm:p-6">
+              <h2 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968] flex items-center gap-1.5">
+                <BookOpen className="w-4 h-4" /> {hi ? 'गहरी कुंडली संश्लेषण' : 'Deeper-chart synthesis'} <span className="text-[9px] text-[#78716C] font-normal normal-case">D9 · 7th house · Venus / Jupiter</span>
+              </h2>
+              <p className="text-xs leading-relaxed text-[#44403C] dark:text-[#D1C9BF] mt-3">{hi && calc.synthesis.summaryHi ? calc.synthesis.summaryHi : calc.synthesis.summary}</p>
+              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px]">
+                <div className="rounded-xl border border-[#F0E6D2] dark:border-white/10 p-3">
+                  <div className="text-[9px] uppercase tracking-wider text-[#78716C] font-bold">D9 Navamsha Moon</div>
+                  <div className="font-bold mt-0.5">{calc.synthesis.navamsha.brideD9 || '—'} & {calc.synthesis.navamsha.groomD9 || '—'}</div>
+                  <div className="text-[10px] text-[#8E6F1D] dark:text-[#F0C968]">{calc.synthesis.navamsha.status}</div>
+                </div>
+                <div className="rounded-xl border border-[#F0E6D2] dark:border-white/10 p-3">
+                  <div className="text-[9px] uppercase tracking-wider text-[#78716C] font-bold">7th house</div>
+                  <div className="font-bold mt-0.5">{calc.synthesis.seventhHouse.brideSign || '—'} & {calc.synthesis.seventhHouse.groomSign || '—'}</div>
+                  <div className="text-[10px] text-[#8E6F1D] dark:text-[#F0C968]">{calc.synthesis.seventhHouse.status}</div>
+                </div>
+              </div>
+            </section>
+
             {/* Prediction layer */}
             <section className="space-y-4">
               <div className="flex items-center gap-2">
@@ -374,15 +418,15 @@ export default function MilanReportClient() {
               )}
               {calc.predictions.map((p) => (
                 <div key={p.id} className="bg-white dark:bg-[#121422] rounded-2xl border border-[#E5D7BC] dark:border-white/10 shadow-sm p-5">
-                  <h3 className="text-base font-serif font-bold">{p.titleHi && hi ? p.titleHi : p.title}</h3>
+                  <h3 className="text-base font-serif font-bold">{hi && p.titleHi ? p.titleHi : p.title}</h3>
                   <div className="mt-3 space-y-3 text-xs leading-relaxed text-[#44403C] dark:text-[#D1C9BF]">
-                    <p className="border-l-2 border-[#8E6F1D] pl-3 font-medium">{p.traditionalClaim}</p>
-                    <p><strong className="text-[#8E6F1D] dark:text-[#F0C968]">{hi ? 'क्यों' : 'Why this matters'}: </strong>{p.explanation}</p>
-                    <p><strong className="text-emerald-700 dark:text-emerald-400">{hi ? 'प्रेरणा' : 'Motivation'}: </strong>{p.motivation}</p>
-                    <p><strong className="text-amber-700 dark:text-amber-300">{hi ? 'सावधानी' : 'Caution'}: </strong>{p.caution}</p>
-                    <p><strong className="text-[#8E6F1D] dark:text-[#F0C968]">Best possible scenario: </strong>{p.bestScenario}</p>
+                    <p className="border-l-2 border-[#8E6F1D] pl-3 font-medium">{hi ? p.traditionalClaimHi : p.traditionalClaim}</p>
+                    <p><strong className="text-[#8E6F1D] dark:text-[#F0C968]">{hi ? 'क्यों' : 'Why this matters'}: </strong>{hi ? p.explanationHi : p.explanation}</p>
+                    <p><strong className="text-emerald-700 dark:text-emerald-400">{hi ? 'प्रेरणा' : 'Motivation'}: </strong>{hi ? p.motivationHi : p.motivation}</p>
+                    <p><strong className="text-amber-700 dark:text-amber-300">{hi ? 'सावधानी' : 'Caution'}: </strong>{hi ? p.cautionHi : p.caution}</p>
+                    <p><strong className="text-[#8E6F1D] dark:text-[#F0C968]">{hi ? 'सर्वोत्तम संभव स्थिति' : 'Best possible scenario'}: </strong>{hi ? p.bestScenarioHi : p.bestScenario}</p>
                     <div className="flex flex-wrap items-center gap-3 border-t border-[#F0E6D2] dark:border-white/5 pt-3">
-                      <span className="font-semibold text-[#8E6F1D] dark:text-[#F0C968]"><AlertTriangle className="w-3.5 h-3.5 inline" /> {p.askAstrologer}</span>
+                      <span className="font-semibold text-[#8E6F1D] dark:text-[#F0C968]"><AlertTriangle className="w-3.5 h-3.5 inline" /> {hi ? p.askAstrologerHi : p.askAstrologer}</span>
                     </div>
                   </div>
                 </div>

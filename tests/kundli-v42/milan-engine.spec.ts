@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import {
   calculateMilan,
   milanInputFromSnapshot,
+  milanContextFromSnapshot,
   rashiLordByName,
   nakshatraDistance,
   rashiDistance,
@@ -80,8 +81,67 @@ test.describe('Milan engine — classical 36-guna tables', () => {
       expect(p.caution.length).toBeGreaterThan(10);
       expect(p.bestScenario.length).toBeGreaterThan(10);
       expect(p.askAstrologer.toLowerCase()).toContain('astrologer');
+      // Authored Hindi body prose is part of the v42 bilingual contract.
+      expect(p.explanationHi.length).toBeGreaterThan(20);
+      expect(p.motivationHi.length).toBeGreaterThan(10);
+      expect(p.cautionHi.length).toBeGreaterThan(10);
+      expect(p.bestScenarioHi.length).toBeGreaterThan(10);
+      expect(p.askAstrologerHi.length).toBeGreaterThan(10);
     }
     expect(r.sources.length).toBeGreaterThanOrEqual(3);
+  });
+
+  test('Rajju, Vedha and the chart-context dosha layer are reported', () => {
+    const r = calculateMilan(
+      { rashiName: 'Taurus', nakshatraName: 'Rohini', pada: 1, rashiLord: 'Venus' },
+      { rashiName: 'Libra', nakshatraName: 'Swati', pada: 1, rashiLord: 'Venus' }
+    );
+    const rajju = r.supplementalDoshas.find((d) => d.id === 'rajju')!;
+    const vedha = r.supplementalDoshas.find((d) => d.id === 'vedha')!;
+    // Rohini = Kantha, Swati = Kantha => active Rajju.
+    expect(rajju.active).toBe(true);
+    // Rohini ↔ Swati is a classical Vedha pair.
+    expect(vedha.active).toBe(true);
+    expect(r.synthesis.navamsha.status).toBe('UNKNOWN');
+    expect(r.predictions.map((p) => p.id)).toContain('synthesis');
+  });
+
+  test('same nakshatra different pada cancels Rajju in the same rashi', () => {
+    const r = calculateMilan(taurusRohini1, taurusRohini2);
+    const rajju = r.supplementalDoshas.find((d) => d.id === 'rajju')!;
+    expect(rajju.active).toBe(false); // cancelled doshas are not "active" in the engine's model
+    expect(rajju.cancelled).toBe(true);
+  });
+
+  test('Kala Sarpa is detected from a planets array on one side of the node axis', () => {
+    const planets = [
+      { name: 'Sun', longitude: 20 },
+      { name: 'Moon', longitude: 30 },
+      { name: 'Mars', longitude: 40 },
+      { name: 'Mercury', longitude: 50 },
+      { name: 'Jupiter', longitude: 60 },
+      { name: 'Venus', longitude: 70 },
+      { name: 'Saturn', longitude: 80 },
+      { name: 'Rahu', longitude: 10 },
+      { name: 'Ketu', longitude: 150 },
+    ];
+    const r = calculateMilan(taurusRohini1, taurusRohini2, {
+      brideCtx: { planetsArray: planets },
+      groomCtx: {},
+    });
+    const ks = r.supplementalDoshas.find((d) => d.id === 'kalsarpa')!;
+    expect(ks.active).toBe(true);
+    expect(r.synthesis.kalaSarpa.brideActive).toBe(true);
+    expect(r.synthesis.kalaSarpa.groomActive).toBe(false);
+  });
+
+  test('D9 and seventh-house contexts feed the synthesis', () => {
+    const r = calculateMilan(taurusRohini1, taurusRohini2, {
+      brideCtx: { d9MoonRashiName: 'Virgo', d9MoonRashiId: 6, seventhHouseName: 'Virgo', seventhHouseLord: 'Mercury' },
+      groomCtx: { d9MoonRashiName: 'Virgo', d9MoonRashiId: 6, seventhHouseName: 'Virgo', seventhHouseLord: 'Mercury' },
+    });
+    expect(r.synthesis.navamsha.status).toBe('ALIGNED');
+    expect(r.synthesis.seventhHouse.status).toBe('STRONG');
   });
 });
 
@@ -123,5 +183,22 @@ test.describe('Milan engine — derived helpers', () => {
       birthPanchang: { nakshatra: { name: 'Rohini' } },
     });
     expect(person).toEqual({ rashiName: 'Taurus', nakshatraName: 'Rohini', pada: 3, rashiLord: 'Venus' });
+  });
+
+  test('milanContextFromSnapshot reads lagna, Mars, D9 and 7th house', () => {
+    const ctx = milanContextFromSnapshot({
+      lagna: { rashiId: 1, rashiName: 'Aries' },
+      planetsArray: [{
+        name: 'Mars', house: 7, rashiId: 7, longitude: 200, rashiName: 'Libra', dignity: 'Enemy',
+      }],
+      houses: [{ number: 7, rashiId: 7, rashiName: 'Libra' }],
+      vargas: { d9Navamsha: [{ planet: 'Moon', navamshaRashi: 'Virgo', navamshaRashiId: 6 }] },
+      yogasAndDoshas: { manglik: { isManglik: true, severity: 'HIGH', causeHouse: 7, isCancelled: false } },
+    });
+    expect(ctx.marsHouse).toBe(7);
+    expect(ctx.seventhHouseName).toBe('Libra');
+    expect(ctx.seventhHouseLord).toBe('Venus');
+    expect(ctx.d9MoonRashiName).toBe('Virgo');
+    expect(ctx.manglik?.isManglik).toBe(true);
   });
 });

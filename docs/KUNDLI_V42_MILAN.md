@@ -64,25 +64,43 @@ The prediction text is always:
 Every block is framed as a traditional reading, not an absolute prediction.
 The paid CTA routes to `/ask?focus=milan&mode=detailed`.
 
+## What was added in the second increment
+
+- **Supplemental Dosha layer** (`supplementalDoshas`): Mangal Dosha (from the
+  canonical `yogasAndDoshas.manglik` plus Mars house from Lagna/Moon/Venus),
+  Rajju (South-Indian / Porutham 5-body-zone table + sign/pada cancellations),
+  Vedha (14 bidirectional nakshatra pairs), and Kala Sarpa (Rahu-Ketu axis
+  side check from `planetsArray`).
+- **Deeper-chart synthesis** (`synthesis`): D9 Navamsha Moon, 7th-house
+  sign/lord, Venus/Jupiter marriage karakas, and the combined traditional
+  verdict — displayed and printed, and always honest about what data was
+  provided vs. not.
+- **Full authored Hindi prediction prose** (`explanationHi`, `motivationHi`,
+  `cautionHi`, `bestScenarioHi`, `askAstrologerHi`) for every prediction block;
+  the UI and the PDF now render complete Hindi text in `hi`/`hi-en`.
+- `milanInputFromSnapshot`/`milanContextFromSnapshot` now map canonical
+  Sanskrit rashi names (`Mesha` etc.) to English (`Aries`) so the Milan tables
+  are fed correctly, and they pull D9 / 7th-house / karaka context.
+
 ## Known limits / next steps (handoff)
 
-1. **Hindi PDF body is partial.** The PDF renders Hindi titles/summaries and
-   Devanagari shaping is real, but the detailed English-only prediction
-   explanations are printed as-is for `hi`/`hi-en`. Full authored Hindi body
-   prose is the next increment (`predictionBlocks` currently has only
-   `traditionalClaimHi`; add `explanationHi`, `motivationHi`, `cautionHi`,
-   `bestScenarioHi`, `askAstrologerHi`).
-2. **PDF page count header is `0`.** The current renderer does not post-count
-   pages; a soft gate could read the PDF with `inspectPdf` (as MR tests do) and
-   emit the real count in `X-Milan-Pages`.
-3. **Mangal Dosha / Rajju / Vedha / Kala Sarpa / D9 synthesis** are not yet in
-   the Milan report. The CTA already says they are part of the full consult.
-   Next step is an engine that takes both snapshots and runs these doshas.
-4. **Client-side "print/preview" parity.** The report currently computes on
-   the client for the interactive truth; the qualified PDF path is the server
-   route. A D9 / whole-chart Milan preview would be the natural next step.
+1. **PDF page count header is still `0`.** The current renderer does not
+   post-count pages; a soft gate could read the PDF with `inspectPdf` (as MR
+   tests do) and emit the real count in `X-Milan-Pages`.
+2. **Rajju uses the South-Indian/Porutham classification** (5 body zones) and
+   is reported as a *supplemental* dosha, not part of the 36-guna score. A
+   North-Indian variant / regional switcher would be a future option.
+3. **Mangal Dosha cancellation is deliberately conservative.** The engine
+   reads the canonical Manglik verdict; a full Mangal-dosha cancellation
+   matrix (own/exaltation, Mars in certain signs/houses, D9, etc.) is a
+   future increment.
+4. **Client-side "print/preview" parity.** The report computes on the client
+   for the interactive truth; the qualified PDF path is the server route. A
+   whole-chart side-by-side Milan preview is the natural next step.
 5. **Rate limit** is 24/min (higher than the Master PDF 12/min because Milan
    is lighter); revisit if the endpoint is exercised by bots.
+
+## How to run
 
 ## How to run
 

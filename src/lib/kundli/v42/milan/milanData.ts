@@ -195,6 +195,43 @@ export function nakshatraIndex(name: string): number {
   return NAKSHATRA_NAMES.indexOf(name) + 1;
 }
 
+export type RajjuGroup = 'Shiro' | 'Kantha' | 'Udara' | 'Kati' | 'Pada';
+
+/** South-Indian / Porutham-style Rajju. Not part of the 36-Guna score. */
+export const RAJJU_BY_NAKSHATRA: Record<string, RajjuGroup> = {
+  Mrigashira: 'Shiro', Chitra: 'Shiro', Dhanishta: 'Shiro',
+  Rohini: 'Kantha', Ardra: 'Kantha', Hasta: 'Kantha', Swati: 'Kantha', Shatabhisha: 'Kantha',
+  Krittika: 'Udara', Punarvasu: 'Udara', 'Uttara Phalguni': 'Udara', Vishakha: 'Udara', 'Uttara Ashadha': 'Udara',
+  Bharani: 'Kati', Pushya: 'Kati', 'Purva Phalguni': 'Kati', Anuradha: 'Kati', 'Purva Ashadha': 'Kati',
+  Ashwini: 'Pada', Ashlesha: 'Pada', Magha: 'Pada', Jyeshtha: 'Pada', Mula: 'Pada', Shravana: 'Pada', Revati: 'Pada', 'Purva Bhadrapada': 'Pada', 'Uttara Bhadrapada': 'Pada',
+};
+
+export const RAJJU_ORDER: RajjuGroup[] = ['Shiro', 'Kantha', 'Udara', 'Kati', 'Pada'];
+
+export function rajjuOf(nakshatra: string): RajjuGroup | undefined {
+  return RAJJU_BY_NAKSHATRA[nakshatra];
+}
+
+/** The 14 classical Vedha pairs (bidirectional). */
+export const VEDHA_PAIRS: Array<[string, string]> = [
+  ['Ashwini', 'Jyeshtha'],
+  ['Bharani', 'Anuradha'],
+  ['Krittika', 'Vishakha'],
+  ['Rohini', 'Swati'],
+  ['Mrigashira', 'Dhanishta'],
+  ['Ardra', 'Shravana'],
+  ['Punarvasu', 'Uttara Ashadha'],
+  ['Pushya', 'Purva Ashadha'],
+  ['Ashlesha', 'Mula'],
+  ['Magha', 'Revati'],
+  ['Purva Phalguni', 'Uttara Bhadrapada'],
+  ['Uttara Phalguni', 'Purva Bhadrapada'],
+  ['Hasta', 'Shatabhisha'],
+];
+
+/** Houses (from Lagna) where Mars creates Mangal Dosha. */
+export const MANGAL_HOUSES = [1, 4, 7, 8, 12];
+
 export const SOURCE_LABELS: Record<string, string> = {
   BPHS: 'Brihat Parashara Hora Shastra (Ashtakoota doctrine)',
   PHALA: 'Phaladeepika',
