@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   Download, Printer, Shield, Sparkles, CheckCircle2, ArrowRight,
   Edit3, AlertTriangle, Heart, BookOpen, FileText, Phone, Star,
-  LayoutDashboard, Layers, Workflow,
+  LayoutDashboard, Layers, Workflow, MessageSquare, Calendar,
 } from 'lucide-react';
 import { getCanonicalJyotishSnapshot } from '@/lib/jyotish/canonicalSnapshot';
 import { calculateMilan, milanInputFromSnapshot, milanContextFromSnapshot, MilanCalculation, MilanPersonInput } from '@/lib/kundli/v42/milan/milanEngine';
@@ -253,6 +253,11 @@ export default function MilanReportClient() {
               </button>
             ))}
           </div>
+          {calc && (
+            <button onClick={() => router.push('/ask?focus=milan&mode=detailed')} className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg bg-[#D4AF37] text-[#060709] hover:bg-[#F0C968] transition-colors">
+              <MessageSquare className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{hi ? 'पंडित से पूछें' : 'Ask a Pandit'}</span>
+            </button>
+          )}
           <button onClick={print} disabled={isGeneratingPdf} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-[#8E6F1D]/30 text-[#8E6F1D] dark:text-[#F0C968] bg-white dark:bg-[#121422]">
             <Printer className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{hi ? 'प्रिंट / पीडीएफ़' : 'Print / PDF'}</span>
           </button>
@@ -339,14 +344,41 @@ export default function MilanReportClient() {
 
         {calc && (
           <>
+            {/* Novice orientation */}
+            <section className="rounded-2xl border border-[#8E6F1D]/25 bg-gradient-to-r from-amber-50 via-white to-amber-50 dark:from-[#241D10] dark:via-[#161828] dark:to-[#241D10] p-4 sm:p-5">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-[#8E6F1D]/10 border border-[#8E6F1D]/30 flex items-center justify-center text-[#8E6F1D] dark:text-[#F0C968]">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-[220px]">
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968]">{hi ? 'आसान भाषा में' : 'In plain words'}</h2>
+                  <p className="text-[11px] sm:text-xs text-[#57534E] dark:text-[#D1C9BF] mt-1 leading-relaxed">
+                    {hi
+                      ? 'यह आपके दोनों चन्द्र-चार्ट का पारंपरिक मिलान है — 36 में से एक अंक। अच्छा अंक प्रोत्साहन है; कम अंक या दोष कोई फैसला नहीं, बल्कि पूछने का न्योता है।'
+                      : 'This is a traditional match test between your two Moon charts, scored out of 36. A high score is encouraging; a lower score or a dosha is not a verdict — it is an invitation to ask.'}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    hi ? '36-गुण स्कोर' : '36-guna score',
+                    hi ? '8 कूट' : '8 kootas',
+                    hi ? '4 दोष' : '4 doshas',
+                    hi ? 'D9 + सप्तम भाव' : 'D9 + 7th house',
+                  ].map((chip) => (
+                    <span key={chip} className="px-2 py-1 rounded-lg text-[10px] font-bold bg-white dark:bg-[#121422] border border-[#E5D7BC] dark:border-white/10 text-[#78716C] dark:text-[#A8A29E]">{chip}</span>
+                  ))}
+                </div>
+              </div>
+            </section>
+
             {/* Section tabs (parity with Master Kundli report's O / FOLIO / WORKBENCH) */}
             <section className="bg-white dark:bg-[#121422] rounded-2xl border border-[#E5D7BC] dark:border-white/10 shadow-sm p-3 print:hidden">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5" role="tablist" aria-label="Milan report section">
                   {([
                     ['OVERVIEW', 'Overview', LayoutDashboard, hi ? 'अवलोकन' : ''],
-                    ['FOLIO', 'Folio', Layers, hi ? 'फोलियो' : ''],
-                    ['WORKBENCH', 'Workbench', Workflow, hi ? 'कार्यक्षेत्र' : ''],
+                    ['FOLIO', 'Full reading', Layers, hi ? 'पूरा पाठ' : ''],
+                    ['WORKBENCH', 'Explore deeper', Workflow, hi ? 'गहरे में देखें' : ''],
                   ] as const).map(([id, label, Icon, labelHi]) => (
                     <button
                       key={id} type="button" role="tab" aria-selected={activeTab === id}
@@ -481,13 +513,43 @@ export default function MilanReportClient() {
                       </p>
                       <div className="flex flex-wrap gap-2 pt-1">
                         <button onClick={() => { chitiSensory.playTick(); setActiveTab('WORKBENCH'); }} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-[#8E6F1D]/30 text-[#8E6F1D] dark:text-[#F0C968]">
-                          <Workflow className="w-3.5 h-3.5" /> {hi ? 'कार्यक्षेत्र में देखें' : 'Open in Workbench'}
+                          <Workflow className="w-3.5 h-3.5" /> {hi ? 'गहरे में देखें' : 'Explore deeper'}
                         </button>
                         <button onClick={() => router.push('/ask?focus=milan&mode=detailed')} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-[#8E6F1D] text-white">
                           <Phone className="w-3.5 h-3.5" /> {hi ? 'परामर्श बुक करें' : 'Book consultation'}
                         </button>
                       </div>
                     </div>
+                  </div>
+                </section>
+
+                {/* Novice curiosity: what the Pandit call actually adds */}
+                <section className="rounded-2xl border border-[#D4AF37]/40 bg-gradient-to-r from-[#241D10] to-[#3A2C14] dark:from-[#131510] dark:to-[#1C2312] p-5 sm:p-6 text-amber-50">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div className="max-w-xl">
+                      <h2 className="font-serif font-bold text-lg text-amber-100">{hi ? 'अब क्या? पंडित कॉल में क्या मिलेगा' : 'Still curious? What a Pandit call adds'}</h2>
+                      <p className="text-[11px] text-amber-200/80 mt-1.5 leading-relaxed">
+                        {hi
+                          ? 'यह स्कोर केवल चन्द्र और कूट पढ़ता है। पंडित पूरी कुंडली, दशा, D9, सप्तम भाव और उपाय एक साथ देखते हैं।'
+                          : 'This score reads the Moon and the eight kootas. A Pandit reads the whole chart — the dashas, D9, seventh house, dosha remedies and family context together.'}
+                      </p>
+                    </div>
+                    <button onClick={() => router.push('/ask?focus=milan&mode=detailed')} className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl bg-[#D4AF37] text-[#060709] hover:bg-[#F0C968] transition-colors">
+                      <Phone className="w-4 h-4" /> {hi ? 'पंडित से बात करें' : 'Talk to a Pandit'} <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-[11px]">
+                    {[
+                      { icon: Calendar, en: 'Marriage timing from dashas', hi: 'दशा से विवाह समय' },
+                      { icon: BookOpen, en: 'D9, 7th house & karakas', hi: 'D9, सप्तम भाव और कारक' },
+                      { icon: Shield, en: 'Dosha remedies if needed', hi: 'दोष के उपाय (यदि आवश्यक)' },
+                      { icon: MessageSquare, en: 'Your personal questions', hi: 'आपके निजी प्रश्न' },
+                    ].map((b) => (
+                      <div key={b.en} className="rounded-xl border border-amber-200/20 bg-black/10 p-3">
+                        <b.icon className="w-4 h-4 text-[#F0C968] mb-1.5" />
+                        <div className="font-semibold text-amber-100">{hi ? b.hi : b.en}</div>
+                      </div>
+                    ))}
                   </div>
                 </section>
               </section>
@@ -701,16 +763,28 @@ export default function MilanReportClient() {
               <p className="font-serif font-bold text-xl text-amber-100">{hi ? 'इसे पूरे विवरण के साथ समझें' : 'Understand this in full detail'}</p>
               <p className="text-xs text-amber-200/80 mt-2 max-w-2xl mx-auto leading-relaxed">
                 {hi
-                  ? 'हमारे ज्योतिषी D9 नवांश, सातवें भाव, मंगल दोष, राज्जु-वेध और कालसर्प को साथ देखते हैं। आज ही एक विस्तृत मिलान परामर्श बुक करें।'
-                  : 'Our astrologer reads the D9 Navamsha, the seventh house, Mangal Dosha, Rajju, Vedha and Kala Sarpa together with the eight kootas. Book a detailed Milan consultation to understand this reading in the full chart context.'}
+                  ? 'आपने अभी केवल पहला पन्ना देखा है। हमारे ज्योतिषी D9 नवांश, सातवें भाव, मंगल दोष, राज्जु-वेध और कालसर्प को दशा और उपाय के साथ पढ़ते हैं।'
+                  : 'You have only seen the first page. Our astrologer reads the D9 Navamsha, the seventh house, Mangal Dosha, Rajju, Vedha and Kala Sarpa together with the dashas and remedies.'}
               </p>
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2 max-w-2xl mx-auto text-[11px] text-left">
+                {[
+                  { icon: BookOpen, en: 'The full chart, not just 36 points', hi: 'पूरी कुंडली, केवल 36 अंक नहीं' },
+                  { icon: Calendar, en: 'When marriage is supported by the dashas', hi: 'दशाओं से शुभ विवाह-समय' },
+                  { icon: Shield, en: 'What a dosha needs (and what it does not)', hi: 'दोष का उपाय और उसकी सीमा' },
+                ].map((b) => (
+                  <div key={b.en} className="flex items-start gap-2 rounded-xl border border-amber-200/20 bg-black/10 p-3">
+                    <b.icon className="w-4 h-4 text-[#F0C968] shrink-0 mt-0.5" />
+                    <span className="text-amber-100">{hi ? b.hi : b.en}</span>
+                  </div>
+                ))}
+              </div>
               <button
                 onClick={() => router.push('/ask?focus=milan&mode=detailed')}
-                className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 text-xs font-bold rounded-xl bg-[#D4AF37] text-[#060709] hover:bg-[#F0C968] transition-colors"
+                className="mt-5 inline-flex items-center gap-2 px-6 py-2.5 text-xs font-bold rounded-xl bg-[#D4AF37] text-[#060709] hover:bg-[#F0C968] transition-colors"
               >
-                <Phone className="w-4 h-4" /> {hi ? 'परामर्श बुक करें' : 'Book consultation'} <ArrowRight className="w-4 h-4" />
+                <Phone className="w-4 h-4" /> {hi ? 'पंडित परामर्श बुक करें' : 'Book a Pandit consultation'} <ArrowRight className="w-4 h-4" />
               </button>
-              <p className="mt-2 text-[9px] font-mono-data text-amber-200/60">{hi ? 'विशेषज्ञ परामर्श · मार्गदर्शन, भविष्यवाणी नहीं' : 'Expert guidance · a traditional reading, not a promise'}</p>
+              <p className="mt-2 text-[9px] font-mono-data text-amber-200/60">{hi ? 'विशेषज्ञ मार्गदर्शन · पारंपरिक पाठ, वादा नहीं' : 'Expert guidance · a traditional reading, not a promise'}</p>
             </section>
 
             {/* PDF action band */}

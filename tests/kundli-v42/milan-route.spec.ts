@@ -142,16 +142,19 @@ test.describe('MILAN_KUNDLI_CURRENT_RENDERER', () => {
     await page.getByRole('button', { name: /Calculate Milan/i }).click({ timeout: 20_000 });
     // Chart-first Overview tab (Master report parity), then the Folio reading.
     await expect(page.getByRole('tab', { name: /Overview/i })).toBeVisible();
-    await expect(page.getByRole('tab', { name: /Folio/i })).toBeVisible();
-    await expect(page.getByRole('tab', { name: /Workbench/i })).toBeVisible();
+    await expect(page.getByRole('tab', { name: /Full reading/i })).toBeVisible();
+    await expect(page.getByRole('tab', { name: /Explore deeper/i })).toBeVisible();
+    // Novice orientation + always-visible Pandit CTA.
+    await expect(page.getByRole('heading', { name: /In plain words/i })).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole('button', { name: /Ask a Pandit/i })).toBeVisible();
     // Complete classical dosha layer is surfaced on Overview (not just Folio).
     await expect(page.getByRole('heading', { name: /Complete classical Milan dosha layer/i })).toBeVisible({ timeout: 20_000 });
-    await page.getByRole('tab', { name: /Workbench/i }).click();
+    await page.getByRole('tab', { name: /Explore deeper/i }).click();
     await expect(page.getByRole('heading', { name: /Koota workbench/i })).toBeVisible();
     await expect(page.getByRole('heading', { name: /Deeper-chart synthesis/i })).toBeVisible();
-    await page.getByRole('tab', { name: /Folio/i }).click();
+    await page.getByRole('tab', { name: /Full reading/i }).click();
     await expect(page.getByRole('group', { name: 'Reading depth' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Traditional reading — explanation, motivation, then ask' })).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByRole('button', { name: /Book consultation/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Book a Pandit consultation/i })).toBeVisible();
   });
 });

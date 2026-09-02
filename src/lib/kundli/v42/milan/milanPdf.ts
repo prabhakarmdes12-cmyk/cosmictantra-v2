@@ -379,7 +379,17 @@ export async function generateMilanPdf(
   for (const p of paras) {
     y = drawParagraph(s, p, ML, y, CW, V3.typography.sizes.body, SERIF) + V3.spacing.blockGapMm;
   }
-  footer(s, calc, 'Sources', s.pageCount);
+
+  y += 4;
+  y = drawLabel(s, locale === 'hi' ? 'अगला कदम — पंडित से पूछें' : 'NEXT STEP — ASK OUR PANDIT', ML, y) + 2;
+  y = drawParagraph(
+    s,
+    locale === 'hi'
+      ? 'यह पाठ केवल पहला पन्ना है। पूर्ण D9, सप्तम भाव, शुक्र/बृहस्पति, दशा और उपाय के लिए हमारे ज्योतिषी से एक विस्तृत मिलान परामर्श लें।'
+      : 'This reading is only the first page. For the full D9, seventh house, Venus / Jupiter, dasha and remedy context, ask our astrologer for a detailed Milan consultation.',
+    ML, y, CW, V3.typography.sizes.body, SERIF, V3.colors.gold,
+  ) + V3.spacing.blockGapMm;
+  footer(s, calc, 'Sources · Next step', s.pageCount);
 
   return s.finish();
 }
