@@ -29,6 +29,7 @@ import { getCanonicalJyotishSnapshot } from '../../jyotish/canonicalSnapshot';
 import type { KundliCanonicalModel, PdfQualityReport, PdfRenderMetrics, RawBirthInput } from '../types';
 import { buildDerivedModel, type KundliDerivedModel } from './derivedModel';
 import { buildKundliReportModelV2, assertReportV2Completeness } from './reportModelV2';
+import { buildExecutiveInsights } from './executiveInsights';
 import { renderKundliPdfV2, type RenderV2Options } from './rendererV2';
 import type { KundliReportModelV2, V2Block } from './reportBlocks';
 
@@ -91,6 +92,10 @@ export function collectReportText(report: KundliReportModelV2): { where: string;
         case 'chart': push(where, [block.caption, ...(block.sideFacts ?? []).map((f) => `${f.label} ${f.value}`)].join(' ')); break;
         case 'statusList': push(where, [block.title, ...block.items.map((it) => `${it.label} ${it.status} ${it.note ?? ''}`)].filter(Boolean).join(' ')); break;
         case 'timeline': push(where, [block.caption, ...block.periods.map((pp) => `${pp.label} ${pp.start} ${pp.end}`)].join(' ')); break;
+        case 'gaugeGrid': push(where, [
+          block.title, block.caption, block.footnote,
+          ...block.items.map((it) => [it.label, it.axis, it.tier, it.evidence, it.note].filter(Boolean).join(' ')),
+        ].filter(Boolean).join(' ')); break;
         case 'notesArea': push(where, block.title); break;
         case 'callout': push(where, [block.title, block.text].filter(Boolean).join(' ')); break;
         default: break;
@@ -126,8 +131,13 @@ export async function generateKundliV40Pdf(
 
   /* GATE 2 */
   let canonical: KundliCanonicalModel;
+  /* The snapshot is hoisted out of the gate's try-block deliberately. The same
+   * astronomical truth that feeds the canonical model also feeds the
+   * presentation-parity layer at GATE 3a; computing it twice would allow the
+   * gauge to disagree with the chart printed beside it. */
+  let snapshot: ReturnType<typeof getCanonicalJyotishSnapshot> | null = null;
   try {
-    const snapshot = getCanonicalJyotishSnapshot({
+    snapshot = getCanonicalJyotishSnapshot({
       birthDate: profile.birthDate,
       birthTime: profile.birthTime,
       latitude: profile.coordinates.latitude,
@@ -160,10 +170,22 @@ export async function generateKundliV40Pdf(
     return failure('DERIVATION_FAILED', e);
   }
 
+  /* GATE 3a — presentation parity, and the one step in this pipeline that is
+   * allowed to fail silently.
+   *
+   * The six-dimension life gauge and the nine graha archetype quadrants are
+   * already on the /report screen. Printing them here keeps the download and
+   * the consultation page telling the same story from the same snapshot. But
+   * they are a PRESENTATION layer over GATE 2/GATE 3 truth: if they cannot be
+   * built, the report omits those blocks and still delivers a complete,
+   * validated Kundli. A missing gauge is a smaller harm than a failed
+   * download, so this never returns a failure state. */
+  const executive = snapshot ? buildExecutiveInsights(snapshot) : null;
+
   /* GATE 3b + 3c */
   let report: KundliReportModelV2;
   try {
-    report = buildKundliReportModelV2(canonical, derived, locale);
+    report = buildKundliReportModelV2(canonical, derived, locale, executive);
     assertReportV2Completeness(report);
   } catch (e) {
     return failure('REPORT_INCOMPLETE', e);

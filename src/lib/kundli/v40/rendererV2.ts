@@ -21,6 +21,7 @@ import type {
   KundliReportModelV2, V2Block, V2Section,
   TableBlockV2, KvGridBlock, StatusListBlock, TimelineBlock, NotesAreaBlock,
   CalloutBlockV2, ChartBlockV2, CoverBlock, PartDividerBlock, SectionTitleBlock,
+  GaugeGridBlock,
 } from './reportBlocks';
 
 const PW = T.page.widthMm;
@@ -714,6 +715,73 @@ export async function renderKundliPdfV2(
     return consumed + T.spacing.blockGapMm;
   };
 
+  /* Legacy renderer: the same block, drawn with the v2 timeline's bar grammar.
+   * Geometry only — score/max of the track — with every string taken from the
+   * block, so the fallback cannot drift from what renderer v3 prints. */
+  const renderGaugeGrid = (b: GaugeGridBlock): number => {
+    const labelW = 52;
+    const scoreW = 15;
+    const barH = 2.4;
+    const gap = 1.8;
+    const trackW = CW - scoreW - 2;
+    const max = b.max && b.max > 0 ? b.max : 100;
+    let consumed = 0;
+
+    if (b.title) consumed += renderHeading(3, b.title);
+    if (b.caption) consumed += renderParagraph(b.caption, 'micro');
+
+    for (const item of b.items) {
+      const evidenceH = item.evidence
+        ? measureText(item.evidence, CW - scoreW, T.typography.sizes.micro, false, 3.4) + gap
+        : 0;
+      const noteH = item.note ? measureText(item.note, CW - 4, T.typography.sizes.micro, false, 3.4) + 1.2 : 0;
+      const h = T.spacing.tightLineMm + barH + gap + evidenceH + noteH + 3.0;
+      controller.ensureFits(Math.min(h, controller.usableHeight - 1), createPage);
+      const y = controller.cursorY;
+
+      drawText(item.label, ML, y, labelW, {
+        size: T.typography.sizes.small, bold: true, color: T.colors.ink, lineMm: T.spacing.tightLineMm,
+      });
+      if (item.tier) {
+        drawText(item.tier, ML + labelW + 4, y + 0.3, CW - labelW - 4, {
+          size: T.typography.sizes.micro, color: T.colors.inkSoft, lineMm: 3.4, align: 'right',
+        });
+      }
+
+      const barY = y + T.spacing.tightLineMm + 0.6;
+      const clamped = Math.max(0, Math.min(1, (item.score ?? 0) / max));
+      stroke(T.colors.rule);
+      doc.setLineWidth(T.rule.hairlineMm);
+      doc.rect(ML, barY, trackW, barH, 'S');
+      if (clamped > 0) {
+        fill(T.colors.goldFaint);
+        doc.rect(ML, barY, Math.max(0.6, trackW * clamped), barH, 'F');
+      }
+      drawText(`${item.score ?? 0}`, ML + trackW + 2, barY - 0.9, scoreW, {
+        size: T.typography.sizes.small, bold: true, color: T.colors.ink,
+        lineMm: T.spacing.tightLineMm, align: 'right',
+      });
+
+      let ty = barY + barH + gap;
+      if (item.evidence) {
+        ty += drawText(item.evidence, ML, ty, CW - scoreW, {
+          size: T.typography.sizes.micro, color: T.colors.inkSoft, lineMm: 3.4,
+        }) + gap;
+      }
+      if (item.note) {
+        drawText(item.note, ML + 4, ty, CW - 4, {
+          size: T.typography.sizes.micro, color: T.colors.ink, lineMm: 3.4,
+        });
+      }
+      controller.advance(h);
+      consumed += h;
+    }
+
+    if (b.footnote) consumed += renderParagraph(b.footnote, 'micro');
+    controller.advance(T.spacing.blockGapMm);
+    return consumed + T.spacing.blockGapMm;
+  };
+
   const renderTimeline = (b: TimelineBlock): number => {
     const labelW = 26;
     const dateW = 44;
@@ -846,6 +914,7 @@ export async function renderKundliPdfV2(
       case 'table': return renderTable(block);
       case 'chart': return renderChart(block);
       case 'statusList': return renderStatusList(block);
+      case 'gaugeGrid': return renderGaugeGrid(block);
       case 'timeline': return renderTimeline(block);
       case 'notesArea': return renderNotesArea(block);
       case 'callout': return renderCallout(block);

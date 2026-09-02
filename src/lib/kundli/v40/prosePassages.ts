@@ -258,6 +258,18 @@ export const PROSE_HI: Record<string, string> = {
   'D10 has not been compared against an external reference, so it is displayed for reference only and is used in no conclusion.':
     'दशांश का बाहरी प्रमाण से मिलान नहीं हुआ है; यह केवल संदर्भ के लिए दिखाया गया है और किसी निष्कर्ष में प्रयुक्त नहीं।',
 
+  /* ── Executive Life Gauge (V43 parity with the on-screen summary) ────── */
+  'Six readings of one chart. Each is built from the graha bala of its own significators and the Sarvashtakavarga bindus of the bhavas they rule — the same six dimensions the on-screen summary shows, printed here with the same numbers, so a consultation never reads a different chart from the one the seeker saw.':
+    'एक ही कुण्डली के छह पाठ। प्रत्येक अपने कारक ग्रहों के बल तथा उनके शासित भावों के सर्व अष्टकवर्ग बिन्दुओं से बना है — वे ही छह आयाम जो स्क्रीन सारांश दिखाता है, यहाँ उन्हीं अंकों के साथ मुद्रित हैं, ताकि परामर्श में वह कुण्डली कभी न पढ़ी जाए जो साधक ने देखी थी उससे भिन्न हो।',
+  'The classical axis beside each dimension is the traditional purushartha reading of that dimension\'s own significators. It adds no score and no new fact. Vidya and Arogya are read from the fifth and sixth bhavas in the Bhava Intelligence Matrix.':
+    'प्रत्येक आयाम के साथ दी गई शास्त्रीय धुरी उन्हीं कारकों का पारम्परिक पुरुषार्थ-पाठ है। यह न कोई नया अंक जोड़ती है, न कोई नया तथ्य। विद्या एवं आरोग्य का पाठ भाव विश्लेषण में पंचम और षष्ठ भाव से किया जाता है।',
+  'How far these readings go':
+    'इन पाठों की सीमा',
+  'The strength ratios behind these six readings are computed but have not yet been checked against an external reference, so they orient a conversation rather than settle one. Nothing here is a prediction: no event, no timing and no verdict is claimed, and no dimension overrides the calculated chart facts printed in this folio.':
+    'इन छह पाठों के पीछे के बल-अनुपात गणित हैं, किन्तु बाहरी प्रमाण से उनकी तुलना अभी शेष है; अतः ये चर्चा को दिशा देते हैं, निर्णय नहीं करते। यहाँ कुछ भी भविष्यकथन नहीं है — न कोई घटना, न काल, न अन्तिम मत; और कोई आयाम इस प्रति में मुद्रित गणित कुण्डली-तथ्यों को नहीं बदलता।',
+  'These four quadrants are the classical karakatva of each graha, printed beside this chart\'s own placement of it in the table above. They are traditional guidance keyed to the nature of the graha — not an individualised prediction and not a timing. An upaaya is offered as practice, never as a promised result.':
+    'ये चतुष्क प्रत्येक ग्रह का शास्त्रीय कारकत्व हैं, जो ऊपर की सारणी में इसी कुण्डली में उसके स्थान के साथ मुद्रित हैं। ये ग्रह-स्वभाव पर आधारित पारम्परिक मार्गदर्शन हैं — न व्यक्तिगत भविष्यकथन, न काल-निर्देश। उपाय साधना हेतु है, किसी प्रत्याशित फल हेतु नहीं।',
+
 };
 
 /**

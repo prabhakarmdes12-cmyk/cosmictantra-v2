@@ -159,6 +159,21 @@ function visibleStrings(block: V2Block): { field: string; text: string }[] {
     case 'timeline':
       add('caption', block.caption);
       break;
+    case 'gaugeGrid':
+      // Every field a reader can see: the row label, the classical axis it
+      // is read through, the tier word, the evidence line and the guidance
+      // note. `score` is a number and needs no translation.
+      add('title', block.title);
+      add('caption', block.caption);
+      block.items.forEach((it, i) => {
+        add(`items[${i}].label`, it.label);
+        add(`items[${i}].axis`, it.axis);
+        add(`items[${i}].tier`, it.tier);
+        add(`items[${i}].evidence`, it.evidence);
+        add(`items[${i}].note`, it.note);
+      });
+      add('footnote', block.footnote);
+      break;
     case 'notesArea':
       add('title', block.title);
       break;
