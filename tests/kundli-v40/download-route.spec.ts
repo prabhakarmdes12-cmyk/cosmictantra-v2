@@ -237,15 +237,24 @@ test.describe('DOWNLOAD_KUNDLI_CURRENT_RENDERER', () => {
     const printStart = src.indexOf('const handlePrint');
     const printHandler = src.slice(printStart, src.indexOf('return (', printStart));
     const localeSelector = src.slice(src.indexOf('aria-label="Qualified PDF language"') - 500, src.indexOf('aria-label="Qualified PDF language"') + 1800);
+    const editionSelector = src.slice(src.indexOf('aria-label="Qualified PDF edition"') - 500, src.indexOf('aria-label="Qualified PDF edition"') + 2000);
 
     expect(sharedRequest).toContain("fetch('/api/kundli/pdf'");
     expect(sharedRequest).toContain('locale: pdfLocale');
+    expect(sharedRequest).toContain('mode: pdfMode');
     expect(sharedRequest).toContain('printWindow.location.replace(objectUrl)');
     expect(printHandler).toContain("requestQualifiedPdf('print', printWindow)");
     expect(src).not.toContain('window.print()');
     expect(localeSelector).toContain('flex shrink-0 items-center');
     expect(localeSelector).not.toContain('hidden md:flex');
     expect(localeSelector).toContain("['hi-en', 'हि + EN', 'Hindi-English bilingual PDF']");
+    // A novice must be able to choose the Client Reading from the toolbar; the
+    // mode is a real request-payload switch, not a display-only toggle.
+    expect(editionSelector).toContain('aria-label="Qualified PDF edition"');
+    expect(editionSelector).toContain('setPdfMode');
+    expect(editionSelector).toContain("['CLIENT'");
+    expect(editionSelector).toContain("['SCHOLAR'");
+    expect(editionSelector).not.toContain('hidden md:flex');
   });
 
   test('DKCR-14: v1 is preserved, not deleted', async () => {

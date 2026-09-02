@@ -60,6 +60,13 @@ const KUNDLI_UI: Record<string, { en: string; hi: string }> = {
   simple: { en: 'Simple', hi: 'सरल' },
   detailed: { en: 'Detailed', hi: 'विस्तृत' },
   scholarly: { en: 'Scholarly', hi: 'विद्वत्' },
+  edition: { en: 'Edition', hi: 'संस्करण' },
+  client: { en: 'Client', hi: 'जातक' },
+  pandit: { en: 'Pandit', hi: 'पण्डित' },
+  scholar: { en: 'Scholar', hi: 'शास्त्री' },
+  clientEdition: { en: 'Client Reading — plain, for the chart owner', hi: 'जातक पाठ — सरल, मालिक के लिए' },
+  panditEdition: { en: 'Pandit Workbench — full chart intelligence', hi: 'पण्डित कार्यपत्र — सम्पूर्ण कुण्डली विवेचन' },
+  scholarEdition: { en: 'Scholar Edition — workbook + evidence appendix', hi: 'शास्त्री संस्करण — कार्यपत्र + प्रमाण परिशिष्ट' },
   editDetails: { en: 'Edit Details', hi: 'विवरण बदलें' },
   editTitle: { en: 'Edit Birth Details', hi: 'जन्म विवरण बदलें' },
   print: { en: 'PRINT / SAVE PDF', hi: 'प्रिंट / पीडीएफ़ सेव करें' },
@@ -211,6 +218,10 @@ export default function MasterKundliReportClient() {
   // PDF language is intentionally narrower than the site-wide chrome locale:
   // the qualified V3 report currently supports these three authored editions.
   const [pdfLocale, setPdfLocale] = useState<'en' | 'hi' | 'hi-en'>('en');
+  // Audience edition for the qualified PDF. Default remains SCHOLAR so that a
+  // first-time reader gets the full, verifiable document, but a novice can now
+  // choose the 11-page Client Reading instead of never seeing it.
+  const [pdfMode, setPdfMode] = useState<'CLIENT' | 'PANDIT' | 'SCHOLAR'>('SCHOLAR');
   const [isLangModalOpen, setIsLangModalOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
@@ -615,7 +626,7 @@ export default function MasterKundliReportClient() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           birth: raw,
-          mode: 'SCHOLAR',
+          mode: pdfMode,
           locale: pdfLocale,
         }),
       });
@@ -823,7 +834,35 @@ export default function MasterKundliReportClient() {
             </div>
           )}
 
-          {/*
+          {/* Audience edition for the qualified server PDF. This is the gate
+              that decides whether a novice receives the 11-page Client Reading
+              or a 38-page Scholar workbook, so it must stay reachable on
+              mobile exactly as the language selector does. */}
+          <div
+            className="flex shrink-0 items-center rounded-lg border border-[#E5D7BC] dark:border-white/10 bg-white dark:bg-[#121422] p-0.5"
+            role="group"
+            aria-label="Qualified PDF edition"
+          >
+            {([
+              ['CLIENT', t('client'), t('clientEdition')],
+              ['PANDIT', t('pandit'), t('panditEdition')],
+              ['SCHOLAR', t('scholar'), t('scholarEdition')],
+            ] as const).map(([mode, label, accessibleLabel]) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => { chitiSensory.playTick(); setPdfMode(mode); }}
+                aria-label={accessibleLabel}
+                aria-pressed={pdfMode === mode}
+                title={accessibleLabel}
+                className={`px-2 py-1 text-[10px] font-bold rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8E6F1D] focus-visible:ring-offset-1 ${pdfMode === mode ? 'bg-[#8E6F1D] text-white dark:bg-[#D4AF37] dark:text-[#060709]' : 'text-[#78716C] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#EFECE6]'}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* 
             Keep this selector in the mobile toolbar as well as on desktop.
             `hi-en` changes the qualified server-PDF payload; it is not a
             display-only translation toggle, so hiding it below `md` made the
@@ -1230,7 +1269,7 @@ export default function MasterKundliReportClient() {
             <div>
               <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968]">Your Kundli PDF</h3>
               <p className="text-[11px] text-[#78716C] dark:text-[#A8A29E] mt-0.5">
-                Qualified V3 PDF. Choose English, हिन्दी, or a Hindi-English bilingual edition.
+                Qualified V3 PDF. Choose a {t('edition').toLowerCase()} ({t('client')} / {t('pandit')} / {t('scholar')}) and a language.
                 {lastPdfMeta && <span className="text-[#15803D] dark:text-emerald-400 font-semibold"> Last: {lastPdfMeta.pageCount} pages · {lastPdfMeta.fileSizeKB} KB · PASS</span>}
               </p>
             </div>
