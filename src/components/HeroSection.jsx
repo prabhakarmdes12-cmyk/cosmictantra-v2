@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   ArrowRight, 
@@ -21,6 +21,7 @@ import { TRANSLATIONS } from '../lib/translations';
 import { chitiSensory } from '../lib/chitiAudio';
 import { searchCities, DEFAULT_CITY } from '../lib/cities';
 import { getCurrentGpsLocation } from '../lib/location';
+import { getActiveProfile, upsertProfile, setActiveProfileId } from '../lib/profileStore';
 import CosmicNowDial from './visual/CosmicNowDial';
 
 export default function HeroSection({
@@ -49,6 +50,45 @@ export default function HeroSection({
     longitude: 85.1376,
     timezone: 5.5,
   });
+
+  // Prefill from user profile if active
+  useEffect(() => {
+    let p = null;
+    try {
+      p = getActiveProfile();
+    } catch {}
+    if (!p || !p.birthDate) {
+      try {
+        const saved = localStorage.getItem('cosmictantra_active_kundli');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.birthDate) {
+            p = {
+              name: parsed.name,
+              birthDate: parsed.birthDate,
+              birthTime: parsed.birthTime,
+              birthCity: parsed.city || parsed.locationName,
+              lat: parsed.latitude ?? parsed.birthLat,
+              lng: parsed.longitude ?? parsed.birthLon,
+              tz: parsed.timezone
+            };
+          }
+        }
+      } catch {}
+    }
+    if (p && p.birthDate && p.name && p.name !== 'Priya Sharma') {
+      setFormData(prev => ({
+        ...prev,
+        name: p.name || prev.name,
+        birthDate: p.birthDate || prev.birthDate,
+        birthTime: p.birthTime || prev.birthTime,
+        cityName: p.birthCity || prev.cityName,
+        latitude: Number.isFinite(p.lat) ? p.lat : prev.latitude,
+        longitude: Number.isFinite(p.lng) ? p.lng : prev.longitude,
+        timezone: Number.isFinite(p.tz) ? p.tz : prev.timezone,
+      }));
+    }
+  }, []);
 
   const [citySearchQuery, setCitySearchQuery] = useState('');
   const [showCityDropdown, setShowCityDropdown] = useState(false);
@@ -115,6 +155,17 @@ export default function HeroSection({
 
     try {
       localStorage.setItem('cosmictantra_active_kundli', JSON.stringify(payload));
+      const saved = upsertProfile({
+        name,
+        birthDate: dob,
+        birthTime: tob,
+        birthCity: city,
+        lat,
+        lng,
+        tz,
+        relation: 'Self'
+      });
+      setActiveProfileId(saved.id);
     } catch {}
 
     analytics.track(ANALYTICS_EVENTS.KUNDALI_GENERATED, {

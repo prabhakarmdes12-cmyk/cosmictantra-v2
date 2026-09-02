@@ -1198,6 +1198,23 @@ export default function FloatingAIGuruAvatar() {
       return;
     }
 
+    if (chip.action === 'NAV_REPORT_DOWNLOAD' || chip.action === 'NAV_REPORT') {
+      handleNavigate('/report');
+      return;
+    }
+    if (chip.action === 'OPEN_CHECKOUT_EXPLANATION' || chip.action === 'OPEN_CHECKOUT_WRITTEN') {
+      handleNavigate('/ask?tier=WRITTEN');
+      return;
+    }
+    if (chip.action === 'OPEN_CHECKOUT_VOICE') {
+      handleNavigate('/ask?tier=VOICE');
+      return;
+    }
+    if (chip.action === 'INTENT_ABHIJIT' || chip.action === 'INTENT_PANCHANG') {
+      void postGuru(chip.label);
+      return;
+    }
+
     if (chip.action === 'SELECT_DATE_SAMPLE') {
       if (intakeStep !== 'ASK_BIRTH_DATE') return;
       processDateInput(chip.label, true); // explicit tap = already confirmed
@@ -1291,9 +1308,25 @@ export default function FloatingAIGuruAvatar() {
         birthCity: d.birthCity,
         lat: d.birthLat,
         lng: d.birthLon,
-        tz: d.birthTz,
+        tz: d.birthTz || 5.5,
       } as any);
       setActiveProfileId(saved.id);
+
+      // Keep cosmictantra_active_kundli synced for /report and all other Kundli calculations
+      if (typeof window !== 'undefined') {
+        const kundliPayload = {
+          name: d.name,
+          birthDate: d.birthDate,
+          birthTime: d.birthTime,
+          city: d.birthCity,
+          locationName: d.birthCity,
+          latitude: d.birthLat,
+          longitude: d.birthLon,
+          timezone: d.birthTz || 5.5,
+          source: 'SEEKER_INTAKE'
+        };
+        localStorage.setItem('cosmictantra_active_kundli', JSON.stringify(kundliPayload));
+      }
     } catch (err) {
       console.warn('Profile persist failed:', err);
     }
@@ -1673,14 +1706,14 @@ export default function FloatingAIGuruAvatar() {
       let dashaStr = 'चन्द्र • गुरु';
 
       try {
-        const dObj = seekerData.birthDate ? new Date(seekerData.birthDate) : new Date('1995-06-15');
-        const kundali = calculateKundali(
-          isNaN(dObj.getTime()) ? new Date('1995-06-15') : dObj,
-          seekerData.birthTime || '10:30',
-          seekerData.birthLat ?? 25.3176,
-          seekerData.birthLon ?? 82.9739,
-          seekerData.birthTz ?? 5.5
-        );
+        const kundali = calculateKundali({
+          birthDate: seekerData.birthDate || '1995-06-15',
+          birthTime: seekerData.birthTime || '10:30',
+          latitude: Number(seekerData.birthLat ?? 25.5941),
+          longitude: Number(seekerData.birthLon ?? 85.1376),
+          timezone: Number(seekerData.birthTz ?? 5.5),
+          locationName: seekerData.birthCity || 'Varanasi'
+        });
 
         if (kundali?.lagna?.rashiEn) {
           lagnaName = `${kundali.lagna.rashiName} (${kundali.lagna.rashiEn})`;
@@ -1734,16 +1767,16 @@ export default function FloatingAIGuruAvatar() {
               verified: true,
               experience: '३५+ वर्ष अनुभव • ५०,०००+ कुण्डली समाधान',
               tiers: [
-                { label: '📜 ₹501 लिखित परामर्श पत्र (PDF)', price: '₹501', mode: 'WRITTEN', href: '/ask' },
-                { label: '📞 ₹1,100 सभा (Web/Phone Sabha)', price: '₹1,100', mode: 'VOICE', href: '/ask' },
-                { label: '📹 ₹1,500 साक्षात् वीडियो दर्शन', price: '₹1,500', mode: 'VIDEO', href: '/ask' }
+                { label: '📥 ₹20 सम्पूर्ण कुण्डली PDF', price: '₹20', mode: 'KUNDLI_PDF', href: '/report' },
+                { label: '📜 ₹501 कुण्डली + 10-15m व्याख्या', price: '₹501', mode: 'WRITTEN', href: '/ask?tier=WRITTEN' },
+                { label: '📞 ₹1,100 सभा परामर्श (30m)', price: '₹1,100', mode: 'VOICE', href: '/ask?tier=VOICE' }
               ]
             },
             quickChips: [
-              { label: '📜 ₹501 लिखित विद्वत्-परामर्श पत्र (PDF)', action: 'OPEN_CHECKOUT_WRITTEN', href: '/ask' },
-              { label: '📞 ₹1,100 सभा परामर्श (Web/Phone)', action: 'OPEN_CHECKOUT_VOICE', href: '/ask' },
-              { label: '📹 ₹1,500 साक्षात् वीडियो दर्शन', action: 'OPEN_CHECKOUT_VIDEO', href: '/ask' },
-              { label: '🌸 आज का पञ्चाङ्ग विस्तार से देखें', action: 'INTENT_PANCHANG' },
+              { label: '📥 सम्पूर्ण कुण्डली PDF (₹20)', action: 'NAV_REPORT_DOWNLOAD', href: '/report' },
+              { label: '📜 ₹501 कुण्डली + 10-15 मिनट व्याख्या', action: 'OPEN_CHECKOUT_EXPLANATION', href: '/ask?tier=WRITTEN' },
+              { label: '📞 ₹1,100 सभा परामर्श (विद्वान् कॉल)', action: 'OPEN_CHECKOUT_VOICE', href: '/ask?tier=VOICE' },
+              { label: '✨ आज का गोचर व शुभ मुहूर्त', action: 'INTENT_ABHIJIT' },
             ],
           },
         ]);
@@ -2592,15 +2625,17 @@ export default function FloatingAIGuruAvatar() {
                 onTypeInstead={kashi.cancelListening}
               />
             )}
-            <KashiQuickActions
-              actions={kashi.quickActions}
-              onAction={(a) => {
-                if (a === 'रोकें') kashi.control('stop');
-                else if (a === 'आगे पढ़ें') kashi.control('advance');
-                else if (a === 'फिर से सुनाएं') kashi.control('repeat');
-                else if (a === 'केवल मुझसे बात करें') kashi.sendText('बस मुझसे बात करो');
-              }}
-            />
+            {Boolean(kashi.pendingVerse || kashi.session.passageRef || kashi.session.cursor > 0) && (
+              <KashiQuickActions
+                actions={kashi.quickActions}
+                onAction={(a) => {
+                  if (a === 'रोकें') kashi.control('stop');
+                  else if (a === 'आगे पढ़ें') kashi.control('advance');
+                  else if (a === 'फिर से सुनाएं') kashi.control('repeat');
+                  else if (a === 'केवल मुझसे बात करें') kashi.sendText('बस मुझसे बात करो');
+                }}
+              />
+            )}
           </div>
 
           {/* Persistent Audio Replay Control Bar */}

@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   Sparkles, 
   ShieldCheck, 
@@ -16,9 +16,11 @@ import {
   FileText, 
   Award, 
   Bot, 
-  Lock 
+  Lock,
+  Download
 } from 'lucide-react';
-import { getActiveProfile } from '@/lib/profileStore';
+import { getActiveProfile, upsertProfile, setActiveProfileId } from '@/lib/profileStore';
+import { searchCities } from '@/lib/cities';
 import TrustBar from '@/components/visual/TrustBar';
 import CosmicTantraShell from '@/components/layout/CosmicTantraShell';
 import AIGuruChatbotModal from '@/components/consultation/AIGuruChatbotModal';
@@ -43,12 +45,13 @@ function loadRazorpayCheckout() {
   return rzpScriptPromise;
 }
 
-export default function AskQuestionPage() {
+function AskQuestionContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [submitting, setSubmitting] = useState(false);
   const [showOtpHint, setShowOtpHint] = useState(false);
   const [isAiGuruOpen, setIsAiGuruOpen] = useState(false);
-  const [selectedTier, setSelectedTier] = useState<'WRITTEN' | 'VOICE' | 'VIDEO' | 'PARIVAAR'>('WRITTEN');
+  const [selectedTier, setSelectedTier] = useState<'KUNDLI_PDF' | 'WRITTEN' | 'VOICE' | 'VIDEO' | 'PARIVAAR'>('WRITTEN');
 
   const [form, setForm] = useState({
     customerName: '',
@@ -62,6 +65,14 @@ export default function AskQuestionPage() {
     timezone: 5.5,
     customerQuestion: '',
   });
+
+  // Sync tier from URL search parameter if present
+  useEffect(() => {
+    const t = searchParams?.get('tier');
+    if (t && (t === 'KUNDLI_PDF' || t === 'WRITTEN' || t === 'VOICE' || t === 'VIDEO' || t === 'PARIVAAR')) {
+      setSelectedTier(t as any);
+    }
+  }, [searchParams]);
 
   // Deliberately empty birth fields: prefilled birth data is how
   // wrong-person charts get generated. A sample button fills demo values.
@@ -78,38 +89,99 @@ export default function AskQuestionPage() {
   };
 
   const tierPricing: Record<string, { amount: number; titleHi: string; titleEn: string; desc: string }> = {
-    WRITTEN: { amount: 501, titleHi: 'लिखित विद्वत्-परामर्श पत्र', titleEn: 'Written Scholar Folio', desc: 'Verified PDF folio signed by Banaras scholar with planetary remedies' },
-    VOICE: { amount: 1100, titleHi: 'गोपनीय प्रत्यक्ष वॉयस कॉल (15m)', titleEn: 'Encrypted Voice Call (15m)', desc: 'CallMe4 E2EE Number-Masked Audio Call with senior Pandit' },
-    VIDEO: { amount: 1500, titleHi: 'साक्षात् वीडियो दर्शन (20m)', titleEn: 'HD Video Darshan Consult', desc: 'HD Video + Synchronized Live Kundali Review' },
-    PARIVAAR: { amount: 2100, titleHi: 'पारिवारिक कुण्डली महा-सत्र (30m)', titleEn: 'Parivaar Masterclass (30m)', desc: 'Full Family Multi-Chart Deep-Dive & Varshaphal' },
+    KUNDLI_PDF: { amount: 20, titleHi: 'सम्पूर्ण कुण्डली PDF डाउनलोड', titleEn: 'Full Kundli PDF Download', desc: '17 खण्डों में सम्पूर्ण जन्म कुण्डली, विंशोत्तरी दशा एवं खगोलीय ग्रह स्थिति PDF' },
+    WRITTEN: { amount: 501, titleHi: 'कुण्डली + 10-15 मिनट व्याख्या', titleEn: 'Kundli + 10-15m Pandit Explanation', desc: 'सम्पूर्ण कुण्डली PDF + वरिष्ठ विद्वान् द्वारा 10-15 मिनट व्यक्तिगत शास्त्रसम्मत विवेचन व उपाय' },
+    VOICE: { amount: 1100, titleHi: 'गोपनीय प्रत्यक्ष वॉयस सभा (30m)', titleEn: 'Encrypted Voice Sabha (30m)', desc: 'CallMe4 E2EE Number-Masked Audio Call with senior Pandit' },
+    VIDEO: { amount: 1500, titleHi: 'साक्षात् वीडियो दर्शन (30m)', titleEn: 'HD Video Darshan Consult', desc: 'HD Video + Synchronized Live Kundali Review' },
   };
 
-  // Prefill from active profile
+  // Prefill from active profile or active kundli
   useEffect(() => {
-    const p = getActiveProfile();
+    let p = getActiveProfile();
+    if (!p || !p.birthDate) {
+      try {
+        const saved = localStorage.getItem('cosmictantra_active_kundli');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.birthDate) {
+            p = {
+              name: parsed.name,
+              birthDate: parsed.birthDate,
+              birthTime: parsed.birthTime,
+              birthCity: parsed.city || parsed.locationName,
+              lat: Number(parsed.latitude ?? parsed.birthLat),
+              lng: Number(parsed.longitude ?? parsed.birthLon ?? parsed.lng),
+              tz: Number(parsed.timezone) || 5.5
+            } as any;
+          }
+        }
+      } catch {}
+    }
     if (!p) return;
     setForm(f => ({
       ...f,
-      customerName: f.customerName || p.name || '',
-      birthDate: f.birthDate || p.birthDate || f.birthDate,
-      birthTime: f.birthTime || p.birthTime || f.birthTime,
-      birthCity: f.birthCity || p.birthCity || f.birthCity,
-      birthLat: f.birthLat || p.lat || f.birthLat,
-      birthLon: f.birthLon || p.lng || f.birthLon,
-      timezone: f.timezone || p.tz || f.timezone,
+      customerName: f.customerName || p?.name || '',
+      birthDate: f.birthDate || p?.birthDate || f.birthDate,
+      birthTime: f.birthTime || p?.birthTime || f.birthTime,
+      birthCity: f.birthCity || (p as any)?.birthCity || f.birthCity,
+      birthLat: Number.isFinite(p?.lat) ? p.lat : f.birthLat,
+      birthLon: Number.isFinite(p?.lng) ? p.lng : f.birthLon,
+      timezone: Number.isFinite(p?.tz) ? p.tz : f.timezone,
     }));
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.customerName || !form.customerPhone || !form.customerQuestion) {
+    const effectiveQuestion = form.customerQuestion.trim() || (selectedTier === 'KUNDLI_PDF' ? 'सम्पूर्ण कुण्डली विवरण' : '');
+    if (!form.customerName || !form.customerPhone || !effectiveQuestion) {
       alert('कृपया अपना नाम, व्हाट्सएप नंबर एवं प्रश्न अनिवार्य रूप से भरें।');
       return;
     }
 
     setSubmitting(true);
     chitiSensory.playTick();
-    const config = tierPricing[selectedTier];
+    const config = tierPricing[selectedTier] || tierPricing.WRITTEN;
+
+    // Resolve coordinates and synchronize profile across all surfaces
+    if (form.customerName && form.birthDate && form.birthTime) {
+      try {
+        let lat = form.birthLat;
+        let lng = form.birthLon;
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+          const matched = searchCities(form.birthCity || 'Bilaspur');
+          if (matched.length > 0) {
+            lat = matched[0].lat;
+            lng = matched[0].lng;
+          }
+        }
+        const finalLat = Number.isFinite(lat) ? lat : 25.5941;
+        const finalLng = Number.isFinite(lng) ? lng : 85.1376;
+        const saved = upsertProfile({
+          name: form.customerName,
+          birthDate: form.birthDate,
+          birthTime: form.birthTime,
+          birthCity: form.birthCity || 'India',
+          lat: finalLat,
+          lng: finalLng,
+          tz: form.timezone || 5.5,
+          relation: 'Self'
+        } as any);
+        setActiveProfileId(saved.id);
+        localStorage.setItem('cosmictantra_active_kundli', JSON.stringify({
+          name: form.customerName,
+          birthDate: form.birthDate,
+          birthTime: form.birthTime,
+          city: form.birthCity,
+          locationName: form.birthCity,
+          latitude: finalLat,
+          longitude: finalLng,
+          timezone: form.timezone || 5.5,
+          source: 'ASK_CONSULTATION'
+        }));
+      } catch (err) {
+        console.warn('Profile sync failed in /ask:', err);
+      }
+    }
 
     try {
       // Step 1: Create Order on Server
@@ -118,6 +190,7 @@ export default function AskQuestionPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
+          customerQuestion: effectiveQuestion,
           consultationMode: selectedTier,
           amount: config.amount,
         }),
@@ -133,7 +206,9 @@ export default function AskQuestionPage() {
       const Razorpay = await loadRazorpayCheckout();
       if (!Razorpay || !data.checkoutEnabled) {
         // Fallback simulation / test confirmation
-        if (selectedTier === 'WRITTEN') {
+        if (selectedTier === 'KUNDLI_PDF') {
+          router.push('/report');
+        } else if (selectedTier === 'WRITTEN') {
           router.push(`/ask/success/${data.consultationId || data.orderId || 'CT-4821'}`);
         } else {
           router.push(`/consultation/room/${data.consultationId || 'CT-4821'}?mode=${selectedTier.toLowerCase()}&role=devotee`);
@@ -169,13 +244,19 @@ export default function AskQuestionPage() {
               }),
             });
 
-            if (selectedTier === 'WRITTEN') {
+            if (selectedTier === 'KUNDLI_PDF') {
+              router.push('/report');
+            } else if (selectedTier === 'WRITTEN') {
               router.push(`/ask/success/${data.consultationId}`);
             } else {
               router.push(`/consultation/room/${data.consultationId}?mode=${selectedTier.toLowerCase()}&role=devotee`);
             }
           } catch {
-            router.push(`/consultation/room/${data.consultationId}?mode=${selectedTier.toLowerCase()}&role=devotee`);
+            if (selectedTier === 'KUNDLI_PDF') {
+              router.push('/report');
+            } else {
+              router.push(`/consultation/room/${data.consultationId}?mode=${selectedTier.toLowerCase()}&role=devotee`);
+            }
           }
         },
       };
@@ -357,7 +438,15 @@ export default function AskQuestionPage() {
                   required
                   className="w-full px-2.5 py-2 rounded-xl bg-[#FAF7F2] dark:bg-[#070912] border border-black/10 dark:border-white/10 text-xs text-[#1C1917] dark:text-white outline-none focus:border-[#8E6F1D]"
                   value={form.birthCity}
-                  onChange={e => setForm({ ...form, birthCity: e.target.value })}
+                  onChange={e => {
+                    const val = e.target.value;
+                    const matched = searchCities(val);
+                    setForm(prev => ({
+                      ...prev,
+                      birthCity: val,
+                      ...(matched.length > 0 ? { birthLat: matched[0].lat, birthLon: matched[0].lng, timezone: matched[0].tz } : {})
+                    }));
+                  }}
                   placeholder="Varanasi"
                 />
               </div>
@@ -377,11 +466,11 @@ export default function AskQuestionPage() {
               </label>
               <textarea
                 rows={3}
-                required
+                required={selectedTier !== 'KUNDLI_PDF'}
                 className="w-full p-3 rounded-xl bg-[#FAF7F2] dark:bg-[#070912] border border-black/10 dark:border-white/10 text-xs text-[#1C1917] dark:text-white outline-none focus:border-[#8E6F1D] leading-relaxed"
                 value={form.customerQuestion}
                 onChange={e => setForm({ ...form, customerQuestion: e.target.value })}
-                placeholder="उदा. व्यापार में नया निवेश व साझेदारी करने हेतु आगामी ६ माह में क्या शुभ योग हैं?"
+                placeholder={selectedTier === 'KUNDLI_PDF' ? 'सम्पूर्ण कुण्डली विवरण (वैकल्पिक)' : 'उदा. व्यापार में नया निवेश व साझेदारी करने हेतु आगामी ६ माह में क्या शुभ योग हैं?'}
               />
             </div>
 
@@ -390,7 +479,7 @@ export default function AskQuestionPage() {
               <div>
                 <div className="text-[11px] text-[#696256] dark:text-[#9E988D]">कुल दक्षिणा राशि (Razorpay UPI / Cards):</div>
                 <div className="text-2xl font-bold text-[#8E6F1D] dark:text-[#F0C968]">
-                  ₹{tierPricing[selectedTier].amount}
+                  ₹{tierPricing[selectedTier]?.amount ?? 501}
                 </div>
               </div>
 
@@ -423,5 +512,13 @@ export default function AskQuestionPage() {
 
       </div>
     </CosmicTantraShell>
+  );
+}
+
+export default function AskQuestionPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#FAF7F2] dark:bg-[#070912] flex items-center justify-center text-xs text-[#8E6F1D]">लोड हो रहा है...</div>}>
+      <AskQuestionContent />
+    </Suspense>
   );
 }

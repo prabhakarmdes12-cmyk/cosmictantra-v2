@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Compass,
   Calendar,
@@ -22,6 +22,7 @@ import { getCurrentGpsLocation, resolveBirthPlace } from '../lib/location';
 import { analytics, ANALYTICS_EVENTS } from '../lib/analytics';
 import { TRANSLATIONS } from '../lib/translations';
 import { chitiSensory } from '../lib/chitiAudio';
+import { getActiveProfile, upsertProfile, setActiveProfileId } from '../lib/profileStore';
 import NorthIndianChart from './NorthIndianChart';
 
 const POPULAR_PANCHANG_ANCHORS = [
@@ -54,6 +55,45 @@ export default function KundaliExperience({
     timezone: 5.5,
     isCustomCoordinates: false
   });
+
+  // Prefill from active profile if present
+  useEffect(() => {
+    let p = null;
+    try {
+      p = getActiveProfile();
+    } catch {}
+    if (!p || !p.birthDate) {
+      try {
+        const saved = localStorage.getItem('cosmictantra_active_kundli');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.birthDate) {
+            p = {
+              name: parsed.name,
+              birthDate: parsed.birthDate,
+              birthTime: parsed.birthTime,
+              birthCity: parsed.city || parsed.locationName,
+              lat: parsed.latitude ?? parsed.birthLat,
+              lng: parsed.longitude ?? parsed.birthLon,
+              tz: parsed.timezone
+            };
+          }
+        }
+      } catch {}
+    }
+    if (p && p.birthDate && p.name && p.name !== 'Priya Sharma') {
+      setFormData(prev => ({
+        ...prev,
+        name: p.name || prev.name,
+        birthDate: p.birthDate || prev.birthDate,
+        birthTime: p.birthTime || prev.birthTime,
+        cityName: p.birthCity || prev.cityName,
+        latitude: Number.isFinite(p.lat) ? p.lat : prev.latitude,
+        longitude: Number.isFinite(p.lng) ? p.lng : prev.longitude,
+        timezone: Number.isFinite(p.tz) ? p.tz : prev.timezone,
+      }));
+    }
+  }, []);
 
   const [citySearchQuery, setCitySearchQuery] = useState('');
   const [showCoordinateAdvanced, setShowCoordinateAdvanced] = useState(false);
@@ -123,6 +163,32 @@ export default function KundaliExperience({
       lat,
       lng
     });
+
+    try {
+      const payload = {
+        name: formData.name,
+        birthDate: formData.birthDate,
+        birthTime: formData.birthTime,
+        city: locationLabel,
+        locationName: locationLabel,
+        latitude: lat,
+        longitude: lng,
+        timezone: tz,
+        source: 'KUNDALI_EXPERIENCE'
+      };
+      localStorage.setItem('cosmictantra_active_kundli', JSON.stringify(payload));
+      const saved = upsertProfile({
+        name: formData.name,
+        birthDate: formData.birthDate,
+        birthTime: formData.birthTime,
+        birthCity: locationLabel,
+        lat,
+        lng,
+        tz,
+        relation: 'Self'
+      });
+      setActiveProfileId(saved.id);
+    } catch {}
 
     onGenerateKundali(data);
   };

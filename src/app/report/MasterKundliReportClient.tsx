@@ -38,7 +38,8 @@ import GlobalHeader from '@/components/layout/GlobalHeader';
 import LanguageSelectorModal from '@/components/layout/LanguageSelectorModal';
 import { CosmicTantraEmblem } from '@/components/visual/CosmicTantraLogo';
 import { chitiSensory } from '@/lib/chitiAudio';
-import { generateKundliPdf } from '@/lib/kundli/pipeline';
+import { generateKundliV40Pdf } from '@/lib/kundli/v40/pipelineV2';
+import { getActiveProfile } from '@/lib/profileStore';
 import { KUNDLI_SAFE_MESSAGES } from '@/lib/kundli/errors';
 import { searchCities } from '@/lib/cities';
 import type { PipelineState, RawBirthInput } from '@/lib/kundli/types';
@@ -379,6 +380,37 @@ export default function MasterKundliReportClient() {
             locationName: parsed.city || parsed.locationName || 'India'
           });
           setIsDemoProfile(false);
+          return;
+        }
+      }
+    } catch {}
+
+    // 2b. Check Unified Profile Store (getActiveProfile)
+    try {
+      const active = getActiveProfile();
+      if (active && active.birthDate && active.birthTime && (active.lat !== undefined || active.latitude !== undefined) && (active.lng !== undefined || active.longitude !== undefined)) {
+        const lat = Number(active.lat ?? active.latitude);
+        const lng = Number(active.lng ?? active.longitude);
+        if (Number.isFinite(lat) && Number.isFinite(lng)) {
+          const profilePayload = {
+            name: active.name || 'Seeker',
+            birthDate: active.birthDate,
+            birthTime: active.birthTime,
+            latitude: lat,
+            longitude: lng,
+            timezone: Number(active.tz ?? active.timezone) || 5.5,
+            locationName: active.birthCity || active.city || active.locationName || 'India'
+          };
+          rawInputRef.current = {
+            ...profilePayload,
+            utcOffsetHours: profilePayload.timezone,
+            coordinateProvenance: 'PROFILE'
+          };
+          setBirthState(profilePayload);
+          setIsDemoProfile(false);
+          try {
+            localStorage.setItem('cosmictantra_active_kundli', JSON.stringify(profilePayload));
+          } catch {}
           return;
         }
       }
@@ -1825,11 +1857,11 @@ export default function MasterKundliReportClient() {
                     setIsGeneratingPdf(true);
                     setPipelineState(null);
                     try {
-                      const result = await generateKundliPdf(editedRaw, {
+                      const result = await generateKundliV40Pdf(editedRaw, {
                         locale: lang === 'hi' ? 'hi' : 'en',
-                        renderPdf: false
+                        skipPdf: true
                       });
-                      if (result.state !== 'REPORT_READY') {
+                      if (!result.ok) {
                         const code = result.errorCode ?? 'KUNDLI_INPUT_INVALID';
                         setFailSafe({
                           message: KUNDLI_SAFE_MESSAGES[code as keyof typeof KUNDLI_SAFE_MESSAGES] ?? KUNDLI_SAFE_MESSAGES.KUNDLI_INPUT_INVALID,
