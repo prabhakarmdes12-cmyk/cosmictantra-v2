@@ -61,6 +61,18 @@ export default function KundliWorkspaceClient({ id }: { id: string }) {
   const currentAD = dasha.currentAntardasha;
   const currentPD = dasha.currentPratyantardasha;
 
+  // The Master Kundli report reads birth details from URL params before any
+  // localStorage fallback. Carry the workspace's actual chart through so the
+  // report preview and the PRINT / DOWNLOAD PDF actions operate on the profile
+  // the user is currently viewing, never on the demo profile by accident.
+  const reportHref = `/report?name=${encodeURIComponent(personName)}` +
+    `&dob=${encodeURIComponent(birthContext.birthDate)}` +
+    `&tob=${encodeURIComponent(birthContext.birthTime)}` +
+    `&city=${encodeURIComponent(birthContext.locationName ?? '')}` +
+    `&lat=${birthContext.latitude}` +
+    `&lng=${birthContext.longitude}` +
+    `&tz=${birthContext.timezone}`;
+
   const tabs = [
     { id: 'overview', label: 'Overview', icon: Eye },
     { id: 'birth', label: 'Birth Details', icon: Calendar },
@@ -105,7 +117,7 @@ export default function KundliWorkspaceClient({ id }: { id: string }) {
               <span>{ayanamshaName}</span>
             </div>
             <a
-              href="/report"
+              href={reportHref}
               className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-[#d4af37] text-black font-semibold text-xs shadow-md shadow-[#d4af37]/20 hover:bg-[#e5c04b] transition"
             >
               <Download className="w-3.5 h-3.5" />

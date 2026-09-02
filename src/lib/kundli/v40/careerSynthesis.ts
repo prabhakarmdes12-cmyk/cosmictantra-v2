@@ -290,7 +290,7 @@ export function buildCareerSynthesis(
       ARTHA_HOUSES.flatMap((h) => [FACT.houseSignId(h), FACT.houseOccupants(h)]),
       'DERIVED_JYOTISH_FACT',
       'CAREER_ARTHA_TRIKONA',
-      { lords: [...new Set(arthaLords)].join(', '), occupancy: linked.length > 0 ? `युक्त भाव: ${linked.map((b) => `${b.house} (${b.occupants.join(', ')})`).join('; ')}।` : 'उनमें से कोई भी भाव युक्त नहीं है।' }
+      { lords: [...new Set(arthaLords)].join(', '), houses: ARTHA_HOUSES.join(' / '), occupancy: linked.length > 0 ? `युक्त भाव: ${linked.map((b) => `${b.house} (${b.occupants.join(', ')})`).join('; ')}।` : 'उनमें से कोई भी भाव युक्त नहीं है।' }
     ));
   } else {
     missing.push({ factor: 'ARTHA_TRIKONA', reason: 'One or more of bhavas 2/6/10/11 is unresolved.' });
@@ -540,7 +540,7 @@ export function buildCareerSynthesis(
       p.evidenceIds,
       'DERIVED_JYOTISH_FACT',
       careerTouch.length > 0 ? 'CAREER_ACTIVATION_TOUCH' : isKeyGraha ? 'CAREER_ACTIVATION_KEY' : 'CAREER_ACTIVATION_NONE',
-      { level: levelWord(p.level), lord: p.lord, houses: careerTouch.join(', ') }
+      { level: levelWord(p.level), lord: p.lord, houses: careerTouch.join(', '), arthas: ARTHA_HOUSES.join('/') }
     ));
   }
   if (dashaClaims.some((c) => c.contentType !== 'NOT_CALCULATED')) resolved.add('DASHA_ACTIVATION');

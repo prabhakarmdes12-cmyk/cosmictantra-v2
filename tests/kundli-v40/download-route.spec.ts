@@ -256,4 +256,22 @@ test.describe('DOWNLOAD_KUNDLI_CURRENT_RENDERER', () => {
       await expect(fs.access(f), `${f} must still exist`).resolves.toBeUndefined();
     }
   });
+
+  test('DKCR-16: the Kundli workspace Download Book carries the viewed chart into /report', async () => {
+    const fs = await import('node:fs/promises');
+    const src = await fs.readFile('src/app/kundli/[id]/KundliWorkspaceClient.tsx', 'utf8');
+    const start = src.indexOf('const reportHref');
+    expect(start, 'the workspace must build a report URL from the chart profile').toBeGreaterThan(-1);
+    const reportHref = src.slice(start, src.indexOf('const tabs =', start));
+
+    // Download Book should not navigate to a bare /report and silently drop
+    // the profile the user is viewing (see DKCR-13's same-route wiring rule).
+    expect(reportHref).toContain('/report?name=');
+    expect(reportHref).toContain('birthContext.birthDate');
+    expect(reportHref).toContain('birthContext.birthTime');
+    expect(reportHref).toContain('birthContext.latitude');
+    expect(reportHref).toContain('birthContext.longitude');
+    expect(reportHref).toContain('birthContext.timezone');
+    expect(src, 'the header action must use the context-aware URL').toContain('href={reportHref}');
+  });
 });

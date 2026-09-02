@@ -244,7 +244,7 @@ export function localizeTemplateValue(
   // Lists such as "Mercury (10th bhava)" keep their data grammatical after
   // vocabulary replacement without pretending to translate arbitrary prose.
   localized = localized.replace(/\bbhava\b/gi, mode === 'hi' ? 'भाव' : 'भाव / bhava');
-  if (key === 'houses' || key === 'occupancy') localized = readerNumber(localized, mode);
+  if (key === 'houses' || key === 'occupancy' || key === 'arthas') localized = readerNumber(localized, mode);
   return localized;
 }
 
