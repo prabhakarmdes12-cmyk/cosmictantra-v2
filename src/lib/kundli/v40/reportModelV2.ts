@@ -33,6 +33,10 @@ import {
 import { dms, longDate, clockTime, weekdayOf } from './format';
 import { FACT } from './factPaths';
 import {
+  classicalAxisFor, significatorsFor, takeawayFor,
+  type ExecutiveInsights,
+} from './executiveInsights';
+import {
   localizeKnownText,
   readerBhava,
   readerDateValue,
@@ -539,6 +543,119 @@ function saarSection(
   };
 }
 
+/**
+ * PART A — Executive Life Gauge.
+ *
+ * The printed twin of the on-screen `ExecutiveLifeGaugeDashboard`: the same six
+ * dimensions, the same scores, computed by the same module from the same
+ * snapshot that produced the canonical model. Before V43 the website summary
+ * carried this and the downloadable folio did not, so the document a Pandit
+ * held in a consultation described a thinner chart than the one the seeker had
+ * just read on their phone.
+ *
+ * What this section may and may not say:
+ *   • the SCORES are rule-derivations over calculated facts (graha bala and
+ *     Sarvashtakavarga bindus) and are tagged accordingly;
+ *   • the strength ratios behind them are recorded in the capability inventory
+ *     as computed-but-not-validated, so the limitation is printed ON THE PAGE,
+ *     not buried in the appendix;
+ *   • the TAKEAWAYS are practice lines — guidance, never a prediction;
+ *   • the classical axis is a traditional reading of each dimension's own
+ *     significators. It adds no number.
+ *
+ * Returns null when the presentation layer could not be built, so a failure
+ * there costs one section and never the whole document.
+ */
+function executiveLifeGaugeSection(
+  executive: ExecutiveInsights | null,
+  mode: LabelMode,
+): V2Section | null {
+  if (!executive || executive.dimensions.length === 0) return null;
+
+  /** Picks the reader's language: `hi-en` glosses short labels, never prose. */
+  const pick = (en: string, hi: string): string => {
+    if (mode === 'en') return en;
+    if (mode === 'hi') return hi;
+    return `${hi} / ${en}`;
+  };
+  /** Prose follows trProse's own rule: a Hindi locale reads Hindi paragraphs. */
+  const prose = (en: string, hi: string): string => (mode === 'en' ? en : hi);
+
+  const items = executive.dimensions.map((d) => {
+    const sig = significatorsFor(d.id);
+    const axis = classicalAxisFor(d.id);
+    const takeaway = takeawayFor(d.id);
+
+    const grahaWords = sig ? sig.grahas.map((g) => planetLabel(g, mode)).join(' · ') : '';
+    const bhavaWords = sig ? sig.bhavas.map((h) => readerBhava(h, mode)).join(' · ') : '';
+    const bindus = typeof d.bindus === 'number'
+      ? `${readerNumber(d.bindus, mode)} ${label('bindus', mode)}`
+      : '';
+    const ratio = typeof d.shadbalaRatio === 'number'
+      ? `${label('balaRatio', mode)} ${readerNumber(d.shadbalaRatio.toFixed(2), mode)}`
+      : '';
+    const evidence = [grahaWords, bhavaWords, bindus, ratio].filter(Boolean).join(' · ');
+
+    return {
+      label: pick(d.titleEn, d.titleHi),
+      axis: axis ? pick(axis.en, axis.hi) : undefined,
+      score: d.score,
+      tier: pick(d.levelEn, d.levelHi),
+      evidence,
+      note: takeaway ? prose(takeaway.en, takeaway.hi) : undefined,
+      contentType: 'PRACTICAL_REFLECTION' as const,
+    };
+  });
+
+  return {
+    id: 'executive-life-gauge',
+    title: 'Executive Life Gauge',
+    part: 'A',
+    startsNewPage: true,
+    status: 'READY',
+    blocks: [
+      title('Executive Life Gauge', renderTerm(TERMS.executiveGauge, 'hi'), tr('PART A', mode), mode),
+      p(
+        trProse(
+          'Six readings of one chart. Each is built from the graha bala of its own significators and the Sarvashtakavarga bindus of the bhavas they rule — the same six dimensions the on-screen summary shows, printed here with the same numbers, so a consultation never reads a different chart from the one the seeker saw.',
+          mode,
+        ),
+        'small',
+        'DERIVED_JYOTISH_FACT',
+      ),
+
+      {
+        kind: 'gaugeGrid',
+        title: renderTerm(TERMS.lifeDimension, mode),
+        items,
+        max: 100,
+        contentType: 'DERIVED_JYOTISH_FACT',
+        system: 'PARASHARI',
+        footnote: trProse(
+          "The classical axis beside each dimension is the traditional purushartha reading of that dimension's own significators. It adds no score and no new fact. Vidya and Arogya are read from the fifth and sixth bhavas in the Bhava Intelligence Matrix.",
+          mode,
+        ),
+      },
+
+      {
+        kind: 'callout',
+        tone: 'limitation',
+        title: trProse('How far these readings go', mode),
+        text: trProse(
+          'The strength ratios behind these six readings are computed but have not yet been checked against an external reference, so they orient a conversation rather than settle one. Nothing here is a prediction: no event, no timing and no verdict is claimed, and no dimension overrides the calculated chart facts printed in this folio.',
+          mode,
+        ),
+        contentType: 'PRACTICAL_REFLECTION',
+      },
+      /* The practice line for each dimension is printed INSIDE its own gauge
+       * row rather than restated as a bullet list below it. One statement per
+       * page is the density rule this document applies everywhere else (see
+       * CD-08): repeating six sentences in a second layout would buy the
+       * reader nothing and cost a page of the consultation folio. */
+    ],
+  };
+}
+
 function chartSection(
   canonical: KundliCanonicalModel,
   derived: KundliDerivedModel,
@@ -642,6 +759,7 @@ function grahaDossierSection(
   canonical: KundliCanonicalModel,
   derived: KundliDerivedModel,
   mode: LabelMode,
+  executive: ExecutiveInsights | null = null,
 ): V2Section {
   const rows = derived.grahaConditions.conditions.map((c) => {
     const marks: string[] = [];
@@ -733,6 +851,47 @@ function grahaDossierSection(
         trProse('Rahu and Ketu are marked retrograde by the mean-node convention, not by observed motion.', mode),
         trProse('Shadbala: validation pending — computed internally, not verified, and used in no conclusion.', mode),
       ]),
+
+      /* ── Four-quadrant graha archetypes (V43 parity with the website) ──
+       * The dashboard shows these as nine cards: core Vedic theme, innate
+       * superpower, shadow challenge and a traditional upaaya. They are the
+       * classical karakatva of each graha, printed HERE — beside this chart's
+       * own placement of that graha in the table above — so a Pandit can read
+       * the nature and the placement on one page instead of two screens.
+       * Tagged TRADITIONAL_RULE: doctrine keyed to the graha's identity, not an
+       * individualised prediction and not a timing. */
+      ...(executive
+        ? [
+            h3(renderTerm(TERMS.grahaArchetypes, mode)),
+            {
+              kind: 'table',
+              headers: [
+                label('graha', mode),
+                label('coreTheme', mode),
+                label('innateStrength', mode),
+                label('shadowChallenge', mode),
+                label('vedicRemedy', mode),
+              ],
+              widths: [0.09, 0.21, 0.24, 0.23, 0.23],
+              rows: executive.archetypes.map((a) => {
+                const hi = mode !== 'en';
+                return [
+                  planetLabel(a.planet, mode),
+                  hi ? a.coreThemeHi : a.coreThemeEn,
+                  hi ? a.strengthHi : a.strengthEn,
+                  hi ? a.challengeHi : a.challengeEn,
+                  hi ? a.practicalRemedyHi : a.practicalRemedyEn,
+                ];
+              }),
+              contentType: 'TRADITIONAL_RULE',
+              system: 'PARASHARI',
+              footnote: trProse(
+                "These four quadrants are the classical karakatva of each graha, printed beside this chart's own placement of it in the table above. They are traditional guidance keyed to the nature of the graha — not an individualised prediction and not a timing. An upaaya is offered as practice, never as a promised result.",
+                mode,
+              ),
+            } as V2Block,
+          ]
+        : []),
     ],
   };
 }
@@ -1735,10 +1894,21 @@ export function computeContentHashV2(
 /* Assembler                                                           */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Builds the report model.
+ *
+ * `executive` is the presentation-parity layer (see ./executiveInsights.ts):
+ * the six-dimension life gauge and the nine graha archetype quadrants that the
+ * `/report` screen already shows, computed from the SAME snapshot GATE 2 used.
+ * It is optional on purpose — when the pipeline cannot build it the model omits
+ * those blocks rather than failing a download, because a missing presentation
+ * layer is a smaller harm than no Kundli at all.
+ */
 export function buildKundliReportModelV2(
   canonical: KundliCanonicalModel,
   derived: KundliDerivedModel,
   locale: LabelMode = 'en',
+  executive: ExecutiveInsights | null = null,
 ): KundliReportModelV2 {
   const mode = labelModeForLocale(locale);
   // A Hindi or bilingual Kundli draws Devanagari graha abbreviations in the
@@ -1750,14 +1920,18 @@ export function buildKundliReportModelV2(
   const generatedAt = new Date().toISOString();
   const contentHash = computeContentHashV2(canonical, derived, reportId, locale);
 
-  const sections: V2Section[] = [
+  const sections: V2Section[] = ([
     /* PART A */
     coverSection(canonical, reportId, mode),
     passportSection(canonical, derived, mode),
     saarSection(canonical, derived, mode),
+    /* The gauge sits between the one-page summary and the drawings: the reader
+     * gets the shape of the life before the geometry that produced it. Null
+     * when the presentation layer could not be built — filtered below. */
+    executiveLifeGaugeSection(executive, mode),
     chartSection(canonical, derived, 1, chartMode, mode, tr('PART A', mode), devanagariNumerals),
     chartSection(canonical, derived, 9, chartMode, mode, tr('PART A', mode), devanagariNumerals),
-    grahaDossierSection(canonical, derived, mode),
+    grahaDossierSection(canonical, derived, mode, executive),
     bhavaMatrixSection(derived, mode),
     yogaDashboardSection(canonical, derived, mode),
     vimshottariSection(canonical, derived, mode),
@@ -1779,7 +1953,7 @@ export function buildKundliReportModelV2(
     sourceRegistryAppendix(canonical),
     notCalculatedAppendix(derived, canonical),
     lineageAppendix(canonical, derived),
-  ];
+  ] as (V2Section | null)[]).filter((sec): sec is V2Section => sec !== null);
 
   return {
     reportModelVersion: REPORT_MODEL_V2_VERSION,

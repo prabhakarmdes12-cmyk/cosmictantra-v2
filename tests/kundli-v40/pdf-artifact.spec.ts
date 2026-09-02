@@ -43,10 +43,15 @@ test.describe('V40 PDF artifact — golden chart', () => {
     expect(q.pageCount).toBeGreaterThan(14);
     expect(q.pageCount).toBeLessThanOrEqual(40);
 
-    // Part A must stay consultable: the scholar appendix begins by page 16.
+    // Part A must stay consultable: the scholar appendix begins by page 18.
+    // The ratchet stood at 16 until the Executive Life Gauge folio and the
+    // graha archetype quadrants joined Part A (2026-09-02) — two pages of
+    // consultation-facing reading that the /report screen already showed and
+    // the download did not. This line is what keeps the next addition out of
+    // the folio and in the appendix.
     const partAPages = result.pageTitles.findIndex((t) => t === 'Scholar Appendix') + 1;
     expect(partAPages, `Part A ran to ${partAPages} pages`).toBeGreaterThan(0);
-    expect(partAPages).toBeLessThanOrEqual(16);
+    expect(partAPages).toBeLessThanOrEqual(18);
 
     fs.mkdirSync(OUT_DIR, { recursive: true });
     const file = path.join(OUT_DIR, 'priya-1995-v40-pandit-workbench.pdf');

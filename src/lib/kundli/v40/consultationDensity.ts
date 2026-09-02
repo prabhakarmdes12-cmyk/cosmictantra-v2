@@ -447,7 +447,12 @@ export function auditPartADensity(report: KundliReportModelV2): PartAFinding[] {
           if (typeof it === 'string') texts.push(it);
           else if (it && typeof it === 'object') {
             const o = it as Record<string, unknown>;
-            for (const k of ['label', 'value', 'note']) if (typeof o[k] === 'string') texts.push(o[k] as string);
+            /* The keys are listed rather than reflected over, so an internal
+             * enum can never be scanned as prose. `tier`, `axis` and
+             * `evidence` are the gauge-grid fields a reader sees. */
+            for (const k of ['label', 'value', 'note', 'tier', 'axis', 'evidence']) {
+              if (typeof o[k] === 'string') texts.push(o[k] as string);
+            }
           }
         }
       }

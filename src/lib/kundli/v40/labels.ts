@@ -128,6 +128,22 @@ export const TERMS = {
   activation: T('दशा सक्रियता', 'Dasha Activation'),
   evidenceCoverage: T('प्रमाण व्याप्ति', 'Evidence Coverage'),
 
+  /* executive life gauge — the printed form of the on-screen dashboard */
+  executiveGauge: T('षड्-आयामी जीवन मापक', 'Executive Life Gauge'),
+  bindus: T('अष्टकवर्ग बिन्दु', 'Ashtakavarga Bindus'),
+  balaRatio: T('ग्रह-बल अनुपात', 'Graha Bala Ratio'),
+  lifeDimension: T('जीवन आयाम', 'Life Dimension'),
+  classicalAxis: T('शास्त्रीय धुरी', 'Classical Axis'),
+  gaugeScore: T('अंक', 'Score'),
+  gaugeTier: T('कोटि', 'Tier'),
+  gaugeEvidence: T('आधार', 'Evidence'),
+  gaugeTakeaway: T('साधना-सूत्र', 'Actionable Takeaway'),
+  grahaArchetypes: T('ग्रह-स्वरूप चतुष्क', 'Graha Archetype Quadrants'),
+  coreTheme: T('मूल वैदिक भाव', 'Core Vedic Theme'),
+  innateStrength: T('सहज सामर्थ्य', 'Innate Superpower'),
+  shadowChallenge: T('छाया-चुनौती', 'Shadow Challenge'),
+  vedicRemedy: T('वैदिक उपाय', 'Actionable Vedic Remedy'),
+
   /* pandit workbench */
   discussionPoints: T('पंडित चर्चा बिंदु', 'Pandit Discussion Points'),
   panditNotes: T('पंडित टिप्पणी', 'Pandit Notes'),

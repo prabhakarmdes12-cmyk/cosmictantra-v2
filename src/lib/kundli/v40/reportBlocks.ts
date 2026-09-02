@@ -137,6 +137,47 @@ export interface NotesAreaBlock extends V2BlockBase {
   lines: number;
 }
 
+/**
+ * One row of a scored gauge.
+ *
+ * The score is carried by the MODEL, never computed by the renderer: the bar
+ * length is `score / max`, which is geometry, and every word beside it came
+ * from the derivation layer. KUNDLI_INV_RENDER_001 holds for this block exactly
+ * as it holds for a table.
+ */
+export interface GaugeItemV2 {
+  /** The dimension as the reader sees it, e.g. "Career Drive & Public Trajectory". */
+  label: string;
+  /** Optional classical gloss printed as a small tag beside the label. */
+  axis?: string;
+  /** Position on the scale. 0..max. */
+  score: number;
+  /** Localised tier word for `score`, e.g. "सुसंतुलित / Harmonious". */
+  tier: string;
+  /** The numbers behind the score: significators, bindus, strength ratio. */
+  evidence?: string;
+  /** Actionable takeaway. Guidance, never a prediction. */
+  note?: string;
+  contentType?: ContentType;
+}
+
+/**
+ * A scored gauge grid — the printed form of the on-screen Executive Life Gauge.
+ *
+ * Drawn as hairline-ruled bars in the document's own gold, in the same visual
+ * grammar as the Vimshottari timeline: no cards, no shadows, no gradients, and
+ * a shape that still reads on a black-and-white photocopy.
+ */
+export interface GaugeGridBlock extends V2BlockBase {
+  kind: 'gaugeGrid';
+  title?: string;
+  items: GaugeItemV2[];
+  /** Top of the scale. Defaults to 100. */
+  max?: number;
+  caption?: string;
+  footnote?: string;
+}
+
 export interface CalloutBlockV2 extends V2BlockBase {
   kind: 'callout';
   text: string;
@@ -150,7 +191,7 @@ export interface SpacerBlock extends V2BlockBase { kind: 'spacer'; mm: number; }
 export type V2Block =
   | CoverBlock | PartDividerBlock | SectionTitleBlock | HeadingBlockV2 | ParagraphBlockV2
   | BulletsBlock | KvGridBlock | TableBlockV2 | ChartBlockV2 | StatusListBlock
-  | TimelineBlock | NotesAreaBlock | CalloutBlockV2 | DividerBlockV2 | SpacerBlock;
+  | TimelineBlock | NotesAreaBlock | GaugeGridBlock | CalloutBlockV2 | DividerBlockV2 | SpacerBlock;
 
 export interface V2Section {
   id: string;

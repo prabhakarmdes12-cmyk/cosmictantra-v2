@@ -71,13 +71,23 @@ test('the density transform moves presentation, never facts', async () => {
 test('pagination is deterministic', async () => {
   const { result, inspection } = await goldenV3Artifact();
   expect(inspection.pageCount).toBe(result.metrics!.pageCount);
-  // The 38-page baseline was deliberately reviewed on 2026-09-02 after the
-  // qualified V41 PDF slice (chart DMS labels, QR-copy removal and reader
-  // presentation updates). All sections remain present; semantic, geometry,
-  // font and rendered-page audits pass; and the nine committed visual
-  // baselines were replaced from this exact artifact. A stable page count is
-  // what makes those baselines meaningful: review them before changing this.
-  expect(inspection.pageCount).toBe(38);
+  // A stable page count is what makes the committed visual baselines
+  // meaningful, so this number is pinned and every move of it is recorded:
+  //
+  //   38 — reviewed 2026-09-02 after the qualified V41 PDF slice (chart DMS
+  //        labels, QR-copy removal, reader presentation updates).
+  //   39 — drifted with the V42 release work and was never re-pinned; this
+  //        line was already red before the parity work below landed.
+  //   40 — the Executive Life Gauge folio in Part A plus the nine graha
+  //        archetype quadrants in the graha dossier, so the download carries
+  //        the same six readings and the same four-quadrant guidance the
+  //        /report screen shows. Re-pinned 2026-09-02 with every other audit
+  //        green: semantic values, page geometry, embedded faces, blank-page
+  //        and density checks, the banned-language scan and the Part A
+  //        residue scan. The nine visual baselines are matched by page title
+  //        rather than index, so the inserted folio shifted nothing; their
+  //        drift stayed inside the informational tolerance.
+  expect(inspection.pageCount).toBe(40);
   for (const page of inspection.pages) {
     expect(Math.round(page.widthPt)).toBe(595);
     expect(Math.round(page.heightPt)).toBe(842);

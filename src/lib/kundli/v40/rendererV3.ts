@@ -37,6 +37,7 @@ import type {
   KundliReportModelV2, V2Block, V2Section,
   TableBlockV2, KvGridBlock, StatusListBlock, TimelineBlock, NotesAreaBlock,
   CalloutBlockV2, ChartBlockV2, CoverBlock, PartDividerBlock, SectionTitleBlock,
+  GaugeGridBlock,
 } from './reportBlocks';
 import { dms } from './format';
 
@@ -68,6 +69,25 @@ export interface RenderV3Result {
   /** Every distinct font face actually used, for the QA gate. */
   fontsUsed: string[];
 }
+
+/* Gauge-grid geometry.
+ *
+ * The life gauge is drawn as hairline-ruled bars in the document's own gold —
+ * the visual grammar of the Vimshottari timeline, so the block belongs to the
+ * page instead of looking like a dashboard widget pasted in. No cards, no
+ * shadows, no gradients.
+ *
+ * A bar is GEOMETRY ONLY: its length is (score / max) of the track, and every
+ * character printed beside it comes from the block. The renderer never
+ * computes, re-scores or re-tiers anything (KUNDLI_INV_RENDER_001).
+ *
+ * The constants live at module level so the row arithmetic cannot drift
+ * between the height measurement and the paint. */
+const GAUGE_LABEL_W_MM = 52;
+const GAUGE_SCORE_W_MM = 15;
+const GAUGE_BAR_H_MM = 2.4;
+const GAUGE_BAR_GAP_MM = 1.8;
+const GAUGE_ITEM_GAP_MM = 3.0;
 
 const SERIF: RunStyle = { family: 'serif' };
 const SERIF_BOLD: RunStyle = { family: 'serif', bold: true };
@@ -687,6 +707,83 @@ export async function renderKundliPdfV3(
     return consumed + V3.spacing.blockGapMm;
   };
 
+  /** Height of one gauge row: label+tier line, bar line, evidence, note. */
+  const gaugeItemHeight = (b: GaugeGridBlock, max: number): ((item: GaugeGridBlock['items'][number]) => number) => {
+    void max;
+    return (item) => {
+      const labelH = measureText(item.label, GAUGE_LABEL_W_MM, V3.typography.sizes.small, SERIF_BOLD, V3.spacing.tightLineMm);
+      const tierH = item.tier
+        ? measureText(item.tier, CW - GAUGE_LABEL_W_MM - 4, V3.typography.sizes.micro, SANS, V3.spacing.microLineMm)
+        : 0;
+      const evidenceH = item.evidence
+        ? measureText(item.evidence, CW - GAUGE_SCORE_W_MM, V3.typography.sizes.micro, SERIF_ITALIC, V3.spacing.microLineMm) + GAUGE_BAR_GAP_MM
+        : 0;
+      const noteH = item.note
+        ? measureText(item.note, CW - 4, V3.typography.sizes.micro, SERIF, V3.spacing.microLineMm) + 1.2
+        : 0;
+      return Math.max(labelH, tierH, V3.spacing.tightLineMm)
+        + GAUGE_BAR_H_MM + GAUGE_BAR_GAP_MM + evidenceH + noteH + GAUGE_ITEM_GAP_MM;
+    };
+  };
+
+  const renderGaugeGrid = (b: GaugeGridBlock): number => {
+    let consumed = 0;
+    if (b.title) consumed += renderHeading(3, b.title);
+    if (b.caption) consumed += renderParagraph(b.caption, 'micro');
+
+    const max = b.max && b.max > 0 ? b.max : 100;
+    const trackW = CW - GAUGE_SCORE_W_MM - 2;
+    const heightOf = gaugeItemHeight(b, max);
+
+    for (const item of b.items) {
+      const h = heightOf(item);
+      controller.ensureFits(Math.min(h, controller.usableHeight - 1), createPage);
+      const y = controller.cursorY;
+
+      const labelH = drawText(item.label, ML, y, GAUGE_LABEL_W_MM, {
+        size: V3.typography.sizes.small, style: SERIF_BOLD, color: V3.colors.ink,
+        lineMm: V3.spacing.tightLineMm,
+      });
+      if (item.tier) {
+        drawText(item.tier, ML + GAUGE_LABEL_W_MM + 4, y + 0.4, CW - GAUGE_LABEL_W_MM - 4, {
+          size: V3.typography.sizes.micro, style: SANS, color: V3.colors.inkSoft,
+          lineMm: V3.spacing.microLineMm, align: 'right',
+        });
+      }
+
+      /* Bar: a hairline-ruled track with the scored portion filled. Length is
+       * pure geometry from the block's own score — nothing is recomputed. */
+      const barY = y + Math.max(labelH, V3.spacing.tightLineMm) + 0.6;
+      const clamped = Math.max(0, Math.min(1, (item.score ?? 0) / max));
+      s.strokeRect(ML, barY, trackW, GAUGE_BAR_H_MM, V3.colors.rule, V3.rule.hairlineMm);
+      if (clamped > 0) s.fillRect(ML, barY, Math.max(0.6, trackW * clamped), GAUGE_BAR_H_MM, V3.colors.goldFaint);
+      drawText(`${item.score ?? 0}`, ML + trackW + 2, barY - 0.9, GAUGE_SCORE_W_MM, {
+        size: V3.typography.sizes.small, style: SANS_BOLD, color: V3.colors.ink,
+        lineMm: V3.spacing.tightLineMm, align: 'right',
+      });
+
+      let ty = barY + GAUGE_BAR_H_MM + GAUGE_BAR_GAP_MM;
+      if (item.evidence) {
+        ty += drawText(item.evidence, ML, ty, CW - GAUGE_SCORE_W_MM, {
+          size: V3.typography.sizes.micro, style: SERIF_ITALIC, color: V3.colors.inkSoft,
+          lineMm: V3.spacing.microLineMm,
+        }) + GAUGE_BAR_GAP_MM;
+      }
+      if (item.note) {
+        drawText(item.note, ML + 4, ty, CW - 4, {
+          size: V3.typography.sizes.micro, style: SERIF, color: V3.colors.ink,
+          lineMm: V3.spacing.microLineMm,
+        });
+      }
+      controller.advance(h);
+      consumed += h;
+    }
+
+    if (b.footnote) consumed += renderParagraph(b.footnote, 'micro');
+    controller.advance(V3.spacing.blockGapMm);
+    return consumed + V3.spacing.blockGapMm;
+  };
+
   const renderTimeline = (b: TimelineBlock): number => {
     const labelW = 26;
     const dateW = 44;
@@ -886,6 +983,7 @@ export async function renderKundliPdfV3(
       case 'table': return renderTable(block);
       case 'chart': return renderChart(block);
       case 'statusList': return renderStatusList(block);
+      case 'gaugeGrid': return renderGaugeGrid(block);
       case 'timeline': return renderTimeline(block);
       case 'notesArea': return renderNotesArea(block);
       case 'callout': return renderCallout(block);
