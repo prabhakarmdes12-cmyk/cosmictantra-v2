@@ -484,11 +484,12 @@ export default function FloatingAIGuruAvatar() {
   useEffect(() => {
     if (!isOpen || chatMessages.length === 0) return;
     const last = chatMessages[chatMessages.length - 1];
-    if (last && last.sender === 'GURU' && last.text && last.id !== lastSpokenIdRef.current) {
+    const toSpeak = last?.speakText || last?.text;
+    if (last && last.sender === 'GURU' && toSpeak && last.id !== lastSpokenIdRef.current) {
       lastSpokenIdRef.current = last.id;
       const session = readingSessionRef.current;
       const shouldAdvance = readingAutoAdvanceRef.current === true;
-      voice.speak(last.text, {
+      voice.speak(toSpeak, {
         // The reading session's own speed ("धीरे पढ़ो" → 0.9×) is applied to
         // speech; without it a speed change would change nothing audible.
         rate: speechRateFor(session),
@@ -528,13 +529,13 @@ export default function FloatingAIGuruAvatar() {
 
       const greetingText =
         `हर हर महादेव! 🙏\n\n` +
-        `आज ${locLabel} का पञ्चाङ्ग मेरे पास है।\n` +
-        `आप तिथि, राहुकाल, शुभ समय, व्रत या किसी दूसरी तारीख के बारे में पूछ सकते हैं।\n\n` +
-        `• आज की तिथि: ${bundle.tithi.fullNameHi}\n` +
+        `आज आप कैसा महसूस कर रहे हैं? मन में कोई चिन्ता, दुविधा या संशय हो, अथवा आज के पञ्चाङ्ग, शुभ समय या किसी कार्य के लिए मार्गदर्शन चाहिए — निसंकोच कहें। मैं आपके साथ हूँ।\n\n` +
+        `आज की मुख्य खगोलीय स्थिति (${locLabel}):\n` +
+        `• तिथि: ${bundle.tithi.fullNameHi}\n` +
         `• राहुकाल: ${bundle.timings.rahuKalam}\n` +
         `• शुभ अभिजित मुहूर्त: ${bundle.timings.abhijitMuhurat}`;
 
-      const speakGreeting = `हर हर महादेव! आज ${locLabel} का पंचांग मेरे पास है। आप तिथि, राहुकाल, शुभ समय या व्रत के बारे में पूछ सकते हैं।`;
+      const speakGreeting = `हर हर महादेव! आज आप कैसा महसूस कर रहे हैं? मन में कोई चिंता हो या आज के पंचांग और शुभ समय की जानकारी चाहिए, निसंकोच बताइए।`;
 
       const initialMsg: ChatMessage = {
         id: 'welcome-1',
@@ -546,14 +547,15 @@ export default function FloatingAIGuruAvatar() {
           calculation: bundle.provenance.calculationEngine,
           location: bundle.location.name,
           source: bundle.provenance.source,
-          interpretation: 'काशी सहायक • प्रत्यक्ष दृक्-गणित'
+          interpretation: 'काशी सहायक • भाव-संवेदनशील व प्रत्यक्ष दृक्-गणित'
         },
         quickChips: [
+          { label: '😌 मन शांत व प्रसन्न है', action: 'MOOD_CALM' },
+          { label: '😟 चिन्ता या डर लग रहा है', action: 'MOOD_ANXIOUS' },
+          { label: '😔 मन उदास / भारी है', action: 'MOOD_SAD' },
           { label: '✨ आज का शुभ समय', action: 'INTENT_ABHIJIT' },
           { label: '🕒 आज का राहुकाल', action: 'INTENT_RAHU' },
           { label: '🙏 अगली एकादशी', action: 'INTENT_NEXT_EKADASHI' },
-          { label: '📅 कल का पञ्चाङ्ग', action: 'INTENT_PANCHANG_TOMORROW' },
-          ...MOOD_OPTIONS.slice(0, 2).map((m) => ({ label: m.chipLabel, action: m.id })),
         ],
       };
 
@@ -935,10 +937,42 @@ export default function FloatingAIGuruAvatar() {
   };
 
   // -------------------------------------------------------------------
+  const kashi = useKashiSahayak();
+  const [verseDismissed, setVerseDismissed] = useState(false);
+
+  const handleListenVerse = (passage: any) => {
+    playClick();
+    if (!passage) return;
+    const verseText = passage.original || passage.verse || '';
+    const meaningText = passage.meaning || passage.meaningHi || '';
+    const recitation = `${verseText}। भावार्थ: ${meaningText}`;
+
+    voice.speak(recitation, { rate: 0.82 });
+    kashi.control('resume');
+
+    const msgObj: ChatMessage = {
+      id: `verse-${Date.now()}`,
+      sender: 'GURU',
+      text: recitation,
+      speakText: recitation,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+    setLastSpeakableMsg(msgObj);
+  };
+
+  useEffect(() => {
+    if (kashi.pendingVerse) {
+      setVerseDismissed(false);
+      setTimeout(() => {
+        chatScrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  }, [kashi.pendingVerse]);
+
+  // -------------------------------------------------------------------
   // Emotional check-in: the seeker taps a mood chip, Kashi Sahayak
   // acknowledges the feeling warmly, anchors an authentic shastra wisdom
-  // card (when the mood carries one), and then reveals every capability
-  // so the seeker instantly understands the offering.
+  // card (single truth via kashi.pendingVerse), and reveals capabilities.
   // -------------------------------------------------------------------
   const handleMoodSelection = (moodId: string) => {
     const mood = moodId === 'SKIP_MOOD' ? null : getMoodById(moodId);
@@ -946,14 +980,26 @@ export default function FloatingAIGuruAvatar() {
       setSeekerData(prev => ({ ...prev, mood: mood.speakLabel }));
     }
 
+    const emotion = MOOD_TO_EMOTION[moodId];
     const insight =
       mood && mood.insightId
         ? SCRIPTURE_WISDOM_REGISTRY.find((s) => s.id === mood.insightId) || null
         : null;
 
-    const acknowledgement = mood
-      ? mood.acknowledgeHi
-      : 'बहुत अच्छा! 🙏 चलिए सीधे मुख्य विषय पर चलते हैं।';
+    const acknowledgement =
+      (emotion && kashi.lastResponse?.acknowledgement) ||
+      (mood ? mood.acknowledgeHi : 'बहुत अच्छा! 🙏 चलिए सीधे मुख्य विषय पर चलते हैं।');
+
+    // To prevent duplicate quotes ("two quotes, one blocking view"),
+    // if an emotion produces a pendingVerse in the companion card, do NOT also attach scriptureCard inline.
+    const shouldAttachScriptureCard = !emotion && !!insight;
+
+    // Recite the shloka immediately when suggesting it!
+    const activeVerse = kashi.pendingVerse || (insight ? { original: insight.verse, meaning: insight.meaningHi } : null);
+    const shlokaRecitation = activeVerse
+      ? `। शास्त्र का श्लोक सुनिए: ${activeVerse.original}। इसका भावार्थ है: ${activeVerse.meaning || ''}`
+      : '';
+    const speakText = `${acknowledgement}${shlokaRecitation}`;
 
     setTimeout(() => {
       setChatMessages(prev => [
@@ -961,9 +1007,10 @@ export default function FloatingAIGuruAvatar() {
         {
           id: `g-${Date.now()}`,
           sender: 'GURU',
-          text: `${acknowledgement}\n\nअब बताइए — आज आपके लिए किस विषय की सहायता सबसे महत्वपूर्ण है? नीचे से चुन सकते हैं या अपनी बात सीधे लिख सकते हैं:`,
+          text: `${acknowledgement}\n\nऔर बताइए — इस भावना के साथ आज किस विषय में सहायता चाहिए? नीचे से चुन सकते हैं या अपनी बात सीधे लिख सकते हैं:`,
+          speakText,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          ...(insight ? { scriptureCard: insight } : {}),
+          ...(shouldAttachScriptureCard ? { scriptureCard: insight } : {}),
           provenance: insight
             ? { source: insight.sourceGrantha, interpretation: 'काशी सहायक • भाव-संवेदन (Mood-Aware)' }
             : { interpretation: 'काशी सहायक • भाव-संवेदन (Mood-Aware)' },
@@ -972,8 +1019,6 @@ export default function FloatingAIGuruAvatar() {
       ]);
     }, 400);
   };
-
-  const kashi = useKashiSahayak();
 
   const handleChipClick = (chip: { label: string; action: string; href?: string }) => {
     playClick();
@@ -1717,6 +1762,8 @@ export default function FloatingAIGuruAvatar() {
       const localInsight = findScriptureInsight(text);
       if (localInsight) {
         setSeekerData(prev => (prev.mood ? prev : { ...prev, mood: localInsight.situation }));
+        const recitation = `${localInsight.verse}। भावार्थ: ${localInsight.meaningHi}`;
+        const speakText = `${localInsight.kashiSahayakBridge}। शास्त्र का श्लोक सुनिए: ${recitation}`;
         setTimeout(() => {
           setChatMessages(prev => [
             ...prev,
@@ -1724,6 +1771,7 @@ export default function FloatingAIGuruAvatar() {
               id: `g-${Date.now()}`,
               sender: 'GURU',
               text: `${localInsight.kashiSahayakBridge}\n\nऔर बताइए — इस भावना के साथ आज किस विषय में सहायता चाहिए? नीचे से चुनें या विस्तार से लिखें:`,
+              speakText,
               timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
               scriptureCard: localInsight,
               provenance: {
@@ -2076,6 +2124,21 @@ export default function FloatingAIGuruAvatar() {
                             <span><strong>शास्त्रसम्मत उपाय:</strong> {msg.scriptureCard.suggestedAction}</span>
                           </div>
                         )}
+
+                        <div className="pt-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (msg.scriptureCard) {
+                                handleListenVerse({ original: msg.scriptureCard.verse, meaning: msg.scriptureCard.meaningHi });
+                              }
+                            }}
+                            className="w-full py-2.5 rounded-xl bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#080A10] font-bold text-xs flex items-center justify-center gap-2 hover:opacity-95 active:scale-[0.99] transition-all cursor-pointer shadow-xs"
+                          >
+                            <Volume2 className="w-4 h-4" />
+                            <span>{voice.isSpeaking ? '⏸ श्लोक रोकें' : 'श्लोक सुनें'}</span>
+                          </button>
+                        </div>
                       </div>
                     )}
 
@@ -2472,13 +2535,15 @@ export default function FloatingAIGuruAvatar() {
                 {kashi.lastResponse.acknowledgement}
               </div>
             )}
-            {kashi.pendingVerse ? (
+            {kashi.pendingVerse && !verseDismissed ? (
               <KashiVerseCard
                 passage={kashi.pendingVerse}
                 reflection={kashi.lastResponse?.reflection || undefined}
                 language="hi"
                 autoplayAllowed={false}
-                onListen={() => kashi.control('resume')}
+                onListen={() => handleListenVerse(kashi.pendingVerse)}
+                isPlaying={voice.isSpeaking}
+                onDismiss={() => setVerseDismissed(true)}
                 unresolvedReason={kashi.lastResponse?.unresolvedReason ?? null}
               />
             ) : kashi.lastResponse?.unresolvedReason ? (

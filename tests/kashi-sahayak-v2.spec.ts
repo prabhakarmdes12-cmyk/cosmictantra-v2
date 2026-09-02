@@ -20,7 +20,7 @@ test.describe('KASHI SAHAYAK V2 — Panchang-Aware Conversation, Date Intelligen
     const fixedDate = new Date('2026-09-02T12:00:00+05:30');
 
     // 1. Cosmic Now calculation
-    const cosmicNowPanchang = calculatePanchang(fixedDate, DHANBAD_LOC.latitude, DHANBAD_LOC.longitude, DHANBAD_LOC.timezone);
+    const cosmicNowPanchang: any = calculatePanchang(fixedDate, DHANBAD_LOC.latitude, DHANBAD_LOC.longitude, DHANBAD_LOC.timezone);
     const expectedRahu = cosmicNowPanchang.timings.rahuKalam;
 
     // 2. Canonical Panchang Fact Bundle
@@ -109,7 +109,7 @@ test.describe('KASHI SAHAYAK V2 — Panchang-Aware Conversation, Date Intelligen
 
     const res1 = resolveDeterministicKashiIntent('आज राहुकाल क्या है?', null, ctx);
     expect(res1?.intent).toBe('GET_RAHUKAAL');
-    ctx = res1?.panchangContext || ctx;
+    ctx = (res1?.panchangContext as any) || ctx;
 
     // Turn 2: "और कल?" (should retain GET_RAHUKAAL and advance date by 1)
     const turn2 = resolveConversationalDate('और कल?', ctx);
@@ -118,8 +118,8 @@ test.describe('KASHI SAHAYAK V2 — Panchang-Aware Conversation, Date Intelligen
 
     const res2 = resolveDeterministicKashiIntent('और कल?', null, ctx);
     expect(res2?.intent).toBe('GET_RAHUKAAL');
-    expect(res2?.panchangContext.referenceDate).toBe('2026-09-03');
-    ctx = res2?.panchangContext || ctx;
+    expect(res2?.panchangContext?.referenceDate).toBe('2026-09-03');
+    ctx = (res2?.panchangContext as any) || ctx;
 
     // Turn 3: "उस दिन तिथि क्या है?" (should query Tithi on 2026-09-03)
     const turn3 = resolveConversationalDate('उस दिन तिथि क्या है?', ctx);
@@ -127,8 +127,8 @@ test.describe('KASHI SAHAYAK V2 — Panchang-Aware Conversation, Date Intelligen
 
     const res3 = resolveDeterministicKashiIntent('उस दिन तिथि क्या है?', null, ctx);
     expect(res3?.intent).toBe('GET_TITHI');
-    expect(res3?.panchangContext.referenceDate).toBe('2026-09-03');
-    ctx = res3?.panchangContext || ctx;
+    expect(res3?.panchangContext?.referenceDate).toBe('2026-09-03');
+    ctx = (res3?.panchangContext as any) || ctx;
 
     // Turn 4: "कब बदलेगी?" (Transition query on current context)
     const res4 = resolveDeterministicKashiIntent('कब बदलेगी?', null, ctx);

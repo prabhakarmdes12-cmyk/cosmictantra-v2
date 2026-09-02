@@ -71,6 +71,7 @@ interface Message {
   id: string;
   sender: 'GURU_AI' | 'USER';
   text: string;
+  speakText?: string;
   timestamp: string;
   isPulseReport?: boolean;
   pulseData?: any;
@@ -152,9 +153,10 @@ export default function AIGuruChatbotModal({
   useEffect(() => {
     if (!isOpen || messages.length === 0) return;
     const last = messages[messages.length - 1];
-    if (last && last.sender === 'GURU_AI' && last.text && last.id !== lastSpokenIdRef.current) {
+    const toSpeak = last?.speakText || last?.text;
+    if (last && last.sender === 'GURU_AI' && toSpeak && last.id !== lastSpokenIdRef.current) {
       lastSpokenIdRef.current = last.id;
-      voice.speak(last.text);
+      voice.speak(toSpeak);
     }
   }, [messages]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -323,6 +325,23 @@ export default function AIGuruChatbotModal({
   // glide into the consultation intake. The mood rides along into the
   // scholar dossier so the human pandit already knows the seeker's state.
   const kashi = useKashiSahayak();
+  const [verseDismissed, setVerseDismissed] = useState(false);
+
+  const handleListenVerse = (passage: any) => {
+    chitiSensory.playTick();
+    if (!passage) return;
+    const verseText = passage.original || passage.verse || '';
+    const meaningText = passage.meaning || passage.meaningHi || '';
+    const recitation = `${verseText}। भावार्थ: ${meaningText}`;
+    voice.speak(recitation, { rate: 0.82 });
+    kashi.control('resume');
+  };
+
+  useEffect(() => {
+    if (kashi.pendingVerse) {
+      setVerseDismissed(false);
+    }
+  }, [kashi.pendingVerse]);
 
   const handleSelectMood = (moodId: string) => {
     chitiSensory.playTick();
@@ -340,6 +359,14 @@ export default function AIGuruChatbotModal({
       ? 'चलिए शुरुआत करते हैं — कृपया अपना शुभ नाम बताएं या सेव किए प्रोफाइल से आगे बढ़ें:'
       : 'Let us begin — please share your full name, or continue with your saved profile:';
 
+    const passage = kashi.pendingVerse;
+    const recitation = passage
+      ? (lang === 'hi'
+        ? `। शास्त्र का श्लोक सुनिए: ${passage.original}। इसका भावार्थ है: ${passage.meaning || ''}`
+        : `. Listen to the sacred verse: ${passage.original}. Meaning: ${passage.meaning || ''}`)
+      : '';
+    const speakText = `${ack}${recitation}`;
+
     setMessages(prev => [
       ...prev,
       {
@@ -352,6 +379,7 @@ export default function AIGuruChatbotModal({
         id: `guru-${Date.now() + 1}`,
         sender: 'GURU_AI',
         text: `${ack} 🙏\n\n${followUp}`,
+        speakText,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       }
     ]);
@@ -1320,13 +1348,15 @@ export default function AIGuruChatbotModal({
                 {kashi.lastResponse.acknowledgement}
               </div>
             )}
-            {kashi.pendingVerse ? (
+            {kashi.pendingVerse && !verseDismissed ? (
               <KashiVerseCard
                 passage={kashi.pendingVerse}
                 reflection={kashi.lastResponse?.reflection || undefined}
                 language={lang === 'hi' ? 'hi' : 'en'}
                 autoplayAllowed={false}
-                onListen={() => kashi.control('resume')}
+                onListen={() => handleListenVerse(kashi.pendingVerse)}
+                isPlaying={voice.isSpeaking}
+                onDismiss={() => setVerseDismissed(true)}
                 unresolvedReason={kashi.lastResponse?.unresolvedReason ?? null}
               />
             ) : kashi.lastResponse?.unresolvedReason ? (
