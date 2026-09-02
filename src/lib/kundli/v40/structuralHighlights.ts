@@ -25,6 +25,8 @@ export interface StructuralHighlight {
   /** Higher = surfaced earlier. Set by the rule, not tuned per chart. */
   priority: number;
   statement: string;
+  templateId?: string;
+  templateParams?: Record<string, string | number>;
   contentType: ContentType;
   system: JyotishSystem;
   evidenceIds: string[];
@@ -53,6 +55,8 @@ export function buildStructuralHighlights(
         ruleId: 'SALIENCE_CONCENTRATION_3_PLUS',
         priority: 100 + grahas.length,
         statement: `${grahas.join(' + ')} together in the ${ORDINAL[house]} bhava (${grahas.length} grahas in one bhava).`,
+        templateId: 'HL_STELLIUM',
+        templateParams: { grahas: grahas.join(' + '), house: ORDINAL[house], count: grahas.length },
         contentType: 'DERIVED_JYOTISH_FACT',
         system: 'PARASHARI',
         evidenceIds: grahas.map((g) => FACT.planetHouse(g)),
@@ -70,6 +74,8 @@ export function buildStructuralHighlights(
         ruleId: 'SALIENCE_DIGNITY_EXTREME',
         priority,
         statement: `${c.graha} in ${c.signName} — ${strong.replace(/_/g, ' ').toLowerCase()} — in the ${ORDINAL[c.house]} bhava at ${dm(c.degreeInSign)}.`,
+        templateId: 'HL_DIGNITY',
+        templateParams: { graha: c.graha, sign: c.signName, dignity: strong.replace(/_/g, ' ').toLowerCase(), house: ORDINAL[c.house], degree: dm(c.degreeInSign) },
         contentType: 'DERIVED_JYOTISH_FACT',
         system: 'PARASHARI',
         evidenceIds: [FACT.planetDignity(c.graha), FACT.planetSignId(c.graha), FACT.planetHouse(c.graha)],
@@ -87,6 +93,8 @@ export function buildStructuralHighlights(
         ruleId: 'SALIENCE_LAGNESHA',
         priority: 99,
         statement: `Lagnesha ${lagnesha} occupies the ${ORDINAL[c.house]} bhava in ${c.signName} at ${dm(c.degreeInSign)}.`,
+        templateId: 'HL_LAGNESHA',
+        templateParams: { lagnesha, house: ORDINAL[c.house], sign: c.signName, degree: dm(c.degreeInSign) },
         contentType: 'DERIVED_JYOTISH_FACT',
         system: 'PARASHARI',
         evidenceIds: [FACT.houseSignLord(1), FACT.planetHouse(lagnesha), FACT.planetSignId(lagnesha)],
@@ -102,6 +110,8 @@ export function buildStructuralHighlights(
         ruleId: 'SALIENCE_YOGAKARAKA',
         priority: 93,
         statement: `${c.graha} is yogakaraka for this lagna (rules the ${c.functionalLordship.ruledHouses.map((h) => ORDINAL[h]).join(' and ')}) and sits in the ${ORDINAL[c.house]} bhava.`,
+        templateId: 'HL_YOGAKARAKA',
+        templateParams: { graha: c.graha, ruled: c.functionalLordship.ruledHouses.map((h) => ORDINAL[h]).join(' and '), house: ORDINAL[c.house] },
         contentType: 'DERIVED_JYOTISH_FACT',
         system: 'PARASHARI',
         evidenceIds: [FACT.planetHouse(c.graha), ...c.functionalLordship.ruledHouses.map((h) => FACT.houseSignId(h))],
@@ -117,6 +127,8 @@ export function buildStructuralHighlights(
       ruleId: 'SALIENCE_MOON',
       priority: 92,
       statement: `Moon in ${moon.signName} in the ${ORDINAL[moon.house]} bhava, nakshatra ${moon.nakshatra} pada ${moon.pada}.`,
+      templateId: 'HL_MOON',
+      templateParams: { sign: moon.signName, house: ORDINAL[moon.house], nakshatra: moon.nakshatra, pada: moon.pada },
       contentType: 'DERIVED_JYOTISH_FACT',
       system: 'PARASHARI',
       evidenceIds: [FACT.planetHouse('Moon'), FACT.planetSignId('Moon'), FACT.planetNakshatra('Moon')],
@@ -131,6 +143,8 @@ export function buildStructuralHighlights(
         ruleId: 'SALIENCE_ANGULAR',
         priority: 70 + (c.house === 10 ? 6 : c.house === 1 ? 5 : 0),
         statement: `${c.graha} in the ${ORDINAL[c.house]} bhava (${c.signName}) at ${dm(c.degreeInSign)}.`,
+        templateId: 'HL_ANGULAR',
+        templateParams: { graha: c.graha, house: ORDINAL[c.house], sign: c.signName, degree: dm(c.degreeInSign) },
         contentType: 'DERIVED_JYOTISH_FACT',
         system: 'PARASHARI',
         evidenceIds: [FACT.planetHouse(c.graha), FACT.planetSignId(c.graha)],
@@ -148,6 +162,8 @@ export function buildStructuralHighlights(
       ruleId: 'SALIENCE_RETROGRADE',
       priority: 65,
       statement: `Retrograde at birth: ${retro.map((c) => `${c.graha} (${ORDINAL[c.house]} bhava)`).join(', ')}.`,
+      templateId: 'HL_RETROGRADE',
+      templateParams: { list: retro.map((c) => `${c.graha} (${ORDINAL[c.house]} bhava)`).join(', ') },
       contentType: 'DERIVED_JYOTISH_FACT',
       system: 'PARASHARI',
       evidenceIds: retro.map((c) => FACT.planetRetrograde(c.graha)),
@@ -162,6 +178,8 @@ export function buildStructuralHighlights(
       ruleId: 'SALIENCE_COMBUSTION',
       priority: 80,
       statement: `Combust (asta): ${combust.map((c) => `${c.graha} at ${dm(c.combustion.angularDistance ?? 0)} from the Sun, orb ${dm(c.combustion.orbUsed ?? 0)}`).join('; ')}.`,
+      templateId: 'HL_COMBUST',
+      templateParams: { list: combust.map((c) => `${c.graha} at ${dm(c.combustion.angularDistance ?? 0)} from the Sun, orb ${dm(c.combustion.orbUsed ?? 0)}`).join('; ') },
       contentType: 'DERIVED_JYOTISH_FACT',
       system: 'PARASHARI',
       evidenceIds: combust.flatMap((c) => c.combustion.evidenceIds),
@@ -176,6 +194,8 @@ export function buildStructuralHighlights(
       ruleId: 'SALIENCE_VARGOTTAMA',
       priority: 75,
       statement: `Vargottama (same sign in D1 and D9): ${vargottama.map((c) => c.graha).join(', ')}.`,
+      templateId: 'HL_VARGOTTAMA',
+      templateParams: { list: vargottama.map((c) => c.graha).join(', ') },
       contentType: 'DERIVED_JYOTISH_FACT',
       system: 'PARASHARI',
       evidenceIds: vargottama.flatMap((c) => c.vargottama.evidenceIds),
@@ -191,6 +211,8 @@ export function buildStructuralHighlights(
       ruleId: 'SALIENCE_NODE_AXIS',
       priority: 60,
       statement: `Rahu–Ketu axis across the ${ORDINAL[rahu.house]} and ${ORDINAL[ketu.house]} bhavas (${rahu.signName} / ${ketu.signName}).`,
+      templateId: 'HL_NODE_AXIS',
+      templateParams: { rahuHouse: ORDINAL[rahu.house], ketuHouse: ORDINAL[ketu.house], rahuSign: rahu.signName, ketuSign: ketu.signName },
       contentType: 'DERIVED_JYOTISH_FACT',
       system: 'PARASHARI',
       evidenceIds: [FACT.planetHouse('Rahu'), FACT.planetHouse('Ketu')],

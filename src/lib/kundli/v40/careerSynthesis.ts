@@ -92,12 +92,20 @@ const claim = (
   polarity: EvidenceClaim['polarity'],
   evidenceIds: string[],
   contentType: EvidenceClaim['contentType'] = 'DERIVED_JYOTISH_FACT',
+  templateId?: string,
+  templateParams?: Record<string, string | number>,
 ): EvidenceClaim => ({
-  id, contentType, system: 'PARASHARI', statement, polarity, evidenceIds,
+  id, contentType, system: 'PARASHARI', statement, templateId, templateParams, polarity, evidenceIds,
 });
 
-const notCalculated = (id: string, statement: string, reason: string): EvidenceClaim => ({
-  id, contentType: 'NOT_CALCULATED', system: 'PARASHARI', statement,
+const notCalculated = (
+  id: string,
+  statement: string,
+  reason: string,
+  templateId?: string,
+  templateParams?: Record<string, string | number>
+): EvidenceClaim => ({
+  id, contentType: 'NOT_CALCULATED', system: 'PARASHARI', statement, templateId, templateParams,
   polarity: 'NEUTRAL', evidenceIds: [], notCalculatedReason: reason,
 });
 
@@ -130,6 +138,8 @@ export function buildCareerSynthesis(
       'NEUTRAL',
       [FACT.houseSignId(10)],
       'CALCULATED_FACT',
+      'CAREER_TENTH_SIGN',
+      { sign: tenth.signName }
     ));
   } else {
     missing.push({ factor: 'TENTH_BHAVA_SIGN', reason: 'The canonical model carries no 10th bhava.' });
@@ -145,6 +155,9 @@ export function buildCareerSynthesis(
       `${tenthLord} rules the 10th bhava for this lagna.`,
       'NEUTRAL',
       [FACT.houseSignLord(10)],
+      'DERIVED_JYOTISH_FACT',
+      'CAREER_TENTH_LORD',
+      { lord: tenthLord! }
     ));
   } else {
     missing.push({ factor: 'TENTH_LORD_IDENTITY', reason: 'The sign on the 10th could not be resolved to a lord.' });
@@ -162,6 +175,9 @@ export function buildCareerSynthesis(
       `${inDusthana ? ' — a dusthana, which the tradition reads as obstruction to the bhava it rules' : inKendraTrikona ? ' — a kendra/trikona, which the tradition reads as support for the bhava it rules' : ''}.`,
       inDusthana ? 'CHALLENGING' : inKendraTrikona ? 'SUPPORTING' : 'MIXED',
       [FACT.planetHouse(tenthLordCondition.graha), FACT.planetSignId(tenthLordCondition.graha)],
+      'DERIVED_JYOTISH_FACT',
+      'CAREER_TENTH_LORD_PLACEMENT',
+      { graha: tenthLordCondition.graha, sign: tenthLordCondition.signName, house: h, comment: inDusthana ? ' (दुःस्थान)' : inKendraTrikona ? ' (केन्द्र/त्रिकोण)' : '' }
     ));
   } else if (tenthLord) {
     missing.push({ factor: 'TENTH_LORD_PLACEMENT', reason: `${tenthLord} has no resolved placement in the canonical model.` });
@@ -178,6 +194,9 @@ export function buildCareerSynthesis(
         'No graha occupies the 10th bhava. The tradition then reads the karma bhava chiefly through its lord and the drishti it receives; an empty bhava is not a weak bhava.',
         'MIXED',
         [FACT.houseOccupants(10)],
+        'DERIVED_JYOTISH_FACT',
+        'CAREER_TENTH_EMPTY',
+        {}
       ));
     } else {
       for (const occ of tenth.occupants) {
@@ -191,6 +210,9 @@ export function buildCareerSynthesis(
           `${occ} occupies the 10th bhava in ${c.signName} (${c.dignity.category.replace(/_/g, ' ').toLowerCase()}).`,
           strong ? 'SUPPORTING' : weak ? 'CHALLENGING' : 'MIXED',
           [FACT.planetHouse(occ), FACT.planetDignity(occ)],
+          'DERIVED_JYOTISH_FACT',
+          'CAREER_TENTH_OCCUPANT',
+          { graha: occ, sign: c.signName, dignity: dignityPhrase(c.dignity.category) }
         ));
       }
     }
@@ -213,6 +235,9 @@ export function buildCareerSynthesis(
         `Lagnesha ${lagnesha} sits in the 10th while the 10th lord ${tenthLord} sits in the lagna — a mutual exchange between the 1st and 10th.`,
         'SUPPORTING',
         [FACT.planetHouse(lagnesha!), FACT.planetHouse(tenthLord!)],
+        'DERIVED_JYOTISH_FACT',
+        'CAREER_LAGNESHA_EXCHANGE',
+        { lagnesha: lagnesha!, tenthLord: tenthLord! }
       ));
     } else if (sameHouse) {
       supportive.push(claim(
@@ -220,6 +245,9 @@ export function buildCareerSynthesis(
         `Lagnesha ${lagnesha} and the 10th lord ${tenthLord} occupy the same bhava (${ORDINAL[lagneshaCondition.house]}), linking the self and the karma bhava.`,
         'SUPPORTING',
         [FACT.planetHouse(lagnesha!), FACT.planetHouse(tenthLord!)],
+        'DERIVED_JYOTISH_FACT',
+        'CAREER_LAGNESHA_CONJUNCT_TENTH_LORD',
+        { lagnesha: lagnesha!, tenthLord: tenthLord!, house: lagneshaCondition.house }
       ));
     } else if (lagneshaInTenth) {
       supportive.push(claim(
@@ -227,6 +255,9 @@ export function buildCareerSynthesis(
         `Lagnesha ${lagnesha} occupies the 10th bhava, placing the self directly in the karma bhava.`,
         'SUPPORTING',
         [FACT.planetHouse(lagnesha!)],
+        'DERIVED_JYOTISH_FACT',
+        'CAREER_LAGNESHA_IN_TENTH',
+        { lagnesha: lagnesha! }
       ));
     } else {
       mixed.push(claim(
@@ -234,6 +265,9 @@ export function buildCareerSynthesis(
         `Lagnesha ${lagnesha} (${ORDINAL[lagneshaCondition.house]} bhava) and the 10th lord ${tenthLord} (${ORDINAL[tenthLordCondition.house]} bhava) are not directly linked by conjunction or exchange.`,
         'MIXED',
         [FACT.planetHouse(lagnesha!), FACT.planetHouse(tenthLord!)],
+        'DERIVED_JYOTISH_FACT',
+        'CAREER_LAGNESHA_RELATION',
+        { lagnesha: lagnesha!, tenthLord: tenthLord!, lagnaHouse: lagneshaCondition.house, tenthHouse: tenthLordCondition.house }
       ));
     }
   } else {
@@ -254,6 +288,9 @@ export function buildCareerSynthesis(
         : 'none of them is occupied.'),
       'MIXED',
       ARTHA_HOUSES.flatMap((h) => [FACT.houseSignId(h), FACT.houseOccupants(h)]),
+      'DERIVED_JYOTISH_FACT',
+      'CAREER_ARTHA_TRIKONA',
+      { lords: [...new Set(arthaLords)].join(', '), occupancy: linked.length > 0 ? `युक्त भाव: ${linked.map((b) => `${b.house} (${b.occupants.join(', ')})`).join('; ')}।` : 'उनमें से कोई भी भाव युक्त नहीं है।' }
     ));
   } else {
     missing.push({ factor: 'ARTHA_TRIKONA', reason: 'One or more of bhavas 2/6/10/11 is unresolved.' });
@@ -275,6 +312,9 @@ export function buildCareerSynthesis(
         `${g} — ${fl.functionalStatement} Natural character: ${fl.naturalCharacter.toLowerCase()}.`,
         polarity,
         fl.evidenceIds,
+        'DERIVED_JYOTISH_FACT',
+        'CAREER_FUNCTIONAL',
+        { graha: g, functionalStatement: fl.functionalStatement, natural: fl.naturalCharacter.toLowerCase() }
       ));
     }
   } else {
@@ -294,6 +334,9 @@ export function buildCareerSynthesis(
           `${g} is ${dignityPhrase(cat)} (${c.signName}).`,
           'SUPPORTING',
           c.dignity.evidenceIds,
+          'DERIVED_JYOTISH_FACT',
+          'CAREER_DIGNITY',
+          { graha: g, dignity: dignityPhrase(cat), sign: c.signName }
         ));
       } else if (cat === 'DEBILITATED' || cat === 'ENEMY') {
         challenging.push(claim(
@@ -301,6 +344,9 @@ export function buildCareerSynthesis(
           `${g} is ${dignityPhrase(cat)} (${c.signName}).`,
           'CHALLENGING',
           c.dignity.evidenceIds,
+          'DERIVED_JYOTISH_FACT',
+          'CAREER_DIGNITY',
+          { graha: g, dignity: dignityPhrase(cat), sign: c.signName }
         ));
       }
       if (c.combustion.status === 'COMBUST') {
@@ -309,6 +355,9 @@ export function buildCareerSynthesis(
           `${g} is combust — ${dm(c.combustion.angularDistance ?? 0)} from the Sun against an orb of ${dm(c.combustion.orbUsed ?? 0)}.`,
           'CHALLENGING',
           c.combustion.evidenceIds,
+          'DERIVED_JYOTISH_FACT',
+          'CAREER_COMBUST',
+          { graha: g, distance: dm(c.combustion.angularDistance ?? 0), orb: dm(c.combustion.orbUsed ?? 0) }
         ));
       } else if (c.combustion.nearCombust) {
         mixed.push(claim(
@@ -316,6 +365,9 @@ export function buildCareerSynthesis(
           `${g} is close to the Sun (${dm(c.combustion.angularDistance ?? 0)} against an orb of ${dm(c.combustion.orbUsed ?? 0)}) but outside the adopted combustion orb.`,
           'MIXED',
           c.combustion.evidenceIds,
+          'DERIVED_JYOTISH_FACT',
+          'CAREER_NEAR_COMBUST',
+          { graha: g, distance: dm(c.combustion.angularDistance ?? 0), orb: dm(c.combustion.orbUsed ?? 0) }
         ));
       }
       if (c.motion.retrograde && !['Rahu', 'Ketu'].includes(g)) {
@@ -324,6 +376,9 @@ export function buildCareerSynthesis(
           `${g} is retrograde at birth. The tradition disagrees about whether retrogression strengthens or unsettles a graha, so this is recorded as a mixed factor rather than resolved.`,
           'MIXED',
           [FACT.planetRetrograde(g)],
+          'DERIVED_JYOTISH_FACT',
+          'CAREER_RETROGRADE',
+          { graha: g }
         ));
       }
     }
@@ -340,6 +395,9 @@ export function buildCareerSynthesis(
         'The 10th bhava receives no full Parashari drishti under the adopted aspect policy.',
         'MIXED',
         [FACT.houseSignId(10)],
+        'DERIVED_JYOTISH_FACT',
+        'CAREER_TENTH_NO_DRISHTI',
+        {}
       ));
     } else {
       for (const a of tenth.aspectsReceived) {
@@ -355,6 +413,9 @@ export function buildCareerSynthesis(
           `${a.from} casts its ${ORDINAL[a.offset] ?? `${a.offset}th`} full drishti on the 10th bhava.`,
           benefic ? 'SUPPORTING' : 'MIXED',
           a.evidenceIds,
+          'DERIVED_JYOTISH_FACT',
+          'CAREER_DRISHTI',
+          { graha: a.from, offset: a.offset }
         ));
       }
     }
@@ -380,6 +441,8 @@ export function buildCareerSynthesis(
           contentType: 'TRADITIONAL_RULE',
           system: y.system,
           statement: `${y.name} is present — every condition of the applied rule evaluated true.`,
+          templateId: 'CAREER_YOGA_PRESENT',
+          templateParams: { name: y.name },
           polarity: 'SUPPORTING',
           evidenceIds: [FACT.yogaStatus(y.id)],
         });
@@ -393,6 +456,8 @@ export function buildCareerSynthesis(
         statement:
           `${absentYogas.length} career-relevant yoga rule(s) were evaluated and did not apply to this chart, so they ` +
           `contribute nothing either way: ${absentYogas.map((y) => y.name).join(', ')}.`,
+        templateId: 'CAREER_YOGAS_ABSENT',
+        templateParams: { count: absentYogas.length, list: absentYogas.map((y) => y.name).join(', ') },
         polarity: 'NEUTRAL',
         evidenceIds: absentYogas.map((y) => FACT.yogaStatus(y.id)),
       });
@@ -405,6 +470,8 @@ export function buildCareerSynthesis(
         statement:
           `${unresolvedYogas.length} career-relevant yoga rule(s) could not be resolved by this engine and are therefore ` +
           `not used as evidence in either direction: ${unresolvedYogas.map((y) => y.name).join(', ')}.`,
+        templateId: 'CAREER_YOGAS_UNRESOLVED',
+        templateParams: { count: unresolvedYogas.length, list: unresolvedYogas.map((y) => y.name).join(', ') },
         polarity: 'NEUTRAL',
         evidenceIds: unresolvedYogas.map((y) => FACT.yogaStatus(y.id)),
         notCalculatedReason: 'Reported as not calculated; absence is not claimed.',
@@ -422,6 +489,8 @@ export function buildCareerSynthesis(
       'CAREER_D10',
       'D10 (Dashamsha) is not used to confirm or contradict this reading.',
       D10_PROMOTION.reason,
+      'CAREER_D10_NOT_USED',
+      {}
     ));
     missing.push({ factor: 'D10_CONFIRMATION', reason: D10_PROMOTION.reason });
   }
@@ -434,6 +503,9 @@ export function buildCareerSynthesis(
       `${tenthLordCondition.vargottama.value ? ' — vargottama (same sign as D1)' : ''}. D9 is reported as cross-chart context; it is not a career varga.`,
       tenthLordCondition.vargottama.value ? 'SUPPORTING' : 'NEUTRAL',
       tenthLordCondition.vargottama.evidenceIds,
+      'DERIVED_JYOTISH_FACT',
+      'CAREER_D9_TENTH_LORD',
+      { graha: tenthLordCondition.graha, sign: tenthLordCondition.vargottama.d9Sign!, comment: tenthLordCondition.vargottama.value ? ' — वर्गोत्तम (D1 और D9 में समान राशि)' : '' }
     ));
   }
 
@@ -466,6 +538,9 @@ export function buildCareerSynthesis(
           : `The ${levelWord(p.level)} lord ${p.lord} touches no artha bhava (2/6/10/11) by occupation, ownership or full drishti.`,
       careerTouch.length > 0 || isKeyGraha ? 'SUPPORTING' : 'NEUTRAL',
       p.evidenceIds,
+      'DERIVED_JYOTISH_FACT',
+      careerTouch.length > 0 ? 'CAREER_ACTIVATION_TOUCH' : isKeyGraha ? 'CAREER_ACTIVATION_KEY' : 'CAREER_ACTIVATION_NONE',
+      { level: levelWord(p.level), lord: p.lord, houses: careerTouch.join(', ') }
     ));
   }
   if (dashaClaims.some((c) => c.contentType !== 'NOT_CALCULATED')) resolved.add('DASHA_ACTIVATION');
@@ -476,6 +551,8 @@ export function buildCareerSynthesis(
     'CAREER_TRANSIT',
     'Gochara (transit) activation is not part of this report.',
     'The kernel can compute transits, but no transit rule set has been validated for this product, and a transit reading dated to the moment of generation would make the report non-deterministic.',
+    'CAREER_TRANSIT',
+    {}
   ));
   missing.push({ factor: 'TRANSIT_ACTIVATION', reason: 'Gochara rules are not validated for this report.' });
 
@@ -501,17 +578,23 @@ export function buildCareerSynthesis(
   if (tenth && tenthLord) {
     statements.push({
       text: `Career is read here from the 10th bhava in ${tenth.signName}, its lord ${tenthLord}, and the grahas that occupy or aspect it.`,
+      templateId: 'CAREER_CONCLUSION_1',
+      templateParams: { sign: tenth.signName, lord: tenthLord },
       evidenceIds: [FACT.houseSignId(10), FACT.houseSignLord(10)],
     });
   }
   if (support > 0) {
     statements.push({
       text: `${support} factor(s) support the karma bhava and ${challenge} work against it; both lists are printed in full above so the balance can be checked rather than trusted.`,
+      templateId: 'CAREER_CONCLUSION_2',
+      templateParams: { support, challenge },
       evidenceIds: [...supportive.slice(0, 3).flatMap((c) => c.evidenceIds)],
     });
   }
   statements.push({
     text: `Under the running ${activation.current.mahadasha} mahadasha / ${activation.current.antardasha} antardasha, the career reading is activated to the degree listed under Dasha Activation — the period states timing, not outcome.`,
+    templateId: 'CAREER_CONCLUSION_3',
+    templateParams: { mahadasha: activation.current.mahadasha, antardasha: activation.current.antardasha },
     evidenceIds: [FACT.currentMahadasha, FACT.currentAntardasha],
   });
 

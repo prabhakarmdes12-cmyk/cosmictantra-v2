@@ -381,13 +381,11 @@ model PjosAccount {
   @@index([mergedIntoId])
 }
 
-/**
- * One way of proving you are an account. A human may hold several.
- *
- * The unique key is (channel, subject) GLOBALLY, so a phone number can only
- * ever point at one account — that is what makes a merge detectable instead
- * of silently forking the user.
- */
+/// One way of proving you are an account. A human may hold several.
+///
+/// The unique key is (channel, subject) GLOBALLY, so a phone number can only
+/// ever point at one account — that is what makes a merge detectable instead
+/// of silently forking the user.
 model PjosAuthIdentity {
   id        String          @id @default(uuid())
   accountId String
@@ -405,21 +403,19 @@ model PjosAuthIdentity {
   @@index([accountId])
 }
 
-/**
- * Audit of a merge. Append-only, like consent.
- *
- * Merging re-points the mutable associations (identities, relationships,
- * grants) but deliberately leaves PjosConsentRecord rows attached to the
- * account that actually gave the consent. A consent is a historical fact
- * about a credential-holder at a moment in time; rewriting whose it was to
- * tidy up a merge would be falsifying the DPDP record. These rows are how a
- * reader walks from the old account to the surviving one.
- */
+/// Audit of a merge. Append-only, like consent.
+///
+/// Merging re-points the mutable associations (identities, relationships,
+/// grants) but deliberately leaves PjosConsentRecord rows attached to the
+/// account that actually gave the consent. A consent is a historical fact
+/// about a credential-holder at a moment in time; rewriting whose it was to
+/// tidy up a merge would be falsifying the DPDP record. These rows are how a
+/// reader walks from the old account to the surviving one.
 model PjosAccountMerge {
   id                 String   @id @default(uuid())
   survivingAccountId String
   absorbedAccountId  String
-  /** What triggered it, e.g. "LINK_CHANNEL:EMAIL". */
+  /// What triggered it, e.g. "LINK_CHANNEL:EMAIL".
   reason             String
   personsMoved       Int      @default(0)
   identitiesMoved    Int      @default(0)
@@ -432,19 +428,17 @@ model PjosAccountMerge {
   @@unique([absorbedAccountId])
 }
 
-/**
- * A chart entered before anyone signed in.
- *
- * Asking for a phone number before showing the Kundli is the single biggest
- * drop-off in this funnel, so the Person is created on birth-detail entry and
- * held against a signed device cookie. Claiming it later attaches it to a real
- * account without the user re-typing anything — and an abandoned funnel still
- * leaves a recoverable chart instead of nothing.
- */
+/// A chart entered before anyone signed in.
+///
+/// Asking for a phone number before showing the Kundli is the single biggest
+/// drop-off in this funnel, so the Person is created on birth-detail entry and
+/// held against a signed device cookie. Claiming it later attaches it to a real
+/// account without the user re-typing anything — and an abandoned funnel still
+/// leaves a recoverable chart instead of nothing.
 model PjosAnonymousSession {
   id        String   @id @default(uuid())
   projectId String   @default("cosmic-tantra")
-  /** SHA-256 of the cookie value. The raw token is never stored. */
+  /// SHA-256 of the cookie value. The raw token is never stored.
   tokenHash String   @unique
   personId  String?
   person    PjosPerson? @relation(fields: [personId], references: [id], onDelete: SetNull)

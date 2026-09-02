@@ -38,6 +38,7 @@ import type {
   TableBlockV2, KvGridBlock, StatusListBlock, TimelineBlock, NotesAreaBlock,
   CalloutBlockV2, ChartBlockV2, CoverBlock, PartDividerBlock, SectionTitleBlock,
 } from './reportBlocks';
+import { dms, dm } from './format';
 
 export const RENDERER_V3_VERSION = 'kundli-pdf-renderer-v3';
 
@@ -428,7 +429,9 @@ export async function renderKundliPdfV3(
   };
 
   const renderSectionTitle = (b: SectionTitleBlock): number => {
-    const h = b.secondary ? 16.5 : 12;
+    const titleH = measureText(b.text, CW * 0.74, V3.typography.sizes.sectionTitle, SERIF_BOLD, 7.5);
+    const secondaryH = b.secondary ? measureText(b.secondary, CW * 0.74, 10, SERIF_ITALIC, 5.4) + 1.5 : 0;
+    const h = titleH + secondaryH + 6;
     controller.ensureFits(h + V3.heading.minLinesAfterHeadingMm, createPage);
     const y = controller.cursorY;
     drawText(b.text, ML, y, CW * 0.74, {
@@ -437,7 +440,7 @@ export async function renderKundliPdfV3(
     });
     if (b.tag) drawLabel(b.tag, ML + CW * 0.74, y + 2.2, CW * 0.26, V3.colors.inkFaint, 'right');
     if (b.secondary) {
-      drawText(b.secondary, ML, y + 7.2, CW * 0.74, {
+      drawText(b.secondary, ML, y + titleH + 1.0, CW * 0.74, {
         size: 10, style: SERIF_ITALIC, color: V3.colors.inkSoft, lineMm: 5.4,
       });
     }
@@ -693,7 +696,7 @@ export async function renderKundliPdfV3(
     let consumed = 0;
 
     for (const period of b.periods) {
-      const h = 6.8;
+      const h = 8.5; // increased from 6.8 to prevent timeline bar overlap with Hindi characters
       controller.ensureFits(h, createPage);
       const y = controller.cursorY;
       if (period.current) s.fillRect(ML - 1.5, y - 0.6, CW + 3, h, V3.colors.highlightFill);
@@ -811,14 +814,26 @@ export async function renderKundliPdfV3(
   };
 
   const renderChart = (b: ChartBlockV2): number => {
-    const model = b.data as ChartRenderModel | undefined;
-    if (!model || !Array.isArray(model.houses) || model.houses.length !== 12) {
+    const rawModel = b.data as ChartRenderModel | undefined;
+    if (!rawModel || !Array.isArray(rawModel.houses) || rawModel.houses.length !== 12) {
       return renderCallout({
         kind: 'callout', tone: 'warning',
         title: 'Chart not drawn',
         text: 'The chart render model was incomplete, so no diagram was drawn. This is reported rather than approximated.',
       });
     }
+    
+    // Inject Degrees and Minutes into planet abbreviations
+    const model: ChartRenderModel = {
+      ...rawModel,
+      placements: rawModel.placements.map((p) => ({
+        ...p,
+        abbreviation: p.abbreviation && p.degreeInSign !== undefined
+          ? `${p.abbreviation} ${dm(p.degreeInSign)}`
+          : p.abbreviation,
+      })),
+    };
+
     const side = b.size === 'hero' ? V3.chart.heroSizeMm : V3.chart.inlineSizeMm;
     // The facts line is measured, not assumed to be one line. A bilingual
     // locale doubles its length ("लग्न — Ascendant: सिंह — Leo 12°06′ ...")

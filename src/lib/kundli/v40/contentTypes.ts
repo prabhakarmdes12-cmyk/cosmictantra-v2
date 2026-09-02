@@ -43,6 +43,8 @@ export interface EvidenceClaim {
   system: JyotishSystem;
   /** One sentence, in the report's own words. */
   statement: string;
+  templateId?: string;
+  templateParams?: Record<string, string | number>;
   polarity: EvidencePolarity;
   evidenceIds: string[];
   /** Present only when contentType === 'NOT_CALCULATED'. */
@@ -67,7 +69,7 @@ export interface StructuredConclusion {
   contentType: 'INTERPRETIVE_SYNTHESIS';
   system: JyotishSystem;
   /** Short headline statements, each backed by claims already listed. */
-  statements: { text: string; evidenceIds: string[] }[];
+  statements: { text: string; templateId?: string; templateParams?: Record<string, string | number>; evidenceIds: string[] }[];
   /** Qualitative reading of the natal indication. Never a probability. */
   natalIndication: 'STRONG' | 'MODERATE' | 'MIXED' | 'LIMITED' | 'NOT_ASSESSED';
   /** Qualitative reading of what the running dasha activates. */

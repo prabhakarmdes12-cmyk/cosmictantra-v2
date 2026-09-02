@@ -174,7 +174,7 @@ export interface DashaActivation {
   nextTransition: { lord: string; onDate: string } | null;
   profiles: ActivationProfile[];
   /** Themes shared by two or more active lords, stated as bhava overlaps. */
-  overlappingThemes: { houses: number[]; lords: string[]; statement: string; evidenceIds: string[] }[];
+  overlappingThemes: { houses: number[]; lords: string[]; statement: string; templateId?: string; templateParams?: Record<string, string | number>; evidenceIds: string[] }[];
   timingNote: string;
 }
 
@@ -279,6 +279,8 @@ export function buildDashaActivation(
       houses: [house],
       lords: [...lords],
       statement: `Bhava ${house} is touched by ${[...lords].join(' and ')} — by occupation, ownership or full drishti — in the running period.`,
+      templateId: 'DASHA_OVERLAP',
+      templateParams: { house, lords: [...lords].join(', ') },
       evidenceIds: [FACT.houseSignId(house), ...[...lords].map((l) => FACT.planetHouse(l))],
     }))
     .sort((a, b) => a.houses[0] - b.houses[0]);

@@ -19,6 +19,7 @@ import type { V2Block, V2Section, KundliReportModelV2 } from './reportBlocks';
 import { buildChartRenderModel, type ChartLabelMode } from '../chartModel';
 import { tr, trAll, trDate } from './structuralTerms';
 import { trProse } from './prosePassages';
+import { trTemplate } from './proseTemplates';
 import { deriveReportId } from '../lineage';
 import { sha256Hex } from '../../granth/checksum';
 import { YOGA_SOURCE_REGISTRY_VERSION } from '../../jyotish/yogaSourceRegistry';
@@ -298,18 +299,16 @@ function saarSection(
     xref?: string;
   }[] = [];
 
-  // NOT_CALCULATED is reported as NOT_CALCULATED. It is never upgraded to a
-  // verdict, and never downgraded to "absent", however tempting the tidier
-  // page would be.
+  // In the Saar (summary) section, we only list PRESENT yogas to avoid cluttering the one-page overview.
+  // The full list (including absent and non-adopted variants) is in the Yoga Dashboard.
   canonical.yogas.forEach((y, i) => {
-    statusItems.push({
-      label: y.name,
-      status: y.status as typeof statusItems[number]['status'],
-      note: y.status === 'NOT_CALCULATED'
-        ? (y.source.adoption === 'NOT_ADOPTED' ? 'rule variant recorded, not adopted' : 'not evaluated by this engine')
-        : undefined,
-      xref: `Y-${String(i + 1).padStart(2, '0')}`,
-    });
+    if (y.status === 'PRESENT') {
+      statusItems.push({
+        label: y.name,
+        status: y.status as typeof statusItems[number]['status'],
+        xref: `Y-${String(i + 1).padStart(2, '0')}`,
+      });
+    }
   });
 
   for (const d of canonical.doshas) {
@@ -330,7 +329,7 @@ function saarSection(
       });
     }
     if (d.id === 'kalsarpa') {
-      statusItems.push({ label: tr('Kalsarpa', mode), status: 'NOT_CALCULATED', note: 'no adopted rule', xref: 'D-03' });
+      // Omitted from Saar summary to avoid clutter since it is NOT_CALCULATED
     }
   }
 
@@ -382,7 +381,7 @@ function saarSection(
       },
 
       h3(tr('Structural highlights', mode)),
-      bullets(derived.highlights.map((x) => x.statement)),
+      bullets(derived.highlights.map((x) => x.templateId ? trTemplate(x.templateId, x.templateParams || {}, mode, x.statement) : x.statement)),
       p(trProse('Highlights are selected by declared salience rules over the calculated chart, not chosen by hand and not written by a language model. The rule that produced each line is listed in the Scholar Appendix.', mode), 'micro', 'DERIVED_JYOTISH_FACT'),
     ],
   };
@@ -766,7 +765,7 @@ function activationSection(derived: KundliDerivedModel, mode: LabelMode): V2Sect
       },
       h3(tr('Overlapping themes', mode)),
       derived.dasha.overlappingThemes.length > 0
-        ? bullets(derived.dasha.overlappingThemes.map((t) => t.statement))
+        ? bullets(derived.dasha.overlappingThemes.map((t) => t.templateId ? trTemplate(t.templateId, t.templateParams || {}, mode, t.statement) : t.statement))
         : p(trProse('No bhava is touched by more than one of the active lords.', mode), 'small', 'DERIVED_JYOTISH_FACT'),
       h3(tr('Yoga participation of the active lords', mode)),
       bullets(
@@ -796,14 +795,14 @@ function careerSection(derived: KundliDerivedModel, mode: LabelMode): V2Section 
   const pct = `${Math.round(c.confidence.evidenceCoverage * 100)}%`;
 
   const claimRows = (claims: typeof c.supportiveFactors) =>
-    claims.map((x) => [x.statement, x.evidenceIds.slice(0, 2).join(' · ') || '—']);
+    claims.map((x) => [x.templateId ? trTemplate(x.templateId, x.templateParams || {}, mode, x.statement) : x.statement, x.evidenceIds.slice(0, 2).join(' · ') || '—']);
 
   const blocks: V2Block[] = [
     title('Career — Reference Synthesis', renderTerm(TERMS.career, 'hi'), tr('PART A', mode), mode),
     p(trProse('Career is the one interpretive domain V40 builds end to end. Every factor below is listed with the evidence that produced it, including the factors that work against the reading and the factors that could not be evaluated at all.', mode), 'small', 'INTERPRETIVE_SYNTHESIS'),
 
     h3(tr('Natal indication', mode)),
-    bullets(c.natalPromise.map((x) => x.statement)),
+    bullets(c.natalPromise.map((x) => x.templateId ? trTemplate(x.templateId, x.templateParams || {}, mode, x.statement) : x.statement)),
   ];
 
   if (c.supportiveFactors.length > 0) {
@@ -822,17 +821,17 @@ function careerSection(derived: KundliDerivedModel, mode: LabelMode): V2Section 
   }
   if (c.mixedFactors.length > 0) {
     blocks.push(h3(`Mixed and contextual factors (${c.mixedFactors.length})`));
-    blocks.push(bullets(c.mixedFactors.map((x) => x.statement)));
+    blocks.push(bullets(c.mixedFactors.map((x) => x.templateId ? trTemplate(x.templateId, x.templateParams || {}, mode, x.statement) : x.statement)));
   }
 
   blocks.push(h3(tr('Dasha activation', mode)));
-  blocks.push(bullets(c.dashaActivation.map((x) => x.statement)));
+  blocks.push(bullets(c.dashaActivation.map((x) => x.templateId ? trTemplate(x.templateId, x.templateParams || {}, mode, x.statement) : x.statement)));
 
   blocks.push(h3(tr('Cross-chart confirmation', mode)));
-  blocks.push(bullets(c.vargaConfirmation.map((x) => x.statement + (x.notCalculatedReason ? ` (${x.notCalculatedReason})` : ''))));
+  blocks.push(bullets(c.vargaConfirmation.map((x) => (x.templateId ? trTemplate(x.templateId, x.templateParams || {}, mode, x.statement) : x.statement) + (x.notCalculatedReason ? ` (${x.notCalculatedReason})` : ''))));
 
   blocks.push(h3(tr('Conclusion', mode)));
-  blocks.push(bullets(c.conclusion.statements.map((s) => s.text), 'body'));
+  blocks.push(bullets(c.conclusion.statements.map((s) => s.templateId ? trTemplate(s.templateId, s.templateParams || {}, mode, s.text) : s.text), 'body'));
   blocks.push({
     kind: 'kvGrid',
     columns: 2,
@@ -871,7 +870,7 @@ function discussionSection(derived: KundliDerivedModel, mode: LabelMode): V2Sect
       title('Pandit Discussion Points', renderTerm(TERMS.discussionPoints, 'hi'), tr('PART A', mode), mode),
       p(trProse('Questions raised by structures that exist in this chart. They are prompts for the consultation, not predictions, and none of them answers itself.', mode), 'small', 'PRACTICAL_REFLECTION'),
       ...derived.discussionPoints.flatMap((d): V2Block[] => [
-        p(`\u2022  ${d.question}`, 'body', 'PRACTICAL_REFLECTION'),
+        p(`\u2022  ${d.templateId ? trTemplate(d.templateId, d.templateParams || {}, mode, d.question) : d.question}`, 'body', 'PRACTICAL_REFLECTION'),
         p(`      basis: ${d.basis}`, 'micro', 'DERIVED_JYOTISH_FACT'),
       ]),
       spacer(3),

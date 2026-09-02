@@ -26,6 +26,8 @@ export interface DiscussionPoint {
   question: string;
   /** Structure that raised the question, in one line. */
   basis: string;
+  templateId?: string;
+  templateParams?: Record<string, string | number>;
   contentType: ContentType;
   system: JyotishSystem;
   evidenceIds: string[];
@@ -56,6 +58,8 @@ export function buildDiscussionPoints(
         ruleId: 'QUESTION_CONCENTRATION',
         question: `How should the ${ORDINAL[house]}-bhava concentration of ${grahas.join(', ')} be judged once graha strength and D10 are taken into account?`,
         basis: `${grahas.length} grahas occupy bhava ${house}.`,
+        templateId: 'CQ_CONCENTRATION',
+        templateParams: { grahas: grahas.join(', '), house: house },
         contentType: 'PRACTICAL_REFLECTION',
         system: 'PARASHARI',
         evidenceIds: grahas.map((g) => FACT.planetHouse(g)),
@@ -71,6 +75,8 @@ export function buildDiscussionPoints(
       ruleId: 'QUESTION_PRESENT_YOGA',
       question: `${y.name} is present by rule. How strongly does it operate here once the graha's own condition is weighed?`,
       basis: `${y.name} satisfied every condition of the applied ${y.system} rule.`,
+      templateId: 'CQ_YOGA',
+      templateParams: { name: y.name },
       contentType: 'PRACTICAL_REFLECTION',
       system: y.system,
       evidenceIds: [FACT.yogaStatus(y.id)],
@@ -87,6 +93,8 @@ export function buildDiscussionPoints(
       ruleId: 'QUESTION_MANGLIK',
       question: `How should Mars in the ${ORDINAL[mars.house]} bhava modify the marriage assessment, and which cancellation rules does the family's tradition accept?`,
       basis: `Manglik computed as present from Mars in bhava ${mars.house}.`,
+      templateId: 'CQ_MANGLIK',
+      templateParams: { house: mars.house },
       contentType: 'PRACTICAL_REFLECTION',
       system: 'PARASHARI',
       evidenceIds: [FACT.planetHouse('Mars')],
@@ -103,6 +111,8 @@ export function buildDiscussionPoints(
       `Which themes are actually live in the running ${activation.current.mahadasha} / ${activation.current.antardasha} period` +
       (overlaps.length > 0 ? `, given that bhava(s) ${overlaps.join(' and ')} are touched by more than one active lord?` : '?'),
     basis: `Mahadasha ${activation.current.mahadasha}, antardasha ${activation.current.antardasha}, pratyantardasha ${activation.current.pratyantardasha || '—'}.`,
+    templateId: 'CQ_CURRENT_PERIOD',
+    templateParams: { mahadasha: activation.current.mahadasha, antardasha: activation.current.antardasha, overlapText: overlaps.length > 0 ? `, यह देखते हुए कि ${overlaps.join(' और ')} भाव एक से अधिक सक्रिय स्वामियों द्वारा स्पर्श किए जा रहे हैं` : '' },
     contentType: 'PRACTICAL_REFLECTION',
     system: 'PARASHARI',
     evidenceIds: [FACT.currentMahadasha, FACT.currentAntardasha],
@@ -118,6 +128,8 @@ export function buildDiscussionPoints(
         `The career factors disagree (${career.supportiveFactors.length} supporting, ${career.challengingFactors.length} challenging). ` +
         'Which side does the Pandit weight higher for this chart, and on what classical ground?',
       basis: 'Career synthesis produced both supporting and challenging factors.',
+      templateId: 'CQ_CAREER_CONTRADICTION',
+      templateParams: { support: career.supportiveFactors.length, challenge: career.challengingFactors.length },
       contentType: 'PRACTICAL_REFLECTION',
       system: 'PARASHARI',
       evidenceIds: [FACT.houseSignId(10), FACT.houseSignLord(10)],
@@ -133,6 +145,8 @@ export function buildDiscussionPoints(
         ruleId: 'QUESTION_DUSTHANA_LORD_ANGULAR',
         question: `The ${ORDINAL[b.house]} lord ${b.lord} sits in the ${ORDINAL[b.lordHouse]} bhava, ${[1, 4, 7, 10].includes(b.lordHouse) ? 'a kendra' : 'a trikona'}. Is this read as a viparita indication, or as affliction of the bhava it occupies, in the tradition being applied?`,
         basis: `${b.lord} rules bhava ${b.house} and occupies bhava ${b.lordHouse}.`,
+        templateId: 'CQ_DUSTHANA_LORD_ANGULAR',
+        templateParams: { house: b.house, lord: b.lord ?? '', lordHouse: b.lordHouse, kendraTrikona: [1, 4, 7, 10].includes(b.lordHouse) ? 'केन्द्र' : 'त्रिकोण' },
         contentType: 'PRACTICAL_REFLECTION',
         system: 'PARASHARI',
         evidenceIds: [FACT.houseSignLord(b.house), FACT.planetHouse(b.lord ?? '')],
@@ -149,6 +163,8 @@ export function buildDiscussionPoints(
       ruleId: 'QUESTION_RETROGRADE',
       question: `${retro.map((c) => c.graha).join(' and ')} ${retro.length > 1 ? 'are' : 'is'} retrograde at birth. Which reading of vakri graha does the Pandit apply here?`,
       basis: `Retrograde: ${retro.map((c) => `${c.graha} in bhava ${c.house}`).join(', ')}.`,
+      templateId: 'CQ_RETROGRADE',
+      templateParams: { grahas: retro.map((c) => c.graha).join(' और '), verb: retro.length > 1 ? 'हैं' : 'है' },
       contentType: 'PRACTICAL_REFLECTION',
       system: 'PARASHARI',
       evidenceIds: retro.map((c) => FACT.planetRetrograde(c.graha)),
@@ -164,6 +180,8 @@ export function buildDiscussionPoints(
       ruleId: 'QUESTION_NEAR_COMBUSTION',
       question: `${near.map((c) => c.graha).join(', ')} sits just outside the adopted combustion orb. Does the Pandit's own orb table make it combust?`,
       basis: near.map((c) => `${c.graha} ${c.combustion.angularDistance?.toFixed(2)}° from the Sun against orb ${c.combustion.orbUsed}°`).join('; '),
+      templateId: 'CQ_NEAR_COMBUST',
+      templateParams: { grahas: near.map((c) => c.graha).join(', ') },
       contentType: 'PRACTICAL_REFLECTION',
       system: 'PARASHARI',
       evidenceIds: near.flatMap((c) => c.combustion.evidenceIds),
@@ -177,6 +195,8 @@ export function buildDiscussionPoints(
     ruleId: 'QUESTION_BIRTH_TIME',
     question: `The lagna stands at ${canonical.ascendant.degreeInSign.toFixed(2)}° of ${canonical.ascendant.sign.name}. How confident is the family in the recorded birth time, and is a birth-time rectification warranted before acting on bhava-level readings?`,
     basis: `Lagna ${canonical.ascendant.sign.name} ${canonical.ascendant.degreeInSign.toFixed(2)}°; the lagna moves about 1° every four minutes.`,
+    templateId: 'CQ_BIRTH_TIME',
+    templateParams: { sign: canonical.ascendant.sign.name, degree: canonical.ascendant.degreeInSign.toFixed(2) },
     contentType: 'PRACTICAL_REFLECTION',
     system: 'PARASHARI',
     evidenceIds: [FACT.lagnaDegree, FACT.lagnaSign],
