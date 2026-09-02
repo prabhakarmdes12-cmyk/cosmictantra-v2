@@ -42,6 +42,15 @@ import type { ConversationPanchangContext } from '@/lib/ai/dateIntelligence';
 import { chitiSensory } from '@/lib/chitiAudio';
 import { ScriptureInsight, findScriptureInsight, SCRIPTURE_WISDOM_REGISTRY } from '@/lib/ai/scriptureMap';
 import { MOOD_OPTIONS, MOOD_QUESTION_HI, getMoodById } from '@/lib/ai/moodOptions';
+import { resolveDeterministicKashiIntent } from '@/lib/ai/kashiIntentEngine';
+import { buildScholarHandoverPacket, type ScholarHandoverPacket } from '@/lib/kashi/scholarHandover';
+import {
+  createConversationState, normalizeUtterance, matchIntent, extractEntities, applyEntities,
+  suspendFlow, resumeFlow, resumePromptHi, nextMissingSlot, INTAKE_SLOT_QUESTION_HI,
+  routeFollowUp, recordFact, detectLifeConcern, lifeConcernReply, LIFE_PATHWAY_CHIPS,
+  nextBestActions, INTERRUPTING_INTENTS, INTENT_LABEL_HI,
+  type ConversationState, type ConversationalIntent, type FlowFrame,
+} from '@/lib/kashi/conversationCore';
 import { useKashiSahayak } from '@/hooks/useKashiSahayak';
 import { KashiComposer } from '@/components/kashi/KashiComposer';
 import {
@@ -210,6 +219,13 @@ const GATEWAY_INTENT_PHRASES: Record<string, string> = {
 const VIP_CONCIERGE_PHONE_DISPLAY = '+91 99729 34937';
 const VIP_CONCIERGE_TEL = 'tel:+919972934937';
 const VIP_CONCIERGE_WA = 'https://wa.me/919972934937';
+/** The शान्ति अभ्यास the life-concern pathway offers: three steps, no claims. */
+const SHANTI_PRACTICE_HI = [
+  'चार-सात-आठ श्वास: चार गिनते हुए भीतर, सात रोकें, आठ में धीरे छोड़ें — तीन बार।',
+  'एक बार ॐ ध्वनि सुनकर उसी लय में तीन उच्चारण कीजिए (नीचे बटन है)।',
+  'दिन का एक निश्चित कोना चुनिए — पाँच मिनट, वही स्थान, वही समय। स्थिरता ही अभ्यास है।',
+].join('\n');
+
 const VIP_CONCIERGE_ROADMAP_HI = [
   'पंडित जी को कॉल या WhatsApp कीजिए — अपनी कुंडली व प्रश्न एक वाक्य में बताइए।',
   'WhatsApp पर ही ₹501 का सुरक्षित भुगतान लिंक प्राप्त कीजिए (UPI / कार्ड)।',
@@ -377,8 +393,21 @@ export default function FloatingAIGuruAvatar() {
   const [panchangContext, setPanchangContext] = useState<ConversationPanchangContext | null>(null);
   /** VIP concierge modal — the human handoff out of the chat. */
   const [conciergeOpen, setConciergeOpen] = useState(false);
+  /**
+   * ScholarHandoverPacket: generated the moment the kundli intake completes,
+   * so the human pandit receives seeker + birth data + engine summary +
+   * question in one quotable packet instead of re-asking everything.
+   */
+  const [handoverPacket, setHandoverPacket] = useState<ScholarHandoverPacket | null>(null);
   /** Which recital passage is currently speaking, so the card can show it. */
   const [recitalPlay, setRecitalPlay] = useState<{ msgId: string; index: number } | null>(null);
+  /**
+   * V3 conversation state: subject, date, location, domain, intent, the last
+   * delivered fact, the suspended flow and the detail level. A ref because it
+   * mutates per utterance without re-rendering the whole drawer; the chips it
+   * produces are stamped onto the messages themselves.
+   */
+  const convStateRef = useRef<ConversationState>(createConversationState());
   const [lastSpeakableMsg, setLastSpeakableMsg] = useState<ChatMessage | null>(null);
   const activeCityRef = useRef<any>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
@@ -1104,7 +1133,12 @@ export default function FloatingAIGuruAvatar() {
   };
 
   const conciergeWhatsAppHref = () => {
-    const text = `हर हर महादेव 🙏 मैं ${seekerData.name || 'साधक'} हूँ। CosmicTantra कुंडली परामर्श हेतु ₹501 भुगतान लिंक व पंडित जी के कॉल का अनुरोध है। प्रश्न: ${seekerData.question || 'कुंडली विश्लेषण'}`;
+    // When the intake has completed, prefill the FULL ScholarHandoverPacket so
+    // the seeker forwards seeker+chart+question context in one tap; otherwise
+    // fall back to the short request line.
+    const text = handoverPacket
+      ? handoverPacket.whatsappText
+      : `हर हर महादेव 🙏 मैं ${seekerData.name || 'साधक'} हूँ। CosmicTantra कुंडली परामर्श हेतु ₹501 भुगतान लिंक व पंडित जी के कॉल का अनुरोध है। प्रश्न: ${seekerData.question || 'कुंडली विश्लेषण'}`;
     return `${VIP_CONCIERGE_WA}?text=${encodeURIComponent(text)}`;
   };
 
@@ -1189,6 +1223,70 @@ export default function FloatingAIGuruAvatar() {
     setRecitalPlay(null);
   };
 
+  /** The live intake, as a resumable flow frame. */
+  const intakeFrame = (): FlowFrame => ({
+    kind: 'INTAKE',
+    step: intakeStep,
+    slots: {
+      name: seekerData.name, birthDate: seekerData.birthDate, birthTime: seekerData.birthTime,
+      birthCity: seekerData.birthCity, question: seekerData.question,
+    },
+    labelHi: 'कुंडली इन्टेक',
+  });
+
+  const postFollowUp = (reply: { text: string; speakText: string }) => {
+    pushGuruMessage({
+      text: reply.text,
+      speakText: reply.speakText,
+      quickChips: nextBestActions(convStateRef.current),
+    });
+  };
+
+  /**
+   * Deterministic router for follow-ups and resume. Returns true when the
+   * utterance was consumed here, so the caller must not fall through to the
+   * slot processors or the gateway.
+   */
+  const handleFollowUpIntent = (intent: ConversationalIntent): boolean => {
+    const st = convStateRef.current;
+    if (intent === 'RESUME_FLOW') {
+      const r = resumeFlow(st);
+      if (!r) {
+        const reply = routeFollowUp('RESUME_FLOW', st);
+        if (reply) postFollowUp(reply);
+        return true;
+      }
+      convStateRef.current = r.state;
+      if (r.frame.kind === 'INTAKE') {
+        setSeekerData(prev => ({ ...prev, ...r.frame.slots }));
+        setIntakeStep(r.frame.step as typeof intakeStep);
+        const slot = nextMissingSlot(r.frame.slots);
+        pushGuruMessage({
+          text: `${resumePromptHi(r.frame)} ${slot ? INTAKE_SLOT_QUESTION_HI[slot] : 'सभी विवरण पूर्ण हैं — धन्यवाद!'}`,
+          quickChips: nextBestActions(r.state),
+        });
+      } else {
+        pushGuruMessage({ text: `${resumePromptHi(r.frame)} जारी रखते हैं।`, quickChips: nextBestActions(r.state) });
+      }
+      return true;
+    }
+    const reply = routeFollowUp(intent, st);
+    if (reply) {
+      postFollowUp(reply);
+      return true;
+    }
+    if (intent === 'FOLLOWUP_THAT_DAY' && st.activeDate) {
+      const label = st.activeDateLabelHi;
+      const q = label === 'कल' ? 'कल का पंचांग'
+        : label === 'परसों' ? 'परसों का पंचांग'
+        : label === 'आज' ? 'आज का पंचांग'
+        : `${st.activeDate} का पंचांग`;
+      void postGuru(q);
+      return true;
+    }
+    return false;
+  };
+
   const handleChipClick = (chip: { label: string; action: string; href?: string }) => {
     playClick();
 
@@ -1215,6 +1313,49 @@ export default function FloatingAIGuruAvatar() {
     if (chip.action === 'MAIN_MENU') {
       playClick();
       postMainMenu();
+      return;
+    }
+
+    // Conversation-core chips: follow-ups on the active fact, resume, and the
+    // humane pathways offered after a life concern.
+    if (chip.action === 'FOLLOWUP_WHY' || chip.action === 'FOLLOWUP_MEANING' || chip.action === 'FOLLOWUP_UNTIL'
+      || chip.action === 'FOLLOWUP_THAT_DAY' || chip.action === 'FOLLOWUP_SUBJECT_RASHI' || chip.action === 'RESUME_FLOW') {
+      handleFollowUpIntent(chip.action as ConversationalIntent);
+      return;
+    }
+
+    if (chip.action === 'LIFE_PATH_TALK') {
+      pushGuruMessage({
+        text: 'मैं पूरी तरह सुन रहा हूँ — मन की बात खुलकर कहिए, कोई क्रम नहीं, कोई जल्दी नहीं।',
+        quickChips: MOOD_OPTIONS.map((m) => ({ label: m.chipLabel, action: m.id })),
+      });
+      return;
+    }
+    if (chip.action === 'LIFE_PATH_TIME') {
+      handlePanchangQuery();
+      return;
+    }
+    if (chip.action === 'LIFE_PATH_SHANTI') {
+      pushGuruMessage({
+        text: `🕉️ शान्ति अभ्यास — तीन छोटे चरण:\n${SHANTI_PRACTICE_HI}`,
+        quickChips: [
+          { label: '🕉️  ध्वनि सुनें', action: 'PLAY_OM' },
+          { label: '📿 जप माला खोलें', action: 'NAV_JAPA', href: '/remedy-tracker' },
+          { label: '🗂️ मुख्य मेन्यू', action: 'MAIN_MENU' },
+        ],
+      });
+      return;
+    }
+    if (chip.action === 'LIFE_PATH_JAPA') {
+      handleNavigate('/remedy-tracker');
+      return;
+    }
+    if (chip.action === 'LIFE_PATH_DARSHAN') {
+      handleDarshanQuery('काशी');
+      return;
+    }
+    if (chip.action === 'PLAY_OM') {
+      handlePlayOmChant();
       return;
     }
 
@@ -1757,6 +1898,26 @@ export default function FloatingAIGuruAvatar() {
         ]
       };
 
+      // The delivered answer becomes the conversation's active fact, so
+      // क्यों? / मतलब? / कब तक? have something concrete to point at; and the
+      // follow-up chips ride along with the engine's own chips.
+      if (typeof data.intent === 'string' && /^GET_/.test(data.intent)) {
+        convStateRef.current = recordFact(convStateRef.current, {
+          intent: data.intent,
+          labelHi: INTENT_LABEL_HI[data.intent] ?? data.intent,
+          valueHi: String(data.text || '').split('।')[0] + '।',
+          dateIso: data.panchangContext?.referenceDate,
+          locationHi: data.panchangContext?.location?.name,
+        });
+        const seen = new Set((newMsg.quickChips ?? []).map((c) => c.action));
+        for (const chip of nextBestActions(convStateRef.current)) {
+          if (!seen.has(chip.action)) {
+            seen.add(chip.action);
+            newMsg.quickChips = [...(newMsg.quickChips ?? []), chip];
+          }
+        }
+      }
+
       setChatMessages(prev => [...prev, newMsg]);
       setLastSpeakableMsg(newMsg);
       return true;
@@ -1848,6 +2009,66 @@ export default function FloatingAIGuruAvatar() {
       return;
     }
 
+    // -----------------------------------------------------------------
+    // V3 conversation core: entities → matcher → life concerns → follow-ups
+    // → interruption-safe intake. All deterministic; no model in the loop.
+    // -----------------------------------------------------------------
+    const norm = normalizeUtterance(text);
+    convStateRef.current = applyEntities(convStateRef.current, extractEntities(norm));
+    const coreMatch = matchIntent(norm);
+
+    const concern = coreMatch ? detectLifeConcern(coreMatch.intent) : null;
+    if (concern) {
+      voice.stop();
+      const reply = lifeConcernReply(concern, seekerData.name);
+      pushGuruMessage({ text: reply.text, speakText: reply.speakText, quickChips: [...LIFE_PATHWAY_CHIPS] });
+      return;
+    }
+
+    if (coreMatch && (coreMatch.intent === 'DETAIL_SHORT' || coreMatch.intent === 'DETAIL_PANDIT')) {
+      const lvl = convStateRef.current.detailLevel;
+      pushGuruMessage({
+        text: lvl === 'SHORT'
+          ? 'ठीक है — अब उत्तर संक्षेप में: एक वाक्य, मान और स्रोत। फिर भी विस्तार चाहिए तो कहिए "विस्तार से"।'
+          : 'ठीक है — अब पंडित-स्तर पर उत्तर दूँगा: सूक्त, नियम और गणना-क्रम सहित।',
+        quickChips: nextBestActions(convStateRef.current),
+      });
+      return;
+    }
+
+    if (coreMatch && handleFollowUpIntent(coreMatch.intent)) {
+      return;
+    }
+
+    // Interruption rule: while a flow is live, a factual question or a
+    // follow-up is ANSWERED FULLY and the flow is suspended, never eaten as a
+    // slot answer. "आज राहुकाल क्या है?" mid-birth-time must get its raahu
+    // kaal, and the birth-time step must still be there afterwards.
+    const intakeActive = intakeStep !== 'IDLE' && intakeStep !== 'COMPLETED';
+    if (intakeActive) {
+      const factual = resolveDeterministicKashiIntent(text, panchangContext ?? undefined);
+      const interrupting = (coreMatch !== null && INTERRUPTING_INTENTS.has(coreMatch.intent)) || factual !== null;
+      if (interrupting) {
+        const frame = intakeFrame();
+        convStateRef.current = suspendFlow(convStateRef.current, frame);
+        setIntakeStep('IDLE');
+        const nudge = () => pushGuruMessage({
+          text: `${resumePromptHi(frame)} जब तैयार हों, "वापस" लिखिए या नीचे का बटन चुनिए — वहीं प्रश्न दोहराऊँगा जहाँ रुके थे।`,
+          quickChips: [
+            { label: `↩️ वापस — ${frame.labelHi} जारी रखें`, action: 'RESUME_FLOW' },
+            ...nextBestActions(convStateRef.current),
+          ],
+        });
+        if (factual) {
+          void postGuru(text).then(nudge);
+        } else if (coreMatch) {
+          handleFollowUpIntent(coreMatch.intent);
+          nudge();
+        }
+        return;
+      }
+    }
+
     // Handle Guided Intake Step Machine
     if (intakeStep === 'ASK_NAME') {
       setSeekerData(prev => ({ ...prev, name: text }));
@@ -1914,6 +2135,34 @@ export default function FloatingAIGuruAvatar() {
       const currentHour = new Date().getHours();
       const isCautionDay = currentHour >= 12 && currentHour <= 15;
 
+      // Build the VIP handover packet now — the scholar must never restart
+      // the intake. Deterministic; same seeker + pulse ⇒ same packet id.
+      const transitStatusEarly = isCautionDay ? 'CAUTION_DAY' as const : 'POWER_DAY' as const;
+      const transitMessageEarly = isCautionDay
+        ? 'आज का दिन सतर्कता दिवस (Caution Window) है — चन्द्रमा के गोचर व राहुकाल के कारण नए वित्तीय या उग्र निर्णयों में धैर्य रखें।'
+        : 'आज का दिन शुभ सिद्धि योग (Power Window) है — गुरु-चन्द्र की अनुकूल दृष्टि से सोचे गए कार्यों में प्रगति का योग है।';
+      setHandoverPacket(buildScholarHandoverPacket({
+        seeker: {
+          name: seekerData.name,
+          birthDate: seekerData.birthDate,
+          birthTime: seekerData.birthTime,
+          birthCity: seekerData.birthCity,
+          lat: seekerData.birthLat,
+          lon: seekerData.birthLon,
+          question: text,
+        },
+        pulse: {
+          lagna: lagnaName,
+          nakshatra: nakshatraName,
+          dasha: dashaStr,
+          transitStatus: transitStatusEarly,
+          transitMessage: transitMessageEarly,
+          recommendation: isCautionDay
+            ? 'महामृत्युंजय जप एवं काशी विश्वनाथ लाइव दर्शन; प्रश्न पर पंडित परामर्श पत्र व कॉल।'
+            : 'शुभ समय सक्रिय है — प्रश्न का समाधान पंडित जी से प्रत्यक्ष परामर्श में शीघ्र सम्भव।',
+        },
+      }));
+
       const transitStatus = isCautionDay ? 'CAUTION_DAY' : 'POWER_DAY';
       const transitMessage = isCautionDay
         ? '⚠️ आज का दिन सतर्कता दिवस (Caution Window) है — चन्द्रमा के गोचर व राहुकाल के कारण नए वित्तीय या उग्र निर्णयों में धैर्य रखें।'
@@ -1960,6 +2209,7 @@ export default function FloatingAIGuruAvatar() {
               { label: '📜 ₹501 कुण्डली + 10-15 मिनट व्याख्या', action: 'OPEN_CHECKOUT_EXPLANATION', href: '/ask?tier=WRITTEN' },
               { label: '📞 ₹1,100 सभा परामर्श (विद्वान् कॉल)', action: 'OPEN_CHECKOUT_VOICE', href: '/ask?tier=VOICE' },
               { label: '✨ आज का गोचर व शुभ मुहूर्त', action: 'INTENT_ABHIJIT' },
+              { label: '📞 पंडित जी से सीधी बात (VIP Concierge)', action: 'OPEN_CONCIERGE' },
             ],
           },
         ]);
@@ -3059,6 +3309,41 @@ export default function FloatingAIGuruAvatar() {
             >
               💬 WhatsApp पर संदेश भेजें (पूर्व-भरा हुआ)
             </a>
+
+            <div className="rounded-2xl bg-[#FAF7F2] dark:bg-[#121526] border border-black/10 dark:border-white/10 p-3">
+              <div className="flex items-center justify-between gap-2 mb-1.5">
+                <div className="text-[11px] font-bold text-[#8E6F1D] dark:text-[#F0C968]">
+                  🗂️ ScholarHandoverPacket — पंडित जी के लिए तैयार सारांश
+                </div>
+                {handoverPacket && (
+                  <button
+                    onClick={() => {
+                      playClick();
+                      void navigator.clipboard?.writeText(handoverPacket.whatsappText);
+                    }}
+                    className="shrink-0 px-2 py-1 rounded-lg bg-[#8E6F1D]/10 dark:bg-[#D4AF37]/15 text-[10px] font-bold text-[#8E6F1D] dark:text-[#F0C968] cursor-pointer"
+                    title="पूरा पैकेट कॉपी करें"
+                  >
+                    📋 कॉपी करें
+                  </button>
+                )}
+              </div>
+              {handoverPacket ? (
+                <div className="space-y-1 text-[10.5px] text-[#44403C] dark:text-[#D1C9BF] leading-relaxed max-h-40 overflow-y-auto pr-1">
+                  <div className="font-mono text-[10px] text-[#696256] dark:text-[#9E988D]">{handoverPacket.packetId}</div>
+                  {handoverPacket.displayLines.map((line, i) => (
+                    <div key={i} className={line.startsWith('•') ? '' : 'font-bold text-[#1C1917] dark:text-white mt-1'}>
+                      {line}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-[10.5px] text-[#696256] dark:text-[#9E988D] leading-relaxed">
+                  कुंडली इन्टेक (नाम → जन्म विवरण → प्रश्न) पूरा होते ही यह पैकेट स्वतः बन जाएगा और
+                  WhatsApp संदेश में भी जुड़ जाएगा। तब तक कृपया पंडित जी को जन्म विवरण व प्रश्न बता दें।
+                </p>
+              )}
+            </div>
 
             <div className="rounded-2xl bg-[#FAF7F2] dark:bg-[#121526] border border-black/10 dark:border-white/10 p-3">
               <div className="text-[11px] font-bold text-[#8E6F1D] dark:text-[#F0C968] mb-1.5">
