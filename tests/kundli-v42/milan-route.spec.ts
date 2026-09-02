@@ -136,6 +136,9 @@ test.describe('MILAN_KUNDLI_CURRENT_RENDERER', () => {
     await expect(page.getByRole('heading', { name: 'Ashtakoota Milan' })).toBeVisible();
     await expect(page.getByRole('group', { name: 'Qualified PDF edition' })).toBeVisible();
     await expect(page.getByRole('button', { name: /Calculate Milan/i })).toBeVisible();
+    // Novice-friendly birth entry: type-ahead city search + geolocation.
+    await expect(page.getByLabel(/birth place/i).first()).toBeVisible();
+    await expect(page.getByRole('button', { name: /Use my location/i }).first()).toBeVisible();
     // The paid-consultation gate is only rendered after a calculation; the
     // sample-data form is present and the CTA is reachable after computing.
     await page.getByRole('button', { name: /Fill sample/i }).click();

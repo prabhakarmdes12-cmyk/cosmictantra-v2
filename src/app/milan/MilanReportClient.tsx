@@ -6,7 +6,9 @@ import {
   Download, Printer, Shield, Sparkles, CheckCircle2, ArrowRight,
   Edit3, AlertTriangle, Heart, BookOpen, FileText, Phone, Star,
   LayoutDashboard, Layers, Workflow, MessageSquare, Calendar,
+  Search, Navigation,
 } from 'lucide-react';
+import { searchCities } from '@/lib/cities';
 import { getCanonicalJyotishSnapshot } from '@/lib/jyotish/canonicalSnapshot';
 import { calculateMilan, milanInputFromSnapshot, milanContextFromSnapshot, MilanCalculation, MilanPersonInput } from '@/lib/kundli/v42/milan/milanEngine';
 import GlobalHeader from '@/components/layout/GlobalHeader';
@@ -52,6 +54,9 @@ export default function MilanReportClient() {
   const [selectedKootaId, setSelectedKootaId] = useState<string>('varna');
   const [chartData, setChartData] = useState<{ bride: any; groom: any } | null>(null);
   const [readingDepth, setReadingDepth] = useState<'SIMPLE' | 'DETAILED' | 'PANDIT'>('DETAILED');
+  const [cityQuery, setCityQuery] = useState<{ bride: string; groom: string }>({ bride: '', groom: '' });
+  const [citySuggestions, setCitySuggestions] = useState<{ bride: any[]; groom: any[] }>({ bride: [], groom: [] });
+  const [locating, setLocating] = useState<'' | 'bride' | 'groom'>('');
 
   const hi = lang === 'hi';
 
@@ -92,6 +97,54 @@ export default function MilanReportClient() {
     if (code === 'en' || code === 'hi') setPdfLocale(code);
     document.documentElement.lang = code;
     try { localStorage.setItem('cosmictantra_lang', code); } catch {}
+  };
+
+  const cityAutocomplete = (key: 'bride' | 'groom', q: string) => {
+    setCityQuery((prev) => ({ ...prev, [key]: q }));
+    if (!q.trim()) {
+      setCitySuggestions((prev) => ({ ...prev, [key]: [] }));
+      return;
+    }
+    const hits = searchCities(q).slice(0, 6);
+    setCitySuggestions((prev) => ({ ...prev, [key]: hits }));
+  };
+
+  const pickCity = (key: 'bride' | 'groom', c: { name: string; state: string; lat: number; lng: number; tz: number }) => {
+    const setForm = key === 'bride' ? setBride : setGroom;
+    setForm((prev) => ({
+      ...prev,
+      locationName: `${c.name}, ${c.state}`,
+      latitude: c.lat,
+      longitude: c.lng,
+      timezone: c.tz,
+    }));
+    setCityQuery((prev) => ({ ...prev, [key]: '' }));
+    setCitySuggestions((prev) => ({ ...prev, [key]: [] }));
+  };
+
+  const useMyLocation = (key: 'bride' | 'groom') => {
+    setError('');
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setError(hi ? 'इस डिवाइस पर स्थान उपलब्ध नहीं है।' : 'Location access is not available on this device.');
+      return;
+    }
+    setLocating(key);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const setForm = key === 'bride' ? setBride : setGroom;
+        setForm((prev) => ({
+          ...prev,
+          latitude: Number(pos.coords.latitude.toFixed(4)),
+          longitude: Number(pos.coords.longitude.toFixed(4)),
+        }));
+        setLocating('');
+      },
+      () => {
+        setError(hi ? 'स्थान पढ़ा नहीं जा सका। कृपया शहर लिखें।' : 'Could not read your location. Please type the city.');
+        setLocating('');
+      },
+      { timeout: 8000 },
+    );
   };
 
   const compute = (e: React.FormEvent) => {
@@ -315,9 +368,9 @@ export default function MilanReportClient() {
           </div>
           <form onSubmit={compute} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {[
-              { label: 'Bride (वधू)', form: bride, setForm: setBride },
-              { label: 'Groom (वर)', form: groom, setForm: setGroom },
-            ].map(({ label, form, setForm }) => (
+              { key: 'bride' as const, label: 'Bride (वधू)', form: bride, setForm: setBride },
+              { key: 'groom' as const, label: 'Groom (वर)', form: groom, setForm: setGroom },
+            ].map(({ key, label, form, setForm }) => (
               <div key={label} className="p-4 rounded-xl border border-[#E5D7BC] dark:border-white/10 bg-[#FAF7F2] dark:bg-[#0E101D] space-y-2.5">
                 <div className="text-[10px] uppercase tracking-[0.2em] text-[#8E6F1D] dark:text-[#D4AF37] font-bold">{label}</div>
                 <input className={inputCls} placeholder={hi ? 'नाम' : 'Name'} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
@@ -325,7 +378,34 @@ export default function MilanReportClient() {
                   <input type="date" className={inputCls} value={form.birthDate} onChange={(e) => setForm({ ...form, birthDate: e.target.value })} aria-label="Birth date" />
                   <input type="time" className={inputCls} value={form.birthTime} onChange={(e) => setForm({ ...form, birthTime: e.target.value })} aria-label="Birth time" />
                 </div>
-                <input className={inputCls} placeholder={hi ? 'जन्म स्थान' : 'Birth place'} value={form.locationName} onChange={(e) => setForm({ ...form, locationName: e.target.value })} />
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-[#78716C] dark:text-[#A8A29E] absolute right-3 top-2.5" />
+                  <input
+                    className={inputCls}
+                    placeholder={form.locationName || (hi ? 'जन्म स्थान (शहर लिखें)' : 'Birth place (type a city)')}
+                    value={cityQuery[key]}
+                    onChange={(e) => cityAutocomplete(key, e.target.value)}
+                    onFocus={() => cityQuery[key].trim() && citySuggestions[key].length === 0 && cityAutocomplete(key, cityQuery[key])}
+                    aria-label={`${label} birth place`}
+                  />
+                  {citySuggestions[key].length > 0 && (
+                    <div className="absolute z-20 mt-1 w-full bg-white dark:bg-[#121422] border border-[#E5D7BC] dark:border-white/10 rounded-xl shadow-xl max-h-56 overflow-y-auto">
+                      {citySuggestions[key].map((c: any) => (
+                        <button key={c.id} type="button" onClick={() => pickCity(key, c)}
+                          className="w-full text-left px-3 py-2 hover:bg-[#FAF6EF] dark:hover:bg-[#161828] flex items-center justify-between gap-2">
+                          <span className="text-xs font-semibold">{c.name}, {c.state}</span>
+                          <span className="text-[9px] font-mono-data text-[#78716C] dark:text-[#A8A29E]">{c.lat.toFixed(2)}°, {c.lng.toFixed(2)}°</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[9px] text-[#78716C] dark:text-[#A8A29E] leading-relaxed">{hi ? 'शहर चुनने पर निर्देशांक अपने आप भर जाते हैं।' : 'Pick a city and the coordinates fill in for you.'}</p>
+                  <button type="button" onClick={() => useMyLocation(key)} disabled={locating === key} className="flex items-center gap-1 px-2.5 py-1 rounded-lg border border-[#8E6F1D]/30 bg-white dark:bg-[#121422] text-[#8E6F1D] dark:text-[#F0C968] text-[10px] font-bold hover:bg-[#F5EFE6] disabled:opacity-60 shrink-0">
+                    <Navigation className="w-3 h-3" /> {locating === key ? (hi ? 'खोज…' : 'Locating…') : (hi ? 'मेरा स्थान' : 'Use my location')}
+                  </button>
+                </div>
                 <div className="grid grid-cols-3 gap-2">
                   <input type="number" step="any" className={inputCls} placeholder="Lat" value={form.latitude} onChange={(e) => setForm({ ...form, latitude: parseFloat(e.target.value) || 0 })} aria-label="Latitude" />
                   <input type="number" step="any" className={inputCls} placeholder="Lng" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: parseFloat(e.target.value) || 0 })} aria-label="Longitude" />
