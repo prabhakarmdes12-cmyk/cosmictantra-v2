@@ -751,6 +751,31 @@ function mangalResultFor(
     reasons.push(moonNote); reduced = true;
   }
 
+  // Mercury / Venus association softens the dosha in the composite reading.
+  const mercuryNote = marsConjunctNote(ctx, 'Mercury', marsId);
+  if (mercuryNote) {
+    reasons.push(mercuryNote); reduced = true;
+  }
+  const venusNote = marsConjunctNote(ctx, 'Venus', marsId);
+  if (venusNote) {
+    reasons.push(venusNote); reduced = true;
+  }
+
+  // Mars in a movable (chara) sign and retrograde Mars are classical
+  // softening factors rather than absolute cancellations.
+  if ([1, 4, 7, 10].includes(marsId)) {
+    reasons.push('Mars in a movable (chara) sign'); reduced = true;
+  }
+  if (mars?.isRetrograde) {
+    reasons.push('Mars is retrograde — classic softening factor, needs a full-chart read'); reduced = true;
+  }
+
+  // Dispositor (sign lord of Mars' sign) in a kendra or trikona.
+  const dispositorNote = dispositorInKendraTrikona(ctx, marsId, lagnaId);
+  if (dispositorNote) {
+    reasons.push(dispositorNote); cancelled = true;
+  }
+
   // D9 navamsha own/exaltation softens.
   const d9 = mars?.navamshaRashiId ?? 0;
   if (d9 === 1 || d9 === 8 || d9 === 10) {
@@ -789,6 +814,32 @@ function marsAspectFrom(ctx: MilanChartContext, planetName: 'Jupiter' | 'Moon', 
   const dist = rashiDistance(pId, marsId);
   if (aspects.includes(dist) || aspects.includes(rashiDistance(marsId, pId))) {
     return `${planetName} ${dist === 1 ? 'conjunct' : 'aspects'} Mars ${planetName === 'Jupiter' ? '(major cancellation)' : '(softens)'}`;
+  }
+  return null;
+}
+
+/** Classical softening note when a benefic-by-proximity planet shares Mars' sign. */
+function marsConjunctNote(ctx: MilanChartContext, planetName: 'Mercury' | 'Venus', marsId: number): string | null {
+  const planets = Array.isArray(ctx.planetsArray) ? ctx.planetsArray : [];
+  const p = planets.find((x: any) => x.name === planetName);
+  if (!p) return null;
+  if (Number(p.rashiId) !== marsId) return null;
+  return `${planetName} conjunct Mars`;
+}
+
+/** Cancels a Mangal Dosha when the dispositor (lord of Mars' sign) is in a kendra or trikona. */
+function dispositorInKendraTrikona(ctx: MilanChartContext, marsId: number, lagnaId: number): string | null {
+  const marsRashi = RASHIS.find((r: any) => r.id === marsId);
+  const lord = marsRashi?.lord ?? '';
+  if (!lord) return null;
+  const planets = Array.isArray(ctx.planetsArray) ? ctx.planetsArray : [];
+  const p = planets.find((x: any) => x.name === lord);
+  if (!p) return null;
+  const dispositorId = Number(p.rashiId);
+  if (!dispositorId || !lagnaId) return null;
+  const house = rashiDistance(lagnaId, dispositorId);
+  if ([1, 4, 5, 7, 9, 10].includes(house)) {
+    return `Mars dispositor (${lord}) in kendra/trikona house ${house}`;
   }
   return null;
 }

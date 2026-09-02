@@ -172,8 +172,8 @@ test.describe('Milan engine — classical 36-guna tables', () => {
   test('Mangal Dosha remains active when no Bhanga condition applies', () => {
     const r = calculateMilan(taurusRohini1, taurusRohini2, {
       brideCtx: {
-        lagnaRashiId: 1, mars: { rashiId: 7, house: 7, rashiName: 'Libra' },
-        planetsArray: [{ name: 'Mars', rashiId: 7, house: 7 }, { name: 'Jupiter', rashiId: 9 }, { name: 'Venus', rashiId: 2 }],
+        lagnaRashiId: 1, mars: { rashiId: 2, house: 7, rashiName: 'Taurus' },
+        planetsArray: [{ name: 'Mars', rashiId: 2, house: 7 }, { name: 'Jupiter', rashiId: 9 }],
         manglik: { isManglik: true, isCancelled: false, causeHouse: 7, severity: 'HIGH' },
       },
     });
