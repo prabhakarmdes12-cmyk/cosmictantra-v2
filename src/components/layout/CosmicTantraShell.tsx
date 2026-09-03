@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import GlobalHeader from './GlobalHeader';
+import PrimaryNavigation from './PrimaryNavigation';
 import Breadcrumbs from './Breadcrumbs';
 import GlobalFooter from './GlobalFooter';
 import LanguageSelectorModal from './LanguageSelectorModal';
@@ -90,16 +91,27 @@ export default function CosmicTantraShell({
     <div className={`min-h-screen flex flex-col transition-colors duration-200 ${
       theme === 'dark' ? 'bg-[#06070B] text-[#FFFFFF]' : 'bg-[#FAF7F2] text-[#1C1917]'
     }`}>
-      {/* Context-Aware Global Header */}
-      <GlobalHeader
-        mode={activeShellMode}
-        theme={theme}
-        lang={lang}
-        onThemeToggle={handleThemeToggle}
-        onLangToggle={handleLangToggle}
-        presentationSlide={presentationSlide}
-        totalSlides={totalSlides}
-      />
+      {/* 5-Primary-Destination Navigation (Public Mode) or Global Header (Scholar/Presentation) */}
+      {activeShellMode === 'public' ? (
+        <PrimaryNavigation
+          mode={activeShellMode}
+          theme={theme}
+          lang={lang}
+          currentCity={{ name: 'Varanasi', lat: 25.3176, lng: 82.9739 }}
+          onThemeToggle={handleThemeToggle}
+          onLangToggle={handleLangToggle}
+        />
+      ) : (
+        <GlobalHeader
+          mode={activeShellMode}
+          theme={theme}
+          lang={lang}
+          onThemeToggle={handleThemeToggle}
+          onLangToggle={handleLangToggle}
+          presentationSlide={presentationSlide}
+          totalSlides={totalSlides}
+        />
+      )}
 
       {/* Semantic Clickable Breadcrumbs (Public routes only) */}
       {activeShellMode === 'public' && activeBreadcrumbs && activeBreadcrumbs.length > 0 && (
