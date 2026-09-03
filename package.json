@@ -25,7 +25,9 @@
     "qualify:time": "tsx qualification/time-qualification-runner.ts --scenarios 100000 --write-cert-doc",
     "qualify:time:scaffold": "tsx qualification/time-qualification-runner.ts --scenarios 5000",
     "qualify:bala": "tsx qualification/bala-qualification-runner.ts --scenarios 50000 --write-cert-doc",
-    "qualify:bala:scaffold": "tsx qualification/bala-qualification-runner.ts --scenarios 5000"
+    "qualify:bala:scaffold": "tsx qualification/bala-qualification-runner.ts --scenarios 5000",
+    "qualify:gochara": "tsx qualification/gochara-qualification-runner.ts --scenarios 10000 --gate strict",
+    "qualify:gochara:scaffold": "tsx qualification/gochara-qualification-runner.ts --scenarios 2000"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.77",

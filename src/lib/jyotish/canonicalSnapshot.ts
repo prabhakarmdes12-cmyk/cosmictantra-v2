@@ -40,6 +40,7 @@ import { calculateVarshaphala, VarshaphalaResult } from './varshaphalaEngine';
 import { calculateAvakhada, AvakhadaResult } from './avakhadaEngine';
 import { buildConventionSnapshotMetadata, DEFAULT_PRESET, type ResolvedConventionSelection } from './conventionCenter';
 import { resolveAstronomyProvider } from '../astronomy/astronomyProvider';
+import { computeGochara, type GocharaResult } from './gocharaEngine';
 
 export interface NormalizedBirthContext {
   birthDate: string; // YYYY-MM-DD
@@ -188,6 +189,14 @@ export interface CanonicalJyotishSnapshot {
       isActive: boolean;
       phase: string;
       description: string;
+      /** Sprint G (RSK_016): the phenomenon basis — always TRANSIT, never natal. */
+      basis: 'TRANSIT';
+      natalMoonRashiId: number;
+      transitSaturnRashiId: number;
+      /** Whole-sign houses from the natal Moon rashi: 12 (first), 1 (peak), 2 (third), else not active. */
+      saturnHousesFromMoon: number;
+      /** The explicit reference instant the transit was evaluated at (CT_INV_007). */
+      referenceInstantUtc: string;
     };
     kalsarpa: {
       status: 'NOT_CALCULATED';
@@ -201,8 +210,8 @@ export interface CanonicalJyotishSnapshot {
     specialCombinations: string[];
   };
   
-  // 11. Gochar / Transits (if targetDate provided)
-  transits?: any;
+  // 11. Gochar / Transits — evaluated at the explicit targetDate (Sprint G).
+  transits?: GocharaResult;
 
   // 12. Master Jyotish Systems
   ashtakavarga?: AshtakavargaResult;
@@ -340,14 +349,20 @@ export function getCanonicalJyotishSnapshot(context: NormalizedBirthContext): Ca
 
   const manglikSeverity = !isManglikHouse ? 'NONE' : isCancelled ? 'LOW' : [7, 8].includes(marsHouse) ? 'HIGH' : 'MEDIUM';
 
-  // 10. Sade Sati Phase Tracking
-  const saturnPlanet = (kundli.planets as any[]).find((p: any) => p.name === 'Saturn');
+  // 10. Sade Sati Phase Tracking — TRANSIT-BASED (Sprint G, RSK_016 fix).
+  // Mission §9 is explicit: current Sade Sati is NEVER inferred from natal
+  // Saturn/Moon positions. The state below is a function of TRANSIT Saturn at
+  // the explicit reference instant against the natal Moon rashi; the natal
+  // Saturn is not an input anywhere (enforced by tests/gochara-qualification).
   const moonRashiId = kundli.moon.rashiId;
-  const saturnRashiId = saturnPlanet ? saturnPlanet.rashiId : 1;
-  const saturnFromMoon = ((saturnRashiId - moonRashiId + 12) % 12) + 1;
-  
-  const isSadeSati = [12, 1, 2].includes(saturnFromMoon);
-  const sadeSatiPhase = saturnFromMoon === 12 ? '1st Phase (Rising / द्वादश शनि)' : saturnFromMoon === 1 ? 'Peak Phase (Janma Shani / जन्म शनि)' : saturnFromMoon === 2 ? '3rd Phase (Setting / द्वितीय शनि)' : 'Not Active';
+  const gocharaLight = computeGochara({
+    natalMoonRashiId: moonRashiId,
+    natalLagnaRashiId: kundli.lagna.rashiId,
+    referenceInstantUtc: targetDate.toISOString()
+  });
+  const saturnFromMoon = gocharaLight.sadeSati.saturnHousesFromMoon;
+  const isSadeSati = gocharaLight.sadeSati.isActive;
+  const sadeSatiPhase = gocharaLight.sadeSati.phase;
 
   // 11. Rule-evaluated yogas (replaces the previous unconditional declarations)
   //     Every yoga is evaluated against the computed chart and carries its
@@ -459,7 +474,14 @@ export function getCanonicalJyotishSnapshot(context: NormalizedBirthContext): Ca
       sadeSati: {
         isActive: isSadeSati,
         phase: sadeSatiPhase,
-        description: isSadeSati ? `Saturn is currently transiting ${sadeSatiPhase} relative to natal Moon.` : 'Saturn is favorably placed.'
+        description: isSadeSati
+          ? `Transit Saturn is in ${gocharaLight.sadeSati.transitSaturnRashiName} — the ${saturnFromMoon === 12 ? '12th' : saturnFromMoon === 1 ? '1st' : '2nd'} rashi from the natal Moon (${sadeSatiPhase}), evaluated at the reference instant.`
+          : `Transit Saturn is in ${gocharaLight.sadeSati.transitSaturnRashiName} (${saturnFromMoon}th from the natal Moon) — outside the Sade Sati band at the reference instant.`,
+        basis: 'TRANSIT' as const,
+        natalMoonRashiId: moonRashiId,
+        transitSaturnRashiId: gocharaLight.sadeSati.transitSaturnRashiId,
+        saturnHousesFromMoon: saturnFromMoon,
+        referenceInstantUtc: targetDate.toISOString()
       },
       kalsarpa: {
         // The type allows a kalsarpa dosha, but no rule is implemented yet.
@@ -481,6 +503,7 @@ export function getCanonicalJyotishSnapshot(context: NormalizedBirthContext): Ca
       degrees: kundli.lagna.degrees,
       longitude: kundli.lagna.longitude
     }, d9Placements),
+    transits: gocharaLight,
     kp: calculateKpSystem(kundli.planets as any[], kundli.lagna.longitude, kundli.ayanamsha),
     varshaphala: calculateVarshaphala(
       context.birthDate,

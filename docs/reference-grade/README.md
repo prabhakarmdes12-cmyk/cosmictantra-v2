@@ -26,7 +26,7 @@
 - **Working branch**: `arena/01a0655c-cosmictantra-v2` (Sprint C work; `main` at Sprint B commit `167ad3b`).
 - **TypeScript**: `npx tsc --noEmit` exits with **0 errors**.
 - **Automated Tests**: full 20-spec Playwright sweep — **619 passed / 1 failed / 6 skipped**; the single failure is the pre-existing environmental `MR-07` milan-route case (`net::ERR_CONNECTION_REFUSED`, needs a live app server + DB, not a calculation defect).
-- **Current Milestone**: **Sprint F (Shadbala + Bhava Bala + Ashtakavarga validation) is COMPLETE** (Sprint C astronomy + Sprint D varga + Sprint E time gates: PASS at scale).
+- **Current Milestone**: **Sprint G (Gochara + correct Sade Sati) is COMPLETE** (Sprints C astronomy / D varga / E time / F bala gates: PASS at scale).
 
 ### Sprint C (COMPLETE — this workspace)
 1. **Ayanamsha reconciled (RSK_009 → RESOLVED)**: versioned change `lahiri-registry-aligned-2.0.0` — `getLahiriAyanamsha(jd) = 23.85305556° + 1.39697128°/century · T`, conformant <0.5″ at J2000, <2″ at 1950; engine versioned `V37.0` (CT_INV_008). All engine-derived golden pins (reportId, Vimshottari balance, dasha dates, ayanamsha display, EV-13/14 baselines) re-baselined to the reconciled output with in-test provenance comments.
@@ -60,8 +60,17 @@
 5. **Declared simplifications surfaced** (varsha/masa nominal constant, Yuddha=0, speed-model Cheshta, house-granular Dig, unverifiable required-Rupas) — six standing NON_BLOCKING findings, never hidden.
 6. See `docs/reference-grade/08-sprint-f-bala-qualification.md`.
 
-### Scope for Sprint G (Next Actionable Sprint)
-**Gochara + correct Sade Sati** (Mission §9): first-class transit engine with explicit query conventions (timestamp, timezone, ayanamsha, node mode), Sade Sati as a real transit phenomenon (phase start/transitions/end with evidence — never inferred from natal positions alone); RSK_002 (combustion orbs, Sprint H) stays queued.
+### Sprint G (COMPLETE — this workspace)
+**Gochara + correct Sade Sati** (Mission §9):
+1. **Transit engine** `gochara-engine-1.0.0 (sprint-G qualified)` (`src/lib/jyotish/gocharaEngine.ts`): explicit `GocharaQuery { natalMoonRashiId, natalLagnaRashiId, referenceInstantUtc }` — no defaults, fails closed on incomplete input (CT_INV_006); declared conventions LAHIRI_CHITRA_PAKSHA + MEAN_NODE; 9 transit grahas with houseFromLagna/houseFromMoon; Parashari special aspects onto natal Lagna/Moon.
+2. **Sade Sati as a real transit phenomenon**: band = whole-sign 12/1/2 from the natal MOON rashi at the explicit reference instant; period solver with ALL boundary crossings incl. retrograde oscillation (events JANMA_ENTRY / JANMA_RETROGRADE_RETURN / THIRD_ENTRY / THIRD_RETROGRADE_RETURN), evidence block, declared ±2-day boundary tolerance, and a declared first-vs-final-exit convention; Dhaiya (4/8) tracked separately.
+3. **RSK_016 (HIGH → RESOLVED)**: the natal-Saturn Sade Sati lookup (static, time-blind) is deleted and source-pinned out; snapshot sadeSati now carries `{basis: 'TRANSIT', referenceInstantUtc, ...}` evidence; `transits` is populated with the full GocharaResult.
+4. **RSK_017 (HIGH → RESOLVED)**: fabricated yearly transits (hardcoded 'Meena (Pisces)', lagna-formula Jupiter house, hardcoded nodal axis, hardcoded Varsheshwar) replaced with certified-kernel computation; Varsheshwar honestly NOT_CALCULATED pending Varshaphala.
+5. **Qualification** `GOCHARA_ENGINE_BENCHMARK_001` (`npm run qualify:gochara`): 10,000 scenarios strict — **1.13M transit-identity / 3,062 period-solver / 900 fabrication-regression checks — 0 violations; 5 discovered natal-Saturn-differing chart pairs yield byte-identical Sade Sati (the §9 prohibition, proven); 8 published sidereal-Saturn anchors agree within 6.3 h (declared tolerance ±2 days); determinism 150/0. Verdict PASS.**
+6. See `docs/reference-grade/09-sprint-g-gochara-sade-sati.md`.
+
+### Scope for Sprint H (Next Actionable Sprint)
+Queued candidates: RSK_002 (combustion orbs), Kalsarpa dosha rule (currently NOT_CALCULATED with a frozen definition requirement), Varshaphala/Tajika year lord (Varsheshwar currently honestly NOT_CALCULATED), transit Vimshottari overlay + Kaksha tables (declared Sprint G gaps).
 
 **Rules of Engagement**:
 - **Preserve working systems**: Do not replace working code; wrap and extend it.

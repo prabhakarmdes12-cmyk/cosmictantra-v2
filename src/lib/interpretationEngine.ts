@@ -17,6 +17,7 @@
  */
 
 import { calculateKundali, RASHIS, NAKSHATRAS, PLANETS } from './astrologyEngine.js';
+import { calculateCelestialEphemeris } from './jyotish/celestialEngine';
 import { calculatePanchang } from './panchang.js';
 import { calculateVimshottariDasha, getCurrentDasha } from '../engines/dashaEngine.js';
 import { getDayAlerts } from './vedicAlerts.js';
@@ -489,33 +490,50 @@ export function getYearlyInterpretation(
   const natalKundali = calculateKundali(profile?.birthDate || '1995-06-15', '10:30', city.lat, city.lng, city.tz);
   const lagnaRashiIdx = (natalKundali.lagna as any)?.rasiIndex ?? (natalKundali.lagna as any)?.rashiIndex ?? 1;
 
-
   // Tajika Muntha Progression: Muntha = (Lagna + Age) % 12
   const munthaHouse = ((lagnaRashiIdx + age) % 12) + 1;
 
-  // Jupiter & Saturn long-term transits (2026/2027 context)
-  const jupiterHouse = ((lagnaRashiIdx + 4) % 12) + 1; // Favorable 5th or 9th house
-  const saturnHouse = ((lagnaRashiIdx + 10) % 12) + 1; // 11th Labha or 10th Karma
+  // Sprint G (RSK_017 fix): the transit values below are COMPUTED from the
+  // certified kernel at the explicit reference instant. The previous
+  // implementation fabricated them (a lagna-based formula for the "houses",
+  // hardcoded rashi strings like 'Meena (Pisces)' and a hardcoded Rahu axis).
+  const RASHI_NAMES = ['Mesha', 'Vrishabha', 'Mithuna', 'Karka', 'Simha', 'Kanya', 'Tula', 'Vrishchika', 'Dhanu', 'Makara', 'Kumbha', 'Meena'];
+  const transitEphem = calculateCelestialEphemeris({
+    dateUtc: yearDate,
+    latitude: city.lat,
+    longitude: city.lng,
+    nodeMode: 'MEAN_NODE'
+  });
+  const rashiIdxOf = (lon: number) => Math.floor((((lon % 360) + 360) % 360) / 30);
+  const jupIdx = rashiIdxOf(transitEphem.bodies.Jupiter.siderealLongitude);
+  const satIdx = rashiIdxOf(transitEphem.bodies.Saturn.siderealLongitude);
+  const rahuIdx = rashiIdxOf(transitEphem.bodies.Rahu.siderealLongitude);
+  const natalMoonIdx = (((natalKundali.moon as any)?.rashiId ?? 1) - 1 + 12) % 12;
+  const satFromMoon = ((satIdx - natalMoonIdx + 12) % 12) + 1;
+  const sadeSatiPhase = satFromMoon === 12 ? '1st Phase (Rising)' : satFromMoon === 1 ? 'Peak Phase (Janma Shani)' : satFromMoon === 2 ? '3rd Phase (Setting)' : 'Not Active';
+  const houseFromLagna = (rashiIdx: number) => ((rashiIdx - lagnaRashiIdx + 12) % 12) + 1;
+  const jupiterHouse = houseFromLagna(jupIdx);
+  const saturnHouse = houseFromLagna(satIdx);
 
   return {
     year,
-    varsheshwar: 'Brihaspati (Jupiter) • Wisdom & Dharma Ruler',
+    varsheshwar: 'NOT_CALCULATED — the Tajika year lord requires the qualified Varshaphala engine; it is not fabricated here.',
     munthaHouse,
     yearTheme: `${year}: A Year of Strategic Expansion, Geographic Mobility & Institutional Maturity`,
     jupiterTransit: {
-      rashi: 'Mithuna / Karka (Exalted/Friendly)',
+      rashi: `${RASHI_NAMES[jupIdx]} (computed transit at the reference instant)`,
       house: jupiterHouse,
-      effect: 'Jupiter brings divine protection over children, career expansion, and long-awaited spiritual initiation.'
+      effect: `Transit Jupiter is in ${RASHI_NAMES[jupIdx]}, house ${jupiterHouse} from the natal Lagna at the reference instant. Classical house-based interpretation follows the qualified rules engine.`
     },
     saturnTransit: {
-      rashi: 'Meena (Pisces)',
+      rashi: RASHI_NAMES[satIdx],
       house: saturnHouse,
-      sadeSatiPhase: saturnHouse === 12 ? '1st Phase (Rising)' : saturnHouse === 1 ? 'Peak Phase' : 'Clear / Favorable Transit',
+      sadeSatiPhase,
       mitigation: 'Saturn rewards structured effort. Avoid shortcuts, maintain integrity in taxes and agreements, and serve the needy on Saturdays.'
     },
     rahuKetuAxis: {
-      axis: 'Kumbha (Rahu 11th) - Simha (Ketu 5th)',
-      karmicLesson: 'Focus on collective institutional growth while detaching from personal ego and speculative gambling.'
+      axis: `${RASHI_NAMES[rahuIdx]} (Rahu) — ${RASHI_NAMES[(rahuIdx + 6) % 12]} (Ketu), computed mean-node transits`,
+      karmicLesson: 'The nodal axis marks where collective-karma pressure and detachment meet this year; classical interpretation follows the qualified rules engine.'
     },
     quarters: [
       {

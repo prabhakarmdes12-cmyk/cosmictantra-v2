@@ -1,0 +1,128 @@
+{
+  "runnerVersion": "gochara-qualification-runner-1.0.0 (sprint G)",
+  "engineVersion": "gochara-engine-1.0.0 (sprint-G qualified)",
+  "fixtureSetId": "GOCHARA_ENGINE_BENCHMARK_001",
+  "fixtureSetSha256": "a84fef01c18e5b12794d4697dd9a0f6df9894ad252abdf9d0f3a7d8ba42ea489",
+  "gate": "strict",
+  "scenarios": 10000,
+  "seed": 24778,
+  "generatedAtUtc": "2026-09-03T06:39:42.025Z",
+  "verdict": "PASS",
+  "streamA": {
+    "scenarios": 10000,
+    "identityChecks": 1130000,
+    "violations": 0,
+    "firstViolations": []
+  },
+  "streamB": {
+    "scenarios": 250,
+    "identityChecks": 3062,
+    "violations": 0,
+    "totalSolveMs": 87353,
+    "firstViolations": []
+  },
+  "streamC": {
+    "pairsChecked": 5,
+    "violations": 0,
+    "details": []
+  },
+  "streamD": {
+    "anchors": 8,
+    "violations": 0,
+    "results": [
+      {
+        "anchorId": "SIDEREAL_SATURN_MEENA_ENTRY_FIRST_2025",
+        "engineUtc": "2025-03-29T15:47:12.890Z",
+        "publishedUtc": "2025-03-29T16:15:00Z",
+        "deltaHours": 0.4630861111111111,
+        "withinTolerance": true
+      },
+      {
+        "anchorId": "DHANU_SADE_SATI_START_2014",
+        "engineUtc": "2014-11-02T14:21:09.278Z",
+        "publishedUtc": "2014-11-02T12:00:00Z",
+        "deltaHours": 2.352577222222222,
+        "withinTolerance": true
+      },
+      {
+        "anchorId": "DHANU_SADE_SATI_FIRST_EXIT_2022",
+        "engineUtc": "2022-04-29T02:22:46.552Z",
+        "publishedUtc": "2022-04-29T04:00:00Z",
+        "deltaHours": 1.6204022222222223,
+        "withinTolerance": true
+      },
+      {
+        "anchorId": "SIDEREAL_SATURN_KUMBHA_PERMANENT_2023",
+        "engineUtc": "2023-01-17T12:20:16.310Z",
+        "publishedUtc": "2023-01-17T06:00:00Z",
+        "deltaHours": 6.337863888888889,
+        "withinTolerance": true
+      },
+      {
+        "anchorId": "SIDEREAL_SATURN_KUMBHA_ENTRY_FIRST_2022",
+        "engineUtc": "2022-04-29T02:22:46.552Z",
+        "publishedUtc": "2022-04-29T04:00:00Z",
+        "deltaHours": 1.6204022222222223,
+        "withinTolerance": true
+      },
+      {
+        "anchorId": "SIDEREAL_SATURN_MESHA_ENTRY_FIRST_2027",
+        "engineUtc": "2027-06-02T22:49:21.048Z",
+        "publishedUtc": "2027-06-03T00:53:00Z",
+        "deltaHours": 2.06082,
+        "withinTolerance": true
+      },
+      {
+        "anchorId": "SIDEREAL_SATURN_MEENA_RETRO_RETURN_2027",
+        "engineUtc": "2027-10-20T03:03:05.138Z",
+        "publishedUtc": "2027-10-20T00:35:00Z",
+        "deltaHours": 2.468093888888889,
+        "withinTolerance": true
+      },
+      {
+        "anchorId": "SIDEREAL_SATURN_MESHA_ENTRY_PERMANENT_2028",
+        "engineUtc": "2028-02-23T12:23:12.983Z",
+        "publishedUtc": "2028-02-23T14:30:00Z",
+        "deltaHours": 2.1130602777777776,
+        "withinTolerance": true
+      }
+    ]
+  },
+  "streamE": {
+    "scenarios": 100,
+    "checks": 900,
+    "violations": 0,
+    "firstViolations": []
+  },
+  "determinism": {
+    "samples": 150,
+    "mismatches": 0
+  },
+  "findings": [
+    {
+      "id": "DECLARED_MEAN_NODE_PINNED",
+      "severity": "NON_BLOCKING",
+      "statement": "Rahu/Ketu transits use the MEAN_NODE convention engine-wide; the true-node variant is declared but not qualified.",
+      "status": "OPEN"
+    },
+    {
+      "id": "DECLARED_BOUNDARY_TOLERANCE_2D",
+      "severity": "NON_BLOCKING",
+      "statement": "Phase-boundary instants carry the declared +/-2-day tolerance; observed agreement with published tables is under 3 hours.",
+      "status": "OPEN"
+    },
+    {
+      "id": "DECLARED_WHOLE_SIGN_ASPECTS",
+      "severity": "NON_BLOCKING",
+      "statement": "Special aspects onto natal Lagna/Moon are whole-sign house distances; cusp-degree aspectation is not implemented.",
+      "status": "OPEN"
+    },
+    {
+      "id": "DECLARED_GOCHARA_SCOPE",
+      "severity": "NON_BLOCKING",
+      "statement": "Transit Vimshottari overlay, Kaksha (Ashtakavarga transit) tables and Tajika Varshaphala year lord are out of Sprint G scope.",
+      "status": "OPEN"
+    }
+  ],
+  "totalViolations": 0
+}
