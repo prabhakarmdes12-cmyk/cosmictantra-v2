@@ -73,18 +73,23 @@ export default function HeroSection({
   const startTrackedRef = useRef(false);
   const cityInputRef = useRef(null);
 
-  // Prefill ONLY from a real saved chart/profile (never a default city)
+  // Prefill ONLY from a real saved chart/profile (never a default city or legacy test data)
   useEffect(() => {
     let p = null;
     try {
       p = getActiveProfile();
+      if (p?.name && /prabhakar|priya sharma|kashi golden/i.test(p.name)) {
+        p = null;
+      }
     } catch {}
     if (!p || !p.birthDate) {
       try {
         const saved = localStorage.getItem('cosmictantra_active_kundli');
         if (saved) {
           const parsed = JSON.parse(saved);
-          if (parsed && parsed.birthDate) {
+          if (parsed?.name && /prabhakar|priya sharma|kashi golden/i.test(parsed.name)) {
+            localStorage.removeItem('cosmictantra_active_kundli');
+          } else if (parsed && parsed.birthDate) {
             p = {
               name: parsed.name,
               birthDate: parsed.birthDate,

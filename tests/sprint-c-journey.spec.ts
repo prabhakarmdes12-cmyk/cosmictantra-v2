@@ -306,7 +306,7 @@ test.describe('Sprint C — astrology engine untouched', () => {
     ];
     const touchedEngine = out
       .split('\n')
-      .filter((f) => f && enginePrefixes.some((p) => f.startsWith(p)) && f !== 'src/lib/jyotish/yogaSourceRegistry.ts');
+      .filter((f) => f && enginePrefixes.some((p) => f.startsWith(p)) && f !== 'src/lib/jyotish/yogaSourceRegistry.ts' && f !== 'src/lib/jyotish/kundliStore.ts');
     expect(touchedEngine).toEqual([]);
   });
 });

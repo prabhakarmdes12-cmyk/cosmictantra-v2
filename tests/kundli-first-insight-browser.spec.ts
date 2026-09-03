@@ -33,29 +33,49 @@ test.describe('Kundli First Insight & Report Browser Acceptance', () => {
 
   test('/report displays reference specimen banner and download PDF succeeds without render failure', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    await page.goto('http://localhost:3000/report', { waitUntil: 'domcontentloaded' });
+    await page.goto('http://localhost:3000/report?sample=1', { waitUntil: 'domcontentloaded' });
 
     // 1. Reference specimen notice banner is visible
     const demoBanner = page.locator('[data-testid="demo-profile-banner"]');
     await expect(demoBanner).toBeVisible({ timeout: 15000 });
-    await expect(demoBanner).toContainText('Viewing benchmark reference specimen');
+    await expect(demoBanner).toContainText(/benchmark|specimen|संदर्भ/i);
 
     // 2. Button to enter birth details is present
     const enterBtn = page.locator('[data-testid="enter-my-birth-details"]');
     await expect(enterBtn).toBeVisible();
 
-    // 3. Download button is present
+    // 3. Print button is present
+    const printBtn = page.locator('[data-testid="report-print-kundli"]');
+    await expect(printBtn).toBeVisible();
+
+    // 4. Download button is present
     const downloadBtn = page.locator('[data-testid="report-download-pdf"]');
     await expect(downloadBtn).toBeVisible();
 
-    // 4. Trigger download and monitor for failure banner
+    // 5. Trigger download and monitor for failure banner
     const downloadPromise = page.waitForEvent('download', { timeout: 30000 }).catch(() => null);
     await downloadBtn.click();
 
-    // 5. Ensure NO red error banner appears with KUNDLI_PDF_RENDER_FAILED
+    // 6. Ensure NO error banner appears with KUNDLI_PDF_RENDER_FAILED
     const errorText = page.locator('text=KUNDLI_PDF_RENDER_FAILED');
     await expect(errorText).not.toBeVisible({ timeout: 5000 });
 
     await page.screenshot({ path: 'artifacts/screenshots/report-sample-view.png', fullPage: false });
+  });
+
+  test('/report for first-time visitor prompts with clean intake form and historical benchmarks', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    // Visit /report without parameters or stored profile
+    await page.goto('http://localhost:3000/report', { waitUntil: 'domcontentloaded' });
+
+    // 1. Verify clean intake form is visible
+    await expect(page.locator('form')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('input[type="date"]')).toBeVisible();
+    await expect(page.locator('input[type="time"]')).toBeVisible();
+
+    // 2. Verify historical benchmark cards (Gandhi, Vivekananda, Einstein) are present
+    await expect(page.getByRole('button', { name: /Mahatma Gandhi/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Swami Vivekananda/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Albert Einstein/i })).toBeVisible();
   });
 });

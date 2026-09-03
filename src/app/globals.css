@@ -334,6 +334,13 @@ html.light .observatory-varanasi-bg {
    theme is dark, browser-print must produce readable light paper. Scoped to
    the report root (.kundli-paper) so nothing else is affected. */
 @media print {
+  header, footer, nav, .print\:hidden, [role="navigation"], .ct-avatar-root, .ct-kashi-panel {
+    display: none !important;
+  }
+  body {
+    background: #ffffff !important;
+    color: #1C1917 !important;
+  }
   .kundli-paper,
   .kundli-paper * {
     color: #1C1917 !important;

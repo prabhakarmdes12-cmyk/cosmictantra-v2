@@ -29,11 +29,13 @@ import {
   Navigation,
   LayoutDashboard,
   ChevronDown,
-  Telescope
+  Telescope,
+  Printer
 } from 'lucide-react';
 import { getCanonicalJyotishSnapshot } from '@/lib/jyotish/canonicalSnapshot';
 import { generateKundliBookModel, BookVolume } from '@/lib/jyotish/kundliBookModel';
 import NorthIndianChart from '@/components/NorthIndianChart';
+import NoviceCosmicOverview from '@/components/kundli/NoviceCosmicOverview';
 import GlobalHeader from '@/components/layout/GlobalHeader';
 import LanguageSelectorModal from '@/components/layout/LanguageSelectorModal';
 import { CosmicTantraEmblem } from '@/components/visual/CosmicTantraLogo';
@@ -363,16 +365,52 @@ export default function MasterKundliReportClient() {
   // NO silent default substitution happens here — the pipeline validates it.
   const rawInputRef = useRef<RawBirthInput | null>(null);
 
-  // The demo profile is a complete, explicit PROFILE (never a fallback).
-  const DEMO_PROFILE = {
-    name: 'Prabhakar Sharma',
-    birthDate: '1989-05-26',
-    birthTime: '02:20:30',
-    latitude: 22.0797,
-    longitude: 82.1391,
-    timezone: 5.5,
-    locationName: 'Bilaspur, Chhattisgarh, India'
-  };
+  // Verified historical benchmarks for reference exploration (never testing artifacts)
+  const HISTORICAL_BENCHMARKS = [
+    {
+      id: 'gandhi-1869',
+      name: 'Mahatma Gandhi',
+      hindiName: 'महात्मा गाँधी (1869)',
+      birthDate: '1869-10-02',
+      birthTime: '07:11:00',
+      latitude: 21.6417,
+      longitude: 69.6293,
+      timezone: 5.5,
+      locationName: 'Porbandar, Gujarat, India',
+      tag: 'HISTORICAL BENCHMARK',
+      highlightEn: 'Libra Lagna · Mars-Venus in 1st house · World leader of Ahimsa',
+      highlightHi: 'तुला लग्न · प्रथम भाव में मंगल-शुक्र · अहिंसा के महानायक'
+    },
+    {
+      id: 'vivekananda-1863',
+      name: 'Swami Vivekananda',
+      hindiName: 'स्वामी विवेकानन्द (1863)',
+      birthDate: '1863-01-12',
+      birthTime: '06:33:00',
+      latitude: 22.5726,
+      longitude: 88.3639,
+      timezone: 5.5,
+      locationName: 'Kolkata, West Bengal, India',
+      tag: 'SPIRITUAL LUMINARY',
+      highlightEn: 'Sagittarius Lagna · Sun in 1st, Saturn in 10th · Spiritual renaissance',
+      highlightHi: 'धनु लग्न · प्रथम में सूर्य, दशम में शनि · वेदान्त के अग्रदूत'
+    },
+    {
+      id: 'einstein-1879',
+      name: 'Albert Einstein',
+      hindiName: 'अल्बर्ट आइंस्टीन (1879)',
+      birthDate: '1879-03-14',
+      birthTime: '11:30:00',
+      latitude: 48.4011,
+      longitude: 9.9876,
+      timezone: 0.6658,
+      locationName: 'Ulm, Germany',
+      tag: 'SCIENTIFIC LUMINARY',
+      highlightEn: 'Gemini Lagna · Mercury-Venus-Saturn in 10th · Nobel Laureate',
+      highlightHi: 'मिथुन लग्न · दशम में बुध-शुक्र-शनि · नोबेल विजेता'
+    }
+  ];
+  const DEMO_PROFILE = HISTORICAL_BENCHMARKS[0];
 
   useEffect(() => {
     const savedLanguage = localStorage.getItem('cosmictantra_lang');
@@ -436,8 +474,11 @@ export default function MasterKundliReportClient() {
       const saved = localStorage.getItem('cosmictantra_active_kundli');
       if (saved) {
         const parsed = JSON.parse(saved);
-        const hasComplete = parsed.birthDate && parsed.birthTime && (parsed.latitude !== undefined || parsed.birthLat !== undefined) && (parsed.longitude !== undefined || parsed.birthLon !== undefined || parsed.lng !== undefined);
-        if (hasComplete) {
+        if (parsed?.name && /prabhakar|priya sharma|kashi golden/i.test(parsed.name)) {
+          try { localStorage.removeItem('cosmictantra_active_kundli'); } catch {}
+        } else {
+          const hasComplete = parsed.birthDate && parsed.birthTime && (parsed.latitude !== undefined || parsed.birthLat !== undefined) && (parsed.longitude !== undefined || parsed.birthLon !== undefined || parsed.lng !== undefined);
+          if (hasComplete) {
           let lat = Number(parsed.latitude ?? parsed.birthLat);
           let lng = Number(parsed.longitude ?? parsed.birthLon ?? parsed.lng);
           let tz = Number(parsed.timezone) || 5.5;
@@ -471,12 +512,15 @@ export default function MasterKundliReportClient() {
           return;
         }
       }
-    } catch {}
+    }
+  } catch {}
 
     // 2b. Check Unified Profile Store (getActiveProfile)
     try {
       const active = getActiveProfile();
-      if (active && active.birthDate && active.birthTime && (active.lat !== undefined || active.latitude !== undefined) && (active.lng !== undefined || active.longitude !== undefined)) {
+      if (active?.name && /prabhakar|priya sharma|kashi golden/i.test(active.name)) {
+        // ignore legacy test profile
+      } else if (active && active.birthDate && active.birthTime && (active.lat !== undefined || active.latitude !== undefined) && (active.lng !== undefined || active.longitude !== undefined)) {
         let lat = Number(active.lat ?? active.latitude);
         let lng = Number(active.lng ?? active.longitude);
         let tz = Number(active.tz ?? active.timezone) || 5.5;
@@ -633,6 +677,24 @@ export default function MasterKundliReportClient() {
       },
       { timeout: 8000 }
     );
+  };
+
+  const handleInlineIntakeSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    chitiSensory.playTick();
+    const errs = validateLive(birthState);
+    setFieldErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
+    setIsDemoProfile(false);
+    rawInputRef.current = rawFromDisplay(birthState, 'MANUAL');
+    try {
+      localStorage.setItem('cosmictantra_active_kundli', JSON.stringify(birthState));
+    } catch {}
+    setToast({
+      tone: 'ok',
+      text: lang === 'hi' ? 'जन्म विवरण सुरक्षित हो गए हैं!' : 'Birth details loaded successfully!'
+    });
   };
 
   // Fail-safe is surfaced only when download or generation is explicitly requested with incomplete details
@@ -1102,10 +1164,21 @@ export default function MasterKundliReportClient() {
 
           <button
             type="button"
+            onClick={() => window.print()}
+            title={lang === 'hi' ? 'कुण्डली प्रिंट करें' : 'Print Kundli'}
+            data-testid="report-print-kundli"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-[#E5D7BC] dark:border-white/10 bg-white dark:bg-[#121422] hover:bg-[#F5EFE6] dark:hover:bg-[#1C1E27] text-[#8E6F1D] dark:text-[#F0C968] transition-colors shadow-xs cursor-pointer"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{lang === 'hi' ? 'प्रिंट' : 'Print'}</span>
+          </button>
+
+          <button
+            type="button"
             onClick={handleDownloadPDF}
             disabled={isGeneratingPdf}
             data-testid="report-download-pdf"
-            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#8E6F1D] hover:bg-[#785E18] text-white transition-colors shadow-sm disabled:opacity-60 disabled:cursor-wait"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#8E6F1D] hover:bg-[#785E18] text-white transition-colors shadow-sm disabled:opacity-60 disabled:cursor-wait cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">{isGeneratingPdf ? t('validating') : t('download')}</span>
@@ -1121,8 +1194,8 @@ export default function MasterKundliReportClient() {
             <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
             <p>
               {lang === 'hi'
-                ? 'आप संदर्भ कुण्डली नमूना देख रहे हैं (प्रभाकर शर्मा · बिलासपुर)। अपनी व्यक्तिगत महाकुण्डली तैयार करने हेतु अपने जन्म विवरण दर्ज करें।'
-                : 'Viewing benchmark reference specimen (Prabhakar Sharma · Bilaspur). Enter your own birth details to generate your personal Master Kundli.'}
+                ? `आप ऐतिहासिक संदर्भ कुण्डली देख रहे हैं (${displayProfile.name} · ${displayProfile.locationName || 'पोरबंदर'})। अपनी व्यक्तिगत महाकुण्डली तैयार करने हेतु अपने जन्म विवरण दर्ज करें।`
+                : `Viewing historical benchmark horoscope (${displayProfile.name} · ${displayProfile.locationName || 'Porbandar'}). Enter your own birth details to generate your personal Master Kundli.`}
             </p>
           </div>
           <button
@@ -1284,29 +1357,181 @@ export default function MasterKundliReportClient() {
       </div>
 
       {!inputComplete && (
-        <div className="max-w-7xl mx-auto px-4 lg:px-8 pt-6 print:hidden">
-          <div className="rounded-2xl border border-[#8E6F1D]/40 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-amber-500/10 dark:from-[#D4AF37]/15 dark:via-transparent dark:to-[#D4AF37]/15 p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 text-sm font-bold text-[#8E6F1D] dark:text-[#F0C968]">
-                <span>✨</span>
-                <span>{lang === 'hi' ? 'अपनी जन्म पत्रिका बनाएं' : 'Create Your Master Kundli'}</span>
+        <div className="max-w-4xl mx-auto px-4 lg:px-8 py-8 space-y-8 print:hidden">
+          {/* Intake Card */}
+          <div className="rounded-3xl border border-[#D4C7B0] dark:border-white/15 bg-white/90 dark:bg-[#121422]/90 backdrop-blur-md p-6 sm:p-8 shadow-sm space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-xl text-amber-700 dark:text-amber-400">
+                ✨
               </div>
-              <p className="text-xs text-[#78716C] dark:text-[#A8A29E] mt-1">
-                {lang === 'hi'
-                  ? 'अपनी सटीक कुण्डली देखने एवं उच्च-गुणवत्ता वाली पीडीएफ डाउनलोड करने के लिए कृपया अपना जन्म विवरण भरें।'
-                  : 'Enter your birth details once to generate your full Vedic chart, life gauges, planetary dignities, and qualified PDF.'}
-              </p>
+              <div>
+                <h2 className="font-editorial text-2xl sm:text-3xl font-bold text-[#1C1917] dark:text-[#EFECE6]">
+                  {lang === 'hi' ? 'अपनी प्रामाणिक महाकुण्डली तैयार करें' : 'Generate Your Complete Master Kundli'}
+                </h2>
+                <p className="text-xs text-[#78716C] dark:text-[#A8A29E] mt-1">
+                  {lang === 'hi'
+                    ? 'सटीक जन्म विवरण दर्ज करें — ग्रह स्पष्ट, षोडशवर्ग, विंशोत्तरी महादशा एवं १९ पृष्ठों की विस्तृत प्रमाणित रिपोर्ट।'
+                    : 'Enter your birth details to calculate accurate Vedic coordinates, 16 divisional charts, Vimshottari Dasha, and 19-page certified PDF report.'}
+                </p>
+              </div>
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                chitiSensory.playTick();
-                setIsEditModalOpen(true);
-              }}
-              className="px-4 py-2 rounded-xl text-xs font-bold bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#060709] hover:bg-[#785E18] transition-colors shadow-sm shrink-0"
-            >
-              {t('editTitle')}
-            </button>
+
+            {/* Form */}
+            <form onSubmit={handleInlineIntakeSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-[#1C1917] dark:text-[#EFECE6] mb-1">
+                    {lang === 'hi' ? 'पूरा नाम' : 'Full Name'} *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={birthState.name}
+                    onChange={(e) => setBirthState((prev) => ({ ...prev, name: e.target.value }))}
+                    placeholder={lang === 'hi' ? 'उदा. राहुल शर्मा' : 'e.g. John Doe'}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#E5D7BC] dark:border-white/10 bg-[#FAF6EF]/50 dark:bg-[#161828] text-sm text-[#1C1917] dark:text-[#EFECE6] focus:outline-none focus:border-[#8E6F1D] dark:focus:border-[#D4AF37]"
+                  />
+                  {fieldErrors.name && <p className="text-[11px] text-rose-500 mt-1">{fieldErrors.name}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#1C1917] dark:text-[#EFECE6] mb-1">
+                    {lang === 'hi' ? 'जन्म तिथि' : 'Birth Date'} *
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={birthState.birthDate}
+                    onChange={(e) => setBirthState((prev) => ({ ...prev, birthDate: e.target.value }))}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#E5D7BC] dark:border-white/10 bg-[#FAF6EF]/50 dark:bg-[#161828] text-sm text-[#1C1917] dark:text-[#EFECE6] focus:outline-none focus:border-[#8E6F1D] dark:focus:border-[#D4AF37]"
+                  />
+                  {fieldErrors.birthDate && <p className="text-[11px] text-rose-500 mt-1">{fieldErrors.birthDate}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#1C1917] dark:text-[#EFECE6] mb-1">
+                    {lang === 'hi' ? 'जन्म समय' : 'Birth Time (24h)'} *
+                  </label>
+                  <input
+                    type="time"
+                    step="1"
+                    required
+                    value={birthState.birthTime}
+                    onChange={(e) => setBirthState((prev) => ({ ...prev, birthTime: e.target.value }))}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#E5D7BC] dark:border-white/10 bg-[#FAF6EF]/50 dark:bg-[#161828] text-sm text-[#1C1917] dark:text-[#EFECE6] focus:outline-none focus:border-[#8E6F1D] dark:focus:border-[#D4AF37]"
+                  />
+                  {fieldErrors.birthTime && <p className="text-[11px] text-rose-500 mt-1">{fieldErrors.birthTime}</p>}
+                </div>
+
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-semibold text-[#1C1917] dark:text-[#EFECE6]">
+                      {lang === 'hi' ? 'जन्म स्थान / शहर' : 'Birth Place / City'} *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={useMyLocation}
+                      disabled={locating}
+                      className="text-[10px] font-mono-data font-bold text-[#8E6F1D] dark:text-[#F0C968] hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Navigation className="w-2.5 h-2.5" />
+                      {locating ? (lang === 'hi' ? 'खोज रहे हैं…' : 'Locating…') : (lang === 'hi' ? 'मेरी स्थिति' : 'Use GPS')}
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    value={birthState.locationName || cityQuery}
+                    onChange={(e) => {
+                      cityAutocomplete(e.target.value);
+                      setBirthState((prev) => ({ ...prev, locationName: e.target.value }));
+                    }}
+                    placeholder={lang === 'hi' ? 'शहर टाइप करें (उदा. Varanasi, Patna)...' : 'Type city name (e.g. Varanasi, London)...'}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#E5D7BC] dark:border-white/10 bg-[#FAF6EF]/50 dark:bg-[#161828] text-sm text-[#1C1917] dark:text-[#EFECE6] focus:outline-none focus:border-[#8E6F1D] dark:focus:border-[#D4AF37]"
+                  />
+                  {showCitySuggestions && citySuggestions.length > 0 && (
+                    <div className="absolute z-50 left-0 right-0 top-full mt-1 rounded-xl border border-[#E5D7BC] dark:border-white/10 bg-white dark:bg-[#161828] shadow-lg max-h-48 overflow-y-auto divide-y divide-[#F0E6D2] dark:divide-white/5">
+                      {citySuggestions.map((c) => (
+                        <button
+                          key={`${c.name}-${c.state}-${c.lat}`}
+                          type="button"
+                          onClick={() => pickCity(c)}
+                          className="w-full text-left px-3.5 py-2 hover:bg-[#FAF6EF] dark:hover:bg-[#1E2032] text-xs flex items-center justify-between cursor-pointer"
+                        >
+                          <span className="font-medium text-[#1C1917] dark:text-[#EFECE6]">{c.name}, {c.state}</span>
+                          <span className="text-[10px] font-mono-data text-[#78716C] dark:text-[#A8A29E]">{c.lat.toFixed(2)}°N, {c.lng.toFixed(2)}°E</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {fieldErrors.lat && <p className="text-[11px] text-rose-500 mt-1">{fieldErrors.lat}</p>}
+                </div>
+              </div>
+
+              <div className="pt-2 flex flex-wrap items-center gap-3">
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#060709] hover:bg-[#785E18] transition-all shadow-md cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>{lang === 'hi' ? 'महाकुण्डली तैयार करें →' : 'Generate My Master Kundli →'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Historical Benchmarks Section */}
+          <div className="space-y-3">
+            <div className="text-xs font-mono-data uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E] font-bold">
+              {lang === 'hi' ? 'अथवा ऐतिहासिक संदर्भ कुण्डली का अध्ययन करें:' : 'Or explore a verified historical benchmark:'}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {HISTORICAL_BENCHMARKS.map((h) => (
+                <button
+                  key={h.id}
+                  type="button"
+                  onClick={() => {
+                    chitiSensory.playTick();
+                    setBirthState({
+                      name: h.name,
+                      birthDate: h.birthDate,
+                      birthTime: h.birthTime,
+                      latitude: h.latitude,
+                      longitude: h.longitude,
+                      timezone: h.timezone,
+                      locationName: h.locationName
+                    });
+                    setIsDemoProfile(true);
+                    rawInputRef.current = {
+                      name: h.name,
+                      birthDate: h.birthDate,
+                      birthTime: h.birthTime,
+                      latitude: h.latitude,
+                      longitude: h.longitude,
+                      utcOffsetHours: h.timezone,
+                      locationName: h.locationName,
+                      coordinateProvenance: 'PROFILE'
+                    };
+                  }}
+                  className="p-4 rounded-2xl border border-[#E5D7BC] dark:border-white/10 bg-white/70 dark:bg-[#121422]/70 hover:border-[#8E6F1D] dark:hover:border-[#D4AF37] transition-all text-left space-y-1.5 cursor-pointer shadow-xs group"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-mono-data font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-[#8E6F1D] dark:text-[#F0C968]">
+                      {h.tag}
+                    </span>
+                    <span className="text-[10px] text-[#78716C] dark:text-[#A8A29E] font-mono-data">
+                      {h.birthDate.slice(0, 4)}
+                    </span>
+                  </div>
+                  <div className="font-editorial text-sm font-bold text-[#1C1917] dark:text-[#EFECE6] group-hover:text-[#8E6F1D] dark:group-hover:text-[#D4AF37] transition-colors">
+                    {lang === 'hi' ? h.hindiName : h.name}
+                  </div>
+                  <p className="text-[11px] text-[#78716C] dark:text-[#A8A29E] leading-snug">
+                    {lang === 'hi' ? h.highlightHi : h.highlightEn}
+                  </p>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -1370,6 +1595,9 @@ export default function MasterKundliReportClient() {
           role="tabpanel"
           aria-labelledby="report-tab-overview"
           className="max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-8">
+          {/* Market-Leading Novice-Friendly Overview (Core Essence & Life Archetypes) */}
+          <NoviceCosmicOverview snapshot={snapshot} lang={lang} personName={displayProfile.name} />
+
           {/* Row 1: D1 chart + current period */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-white dark:bg-[#121422] rounded-2xl p-5 border border-[#E5D7BC] dark:border-white/10 shadow-sm space-y-3">

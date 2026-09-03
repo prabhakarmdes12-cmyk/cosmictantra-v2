@@ -157,17 +157,30 @@ test.describe('CT_LOCATION_INV_001 — Single Source Location Resolver & Ranking
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('http://localhost:3000/', { waitUntil: 'domcontentloaded' });
 
-    // Step through the hero intake flow
-    await page.locator('#kundli-name').fill('Patna Verification Tester');
-    await page.getByRole('button', { name: 'Next', exact: true }).click();
-    await page.locator('#kundli-dob').fill('1995-05-15');
-    await page.getByRole('button', { name: 'Next', exact: true }).click();
-    await page.locator('#kundli-tob').fill('14:30');
-    await page.getByRole('radio', { name: 'Exact' }).check({ force: true });
-    await page.getByRole('button', { name: 'Next', exact: true }).click();
+    // Step through the hero intake flow (ensuring React hydration has settled)
+    const nameInput = page.locator('#kundli-name');
+    await expect(nameInput).toBeVisible();
+    await nameInput.click();
+    await nameInput.fill('Patna Verification Tester');
+    await expect(nameInput).toHaveValue('Patna Verification Tester');
+    await page.getByRole('button', { name: /Next|आगे/i }).click();
+
+    const dobInput = page.locator('#kundli-dob');
+    await expect(dobInput).toBeVisible({ timeout: 10000 });
+    await dobInput.fill('1995-05-15');
+    await expect(dobInput).toHaveValue('1995-05-15');
+    await page.getByRole('button', { name: /Next|आगे/i }).click();
+
+    const tobInput = page.locator('#kundli-tob');
+    await expect(tobInput).toBeVisible({ timeout: 10000 });
+    await tobInput.fill('14:30');
+    await page.getByRole('radio', { name: /Exact|सटीक/i }).check({ force: true });
+    await page.getByRole('button', { name: /Next|आगे/i }).click();
 
     // Type "Patna" into place input
-    await page.locator('#kundli-place').fill('Patna');
+    const placeInput = page.locator('#kundli-place');
+    await expect(placeInput).toBeVisible({ timeout: 10000 });
+    await placeInput.fill('Patna');
 
     // Assert that the first recommendation is Patna, not Machilipatnam or Visakhapatnam
     const firstBtn = page.locator('#kundli-city-list button').first();

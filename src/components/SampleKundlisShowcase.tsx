@@ -25,20 +25,20 @@ export interface SampleKundli {
 
 export const SAMPLE_KUNDLIS: SampleKundli[] = [
   {
-    id: 'kashi-reference-1989',
-    name: 'Kashi Golden Specimen (1989)',
-    hindiName: 'काशी स्वर्ण मानक पत्रिका (1989)',
-    birthDate: '1989-05-26',
-    birthTime: '02:20:30',
-    city: 'Bilaspur, Chhattisgarh, India',
-    latitude: 22.0797,
-    longitude: 82.1391,
-    timezone: 5.5,
-    lagna: 'Pisces (Meena)',
-    moonRasi: 'Capricorn (Makara)',
-    highlights: 'Full 17-Volume qualification baseline with JPL Horizons & AstroSage validated sidereal coordinates.',
-    highlightsHi: '१७-खण्डों का प्रामाणिक संदर्भ पत्र — नासा JPL व एस्ट्रोसेज द्वारा सत्यापित शुद्ध गणना।',
-    tag: 'REFERENCE SPECIMEN'
+    id: 'einstein-1879',
+    name: 'Albert Einstein (1879)',
+    hindiName: 'अल्बर्ट आइंस्टीन (1879)',
+    birthDate: '1879-03-14',
+    birthTime: '11:30:00',
+    city: 'Ulm, Germany',
+    latitude: 48.4011,
+    longitude: 9.9876,
+    timezone: 0.6658,
+    lagna: 'Gemini (Mithuna)',
+    moonRasi: 'Sagittarius (Dhanu)',
+    highlights: 'Gemini Lagna with Mercury, Venus, Saturn in 10th. Nobel Prize for Theoretical Physics.',
+    highlightsHi: 'मिथुन लग्न, दशम भाव में बुध-शुक्र-शनि — सैद्धांतिक भौतिकी के युगद्रष्टा एवं नोबेल विजेता।',
+    tag: 'SCIENTIFIC LUMINARY'
   },
   {
     id: 'gandhi-1869',

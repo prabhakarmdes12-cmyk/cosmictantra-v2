@@ -9,11 +9,20 @@ export async function POST(req: NextRequest) {
     const limited = analyticsLimiter.check(clientKeyFor(req));
     if (limited) return limited;
 
-    const body = await req.json();
+    let body: any = {};
+    try {
+      body = await req.json();
+    } catch {
+      body = {};
+    }
     const { eventType, payload } = body;
 
     if (!eventType) {
       return NextResponse.json({ success: false, error: 'Event type is required.' }, { status: 400 });
+    }
+
+    if (!process.env.DATABASE_URL) {
+      return NextResponse.json({ success: true, eventType, recorded: false });
     }
 
     await db.astrologyAuditLog.create({

@@ -29,8 +29,9 @@ const EMPTY_PROFILE = {
   locationName: 'Patna, Bihar, India',
 };
 
-const DEMO_A = { name: 'Prabhakar Sharma', birthDate: '1989-05-26', birthTime: '02:20:30', latitude: 22.0797, longitude: 82.1391, timezone: 5.5, locationName: 'Bilaspur, Chhattisgarh, India' };
-const DEMO_B = { name: 'Ananya Sharma', birthDate: '1992-11-08', birthTime: '14:45:00', latitude: 25.5941, longitude: 85.1376, timezone: 5.5, locationName: 'Patna, Bihar, India' };
+const SAMPLE_A = { name: 'Kailash Sharma', birthDate: '1990-04-14', birthTime: '06:30', latitude: 25.3176, longitude: 82.9739, timezone: 5.5, locationName: 'Varanasi, Uttar Pradesh, India' };
+const SAMPLE_B = { name: 'Gauri Verma', birthDate: '1992-09-20', birthTime: '11:15', latitude: 25.3176, longitude: 82.9739, timezone: 5.5, locationName: 'Varanasi, Uttar Pradesh, India' };
+const BLANK_PARTNER = { name: '', birthDate: '', birthTime: '12:00', latitude: 25.3176, longitude: 82.9739, timezone: 5.5, locationName: '' };
 
 export default function MilanReportClient() {
   const router = useRouter();
@@ -40,9 +41,9 @@ export default function MilanReportClient() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [isLangModalOpen, setIsLangModalOpen] = useState(false);
 
-  const [bride, setBride] = useState({ ...DEMO_B });
-  const [groom, setGroom] = useState({ ...DEMO_A });
-  const [usingDemo, setUsingDemo] = useState(true);
+  const [bride, setBride] = useState({ ...BLANK_PARTNER });
+  const [groom, setGroom] = useState({ ...BLANK_PARTNER });
+  const [usingDemo, setUsingDemo] = useState(false);
   const [error, setError] = useState('');
   const [calc, setCalc] = useState<MilanCalculation | null>(null);
   const [computing, setComputing] = useState(false);
@@ -199,9 +200,11 @@ export default function MilanReportClient() {
     }
   };
 
-  // Auto-compute on mount so the user immediately sees the 36-point report and PDF options
+  // Only auto-compute if bride and groom have already been provided with valid data
   useEffect(() => {
-    runCalculation(DEMO_A, DEMO_B, true);
+    if (groom.name && bride.name && groom.birthDate && bride.birthDate) {
+      runCalculation(groom, bride, false);
+    }
   }, []);
 
   const compute = (e?: React.FormEvent) => {
@@ -212,9 +215,9 @@ export default function MilanReportClient() {
 
   const fillDemo = () => {
     chitiSensory.playTick();
-    setGroom({ ...DEMO_A });
-    setBride({ ...DEMO_B });
-    runCalculation(DEMO_A, DEMO_B, true);
+    setGroom({ ...SAMPLE_A });
+    setBride({ ...SAMPLE_B });
+    runCalculation(SAMPLE_A, SAMPLE_B, true);
   };
 
 
@@ -307,7 +310,7 @@ export default function MilanReportClient() {
           <div>
             <div className="font-serif font-bold text-base lg:text-lg">{hi ? 'कुंडली मिलान' : 'KUNDLI MILAN'}</div>
             <p className="text-[11px] text-[#78716C] dark:text-[#A8A29E] font-mono-data">
-              {groom.name} & {bride.name}
+              {groom.name && bride.name ? `${groom.name} & ${bride.name}` : (hi ? '३६-गुण अष्टकूट मिलान' : '36-Point Ashtakoota Milan')}
               {usingDemo && <span className="ml-1.5 inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300 uppercase"><Sparkles className="w-2.5 h-2.5" /> {hi ? 'नमूना' : 'Sample'}</span>}
             </p>
           </div>
@@ -322,24 +325,13 @@ export default function MilanReportClient() {
               </button>
             ))}
           </div>
-          <div className="flex shrink-0 items-center rounded-lg border border-[#E5D7BC] dark:border-white/10 bg-white dark:bg-[#121422] p-0.5" role="group" aria-label="Qualified PDF language">
-            {([['en', 'EN'], ['hi', 'हिन्दी'], ['hi-en', 'हि + EN']] as const).map(([l, label]) => (
-              <button key={l} type="button" onClick={() => setPdfLocale(l)} aria-pressed={pdfLocale === l}
-                className={`px-2 py-1 text-[10px] font-bold rounded-md transition-colors ${pdfLocale === l ? 'bg-[#8E6F1D] text-white dark:bg-[#D4AF37] dark:text-[#060709]' : 'text-[#78716C] dark:text-[#A8A29E]'}`}>
-                {label}
-              </button>
-            ))}
-          </div>
           {calc && (
             <button onClick={() => router.push('/ask?focus=milan&mode=detailed')} className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg bg-[#D4AF37] text-[#060709] hover:bg-[#F0C968] transition-colors">
               <MessageSquare className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{hi ? 'पंडित से पूछें' : 'Ask a Pandit'}</span>
             </button>
           )}
-          <button onClick={print} disabled={isGeneratingPdf} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-[#8E6F1D]/30 text-[#8E6F1D] dark:text-[#F0C968] bg-white dark:bg-[#121422]">
-            <Printer className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{hi ? 'प्रिंट / पीडीएफ़' : 'Print / PDF'}</span>
-          </button>
           <button onClick={download} disabled={isGeneratingPdf || !calc} className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg bg-[#8E6F1D] text-white hover:bg-[#785E18] disabled:opacity-60 disabled:cursor-not-allowed">
-            <Download className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{isGeneratingPdf ? (hi ? 'जाँच…' : 'Validating…') : (hi ? 'पीडीएफ़' : 'Download PDF')}</span>
+            <Download className="w-3.5 h-3.5" /> <span>{isGeneratingPdf ? (hi ? 'जाँच…' : 'Validating…') : (hi ? 'डाउनलोड पीडीएफ़' : 'Download PDF')}</span>
           </button>
         </div>
       </header>
@@ -445,6 +437,32 @@ export default function MilanReportClient() {
             </div>
           </form>
         </section>
+
+        {!calc && (
+          <section className="rounded-2xl border border-dashed border-[#D4C7B0] dark:border-white/15 bg-[#FAF7F2]/60 dark:bg-[#121422]/50 p-8 text-center space-y-4">
+            <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-700 dark:text-amber-400 text-xl">
+              💍
+            </div>
+            <div className="max-w-md mx-auto space-y-2">
+              <h3 className="font-editorial text-xl font-bold text-[#1C1917] dark:text-[#EFECE6]">
+                {hi ? '३६-गुण अष्टकूट मिलान' : '36-Point Ashtakoota Milan Report'}
+              </h3>
+              <p className="text-xs text-[#78716C] dark:text-[#A8A29E] leading-relaxed">
+                {hi
+                  ? 'ऊपर वर और वधू का जन्म विवरण भरें और "मिलान गणना करें" पर क्लिक करें, या उदाहरण देखने के लिए नमूना चुनें।'
+                  : 'Enter Bride and Groom birth details above and click "Calculate Milan" to generate the 36-point compatibility report and certified PDF, or load a classical demonstration.'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={fillDemo}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold border border-[#8E6F1D]/40 bg-white dark:bg-[#1C1E2D] text-[#8E6F1D] dark:text-[#F0C968] hover:border-[#8E6F1D] transition-all cursor-pointer shadow-xs"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>{hi ? 'शास्त्रीय उदाहरण लोड करें' : 'Load Classical Sample Demonstration'}</span>
+            </button>
+          </section>
+        )}
 
         {calc && (
           <>

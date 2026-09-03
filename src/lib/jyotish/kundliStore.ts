@@ -248,8 +248,11 @@ export function getKundliById(id: string): StoredKundliRecord | null {
 /**
  * Lists all available Kundlis (Presets + User Created).
  */
-export function listAllKundlis(): StoredKundliRecord[] {
-  const result: StoredKundliRecord[] = Array.from(IN_MEMORY_STORE.values());
+export function listAllKundlis(includeInternalTestBenchmarks = false): StoredKundliRecord[] {
+  const result: StoredKundliRecord[] = Array.from(IN_MEMORY_STORE.values()).filter(k => {
+    if (includeInternalTestBenchmarks) return true;
+    return (k.tags ?? []).includes('Historical') || (k.tags ?? []).includes('User Created');
+  });
 
   if (typeof window !== 'undefined' && window.localStorage) {
     try {
