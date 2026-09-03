@@ -358,11 +358,25 @@ export async function renderKundliReportPdf(
 
   try {
     drawChrome(1);
+    const pageTopY = controller.cursorY;
     for (const section of report.sections) {
       if (section.status === 'FAILED') {
         throw new KundliError('KUNDLI_REPORT_INCOMPLETE', `section ${section.id} is FAILED`, { sectionId: section.id });
       }
       if (section.status !== 'READY') continue;
+      // A section may ask to start on a fresh page. The Scholar Summary does:
+      // it is the page a reader turns to first, and when it shared a page
+      // with the passport its heading landed alone at the foot of the page
+      // with every fact on the next one.
+      if (
+        section.pageBreakBefore &&
+        section.id !== 'cover' &&
+        // Only break when the current page already carries something. On a
+        // pristine page the break would emit a blank one.
+        controller.cursorY > pageTopY
+      ) {
+        controller.newPage(() => doc.addPage(), drawChrome);
+      }
       // The cover is its own title page — Ganesh Vandana, then the blocks.
       // Layout mirrors the web banner: Ganesh emblem left, invocation
       // centered, CosmicTantra symbol right.
@@ -390,9 +404,21 @@ export async function renderKundliReportPdf(
         renderHeading({ kind: 'heading', level: 2, text: section.title });
       }
       let blocksInSection = 0;
-      for (const block of section.blocks) {
+      for (let bi = 0; bi < section.blocks.length; bi++) {
+        const block = section.blocks[bi];
         // Invocation paragraph is drawn by the cover special-case above.
         if (block.kind === 'paragraph' && /^॥.*॥$/.test(block.text)) continue;
+        // The renderer has already drawn the section title as a heading. A
+        // block that repeats it verbatim puts the same words on the page
+        // twice in a row, which reads as a layout bug rather than emphasis.
+        if (
+          bi === 0 &&
+          section.id !== 'cover' &&
+          block.kind === 'heading' &&
+          block.text === section.title
+        ) {
+          continue;
+        }
         renderBlock(block);
         blocksInSection += 1;
       }

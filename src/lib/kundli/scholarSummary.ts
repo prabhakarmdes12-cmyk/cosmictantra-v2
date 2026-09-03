@@ -489,16 +489,19 @@ export function buildScholarSummary(
   textParts.push({ where: 'DASHA-INTERPRETATION-CURRENT', text: `${dashaStatement} ${dashaLimitation}` });
 
   /* --- Level 3: reflections --------------------------------------- */
+  // Two prompts, not three: as three separate paragraphs the last one was
+  // left behind as a single line at the top of the following page, which
+  // reads as a mistake rather than as a closing thought.
   const reflections: { id: string; text: string }[] = [
     {
       id: 'REFLECTION-1',
       text:
-        'Check the calculated facts against your own records.',
+        'Check the calculated facts against your own records, and ask which of these themes already match your experience.',
     },
     {
       id: 'REFLECTION-2',
       text:
-        'Which of these themes already match your experience? "Not calculated" means the engine did not compute it.',
+        '"Not calculated" means this engine did not compute it. It does not mean the tradition has nothing to say.',
     },
   ];
   for (const r of reflections) textParts.push({ where: r.id, text: r.text });
@@ -536,6 +539,7 @@ export function buildScholarSummarySections(
   const page1: ReportSection = {
     id: 'scholar-summary-1',
     title: 'Your chart at a glance',
+    pageBreakBefore: true,
     status: 'READY',
     blocks: [
       headingBlock(2, 'Your chart at a glance'),
@@ -571,7 +575,7 @@ export function buildScholarSummarySections(
   const level3: ReportBlock[] = [
     headingBlock(3, l('level3', locale)),
     paraBlock(
-      'These are prompts for your own judgement. They are guidance from the report, not a forecast, and not a substitute for professional advice on health, legal or financial matters.',
+      'Prompts for your own judgement: guidance, not a forecast, and not a substitute for professional advice.',
     ),
     ...s.reflections.map((r) => paraBlock(r.text)),
   ];

@@ -31,6 +31,11 @@ of seven kinds.
 | `divider` | — | Visual separation |
 | `pageFooter` | `text` | Repeated footer |
 
+A section may also carry `pageBreakBefore: boolean`, which asks the renderer
+to start it on a fresh page. It is presentation only: it changes where content
+falls and never what it says. The Scholar Summary sets it, so that the page a
+reader turns to first is not half a passport.
+
 There is no eighth kind. A block carries no styling of its own beyond
 `heading.level` and `callout.tone`, which is what makes the same report
 renderable to PDF, HTML and text without a per-surface layout.
@@ -121,6 +126,11 @@ guarantees. It is followed only by the disclaimer.
 **INV-S8 — Bounded length.** No report exceeds `maxPages = 40`. The layout
 engine also refuses to emit a runaway document; the 454-page regression is
 covered by a test.
+
+**INV-S10 — No section repeats its own title.** The renderer draws the section
+title as a heading. A first block that repeats it verbatim puts the same words
+on the page twice, which reads as a layout bug rather than as emphasis. The
+renderer skips such a block.
 
 **INV-S9 — No personal data in logs.** Section content never appears in
 observability output; only counts, ids and hashes.
