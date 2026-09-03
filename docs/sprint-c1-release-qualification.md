@@ -83,8 +83,8 @@ reference URLs) and in **unlinked/dead** components (`KundaliExperience.jsx`,
 |---|---|---|
 | `tests/navigation-ui.spec.ts` | **21 passed / 0 failed** | ~22 s |
 | `tests/sprint-c-ui.spec.ts` | **11 passed / 0 failed** | ~18 s |
-| `tests/sprint-c1-ui.spec.ts` | **7 passed / 0 failed** | ~28 s |
-| **Total** | **39 / 39** | — |
+| `tests/sprint-c1-ui.spec.ts` | **9 passed / 0 failed** (incl. GPS allowed/denied §10) | ~56 s (combined) |
+| **Total** | **41 / 41** | — |
 
 Command used (all runs, three executions):
 `CHROMIUM_PATH=/tmp/chromium CHROMIUM_LD_LIBRARY_PATH=/tmp BASE_URL=http://localhost:3000 npx playwright test <suite>`
@@ -92,13 +92,14 @@ Command used (all runs, three executions):
 Coverage actually exercised (not just authored):
 - Desktop nav (5 destinations, dead-link absence), keyboard focus + Enter, Escape / outside click, language selector → Hindi, location pill truth, Kashi context attributes; mobile bottom nav at 320/360/390/430/768 + Explore sheet + assistant collision; route overflow at landing/today/dashboard/master-kundli/report; landing mega menu; screen captures.
 - Sprint C conversion journey end-to-end: hero form (name/date/time/certainty/city search) → calculation state → First Insight → WHY drawer (technical details, Escape + focus return) → Ask (live `cosmictantra:kashi-journey-context` payload inspected for forbidden keys) → Save → "SAVED TO MY SPACE ✓" → Explore anchor; preset chart (no save CTA); missing chart FAILED state; Today empty state ("no demo chart") + member-form real-city error; Executive Life Matrix absent from default report Overview and present only in Workbench with the experimental badge; hero truthiness (no day strip until a canonical location is chosen; factual strip after choosing Patna — "Moon Krittika · Krishna Paksha Saptami", no prediction language, no video, no horizontal overflow at 1440).
-- C.1: 8 required viewports (320×700 → 1920×1080) landing overflow-free + captured; journey state captures (birth flow / calculation / first insight / WHY / Ask) at 390; persistence save-failure → retry → saved; UNKNOWN time limitation note + "reference only" Lagna; demo-contamination sweep (dashboard, family-panchang, family, profile) with no "Priya Sharma"/"Amit Sharma" anywhere.
+- C.1: 8 required viewports (320×700 → 1920×1080) landing overflow-free + captured; journey state captures (birth flow / calculation / first insight / WHY / Ask) at 390; persistence save-failure → retry → saved; UNKNOWN time limitation note + "reference only" Lagna; demo-contamination sweep (dashboard, family-panchang, family, profile) with no "Priya Sharma"/"Amit Sharma" anywhere; **GPS allowed** (truthful "Live GPS Location" anchor, no fake city, journey completes) and **GPS denied** (explicit "Location permission was not granted." + manual canonical city fallback completes).
 
 Real-browser defects found and fixed this pass (not test-only adjustments):
 1. Hydration race on interactive shell nav (desktop + mobile) — gates `data-nav-hydrated` on `PrimaryNavigation`, `data-header-hydrated` on `GlobalHeader` (4 variants incl. landing).
 2. Hydration race on hero progressive form, `/daily` add-member flow, `/report` tab switch — `data-hero-hydrated` / `data-daily-hydrated` / `data-report-hydrated` + test gates.
 3. **§4 contradiction**: hero journey auto-persisted the chart + profile before the user clicked Save (see §5) — fixed.
 4. Stale selectors in authored suites (hero CTA now the progressive form; Workbench is `role=tab`; `primary-nav-mobile` is CSS-hidden by design; member form uses native `required` validation; profile Orders tab is Hindi-labelled) — corrected to reflect shipped product, and the suites re-run green.
+5. **City-search ranking bug (real, user-facing):** `src/lib/cities.js` — the copy webpack actually bundles — and its typed twin `src/lib/cities.ts` had diverged: typing "Patna" returned Machilipatnam, Visakhapatnam, **then** Patna, so the manual birth-place path silently picked the wrong city. Fixed ranking in both twins (exact match → name-prefix → substring) and verified in the served bundle (`startsWith` present, "Patna" first) and in-browser.
 
 Suite-level notes: hydration gates wait up to 15 s for `data-*-hydrated="true"`; no test was skipped, xfailed or retried into green.
 
@@ -118,6 +119,7 @@ Suite-level notes: hydration gates wait up to 15 s for `data-*-hydrated="true"`;
 
 - Required viewport matrix implemented and **executed**: landing has no horizontal overflow at 320/360/390/430/768/1024/1440/1920; First Insight no overflow at 320/390/430/768; Today no overflow at 360/390; insight no overflow for the UNKNOWN-time (noon) case at 390.
 - Mobile Kundli generation at 390 (name / date / time / certainty / city search / Next / Back / submit / calculation state / first result) — full journey executed with no horizontal movement; findability of the primary CTA at all widths asserted (`#kundli-name` visible).
+- Location UX executed in-browser: GPS allowed → truthful live anchor (never a silently substituted city); GPS denied → calm explicit message; manual city search → exact city now ranks first and the journey completes with the chosen coordinates.
 - No restyling was performed; only genuine interaction-race fixes (#7) and truthful copy/identity fixes (#2, #3, #13).
 
 ## 10. Accessibility results (§20)
@@ -200,7 +202,7 @@ Repo-ops note (not a product defect): GitHub Actions is not enabled on this repo
 - Demo astrology removed from every consumer surface; demo data only in explicitly marked/benchmark surfaces.
 - Prediction-market language removed; deterministic facts separated from "Traditional reading".
 - Chart status + persistence state machines implemented (`docs/product/chart-state-machine.md`), contradictions forbidden, and the run-time EPHEMERAL→SAVE contradiction found by the real browser was fixed.
-- Browser acceptance gates actually executed in a real Chromium against the production build: 39/39 green (navigation 21, Sprint C 11, C.1 7) with screenshots and runtime evidence.
+- Browser acceptance gates actually executed in a real Chromium against the production build: 41/41 green (navigation 21, Sprint C 11, C.1 9) with screenshots and runtime evidence.
 - Node gates green: tsc clean, `validate:navigation` PASS, 70/70 invariant suites (B.1 navigation 22, Sprint C journey 19, derived-model 9, C.1 state machine 12, C.1 privacy 8); production build green (613 pages).
 - Zero engine changes; ENGINE_BLOCKER_001/002 recorded, not repaired.
 - No sensitive analytics keys in any funnel event or Ask context (runtime guard + schema + live-browser checks).

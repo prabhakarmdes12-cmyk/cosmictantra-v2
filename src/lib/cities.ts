@@ -636,6 +636,17 @@ export function searchCities(query: string): CityCoordinate[] {
         nameHi.includes(tok) ||
         countryLower.includes(tok)
     );
+  }).sort((a, b) => {
+    // Exact city-name match first (case-insensitive), then name-prefix,
+    // then broader substring matches — "Patna" must rank before
+    // "Machilipatnam"/"Visakhapatnam" (which merely contain "patna").
+    const rank = (c: CityCoordinate) => {
+      const name = c.name.toLowerCase();
+      if (name === q) return 0;
+      if (name.startsWith(q)) return 1;
+      return 2;
+    };
+    return rank(a) - rank(b);
   });
 }
 

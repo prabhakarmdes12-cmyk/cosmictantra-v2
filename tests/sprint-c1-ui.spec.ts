@@ -196,6 +196,56 @@ test.describe('C.1 — time certainty (§11)', () => {
   });
 });
 
+test.describe('C.1 — location UX (§10): GPS allowed / denied, manual fallback', () => {
+  async function fillBirthSteps(page: Page) {
+    await page.locator('#kundli-name').fill('GPS Tester');
+    await page.getByRole('button', { name: 'Next', exact: true }).click();
+    await page.locator('#kundli-dob').fill('1992-02-20');
+    await page.getByRole('button', { name: 'Next', exact: true }).click();
+    await page.locator('#kundli-tob').fill('08:45');
+    await page.getByRole('radio', { name: 'Exact' }).check({ force: true });
+    await page.getByRole('button', { name: 'Next', exact: true }).click();
+  }
+
+  test('GPS allowed: truthful live anchor (never a fake city); journey completes', async ({ page, context }) => {
+    await context.grantPermissions(['geolocation'], { origin: BASE });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
+    await heroHydrated(page);
+    await context.setGeolocation({ latitude: 25.5941, longitude: 85.1376 });
+
+    await fillBirthSteps(page);
+    await page.getByRole('button', { name: /use my current location/i }).click();
+    await expect(page.locator('#kundli-place')).toHaveValue(/Live GPS Location/i);
+    await expect(page.locator('#kundli-place')).not.toHaveValue(/Dhanbad|Patna|Delhi|Mumbai/i);
+    await expect(page.getByText(/location permission was not granted/i)).toHaveCount(0);
+
+    const nav = page.waitForURL(/\/kundli\//, { timeout: 30000 });
+    await page.getByRole('button', { name: /CREATE MY KUNDLI/i }).click();
+    await nav;
+    await expect(page.locator('[data-testid="kundli-first-insight"]')).toBeVisible({ timeout: 20_000 });
+  });
+
+  test('GPS denied: explicit calm message; manual canonical city still works', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
+    await heroHydrated(page);
+
+    await fillBirthSteps(page);
+    await page.getByRole('button', { name: /use my current location/i }).click();
+    await expect(page.getByText(/location permission was not granted/i)).toBeVisible();
+
+    // Manual city search remains the canonical fallback — no silent location.
+    await page.locator('#kundli-place').fill('Patna');
+    await page.locator('#kundli-city-list button').first().click();
+    expect(await page.locator('#kundli-place').inputValue()).toContain('Patna');
+    const nav = page.waitForURL(/\/kundli\//, { timeout: 30000 });
+    await page.getByRole('button', { name: /CREATE MY KUNDLI/i }).click();
+    await nav;
+    await expect(page.locator('[data-testid="kundli-first-insight"]')).toBeVisible({ timeout: 20_000 });
+  });
+});
+
 test.describe('C.1 — demo contamination & language (§2, §3)', () => {
   test('daily page: neutral member state + "Your Next Three Vedic Days"', async ({ page }) => {
     await page.goto(BASE, { waitUntil: 'domcontentloaded' });
