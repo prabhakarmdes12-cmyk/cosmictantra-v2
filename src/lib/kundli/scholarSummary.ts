@@ -20,7 +20,7 @@
 import type { KundliCanonicalModel, YogaResult } from './types';
 import type { HeadingBlock, KeyValueBlock, ParagraphBlock, ReportBlock, ReportSection } from './types';
 import { placementEvidenceId } from './chartModel';
-import { PLANET_ABBREVIATIONS } from './chartModel';
+import { PLANET_ABBREVIATIONS, SIGN_NAMES_HI } from './chartModel';
 
 export const SCHOLAR_SUMMARY_VERSION = 'scholar-summary-v1';
 
@@ -61,11 +61,6 @@ const SIGN_INDEX_BY_NAME: Record<string, number> = {
 };
 
 /** Hindi names for the twelve signs, used for values as well as labels. */
-const SIGN_NAMES_HI = [
-  'मेष', 'वृषभ', 'मिथुन', 'कर्क', 'सिंह', 'कन्या',
-  'तुला', 'वृश्चिक', 'धनु', 'मकर', 'कुम्भ', 'मीन',
-];
-
 const l = (key: string, loc: Loc) => LABELS[key]?.[loc] ?? key;
 const signName = (signIdx1to12: number, loc: Loc, englishName: string) =>
   loc === 'hi' ? (SIGN_NAMES_HI[signIdx1to12 - 1] ?? englishName) : englishName;

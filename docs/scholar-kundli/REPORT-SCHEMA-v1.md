@@ -59,27 +59,28 @@ the counts. The counts below are documentation, not a contract.
 | 10 | `panchanga` | Panchanga | READY | keyValue ×8 |
 | 11 | `planetary-positions` | Planetary Positions | READY | paragraph ×1, table ×1 |
 | 12 | `house-positions` | House Positions | READY | table ×1 |
-| 13 | `vimshottari-dasha` | Vimshottari Dasha — 9 Mahadashas | READY | paragraph ×1, table ×1 |
-| 14 | `current-dasha` | Current Dasha Period | READY | divider ×1, heading ×1, keyValue ×3, table ×1 |
-| 15 | `lagna-analysis` | Lagna Analysis | READY | keyValue ×2, paragraph ×1 |
-| 16 | `moon-analysis` | Moon Analysis | READY | keyValue ×2, paragraph ×1 |
-| 17 | `nakshatra-analysis` | Janma Nakshatra Analysis | READY | keyValue ×2, paragraph ×1 |
-| 18 | `major-yogas` | Major Yogas | READY | divider ×11, heading ×11, keyValue ×137, paragraph ×1, table ×10 |
-| 19 | `dosha-analysis` | Dosha Analysis | READY | keyValue ×3, paragraph ×1 |
-| 20 | `career` | Career | READY | keyValue ×2, paragraph ×1 |
-| 21 | `finance` | Finance & Wealth | READY | keyValue ×2, paragraph ×1 |
-| 22 | `relationships` | Relationships & Partnership | READY | keyValue ×2, paragraph ×1 |
-| 23 | `family` | Family & Home | READY | keyValue ×2, paragraph ×1 |
-| 24 | `health` | Health & Vitality | READY | keyValue ×2, paragraph ×1 |
-| 25 | `education` | Education & Intellect | READY | keyValue ×2, paragraph ×1 |
-| 26 | `spiritual-tendencies` | Spiritual Tendencies | READY | keyValue ×2, paragraph ×1 |
-| 27 | `current-period` | Current Period — Interpretation | READY | keyValue ×2, paragraph ×1 |
-| 28 | `near-term-themes` | Near-Term Themes | READY | keyValue ×2, paragraph ×1 |
-| 29 | `remedies` | Remedies | READY | keyValue ×2, paragraph ×1 |
-| 30 | `calculation-method` | Calculation Standard | READY | keyValue ×11 |
-| 31 | `appendix-calculation-notes` | Appendix — Calculation Notes | READY | keyValue ×7, paragraph ×2 |
-| 32 | `calculation-certificate` | Calculation Certificate | READY | callout ×1, heading ×7, keyValue ×14, paragraph ×11, table ×1 |
-| 33 | `disclaimer` | Disclaimer | READY | paragraph ×2 |
+| 13 | `bhava-graha-matrix` | Bhava–Graha Matrix | READY | paragraph ×2, table ×1 |
+| 14 | `vimshottari-dasha` | Vimshottari Dasha — 9 Mahadashas | READY | paragraph ×1, table ×1 |
+| 15 | `current-dasha` | Current Dasha Period | READY | divider ×1, heading ×1, keyValue ×3, table ×1 |
+| 16 | `lagna-analysis` | Lagna Analysis | READY | keyValue ×2, paragraph ×1 |
+| 17 | `moon-analysis` | Moon Analysis | READY | keyValue ×2, paragraph ×1 |
+| 18 | `nakshatra-analysis` | Janma Nakshatra Analysis | READY | keyValue ×2, paragraph ×1 |
+| 19 | `major-yogas` | Major Yogas | READY | divider ×11, heading ×11, keyValue ×142, paragraph ×1, table ×10 |
+| 20 | `dosha-analysis` | Dosha Analysis | READY | keyValue ×3, paragraph ×1 |
+| 21 | `career` | Career | READY | keyValue ×2, paragraph ×1 |
+| 22 | `finance` | Finance & Wealth | READY | keyValue ×2, paragraph ×1 |
+| 23 | `relationships` | Relationships & Partnership | READY | keyValue ×2, paragraph ×1 |
+| 24 | `family` | Family & Home | READY | keyValue ×2, paragraph ×1 |
+| 25 | `health` | Health & Vitality | READY | keyValue ×2, paragraph ×1 |
+| 26 | `education` | Education & Intellect | READY | keyValue ×2, paragraph ×1 |
+| 27 | `spiritual-tendencies` | Spiritual Tendencies | READY | keyValue ×2, paragraph ×1 |
+| 28 | `current-period` | Current Period — Interpretation | READY | keyValue ×2, paragraph ×1 |
+| 29 | `near-term-themes` | Near-Term Themes | READY | keyValue ×2, paragraph ×1 |
+| 30 | `remedies` | Remedies | READY | keyValue ×2, paragraph ×1 |
+| 31 | `calculation-method` | Calculation Standard | READY | keyValue ×11 |
+| 32 | `appendix-calculation-notes` | Appendix — Calculation Notes | READY | keyValue ×7, paragraph ×2 |
+| 33 | `calculation-certificate` | Calculation Certificate | READY | callout ×1, heading ×7, keyValue ×14, paragraph ×11, table ×1 |
+| 34 | `disclaimer` | Disclaimer | READY | paragraph ×2 |
 
 ---
 
@@ -87,7 +88,7 @@ the counts. The counts below are documentation, not a contract.
 
 These hold for every delivered report, and each is asserted by a test.
 
-**INV-S1 — Order is fixed.** The thirty-three sections appear in the order
+**INV-S1 — Order is fixed.** The thirty-four sections appear in the order
 above, every time. A reader who has seen one report knows where to find
 things in the next.
 

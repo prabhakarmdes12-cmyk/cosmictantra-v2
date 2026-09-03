@@ -38,6 +38,18 @@ export const PLANET_ABBREVIATIONS: Record<PlanetId, { en: string; hi: string; fu
   Ketu: { en: 'Ke', hi: 'के', full: { en: 'Ketu', hi: 'केतु' } },
 };
 
+/**
+ * Devanagari rashi names, indexed 0..11 for Aries..Pisces.
+ *
+ * These live next to the abbreviation registry rather than in any one report
+ * section, because two surfaces already need them and a second copy would be
+ * a second list to keep in step.
+ */
+export const SIGN_NAMES_HI = [
+  'मेष', 'वृषभ', 'मिथुन', 'कर्क', 'सिंह', 'कन्या',
+  'तुला', 'वृश्चिक', 'धनु', 'मकर', 'कुम्भ', 'मीन',
+] as const;
+
 export const LAGNA_LABELS = { en: 'Lagna', hi: 'लग्न', abbrEn: 'Lg', abbrHi: 'ल' } as const;
 
 /** Devanagari digits, so sign numbers can be rendered without an Arabic fallback. */

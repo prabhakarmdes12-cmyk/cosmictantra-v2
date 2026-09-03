@@ -100,10 +100,28 @@ const SIGN_WITH_QUALITY = new RegExp(
   'gi',
 );
 
+/**
+ * A bare capitalised sign name: the 'Cancer' in a table's Sign column.
+ *
+ * Deliberately case-sensitive. The zodiac sign is written capitalised; the
+ * disease is written lowercase ('risk of cancer'). Matching only the
+ * capitalised form keeps the sign and still catches the disease.
+ *
+ * The limitation is real and stated: a sentence that opens with the word
+ * Cancer as a diagnosis would be read as a sign. That is accepted, because
+ * the alternative — ignoring the word entirely — would blind the scanner to
+ * the thing it exists to catch.
+ */
+const SIGN_NAME_CAPITALISED = new RegExp(
+  '\\b(?:' + ENGLISH_SIGN_NAMES.join('|') + ')\\b',
+  'g',
+);
+
 function neutraliseSignNames(text: string): string {
   let out = text;
   for (const sign of SIGN_NAMES) out = out.split(sign).join('ZODIACSIGN');
   out = out.replace(SIGN_WITH_QUALITY, 'ZODIACSIGN');
+  out = out.replace(SIGN_NAME_CAPITALISED, 'ZODIACSIGN');
   return out;
 }
 
