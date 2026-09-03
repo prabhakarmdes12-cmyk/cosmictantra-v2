@@ -1,0 +1,1209 @@
+{
+ "fixtureSetId": "TIME_ENGINE_BENCHMARK_001",
+ "builder": "build-time-fixtures-1.0.0",
+ "createdAtUtc": "2026-09-03T05:02:48.840Z",
+ "engineVersion": "V37.0",
+ "classicalTables": {
+  "source": {
+   "statement": "Brihat Parashara Hora Shastra (Vimshottara dasha chapter) and standard panchanga limnology",
+   "status": "SOURCE_SECONDARY"
+  },
+  "vimshottari": {
+   "lordOrder": [
+    "Ketu",
+    "Venus",
+    "Sun",
+    "Moon",
+    "Mars",
+    "Rahu",
+    "Jupiter",
+    "Saturn",
+    "Mercury"
+   ],
+   "years": {
+    "Ketu": 7,
+    "Venus": 20,
+    "Sun": 6,
+    "Moon": 10,
+    "Mars": 7,
+    "Rahu": 18,
+    "Jupiter": 16,
+    "Saturn": 19,
+    "Mercury": 17
+   },
+   "totalYears": 120,
+   "yearLengthDays": 365.25,
+   "nakshatraSpanDeg": 13.333333333333334
+  },
+  "nakshatraStartLords": [
+   {
+    "nakshatra": 1,
+    "name": "Ashwini",
+    "lord": "Ketu"
+   },
+   {
+    "nakshatra": 2,
+    "name": "Bharani",
+    "lord": "Venus"
+   },
+   {
+    "nakshatra": 3,
+    "name": "Krittika",
+    "lord": "Sun"
+   },
+   {
+    "nakshatra": 4,
+    "name": "Rohini",
+    "lord": "Moon"
+   },
+   {
+    "nakshatra": 5,
+    "name": "Mrigashira",
+    "lord": "Mars"
+   },
+   {
+    "nakshatra": 6,
+    "name": "Ardra",
+    "lord": "Rahu"
+   },
+   {
+    "nakshatra": 7,
+    "name": "Punarvasu",
+    "lord": "Jupiter"
+   },
+   {
+    "nakshatra": 8,
+    "name": "Pushya",
+    "lord": "Saturn"
+   },
+   {
+    "nakshatra": 9,
+    "name": "Ashlesha",
+    "lord": "Mercury"
+   },
+   {
+    "nakshatra": 10,
+    "name": "Magha",
+    "lord": "Ketu"
+   },
+   {
+    "nakshatra": 11,
+    "name": "Purva Phalguni",
+    "lord": "Venus"
+   },
+   {
+    "nakshatra": 12,
+    "name": "Uttara Phalguni",
+    "lord": "Sun"
+   },
+   {
+    "nakshatra": 13,
+    "name": "Hasta",
+    "lord": "Moon"
+   },
+   {
+    "nakshatra": 14,
+    "name": "Chitra",
+    "lord": "Mars"
+   },
+   {
+    "nakshatra": 15,
+    "name": "Swati",
+    "lord": "Rahu"
+   },
+   {
+    "nakshatra": 16,
+    "name": "Vishakha",
+    "lord": "Jupiter"
+   },
+   {
+    "nakshatra": 17,
+    "name": "Anuradha",
+    "lord": "Saturn"
+   },
+   {
+    "nakshatra": 18,
+    "name": "Jyeshtha",
+    "lord": "Mercury"
+   },
+   {
+    "nakshatra": 19,
+    "name": "Mula",
+    "lord": "Ketu"
+   },
+   {
+    "nakshatra": 20,
+    "name": "Purva Ashadha",
+    "lord": "Venus"
+   },
+   {
+    "nakshatra": 21,
+    "name": "Uttara Ashadha",
+    "lord": "Sun"
+   },
+   {
+    "nakshatra": 22,
+    "name": "Shravana",
+    "lord": "Moon"
+   },
+   {
+    "nakshatra": 23,
+    "name": "Dhanishta",
+    "lord": "Mars"
+   },
+   {
+    "nakshatra": 24,
+    "name": "Shatabhisha",
+    "lord": "Rahu"
+   },
+   {
+    "nakshatra": 25,
+    "name": "Purva Bhadrapada",
+    "lord": "Jupiter"
+   },
+   {
+    "nakshatra": 26,
+    "name": "Uttara Bhadrapada",
+    "lord": "Saturn"
+   },
+   {
+    "nakshatra": 27,
+    "name": "Revati",
+    "lord": "Mercury"
+   }
+  ],
+  "panchanga": {
+   "tithis": [
+    "Pratipada",
+    "Dwitiya",
+    "Tritiya",
+    "Chaturthi",
+    "Panchami",
+    "Shashthi",
+    "Saptami",
+    "Ashtami",
+    "Navami",
+    "Dashami",
+    "Ekadashi",
+    "Dwadashi",
+    "Trayodashi",
+    "Chaturdashi",
+    "Purnima",
+    "Pratipada",
+    "Dwitiya",
+    "Tritiya",
+    "Chaturthi",
+    "Panchami",
+    "Shashthi",
+    "Saptami",
+    "Ashtami",
+    "Navami",
+    "Dashami",
+    "Ekadashi",
+    "Dwadashi",
+    "Trayodashi",
+    "Chaturdashi",
+    "Amavasya"
+   ],
+   "yogas": [
+    "Vishkambha",
+    "Priti",
+    "Ayushman",
+    "Saubhagya",
+    "Shobhana",
+    "Atiganda",
+    "Sukarma",
+    "Dhriti",
+    "Shoola",
+    "Ganda",
+    "Vriddhi",
+    "Dhruva",
+    "Vyaghata",
+    "Harshana",
+    "Vajra",
+    "Siddhi",
+    "Vyatipata",
+    "Variyana",
+    "Parigha",
+    "Shiva",
+    "Siddha",
+    "Sadhya",
+    "Shubha",
+    "Shukla",
+    "Brahma",
+    "Indra",
+    "Vaidhriti"
+   ],
+   "movableKaranas": [
+    "Bava",
+    "Balava",
+    "Kaulava",
+    "Taitila",
+    "Gara",
+    "Vanija",
+    "Vishti"
+   ],
+   "fixedKaranas": {
+    "0": "Kintughna",
+    "57": "Shakuni",
+    "58": "Chatushpada",
+    "59": "Naga"
+   },
+   "muhurtaFactors": [
+    {
+     "vara": "Sunday",
+     "rahu": 8,
+     "yamaganda": 5,
+     "gulika": 7
+    },
+    {
+     "vara": "Monday",
+     "rahu": 2,
+     "yamaganda": 4,
+     "gulika": 6
+    },
+    {
+     "vara": "Tuesday",
+     "rahu": 7,
+     "yamaganda": 3,
+     "gulika": 5
+    },
+    {
+     "vara": "Wednesday",
+     "rahu": 5,
+     "yamaganda": 2,
+     "gulika": 4
+    },
+    {
+     "vara": "Thursday",
+     "rahu": 6,
+     "yamaganda": 1,
+     "gulika": 3
+    },
+    {
+     "vara": "Friday",
+     "rahu": 4,
+     "yamaganda": 7,
+     "gulika": 2
+    },
+    {
+     "vara": "Saturday",
+     "rahu": 3,
+     "yamaganda": 6,
+     "gulika": 1
+    }
+   ]
+  }
+ },
+ "goldenCharts": [
+  {
+   "chartId": "PRIYA_SHARMA_PATNA",
+   "birthDate": "1995-06-15",
+   "moonSiderealLongitude": 268.86546866208835,
+   "nakshatraIndex": 20,
+   "expectedStartLord": "Sun",
+   "startingBalance": "5.0 yrs of Sun",
+   "mahadashas": [
+    {
+     "lord": "Sun",
+     "startDate": "1995-06-15",
+     "endDate": "2000-06-18",
+     "antardashaLords": [
+      "Sun",
+      "Moon",
+      "Mars",
+      "Rahu",
+      "Jupiter",
+      "Saturn",
+      "Mercury",
+      "Ketu",
+      "Venus"
+     ]
+    },
+    {
+     "lord": "Moon",
+     "startDate": "2000-06-18",
+     "endDate": "2010-06-18",
+     "antardashaLords": [
+      "Moon",
+      "Mars",
+      "Rahu",
+      "Jupiter",
+      "Saturn",
+      "Mercury",
+      "Ketu",
+      "Venus",
+      "Sun"
+     ]
+    },
+    {
+     "lord": "Mars",
+     "startDate": "2010-06-18",
+     "endDate": "2017-06-18",
+     "antardashaLords": [
+      "Mars",
+      "Rahu",
+      "Jupiter",
+      "Saturn",
+      "Mercury",
+      "Ketu",
+      "Venus",
+      "Sun",
+      "Moon"
+     ]
+    },
+    {
+     "lord": "Rahu",
+     "startDate": "2017-06-18",
+     "endDate": "2035-06-18",
+     "antardashaLords": [
+      "Rahu",
+      "Jupiter",
+      "Saturn",
+      "Mercury",
+      "Ketu",
+      "Venus",
+      "Sun",
+      "Moon",
+      "Mars"
+     ]
+    },
+    {
+     "lord": "Jupiter",
+     "startDate": "2035-06-18",
+     "endDate": "2051-06-18",
+     "antardashaLords": [
+      "Jupiter",
+      "Saturn",
+      "Mercury",
+      "Ketu",
+      "Venus",
+      "Sun",
+      "Moon",
+      "Mars",
+      "Rahu"
+     ]
+    },
+    {
+     "lord": "Saturn",
+     "startDate": "2051-06-18",
+     "endDate": "2070-06-18",
+     "antardashaLords": [
+      "Saturn",
+      "Mercury",
+      "Ketu",
+      "Venus",
+      "Sun",
+      "Moon",
+      "Mars",
+      "Rahu",
+      "Jupiter"
+     ]
+    },
+    {
+     "lord": "Mercury",
+     "startDate": "2070-06-18",
+     "endDate": "2087-06-18",
+     "antardashaLords": [
+      "Mercury",
+      "Ketu",
+      "Venus",
+      "Sun",
+      "Moon",
+      "Mars",
+      "Rahu",
+      "Jupiter",
+      "Saturn"
+     ]
+    },
+    {
+     "lord": "Ketu",
+     "startDate": "2087-06-18",
+     "endDate": "2094-06-18",
+     "antardashaLords": [
+      "Ketu",
+      "Venus",
+      "Sun",
+      "Moon",
+      "Mars",
+      "Rahu",
+      "Jupiter",
+      "Saturn",
+      "Mercury"
+     ]
+    },
+    {
+     "lord": "Venus",
+     "startDate": "2094-06-18",
+     "endDate": "2114-06-19",
+     "antardashaLords": [
+      "Venus",
+      "Sun",
+      "Moon",
+      "Mars",
+      "Rahu",
+      "Jupiter",
+      "Saturn",
+      "Mercury",
+      "Ketu"
+     ]
+    }
+   ],
+   "rahuMahaDetail": {
+    "startDate": "2017-06-18",
+    "endDate": "2035-06-18",
+    "antardashas": [
+     {
+      "lord": "Rahu",
+      "startDate": "2017-06-18",
+      "endDate": "2020-02-29"
+     },
+     {
+      "lord": "Jupiter",
+      "startDate": "2020-02-29",
+      "endDate": "2022-07-25"
+     },
+     {
+      "lord": "Saturn",
+      "startDate": "2022-07-25",
+      "endDate": "2025-05-31"
+     },
+     {
+      "lord": "Mercury",
+      "startDate": "2025-05-31",
+      "endDate": "2027-12-18"
+     },
+     {
+      "lord": "Ketu",
+      "startDate": "2027-12-18",
+      "endDate": "2029-01-04"
+     },
+     {
+      "lord": "Venus",
+      "startDate": "2029-01-04",
+      "endDate": "2032-01-05"
+     },
+     {
+      "lord": "Sun",
+      "startDate": "2032-01-05",
+      "endDate": "2032-11-29"
+     },
+     {
+      "lord": "Moon",
+      "startDate": "2032-11-29",
+      "endDate": "2034-05-31"
+     },
+     {
+      "lord": "Mars",
+      "startDate": "2034-05-31",
+      "endDate": "2035-06-18"
+     }
+    ],
+    "firstAntardashaPratyantardashas": [
+     {
+      "lord": "Rahu",
+      "startDate": "2017-06-18",
+      "endDate": "2017-11-13"
+     },
+     {
+      "lord": "Jupiter",
+      "startDate": "2017-11-13",
+      "endDate": "2018-03-24"
+     },
+     {
+      "lord": "Saturn",
+      "startDate": "2018-03-24",
+      "endDate": "2018-08-27"
+     },
+     {
+      "lord": "Mercury",
+      "startDate": "2018-08-27",
+      "endDate": "2019-01-14"
+     },
+     {
+      "lord": "Ketu",
+      "startDate": "2019-01-14",
+      "endDate": "2019-03-13"
+     },
+     {
+      "lord": "Venus",
+      "startDate": "2019-03-13",
+      "endDate": "2019-08-24"
+     },
+     {
+      "lord": "Sun",
+      "startDate": "2019-08-24",
+      "endDate": "2019-10-12"
+     },
+     {
+      "lord": "Moon",
+      "startDate": "2019-10-12",
+      "endDate": "2020-01-02"
+     },
+     {
+      "lord": "Mars",
+      "startDate": "2020-01-02",
+      "endDate": "2020-02-29"
+     }
+    ]
+   }
+  },
+  {
+   "chartId": "PRABHAKAR_BILASPUR",
+   "birthDate": "1989-05-26",
+   "moonSiderealLongitude": 281.74809618065365,
+   "nakshatraIndex": 21,
+   "expectedStartLord": "Moon",
+   "startingBalance": "8.7 yrs of Moon",
+   "mahadashas": [
+    {
+     "lord": "Moon",
+     "startDate": "1989-05-26",
+     "endDate": "1998-02-01",
+     "antardashaLords": [
+      "Moon",
+      "Mars",
+      "Rahu",
+      "Jupiter",
+      "Saturn",
+      "Mercury",
+      "Ketu",
+      "Venus",
+      "Sun"
+     ]
+    },
+    {
+     "lord": "Mars",
+     "startDate": "1998-02-01",
+     "endDate": "2005-02-01",
+     "antardashaLords": [
+      "Mars",
+      "Rahu",
+      "Jupiter",
+      "Saturn",
+      "Mercury",
+      "Ketu",
+      "Venus",
+      "Sun",
+      "Moon"
+     ]
+    },
+    {
+     "lord": "Rahu",
+     "startDate": "2005-02-01",
+     "endDate": "2023-02-01",
+     "antardashaLords": [
+      "Rahu",
+      "Jupiter",
+      "Saturn",
+      "Mercury",
+      "Ketu",
+      "Venus",
+      "Sun",
+      "Moon",
+      "Mars"
+     ]
+    },
+    {
+     "lord": "Jupiter",
+     "startDate": "2023-02-01",
+     "endDate": "2039-02-01",
+     "antardashaLords": [
+      "Jupiter",
+      "Saturn",
+      "Mercury",
+      "Ketu",
+      "Venus",
+      "Sun",
+      "Moon",
+      "Mars",
+      "Rahu"
+     ]
+    },
+    {
+     "lord": "Saturn",
+     "startDate": "2039-02-01",
+     "endDate": "2058-02-01",
+     "antardashaLords": [
+      "Saturn",
+      "Mercury",
+      "Ketu",
+      "Venus",
+      "Sun",
+      "Moon",
+      "Mars",
+      "Rahu",
+      "Jupiter"
+     ]
+    },
+    {
+     "lord": "Mercury",
+     "startDate": "2058-02-01",
+     "endDate": "2075-02-01",
+     "antardashaLords": [
+      "Mercury",
+      "Ketu",
+      "Venus",
+      "Sun",
+      "Moon",
+      "Mars",
+      "Rahu",
+      "Jupiter",
+      "Saturn"
+     ]
+    },
+    {
+     "lord": "Ketu",
+     "startDate": "2075-02-01",
+     "endDate": "2082-02-01",
+     "antardashaLords": [
+      "Ketu",
+      "Venus",
+      "Sun",
+      "Moon",
+      "Mars",
+      "Rahu",
+      "Jupiter",
+      "Saturn",
+      "Mercury"
+     ]
+    },
+    {
+     "lord": "Venus",
+     "startDate": "2082-02-01",
+     "endDate": "2102-02-02",
+     "antardashaLords": [
+      "Venus",
+      "Sun",
+      "Moon",
+      "Mars",
+      "Rahu",
+      "Jupiter",
+      "Saturn",
+      "Mercury",
+      "Ketu"
+     ]
+    },
+    {
+     "lord": "Sun",
+     "startDate": "2102-02-02",
+     "endDate": "2108-02-03",
+     "antardashaLords": [
+      "Sun",
+      "Moon",
+      "Mars",
+      "Rahu",
+      "Jupiter",
+      "Saturn",
+      "Mercury",
+      "Ketu",
+      "Venus"
+     ]
+    }
+   ],
+   "rahuMahaDetail": {
+    "startDate": "2005-02-01",
+    "endDate": "2023-02-01",
+    "antardashas": [
+     {
+      "lord": "Rahu",
+      "startDate": "2005-02-01",
+      "endDate": "2007-10-15"
+     },
+     {
+      "lord": "Jupiter",
+      "startDate": "2007-10-15",
+      "endDate": "2010-03-10"
+     },
+     {
+      "lord": "Saturn",
+      "startDate": "2010-03-10",
+      "endDate": "2013-01-14"
+     },
+     {
+      "lord": "Mercury",
+      "startDate": "2013-01-14",
+      "endDate": "2015-08-03"
+     },
+     {
+      "lord": "Ketu",
+      "startDate": "2015-08-03",
+      "endDate": "2016-08-21"
+     },
+     {
+      "lord": "Venus",
+      "startDate": "2016-08-21",
+      "endDate": "2019-08-21"
+     },
+     {
+      "lord": "Sun",
+      "startDate": "2019-08-21",
+      "endDate": "2020-07-15"
+     },
+     {
+      "lord": "Moon",
+      "startDate": "2020-07-15",
+      "endDate": "2022-01-14"
+     },
+     {
+      "lord": "Mars",
+      "startDate": "2022-01-14",
+      "endDate": "2023-02-01"
+     }
+    ],
+    "firstAntardashaPratyantardashas": [
+     {
+      "lord": "Rahu",
+      "startDate": "2005-02-01",
+      "endDate": "2005-06-29"
+     },
+     {
+      "lord": "Jupiter",
+      "startDate": "2005-06-29",
+      "endDate": "2005-11-07"
+     },
+     {
+      "lord": "Saturn",
+      "startDate": "2005-11-07",
+      "endDate": "2006-04-12"
+     },
+     {
+      "lord": "Mercury",
+      "startDate": "2006-04-12",
+      "endDate": "2006-08-30"
+     },
+     {
+      "lord": "Ketu",
+      "startDate": "2006-08-30",
+      "endDate": "2006-10-27"
+     },
+     {
+      "lord": "Venus",
+      "startDate": "2006-10-27",
+      "endDate": "2007-04-09"
+     },
+     {
+      "lord": "Sun",
+      "startDate": "2007-04-09",
+      "endDate": "2007-05-28"
+     },
+     {
+      "lord": "Moon",
+      "startDate": "2007-05-28",
+      "endDate": "2007-08-19"
+     },
+     {
+      "lord": "Mars",
+      "startDate": "2007-08-19",
+      "endDate": "2007-10-15"
+     }
+    ]
+   }
+  },
+  {
+   "chartId": "NAKSHATRA_EDGE_KRITTICA_START",
+   "birthDate": "2000-01-01",
+   "moonSiderealLongitude": 193.69246087109332,
+   "nakshatraIndex": 14,
+   "expectedStartLord": "Rahu",
+   "startingBalance": "8.5 yrs of Rahu",
+   "mahadashas": [
+    {
+     "lord": "Rahu",
+     "startDate": "2000-01-01",
+     "endDate": "2008-07-07",
+     "antardashaLords": [
+      "Rahu",
+      "Jupiter",
+      "Saturn",
+      "Mercury",
+      "Ketu",
+      "Venus",
+      "Sun",
+      "Moon",
+      "Mars"
+     ]
+    },
+    {
+     "lord": "Jupiter",
+     "startDate": "2008-07-07",
+     "endDate": "2024-07-07",
+     "antardashaLords": [
+      "Jupiter",
+      "Saturn",
+      "Mercury",
+      "Ketu",
+      "Venus",
+      "Sun",
+      "Moon",
+      "Mars",
+      "Rahu"
+     ]
+    },
+    {
+     "lord": "Saturn",
+     "startDate": "2024-07-07",
+     "endDate": "2043-07-07",
+     "antardashaLords": [
+      "Saturn",
+      "Mercury",
+      "Ketu",
+      "Venus",
+      "Sun",
+      "Moon",
+      "Mars",
+      "Rahu",
+      "Jupiter"
+     ]
+    },
+    {
+     "lord": "Mercury",
+     "startDate": "2043-07-07",
+     "endDate": "2060-07-07",
+     "antardashaLords": [
+      "Mercury",
+      "Ketu",
+      "Venus",
+      "Sun",
+      "Moon",
+      "Mars",
+      "Rahu",
+      "Jupiter",
+      "Saturn"
+     ]
+    },
+    {
+     "lord": "Ketu",
+     "startDate": "2060-07-07",
+     "endDate": "2067-07-07",
+     "antardashaLords": [
+      "Ketu",
+      "Venus",
+      "Sun",
+      "Moon",
+      "Mars",
+      "Rahu",
+      "Jupiter",
+      "Saturn",
+      "Mercury"
+     ]
+    },
+    {
+     "lord": "Venus",
+     "startDate": "2067-07-07",
+     "endDate": "2087-07-07",
+     "antardashaLords": [
+      "Venus",
+      "Sun",
+      "Moon",
+      "Mars",
+      "Rahu",
+      "Jupiter",
+      "Saturn",
+      "Mercury",
+      "Ketu"
+     ]
+    },
+    {
+     "lord": "Sun",
+     "startDate": "2087-07-07",
+     "endDate": "2093-07-07",
+     "antardashaLords": [
+      "Sun",
+      "Moon",
+      "Mars",
+      "Rahu",
+      "Jupiter",
+      "Saturn",
+      "Mercury",
+      "Ketu",
+      "Venus"
+     ]
+    },
+    {
+     "lord": "Moon",
+     "startDate": "2093-07-07",
+     "endDate": "2103-07-08",
+     "antardashaLords": [
+      "Moon",
+      "Mars",
+      "Rahu",
+      "Jupiter",
+      "Saturn",
+      "Mercury",
+      "Ketu",
+      "Venus",
+      "Sun"
+     ]
+    },
+    {
+     "lord": "Mars",
+     "startDate": "2103-07-08",
+     "endDate": "2110-07-08",
+     "antardashaLords": [
+      "Mars",
+      "Rahu",
+      "Jupiter",
+      "Saturn",
+      "Mercury",
+      "Ketu",
+      "Venus",
+      "Sun",
+      "Moon"
+     ]
+    }
+   ],
+   "rahuMahaDetail": {
+    "startDate": "2000-01-01",
+    "endDate": "2008-07-07",
+    "antardashas": [
+     {
+      "lord": "Rahu",
+      "startDate": "2000-01-01",
+      "endDate": "2001-04-11"
+     },
+     {
+      "lord": "Jupiter",
+      "startDate": "2001-04-11",
+      "endDate": "2002-05-31"
+     },
+     {
+      "lord": "Saturn",
+      "startDate": "2002-05-31",
+      "endDate": "2003-10-05"
+     },
+     {
+      "lord": "Mercury",
+      "startDate": "2003-10-05",
+      "endDate": "2004-12-19"
+     },
+     {
+      "lord": "Ketu",
+      "startDate": "2004-12-19",
+      "endDate": "2005-06-18"
+     },
+     {
+      "lord": "Venus",
+      "startDate": "2005-06-18",
+      "endDate": "2006-11-19"
+     },
+     {
+      "lord": "Sun",
+      "startDate": "2006-11-19",
+      "endDate": "2007-04-23"
+     },
+     {
+      "lord": "Moon",
+      "startDate": "2007-04-23",
+      "endDate": "2008-01-07"
+     },
+     {
+      "lord": "Mars",
+      "startDate": "2008-01-07",
+      "endDate": "2008-07-07"
+     }
+    ],
+    "firstAntardashaPratyantardashas": [
+     {
+      "lord": "Rahu",
+      "startDate": "2000-01-01",
+      "endDate": "2000-03-10"
+     },
+     {
+      "lord": "Jupiter",
+      "startDate": "2000-03-10",
+      "endDate": "2000-05-12"
+     },
+     {
+      "lord": "Saturn",
+      "startDate": "2000-05-12",
+      "endDate": "2000-07-25"
+     },
+     {
+      "lord": "Mercury",
+      "startDate": "2000-07-25",
+      "endDate": "2000-09-29"
+     },
+     {
+      "lord": "Ketu",
+      "startDate": "2000-09-29",
+      "endDate": "2000-10-26"
+     },
+     {
+      "lord": "Venus",
+      "startDate": "2000-10-26",
+      "endDate": "2001-01-12"
+     },
+     {
+      "lord": "Sun",
+      "startDate": "2001-01-12",
+      "endDate": "2001-02-04"
+     },
+     {
+      "lord": "Moon",
+      "startDate": "2001-02-04",
+      "endDate": "2001-03-15"
+     },
+     {
+      "lord": "Mars",
+      "startDate": "2001-03-15",
+      "endDate": "2001-04-11"
+     }
+    ]
+   }
+  }
+ ],
+ "goldenPanchang": [
+  {
+   "id": "VARANASI_SHIVARATRI",
+   "instant": "2026-02-15T06:00:00Z",
+   "lat": 25.3176,
+   "lng": 82.9739,
+   "tz": 5.5,
+   "civilDate": "2026-02-15",
+   "tithi": {
+    "number": 28,
+    "name": "Trayodashi",
+    "paksha": "Krishna Paksha"
+   },
+   "nakshatra": {
+    "name": "Uttara Ashadha",
+    "pada": 3
+   },
+   "yoga": {
+    "name": "Vyatipata"
+   },
+   "karana": {
+    "name": "Vanija"
+   },
+   "sunriseUtc": "2026-02-15T01:04:40.987Z",
+   "sunsetUtc": "2026-02-15T12:20:40.068Z",
+   "rahuStartUtc": "2026-02-15T10:56:10.182Z",
+   "rahuEndUtc": "2026-02-15T12:20:40.068Z",
+   "yamaganda": "12:12 PM – 01:37 PM",
+   "gulikaKalam": "03:01 PM – 04:26 PM",
+   "abhijitMuhurat": "11:50 AM – 12:35 PM"
+  },
+  {
+   "id": "PATNA_DIWALI",
+   "instant": "2026-11-08T06:00:00Z",
+   "lat": 25.5941,
+   "lng": 85.1376,
+   "tz": 5.5,
+   "civilDate": "2026-11-08",
+   "tithi": {
+    "number": 30,
+    "name": "Amavasya",
+    "paksha": "Krishna Paksha"
+   },
+   "nakshatra": {
+    "name": "Swati",
+    "pada": 1
+   },
+   "yoga": {
+    "name": "Ayushman"
+   },
+   "karana": {
+    "name": "Chatushpada"
+   },
+   "sunriseUtc": "2026-11-08T00:33:53.182Z",
+   "sunsetUtc": "2026-11-08T11:33:02.197Z",
+   "rahuStartUtc": "2026-11-08T10:10:38.570Z",
+   "rahuEndUtc": "2026-11-08T11:33:02.197Z",
+   "yamaganda": "11:33 AM – 12:55 PM",
+   "gulikaKalam": "02:18 PM – 03:40 PM",
+   "abhijitMuhurat": "11:11 AM – 11:55 AM"
+  },
+  {
+   "id": "DELHI_MONDAY_MORNING",
+   "instant": "2026-03-16T03:30:00Z",
+   "lat": 28.6139,
+   "lng": 77.209,
+   "tz": 5.5,
+   "civilDate": "2026-03-16",
+   "tithi": {
+    "number": 27,
+    "name": "Dwadashi",
+    "paksha": "Krishna Paksha"
+   },
+   "nakshatra": {
+    "name": "Dhanishta",
+    "pada": 1
+   },
+   "yoga": {
+    "name": "Shiva"
+   },
+   "karana": {
+    "name": "Taitila"
+   },
+   "sunriseUtc": "2026-03-16T01:02:13.231Z",
+   "sunsetUtc": "2026-03-16T12:58:49.601Z",
+   "rahuStartUtc": "2026-03-16T02:31:47.777Z",
+   "rahuEndUtc": "2026-03-16T04:01:22.323Z",
+   "yamaganda": "11:00 AM – 12:30 PM",
+   "gulikaKalam": "02:00 PM – 03:29 PM",
+   "abhijitMuhurat": "12:06 PM – 12:54 PM"
+  },
+  {
+   "id": "MUMBAI_EVENING",
+   "instant": "2026-06-21T13:00:00Z",
+   "lat": 19.076,
+   "lng": 72.8777,
+   "tz": 5.5,
+   "civilDate": "2026-06-21",
+   "tithi": {
+    "number": 8,
+    "name": "Ashtami",
+    "paksha": "Shukla Paksha"
+   },
+   "nakshatra": {
+    "name": "Uttara Phalguni",
+    "pada": 2
+   },
+   "yoga": {
+    "name": "Vyatipata"
+   },
+   "karana": {
+    "name": "Vishti"
+   },
+   "sunriseUtc": "2026-06-21T00:31:33.254Z",
+   "sunsetUtc": "2026-06-21T13:48:19.142Z",
+   "rahuStartUtc": "2026-06-21T12:08:43.406Z",
+   "rahuEndUtc": "2026-06-21T13:48:19.142Z",
+   "yamaganda": "12:39 PM – 02:19 PM",
+   "gulikaKalam": "03:59 PM – 05:38 PM",
+   "abhijitMuhurat": "12:13 PM – 01:06 PM"
+  },
+  {
+   "id": "PATNA_PRE_DAWN",
+   "instant": "2026-01-14T20:30:00Z",
+   "lat": 25.5941,
+   "lng": 85.1376,
+   "tz": 5.5,
+   "civilDate": "2026-01-15",
+   "tithi": {
+    "number": 27,
+    "name": "Dwadashi",
+    "paksha": "Krishna Paksha"
+   },
+   "nakshatra": {
+    "name": "Anuradha",
+    "pada": 4
+   },
+   "yoga": {
+    "name": "Vriddhi"
+   },
+   "karana": {
+    "name": "Kaulava"
+   },
+   "sunriseUtc": "2026-01-15T01:07:49.731Z",
+   "sunsetUtc": "2026-01-15T11:49:46.215Z",
+   "rahuStartUtc": "2026-01-15T07:49:02.533Z",
+   "rahuEndUtc": "2026-01-15T09:09:17.094Z",
+   "yamaganda": "06:37 AM – 07:58 AM",
+   "gulikaKalam": "09:18 AM – 10:38 AM",
+   "abhijitMuhurat": "11:37 AM – 12:20 PM"
+  }
+ ],
+ "setSha256": "a67f731912b93535b80da397dae5b0f35e697b1296404dd63a8f641a71a180e2"
+}

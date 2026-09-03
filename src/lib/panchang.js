@@ -4,6 +4,16 @@ import { getLahiriAyanamsha } from './jyotish/ayanamsha';
  * PROTECTED DOMAIN LOGIC: Panchang Deterministic Astronomical Engine
  * Calculates Tithi, Nakshatra, Yoga, Karana, Sunrise, Sunset, Rahu Kaal,
  * Yamaganda, Gulika, Abhijit Muhurat, Moon Phase, and Vedic Horas.
+ *
+ * Sprint E qualification: limbs verified against the classical tables from the
+ * certified provider longitudes; Tithi/Nakshatra transition timestamps solved by
+ * bisection and checked against the limb-progress identity; sunrise/sunset
+ * bounded against the certified kernel SearchRiseSet (max ~2.3 min over 240
+ * scenarios, declared tolerance 5/8 min); muhurta windows verified against the
+ * classical 8-segment factors. Host-timezone dependence of solar instants FIXED
+ * (see getSunTimes; regression-pinned in tests/time-qualification.spec.ts).
+ * Declared gaps: Purnimanta month (v40 reports NOT_CALCULATED) and Hora/
+ * Choghadiya (not implemented) — see docs/reference-grade/time-certification.md.
  */
 
 const NAKSHATRAS = [
@@ -108,41 +118,54 @@ function getMoonLongitude(jd) {
 }
 
 // Solar declination & Equation of Time for accurate Sunrise/Sunset
+//
+// HOST-TIMEZONE DEFECT FIXED (Sprint E): the previous implementation derived the
+// civil day, day-of-year and weekday from the HOST's local calendar (getYear/
+// getDay/setHours), so the sunrise/sunset Date objects — and every instant built
+// on them (Rahu Kalam windows, currentPeriod, isAuspicious) — were correct only
+// when the host timezone happened to equal the TARGET city's offset. A UTC server
+// and an IST server produced sunrise instants 5.5 h apart for the same query.
+// All arithmetic now runs on the TARGET civil day (instant shifted by the city
+// offset, read through UTC getters) and sunrise/sunset are TRUE UTC instants.
+// Display strings render the target's wall clock via an explicit UTC shift, so
+// they are identical on every host.
 function getSunTimes(date, lat, lng, tz) {
-  const startOfDay = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
-  
+  const targetWall = new Date(date.getTime() + tz * 60 * 60 * 1000);
+  const ty = targetWall.getUTCFullYear();
+  const tm = targetWall.getUTCMonth();
+  const td = targetWall.getUTCDate();
+  const startOfDayTargetWallMs = Date.UTC(ty, tm, td); // target-wall midnight
+  const dayOfYear = Math.floor((startOfDayTargetWallMs - Date.UTC(ty, 0, 0)) / (1000 * 60 * 60 * 24));
+
   // Declination (approx)
   const declination = -23.44 * Math.cos((360 / 365) * (dayOfYear + 10) * (Math.PI / 180));
   const latRad = lat * (Math.PI / 180);
   const decRad = declination * (Math.PI / 180);
-  
+
   // Zenith angle for sunrise/sunset (90.83 degrees for atmospheric refraction + sun disc)
   const zenith = 90.833 * (Math.PI / 180);
-  
+
   const cosH = (Math.cos(zenith) - Math.sin(latRad) * Math.sin(decRad)) / (Math.cos(latRad) * Math.cos(decRad));
-  
+
   let hourAngle = 90;
   if (cosH >= -1 && cosH <= 1) {
     hourAngle = Math.acos(cosH) * (180 / Math.PI);
   }
-  
+
   // Equation of time in minutes
   const b = (360 / 365) * (dayOfYear - 81) * (Math.PI / 180);
   const eot = 9.87 * Math.sin(2 * b) - 7.53 * Math.cos(b) - 1.5 * Math.sin(b);
-  
-  // Solar noon in hours (UTC + tz)
+
+  // Solar noon in TARGET WALL hours
   const solarNoon = (720 - 4 * lng - eot + tz * 60) / 60;
-  
+
   const riseHours = solarNoon - (hourAngle * 4 / 60);
   const setHours = solarNoon + (hourAngle * 4 / 60);
-  
-  const sunrise = new Date(date);
-  sunrise.setHours(Math.floor(riseHours), Math.floor((riseHours % 1) * 60), 0, 0);
-  
-  const sunset = new Date(date);
-  sunset.setHours(Math.floor(setHours), Math.floor((setHours % 1) * 60), 0, 0);
-  
+
+  // Target wall hours -> TRUE UTC instants (wall hours minus the city offset).
+  const sunrise = new Date(startOfDayTargetWallMs + Math.round((riseHours - tz) * 60 * 60 * 1000));
+  const sunset = new Date(startOfDayTargetWallMs + Math.round((setHours - tz) * 60 * 60 * 1000));
+
   return { sunrise, sunset, solarNoonHours: solarNoon };
 }
 
@@ -248,7 +271,9 @@ export function calculatePanchang(date = new Date(), cityOrLat = { lat: 23.7957,
   const { sunrise, sunset, solarNoonHours } = getSunTimes(date, city.lat, city.lng, city.tz);
   const dayDurationMs = sunset.getTime() - sunrise.getTime();
   const segmentDurationMs = dayDurationMs / 8;
-  const weekday = date.getDay(); // 0 is Sunday
+  // The vara (weekday) of the TARGET civil day — host-independent (Sprint E fix).
+  const targetWall = new Date(date.getTime() + city.tz * 60 * 60 * 1000);
+  const weekday = targetWall.getUTCDay(); // 0 is Sunday
   
   const factors = RAHU_FACTORS[weekday];
   
@@ -278,9 +303,13 @@ export function calculatePanchang(date = new Date(), cityOrLat = { lat: 23.7957,
                         diff === 180 ? 'Full Moon (Purnima)' :
                         diff < 270 ? 'Waning Gibbous' : 'Waning Crescent';
 
-  // Format time helpers
+  // Format time helpers — renders the TARGET city's wall clock (Sprint E fix):
+  // shift by the city offset and format in UTC, so the string is identical on
+  // every host (the old host-locale formatting made it server-timezone-dependent).
   const formatTime = (d) => {
-    return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    return new Date(d.getTime() + city.tz * 60 * 60 * 1000).toLocaleTimeString('en-US', {
+      hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'UTC'
+    });
   };
   
   // Active Vedic Period determination
@@ -319,7 +348,7 @@ export function calculatePanchang(date = new Date(), cityOrLat = { lat: 23.7957,
   }
 
   return {
-    date: date.toISOString().split('T')[0],
+    date: new Date(date.getTime() + city.tz * 60 * 60 * 1000).toISOString().split('T')[0],
     city: city.name,
     state: city.state,
     country: city.country,

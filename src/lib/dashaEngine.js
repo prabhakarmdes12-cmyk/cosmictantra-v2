@@ -2,7 +2,19 @@
  * PROTECTED DOMAIN LOGIC: Vimshottari Dasha Engine
  * Computes 120-year cyclical Vimshottari Mahadashas, Antardashas, and Pratyantardashas
  * from the exact natal Moon longitude and Nakshatra fraction.
+ *
+ * Sprint E: all display formatting now uses static month names with UTC getters.
+ * The previous `toLocaleDateString('en-US', ...)` calls rendered the UTC-midnight
+ * period boundaries in the HOST timezone, so pratyantardasha display strings
+ * drifted by a day on hosts west/east of UTC (measured: "Aug 11, 1995" on a UTC
+ * host vs "Aug 12, 1995" on an IST host for the same instant) — and the locale
+ * calls dominated runtime (~1800 per schedule). Formatting is now a pure
+ * function of the schedule itself; the ISO date fields were already UTC-stable
+ * and are unchanged.
  */
+const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const fmtDayMonthYear = (d) => `${MONTHS_SHORT[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
+const fmtMonthYear = (d) => `${MONTHS_SHORT[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 
 export const DASHA_LORDS = [
   { name: 'Ketu', nameHi: 'केतु', years: 7, color: '#ec4899' },
@@ -84,8 +96,8 @@ export function calculateVimshottariDasha(moonLongitude, birthDateStr, targetDat
           lordHi: pdLord.nameHi,
           startDate: pdStartDate.toISOString().split('T')[0],
           endDate: pdEndDate.toISOString().split('T')[0],
-          startFormatted: pdStartDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-          endFormatted: pdEndDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+          startFormatted: fmtDayMonthYear(pdStartDate),
+          endFormatted: fmtDayMonthYear(pdEndDate)
         });
         
         pdCurrentDate = new Date(pdEndDate);
@@ -96,8 +108,8 @@ export function calculateVimshottariDasha(moonLongitude, birthDateStr, targetDat
         lordHi: adLord.nameHi,
         startDate: adStartDate.toISOString().split('T')[0],
         endDate: adEndDate.toISOString().split('T')[0],
-        startFormatted: adStartDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-        endFormatted: adEndDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+        startFormatted: fmtMonthYear(adStartDate),
+        endFormatted: fmtMonthYear(adEndDate),
         isCurrent: targetDate >= adStartDate && targetDate <= adEndDate,
         pratyantardashas
       });
@@ -114,8 +126,8 @@ export function calculateVimshottariDasha(moonLongitude, birthDateStr, targetDat
       actualDurationYears: Number(durationYears.toFixed(2)),
       startDate: startDate.toISOString().split('T')[0],
       endDate: endDate.toISOString().split('T')[0],
-      startFormatted: startDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-      endFormatted: endDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+      startFormatted: fmtMonthYear(startDate),
+      endFormatted: fmtMonthYear(endDate),
       color: lord.color,
       isCurrent: isCurrentMD,
       antardashas

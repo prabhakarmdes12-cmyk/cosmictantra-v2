@@ -20,13 +20,13 @@
 
 ---
 
-## 🚀 Guide for Online Agents: Picking Up Sprint E
+## 🚀 Guide for Online Agents: Picking Up Sprint F
 
 ### Current Engineering State
 - **Working branch**: `arena/01a0655c-cosmictantra-v2` (Sprint C work; `main` at Sprint B commit `167ad3b`).
 - **TypeScript**: `npx tsc --noEmit` exits with **0 errors**.
 - **Automated Tests**: full 20-spec Playwright sweep — **619 passed / 1 failed / 6 skipped**; the single failure is the pre-existing environmental `MR-07` milan-route case (`net::ERR_CONNECTION_REFUSED`, needs a live app server + DB, not a calculation defect).
-- **Current Milestone**: **Sprint D (D1/D9/D10 + Varga certification) is COMPLETE** (Sprint C astronomy gate: PASS at 100k).
+- **Current Milestone**: **Sprint E (Vimshottari + Panchanga certification) is COMPLETE** (Sprint C astronomy and Sprint D varga gates: PASS at 100k each).
 
 ### Sprint C (COMPLETE — this workspace)
 1. **Ayanamsha reconciled (RSK_009 → RESOLVED)**: versioned change `lahiri-registry-aligned-2.0.0` — `getLahiriAyanamsha(jd) = 23.85305556° + 1.39697128°/century · T`, conformant <0.5″ at J2000, <2″ at 1950; engine versioned `V37.0` (CT_INV_008). All engine-derived golden pins (reportId, Vimshottari balance, dasha dates, ayanamsha display, EV-13/14 baselines) re-baselined to the reconciled output with in-test provenance comments.
@@ -43,8 +43,16 @@
 5. **RSK_004 quantified**: D60 boundary sensitivity MEASURED on the run — ascendant ≈ 107 s / Moon ≈ 778 s of clock time per D60 step (golden chart); D60 stays excluded from authoritative tiers (`scholarSummary.ts`), gate spec enforces the visibility.
 6. **D10 promotion gate preserved closed** (`INTERNAL_CROSSCHECK_ONLY`) — internal agreement must never open it; only a named external reference can (see `docs/reference-grade/06-sprint-d-varga-qualification.md`).
 
-### Scope for Sprint E (Next Actionable Sprint)
-**Vimshottari + Panchanga certification** (Mission §8/§9): transition-timestamp verification (not just labels), panchanga elements vs independent references, dasha-boundary fixtures; RSK_002 (combustion orbs, Sprint H) stays queued.
+### Sprint E (COMPLETE — this workspace)
+**Vimshottari + Panchanga certification** (Mission §6, §8):
+1. **Fixture set** `TIME_ENGINE_BENCHMARK_001`: classical Vimshottari/nakshatra/panchanga/muhurta tables (SOURCE_SECONDARY) + 3 golden dasha charts + 5 golden panchang scenarios with exact solar instants (ENGINE_DERIVED regression pins), sha256 `a67f7319…`, tamper-evident on load.
+2. **Qualification runner** `time-qualification-runner-1.0.0 (sprint E)` (`npm run qualify:time`): 100,000 Vimshottari scenarios vs an INDEPENDENT classical implementation — **5.14M boundary comparisons / 0 mismatches, 22.18M property checks / 0 violations**; 240 panchanga scenarios — **1,485 limb checks / 0 mismatches; 960 transition timestamps solved by bisection; 480 progress-vs-interval identity checks / 0 violations; 960 muhurta checks / 0; sunrise bounded max 2.30 min vs the certified kernel (tolerance 5/8 min)**. Verdict PASS (scaffold + strict).
+3. **RSK_013 (NEW → RESOLVED)**: host-timezone dependence CONFIRMED and fixed in BOTH time engines — panchang solar instants/civil-day/weekday derived from the host clock (UTC server: "Usha Kala"; IST server: "Rahu Kalam" for the same instant) and dasha display strings drifting a day across hosts. Now true-UTC instants of the target civil day + static UTC formatting; byte-identical A/B on UTC; regression-pinned by spawning UTC and IST hosts in the gate spec.
+4. **Declared gaps kept honest**: Purnimanta month NOT_CALCULATED (v40 identity layer), Hora/Choghadiya NOT_IMPLEMENTED — recorded as non-blocking findings, no fabricated numbers.
+5. See `docs/reference-grade/07-sprint-e-time-qualification.md`.
+
+### Scope for Sprint F (Next Actionable Sprint)
+**Shadbala + Bhava Bala + Ashtakavarga validation** (Mission §10–§12): audit the six Shadbala components before changing anything, validate Bhava Bala, certify Bhinna/Sarvashtakavarga bindus against classical tables; RSK_002 (combustion orbs, Sprint H) stays queued.
 
 **Rules of Engagement**:
 - **Preserve working systems**: Do not replace working code; wrap and extend it.

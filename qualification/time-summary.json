@@ -1,0 +1,77 @@
+{
+  "runnerVersion": "time-qualification-runner-1.0.0 (sprint E)",
+  "startedAtUtc": "2026-09-03T05:53:07.131Z",
+  "durationMs": 208259,
+  "gate": "strict",
+  "fixtureSet": {
+    "id": "TIME_ENGINE_BENCHMARK_001",
+    "sha256": "a67f731912b93535b80da397dae5b0f35e697b1296404dd63a8f641a71a180e2",
+    "sourceStatus": "SOURCE_SECONDARY",
+    "goldenCharts": 3,
+    "goldenPanchang": 5
+  },
+  "vimshottari": {
+    "scenarios": 100000,
+    "boundaryComparisons": 5140423,
+    "boundaryMismatches": 0,
+    "propertyChecks": 22178001,
+    "propertyViolations": 0,
+    "goldenRegressions": 0,
+    "determinismSamples": 1000,
+    "determinismMismatches": 0
+  },
+  "panchanga": {
+    "scenarios": 240,
+    "limbChecks": 1485,
+    "limbMismatches": 0,
+    "boundaryProximitySkips": 44,
+    "progressChecks": 480,
+    "progressViolations": 0,
+    "transitionsSolved": 960,
+    "sunriseSamples": 240,
+    "sunriseMeanDeltaMin": 0.7487890277777776,
+    "sunriseMaxDeltaMin": 2.3026833333333334,
+    "sunsetMeanDeltaMin": 0.6382552777777779,
+    "sunsetMaxDeltaMin": 2.4062333333333332,
+    "sunriseToleranceMin": 5,
+    "sunriseToleranceBreaches": 0,
+    "muhurtaChecks": 960,
+    "muhurtaViolations": 0,
+    "goldenRegressions": 0,
+    "determinismSamples": 9,
+    "determinismMismatches": 0
+  },
+  "findings": [
+    {
+      "id": "TQF-GAP-PURNIMANTA",
+      "severity": "NON_BLOCKING",
+      "code": "DECLARED_GAP_PURNIMANTA",
+      "detail": {
+        "note": "The panchang kernel does not independently compute the Purnimanta month name; the v40 identity layer reports it NOT_CALCULATED. Declared gap (CT_INV_006), not fabricated."
+      }
+    },
+    {
+      "id": "TQF-GAP-HORA",
+      "severity": "NON_BLOCKING",
+      "code": "DECLARED_GAP_HORA_CHOGHADIYA",
+      "detail": {
+        "note": "Hora and Choghadiya are not implemented in the canonical panchang kernel (Mission §6 list). Queued; no numbers are fabricated for them."
+      }
+    },
+    {
+      "id": "TQF-SUNRISE-APPROX",
+      "severity": "NON_BLOCKING",
+      "code": "SUNRISE_APPROXIMATION_STATS",
+      "detail": {
+        "note": "The panchang kernel uses a day-of-year declination + equation-of-time approximation; deltas vs the certified kernel SearchRiseSet are measured and bounded by the declared tolerance.",
+        "sunriseMeanDeltaMin": 0.7487890277777776,
+        "sunriseMaxDeltaMin": 2.3026833333333334,
+        "sunsetMeanDeltaMin": 0.6382552777777779,
+        "sunsetMaxDeltaMin": 2.4062333333333332,
+        "toleranceMinBase": 5,
+        "toleranceMinHigh": 8
+      }
+    }
+  ],
+  "verdict": "PASS"
+}
