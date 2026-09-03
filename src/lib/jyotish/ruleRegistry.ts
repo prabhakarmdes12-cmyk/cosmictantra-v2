@@ -577,6 +577,109 @@ function seedRegistry(): void {
     scholarReviews: [],
     version: '1.0.0'
   });
+
+  registerClassicalRule({
+    id: 'RULE_VARSHA_SOLAR_RETURN',
+    sanskritName: 'Varshapravesh (वर्षप्रवेश)',
+    englishName: 'Varshaphala solar-return instant: the sidereal Sun returns to its natal longitude',
+    category: 'TRANSIT',
+    tradition: 'Tajika (Neelakanthi/Raman line) — relayed via SOURCE_SECONDARY digitizations; no licensed edition held',
+    source: 'B.V. Raman, Varshaphala (13th ed. 1992) ch. 2, as digitized at vedastro.org Varshaphala Part 2; corroborated by Clickastro/Cosmic Insights worked examples',
+    sourceLocator: 'NOT VERIFIED — no licensed edition held; method relayed from SOURCE_SECONDARY web digitizations (fetched 2026-09)',
+    sourceVerification: 'SOURCE_SECONDARY',
+    originalText: NO_ORIGINAL_TEXT,
+    translation: NO_ORIGINAL_TEXT,
+    adoptedInterpretation: 'The varsha year begins at the instant the SIDEREAL Sun (Lahiri/Chitra-paksha, the certified kernel convention) returns to the exact sidereal longitude it held at birth. Computed by a 6-hour bracket scan + bisection to <= 0.5 s on the certified ephemeris; the pre-Sprint-L hardcoded date string was FABRICATED and is withdrawn (CT_INV_010 remediation).',
+    alternateInterpretations: [
+      'Tropical (sayana) solar return — NOT adopted; the engine is sidereal throughout.',
+      'Some traditions round the varsha start to the civil day — NOT adopted; the exact instant is used.'
+    ],
+    prerequisites: ['Birth instant (civil input)', 'Certified sidereal solar longitude'],
+    evaluator: 'src/lib/jyotish/varshaphalaEngine.ts::findSolarReturn',
+    evidencePaths: ['src/lib/jyotish/varshaphalaEngine.ts', 'src/lib/jyotish/celestialEngine.ts'],
+    validationStatus: 'INTERNALLY_VERIFIED',
+    adoption: 'ADOPTED',
+    scholarReviews: [],
+    version: '1.0.0'
+  });
+
+  registerClassicalRule({
+    id: 'RULE_MUNTHA_PROGRESSION',
+    sanskritName: 'Muntha (मुन्थ)',
+    englishName: 'Muntha: the progressed point advancing one rashi per varsha from the janma lagna',
+    category: 'TRANSIT',
+    tradition: 'Tajika — relayed via SOURCE_SECONDARY digitizations; no licensed edition held',
+    source: 'Raman ch. 6; vedastro.org Part 8; Cosmic Insights / hinducalculator / Saptarishis (Gomes, Marella) corroborate the one-rashi-per-year convention',
+    sourceLocator: 'NOT VERIFIED — no licensed edition held; convention relayed from SOURCE_SECONDARY web sources (fetched 2026-09)',
+    sourceVerification: 'SOURCE_SECONDARY',
+    originalText: NO_ORIGINAL_TEXT,
+    translation: NO_ORIGINAL_TEXT,
+    adoptedInterpretation: 'At birth the Muntha sits on the janma lagna rashi; it advances exactly one rashi at each varshapravesha, so in the A-th varsha (age A = targetYear - birthYear) it occupies rashi (natalLagnaRashi - 1 + A) mod 12 + 1. Interpretive house reading is taken from the ANNUAL lagna; the natal-lagna house is also reported. Fail-closed for pre-birth targets.',
+    alternateInterpretations: [
+      'Continuous-degree Muntha (advancing ~30 deg per solar year instead of jumping whole rashis) — NOT adopted; the whole-rashi jump is the commonly attested convention.',
+      'House reading counted from the janma lagna instead of the varsha lagna — both are reported.'
+    ],
+    prerequisites: ['Janma lagna rashi', 'Completed varsha count (age)'],
+    evaluator: 'src/lib/jyotish/varshaphalaEngine.ts::computeVarshaphala',
+    evidencePaths: ['src/lib/jyotish/varshaphalaEngine.ts'],
+    validationStatus: 'INTERNALLY_VERIFIED',
+    adoption: 'ADOPTED',
+    scholarReviews: [],
+    version: '1.0.0'
+  });
+
+  registerClassicalRule({
+    id: 'RULE_TAJIKA_PANCHAVARGEEYA_BALA',
+    sanskritName: 'Panchavargeeya Bala (पञ्चवर्गीय बल)',
+    englishName: 'Tajika five-fold strength (Kshetra/Ochcha/Hadda/Drekkana/Navamsa)',
+    category: 'DIGNITY',
+    tradition: 'Tajika (Raman ch. 3 arts. 37-46) — relayed via SOURCE_SECONDARY digitizations; no licensed edition held',
+    source: 'B.V. Raman, Varshaphala (13th ed. 1992) ch. 3, digitized at vedastro.org Part 5 (component maxima 30/20/15/10/5 and worked example)',
+    sourceLocator: 'NOT VERIFIED — no licensed edition held; component tables relayed from SOURCE_SECONDARY web digitizations (fetched 2026-09)',
+    sourceVerification: 'SOURCE_SECONDARY',
+    originalText: NO_ORIGINAL_TEXT,
+    translation: NO_ORIGINAL_TEXT,
+    adoptedInterpretation: 'Over the ANNUAL positions: Kshetrabala 30/15/7.5 by natural-friendship tier to the sign lord; Ochchabala (arc from deep debilitation / 180) x 20; Haddabala 15/7.5/3.75 — NOT_CALCULATED because the Hadda tables are unavailable in machine-readable form (DECLARED_HADDA_TABLE_UNAVAILABLE); Drekkanabala 10/5/2.5 with TRINAL lords (sign/5th/9th); Navamsabala 5/2.5/1.25 with the element scheme. Neutral maitri tier scores the declared midpoint of the friendly/enemy scores (interpolation, ATTRIBUTION_UNVERIFIED). The reported total is therefore a declared PARTIAL PV used uniformly for ranking.',
+    alternateInterpretations: [
+      "Charak's line holds the Tajika Drekkana lords differ from the Parashari trinal scheme — NOT adopted; Raman's trinal tables are used.",
+      'Clickastro/Mehta implementations rank candidates by Vimsopaka Bala instead — NOT adopted; the Raman PV is used.',
+      'Haddabala inclusion would change totals (not orderings uniformly); the gap is declared, never hidden.'
+    ],
+    prerequisites: ['Annual (solar-return) planetary longitudes'],
+    evaluator: 'src/lib/jyotish/varshaphalaEngine.ts::panchavargeeyabalaPartial',
+    evidencePaths: ['src/lib/jyotish/varshaphalaEngine.ts'],
+    validationStatus: 'IMPLEMENTED',
+    adoption: 'ADOPTED',
+    scholarReviews: [],
+    version: '1.0.0'
+  });
+
+  registerClassicalRule({
+    id: 'RULE_VARSHESHWAR_SELECTION',
+    sanskritName: 'Varsheshwar (वर्षेश्वर)',
+    englishName: 'Year Lord selection from the five portfolios (Panchadhikari)',
+    category: 'GRAHA_CONDITION',
+    tradition: 'Tajika (Raman ch. 4 arts. 47-52) — relayed via SOURCE_SECONDARY digitizations; no licensed edition held',
+    source: "Raman ch. 4 digitized at vedastro.org Part 6; five portfolios corroborated by Cosmic Insights, Saptarishis (Gomes/Marella) and the Clickastro Varsheshwara-candidate tables",
+    sourceLocator: 'NOT VERIFIED — no licensed edition held; selection algorithm relayed from SOURCE_SECONDARY web digitizations (fetched 2026-09)',
+    sourceVerification: 'SOURCE_SECONDARY',
+    originalText: NO_ORIGINAL_TEXT,
+    translation: NO_ORIGINAL_TEXT,
+    adoptedInterpretation: 'Candidates: (a) Dina-Ratri lord (Sun-sign lord if the return is in daylight, Moon-sign lord at night), (b) janma-lagna lord, (c) varsha-lagna lord, (d) Muntha lord, (e) Thrirasi lord (element tables by day/night). ADOPTED deterministic reading: a candidate qualifies when its annual sign aspects the varsha lagna in the favourable/sama Tajika sign-classes (houses 2,3,5,9,11,12 from the lagna); the highest PARTIAL PV among qualified wins (ties: portfolio count, then portfolio order); if none qualifies, the Muntha lord becomes Year Lord (attested fallback). The pre-Sprint-L hardcoded "Venus, 462.5 virupas" was FABRICATED and is withdrawn (CT_INV_001/010 remediation).',
+    alternateInterpretations: [
+      "Raman's own worked example adds an interpretive 'powerful aspect' (Deeptamsha-orb) filter and rejects a 2/12 candidate the adopted reading would accept — recorded, not mechanically reproducible.",
+      'Thrirasi day-table for Makara: Raman worked example gives Mars, the element table Venus; BOTH readings are computed and readingSensitive flags divergence.',
+      'Some sources hold the Moon can never be Year Lord — the exclusion is NOT adopted.',
+      'Muntha-lord fallback: attested (Cosmic Insights/Saptarishis) but some lineages omit it.'
+    ],
+    prerequisites: ['RULE_VARSHA_SOLAR_RETURN', 'RULE_TAJIKA_PANCHAVARGEEYA_BALA', 'RULE_MUNTHA_PROGRESSION'],
+    evaluator: 'src/lib/jyotish/varshaphalaEngine.ts::computeVarshaphala',
+    evidencePaths: ['src/lib/jyotish/varshaphalaEngine.ts', 'src/lib/jyotish/ruleRegistry.ts'],
+    validationStatus: 'IMPLEMENTED',
+    adoption: 'ADOPTED',
+    scholarReviews: [],
+    version: '1.0.0'
+  });
 }
 
 let seeded = false;

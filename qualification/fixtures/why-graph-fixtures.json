@@ -4,7 +4,7 @@
   "engineNote": "the graph is content-addressed per snapshot; the fixture pins capability sets and registry pins",
   "whyEngineVersion": "why-engine-1.0.0 (sprint J)",
   "ruleRegistryVersion": "classical-rule-registry-1.0.0 (sprint H)",
-  "ruleRegistryFingerprint": "ae1b3749059b24a083f41964de52f4e2492dfcbeb5217436ac1cf4337559e7cd",
+  "ruleRegistryFingerprint": "8191917adcf3f1ce472e153d176e2beff658820dd8a2166a813afad704b6e878",
   "domains": [
     "GRAHA",
     "BHAVA",
@@ -38,5 +38,5 @@
     "SHOW_VALIDATION_STATUS"
   ],
   "kalsarpaConsensusReadings": 5,
-  "setSha256": "275095b790a47c4f5689fd360f9349806e5c6534fb1f460c0e796547bdeacd71"
+  "setSha256": "98c6733081e4b9621081445c6514746e3446ca42d5050a03037cf25dee59b9bb"
 }

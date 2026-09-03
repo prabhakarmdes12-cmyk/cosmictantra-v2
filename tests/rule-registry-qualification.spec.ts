@@ -159,8 +159,8 @@ test.describe('SPRINT-H: provenance surface', () => {
     const meta = (snap.meta as unknown as { ruleRegistry: { fingerprint: string; ruleCount: number; registryVersion: string } }).ruleRegistry;
     expect(meta.registryVersion).toBe(CLASSICAL_RULE_REGISTRY_VERSION);
     expect(meta.fingerprint).toBe(classicalRuleRegistryFingerprint());
-    // Sprint I expanded the registry (24 -> 59: yoga catalog + adopted Kalsarpa variant).
-    expect(meta.ruleCount).toBe(59);
+    // Sprint I expanded the registry (24 -> 59); Sprint L added the four Tajika rules (59 -> 63).
+    expect(meta.ruleCount).toBe(63);
     // combustion rows carry the registry pointer + RSK_002 flags
     const marsRow = snap.relationships?.combustions.Mars as unknown as { registryRuleId?: string; applicable?: boolean; borderline?: boolean };
     expect(marsRow.registryRuleId).toBe('RULE_COMBUSTION_ORBS');
@@ -195,8 +195,8 @@ test.describe('SPRINT-H: qualification gate', () => {
     expect(summary.scenarios).toBe(20000);
     expect(summary.totalViolations).toBe(0);
     expect(summary.streamB.checks).toBe(126665);
-    // Sprint I expansion: 24 -> 59 registered rules.
-    expect(summary.streamA.ruleCount).toBe(59);
+    // Sprint I expansion: 24 -> 59; Sprint L Tajika rules: 59 -> 63.
+    expect(summary.streamA.ruleCount).toBe(63);
     expect(summary.determinism.mismatches).toBe(0);
   });
 

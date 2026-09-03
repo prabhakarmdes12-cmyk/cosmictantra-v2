@@ -26,7 +26,7 @@
 - **Working branch**: `arena/01a0655c-cosmictantra-v2` (Sprint C work; `main` at Sprint B commit `167ad3b`).
 - **TypeScript**: `npx tsc --noEmit` exits with **0 errors**.
 - **Automated Tests**: full 20-spec Playwright sweep — **619 passed / 1 failed / 6 skipped**; the single failure is the pre-existing environmental `MR-07` milan-route case (`net::ERR_CONNECTION_REFUSED`, needs a live app server + DB, not a calculation defect).
-- **Current Milestone**: **Sprint K (Scholar Review + Golden Chart Corpus) is COMPLETE** (Sprints C astronomy / D varga / E time / F bala / G gochara / H rule-registry / I yoga-dosha / J evidence-graph gates: PASS at scale).
+- **Current Milestone**: **Sprint L (Varshaphala/Tajika honest rebuild) is COMPLETE** (Sprints C astronomy / D varga / E time / F bala / G gochara / H rule-registry / I yoga-dosha / J evidence-graph / K scholar+corpus gates: PASS at scale).
 
 ### Sprint C (COMPLETE — this workspace)
 1. **Ayanamsha reconciled (RSK_009 → RESOLVED)**: versioned change `lahiri-registry-aligned-2.0.0` — `getLahiriAyanamsha(jd) = 23.85305556° + 1.39697128°/century · T`, conformant <0.5″ at J2000, <2″ at 1950; engine versioned `V37.0` (CT_INV_008). All engine-derived golden pins (reportId, Vimshottari balance, dasha dates, ayanamsha display, EV-13/14 baselines) re-baselined to the reconciled output with in-test provenance comments.
@@ -105,8 +105,16 @@
 5. **Honest harness lessons**: the dynamical (TT) Julian Day carries ΔT — corpus normalization comes from the civil input, and the corpus pins the TT-based JD without hiding the relation; `degreeInRasi` is a display field (2 dp) — raw longitudes stay at 1e-6°. Harness-side, both; no engine defect across 107 charts.
 6. See `docs/reference-grade/13-sprint-k-scholar-review-golden-corpus.md`.
 
-### Scope for Sprint L (Next Actionable Sprint)
-**Varshaphala/Tajika + transit overlays + yoga growth** (queued): Varshaphala/Tajika year lord (`varshaphalaEngine.ts` exists unqualified — audit, wrap, qualify; Varsheshwar honestly NOT_CALCULATED where the tradition gap is real), transit Vimshottari overlay + Kaksha tables, curated yoga families toward ~100 (full Nabhasa set, Mahabhagya input gap, Jaimini yogada), and the scholar-console UI slice wiring the §19 queue + §18 WHY API into pages.
+### Sprint L (COMPLETE — this workspace)
+**Varshaphala/Tajika — audit remediation + honest rebuild** (charter CT_INV_001/002/006/010 in action):
+1. **The audit**: the pre-existing engine FABRICATED its headline outputs — Varsheshwar hardcoded to "Venus, 462.5 virupas", the solar return a literal date string, Sahams invented constant offsets — all live in every snapshot. All withdrawn; the fabrications are now pinned against permanently (stream A polices executable lines, not the withdrawal commentary).
+2. **Computed honestly**: solar-return solver (bracket+bisect ≤ 0.5 s on the Sprint-C certified kernel, lean primitive ≡ kernel ≤ 1e-9°); Muntha (registered, both house readings); Panchavargeeyabala per Raman ch. 3 with Hadda honestly NOT_CALCULATED (tables unavailable — declared partial PV used uniformly); Varsheshwar from the five portfolios with the adopted sign-class aspect reading + Muntha-lord fallback; Raman's own Thrirasi worked-example contradiction computed BOTH ways with `readingSensitive` flags.
+3. **Registry**: four Tajika rules added (59 → 63), all SOURCE_SECONDARY with unreconstructed text; fixtures re-derived, registry/yoga/why gates re-run PASS at scale.
+4. **Qualification** (`npm run qualify:varshaphala`, strict 400): **1,601 solar-return / 5,200 structure / 2,003 selection-identity / 49 golden checks — 0 violations** vs an independent Newton/secant solver and an independent selection reimplementation. Gate spec 18/18.
+5. See `docs/reference-grade/14-sprint-l-varshaphala-tajika.md`.
+
+### Scope for Sprint M (Next Actionable Sprint)
+**Transit overlays + yoga growth + Tajika depth** (queued): transit Vimshottari overlay + Kaksha tables, curated yoga families toward ~100 (full Nabhasa set, Mahabhagya input gap, Jaimini yogada), Tajika depth (Sahams day/night formulas, Hadda tables if a machine-readable source emerges, Ithasala/Isarapha yogas, Varsha Dasa), and the scholar-console UI slice wiring the §19 queue + §18 WHY API into pages.
 
 **Rules of Engagement**:
 - **Preserve working systems**: Do not replace working code; wrap and extend it.

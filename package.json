@@ -35,7 +35,9 @@
     "qualify:why": "tsx qualification/why-qualification-runner.ts --scenarios 800 --gate strict",
     "qualify:why:scaffold": "tsx qualification/why-qualification-runner.ts --scenarios 150",
     "qualify:corpus": "tsx qualification/golden-corpus-qualification-runner.ts --gate strict",
-    "qualify:corpus:scaffold": "tsx qualification/golden-corpus-qualification-runner.ts --gate scaffold --charts 3"
+    "qualify:corpus:scaffold": "tsx qualification/golden-corpus-qualification-runner.ts --gate scaffold --charts 3",
+    "qualify:varshaphala": "tsx qualification/varshaphala-qualification-runner.ts --gate strict",
+    "qualify:varshaphala:scaffold": "tsx qualification/varshaphala-qualification-runner.ts --gate scaffold"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.77",

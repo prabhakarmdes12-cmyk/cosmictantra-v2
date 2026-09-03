@@ -5,7 +5,7 @@
   "yogaEngineCatalogVersion": "jyotish-source-registry-v2 (sprint I expansion)",
   "doshaEngineVersion": "dosha-engine-1.0.0 (sprint I, kalsarpa variant adopted)",
   "ruleRegistryVersion": "classical-rule-registry-1.0.0 (sprint H)",
-  "ruleRegistryFingerprint": "ae1b3749059b24a083f41964de52f4e2492dfcbeb5217436ac1cf4337559e7cd",
+  "ruleRegistryFingerprint": "8191917adcf3f1ce472e153d176e2beff658820dd8a2166a813afad704b6e878",
   "yogaRuleCount": 44,
   "yogaRuleIds": [
     "YOGA_ADHI",
@@ -53,8 +53,8 @@
     "YOGA_VIPARITA_VIMALA",
     "YOGA_YUGA"
   ],
-  "registryRuleCount": 59,
+  "registryRuleCount": 63,
   "kalsarpaVariant": "ONE_HEMISPHERE_NODE_AXIS",
   "kalsarpaAlternativesDeclared": 4,
-  "setSha256": "3d50b163e275ddeb1d31fb71d9a93aa994a179455602b739b8842517f9f508b8"
+  "setSha256": "e041fcfcbaf72f74428e920b9ce78b596a01646e6162ce5aa210b6d183c6828e"
 }

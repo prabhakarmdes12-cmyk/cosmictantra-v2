@@ -1,0 +1,82 @@
+{
+  "runnerVersion": "varshaphala-runner-1.0.0 (sprint L)",
+  "engineVersion": "varshaphala-engine-2.0.0 (sprint L, honest rebuild)",
+  "fixtureSetId": "VARSHAPHALA_TAJIKA_001",
+  "fixtureSetSha256": "e4b60635d7aa6c42a701dcf2d9b78d001f4a07ba2645adccb4da1e55c5d9540a",
+  "gate": "strict",
+  "scenarios": 400,
+  "generatedAtUtc": "2026-09-03T08:31:27.200Z",
+  "verdict": "PASS",
+  "streamA": {
+    "name": "A AUDIT_PINS",
+    "scenarios": 1,
+    "checks": 16,
+    "violations": 0,
+    "firstViolations": []
+  },
+  "streamB": {
+    "name": "B SOLAR_RETURN",
+    "scenarios": 400,
+    "checks": 1601,
+    "violations": 0,
+    "firstViolations": []
+  },
+  "streamC": {
+    "name": "C ANNUAL_STRUCTURE",
+    "scenarios": 400,
+    "checks": 5200,
+    "violations": 0,
+    "firstViolations": []
+  },
+  "streamD": {
+    "name": "D SELECTION_IDENTITY",
+    "scenarios": 400,
+    "checks": 2003,
+    "violations": 0,
+    "firstViolations": []
+  },
+  "goldenReplay": {
+    "name": "GOLDEN_REPLAY",
+    "scenarios": 7,
+    "checks": 49,
+    "violations": 0,
+    "firstViolations": []
+  },
+  "determinism": {
+    "samples": 3,
+    "mismatches": 0
+  },
+  "findings": [
+    {
+      "id": "DECLARED_HADDA_TABLE_UNAVAILABLE",
+      "severity": "NON_BLOCKING",
+      "statement": "Haddabala is NOT_CALCULATED: the Hadda tables exist only as images in the available sources; the PV total is a declared partial used uniformly for ranking.",
+      "status": "OPEN"
+    },
+    {
+      "id": "DECLARED_THRIRASI_RAMAN_DISCREPANCY",
+      "severity": "NON_BLOCKING",
+      "statement": "Raman's worked example (day Capricorn -> Mars) contradicts his own element day-table (-> Venus); both readings are computed and readingSensitive flags divergence.",
+      "status": "OPEN"
+    },
+    {
+      "id": "DECLARED_ASPECT_SIGN_CLASS_READING",
+      "severity": "NON_BLOCKING",
+      "statement": "The Year-Lord aspect qualification is the adopted mechanical sign-class reading (houses 2,3,5,9,11,12); Raman's interpretive Deeptamsha-orb 'powerful aspect' filter is declared as an alternative.",
+      "status": "OPEN"
+    },
+    {
+      "id": "DECLARED_SAHAMS_QUEUED",
+      "severity": "NON_BLOCKING",
+      "statement": "Saham day/night formulas are queued; the pre-Sprint-L constant-offset Sahams were fabricated and are withdrawn.",
+      "status": "OPEN"
+    },
+    {
+      "id": "DECLARED_ENGINE_DERIVED_GOLDENS",
+      "severity": "NON_BLOCKING",
+      "statement": "Golden scenarios are ENGINE_DERIVED regression pins; externally published varsha-chart anchors are a later slice.",
+      "status": "OPEN"
+    }
+  ],
+  "totalViolations": 0
+}

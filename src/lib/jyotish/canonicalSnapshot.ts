@@ -36,7 +36,7 @@ import { calculateAshtakavarga, AshtakavargaResult } from './ashtakavargaEngine'
 import { evaluateYogas, presentYogaNames, YogaEvaluation } from './yogaEngine';
 import { calculateJaimini, JaiminiResult } from './jaiminiEngine';
 import { calculateKpSystem, KpSystemResult } from './kpEngine';
-import { calculateVarshaphala, VarshaphalaResult } from './varshaphalaEngine';
+import { computeVarshaphalaSafe, VarshaphalaResult } from './varshaphalaEngine';
 import { calculateAvakhada, AvakhadaResult } from './avakhadaEngine';
 import { buildConventionSnapshotMetadata, DEFAULT_PRESET, type ResolvedConventionSelection } from './conventionCenter';
 import { resolveAstronomyProvider } from '../astronomy/astronomyProvider';
@@ -523,12 +523,10 @@ export function getCanonicalJyotishSnapshot(context: NormalizedBirthContext): Ca
     }, d9Placements),
     transits: gocharaLight,
     kp: calculateKpSystem(kundli.planets as any[], kundli.lagna.longitude, kundli.ayanamsha),
-    varshaphala: calculateVarshaphala(
-      context.birthDate,
-      ((kundli.planets as any[]).find(p => p.name === 'Sun')?.degrees) || 40,
-      kundli.lagna.rashiId || 1,
-      2026
-    ),
+    varshaphala: computeVarshaphalaSafe({
+      birthDate, birthTime, latitude, longitude, timezone, locationName,
+      targetYear: targetDate.getUTCFullYear()
+    }),
     avakhada: calculateAvakhada(
       ((kundli.planets as any[]).find(p => p.name === 'Moon')?.rashiName) || 'Makara',
       panchang.nakshatra?.name || 'Shravana'

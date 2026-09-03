@@ -1,0 +1,290 @@
+{
+  "fixtureSetId": "VARSHAPHALA_TAJIKA_001",
+  "builder": "varshaphala-fixture-builder-1.0.0 (sprint L)",
+  "engineNote": "expectations are ENGINE_DERIVED regression pins; the solar-return astronomy inherits the Sprint-C JPL-certified kernel",
+  "honestyNote": "the pre-Sprint-L module fabricated Varsheshwar/solar-return/Sahams; those fabrications are withdrawn and pinned-against here",
+  "engineVersion": "varshaphala-engine-2.0.0 (sprint L, honest rebuild)",
+  "ruleRegistryVersion": "classical-rule-registry-1.0.0 (sprint H)",
+  "ruleRegistryFingerprint": "8191917adcf3f1ce472e153d176e2beff658820dd8a2166a813afad704b6e878",
+  "ruleIds": [
+    "RULE_VARSHA_SOLAR_RETURN",
+    "RULE_MUNTHA_PROGRESSION",
+    "RULE_TAJIKA_PANCHAVARGEEYA_BALA",
+    "RULE_VARSHESHWAR_SELECTION"
+  ],
+  "registry": {
+    "RULE_VARSHA_SOLAR_RETURN": {
+      "validationStatus": "INTERNALLY_VERIFIED",
+      "adoption": "ADOPTED",
+      "sourceVerification": "SOURCE_SECONDARY"
+    },
+    "RULE_MUNTHA_PROGRESSION": {
+      "validationStatus": "INTERNALLY_VERIFIED",
+      "adoption": "ADOPTED",
+      "sourceVerification": "SOURCE_SECONDARY"
+    },
+    "RULE_TAJIKA_PANCHAVARGEEYA_BALA": {
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "sourceVerification": "SOURCE_SECONDARY"
+    },
+    "RULE_VARSHESHWAR_SELECTION": {
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "sourceVerification": "SOURCE_SECONDARY"
+    }
+  },
+  "componentMaxima": {
+    "kshetra": 30,
+    "ochcha": 20,
+    "hadda": "NOT_CALCULATED (table unavailable)",
+    "drekkana": 10,
+    "navamsa": 5
+  },
+  "thrirasiDay": {
+    "fire": "Sun",
+    "earth": "Venus",
+    "air": "Saturn",
+    "water": "Mars"
+  },
+  "thrirasiNight": {
+    "fire": "Jupiter",
+    "earth": "Moon",
+    "air": "Mercury",
+    "water": "Mars"
+  },
+  "aspectQualifyingHouses": [
+    2,
+    3,
+    5,
+    9,
+    11,
+    12
+  ],
+  "fallbackRule": "MUNTHA_LORD",
+  "tolerance": {
+    "seconds": 2,
+    "degrees": 0.00001,
+    "pvAbs": 1e-9
+  },
+  "goldenScenarioCount": 7,
+  "golden": [
+    {
+      "scenarioId": "VT-001-patna-2019",
+      "input": {
+        "birthDate": "1995-06-15",
+        "birthTime": "10:30",
+        "latitude": 25.5941,
+        "longitude": 85.1376,
+        "timezone": 5.5,
+        "locationName": "Patna",
+        "targetYear": 2019
+      },
+      "claim": {
+        "type": "DAY_CASE",
+        "engineVersion": "varshaphala-engine-2.0.0 (sprint L, honest rebuild)"
+      },
+      "expected": {
+        "status": "CALCULATED",
+        "solarReturnUtc": "2019-06-15T08:44:23.606Z",
+        "dayNight": "DAY",
+        "annualLagnaRashiId": 7,
+        "munthaRashiId": 5,
+        "munthaHouseFromAnnualLagna": 11,
+        "varsheshwarPlanet": "Saturn",
+        "varsheshwarPvTotal": 27.80039242802079,
+        "varsheshwarPortfolios": [
+          "THRIRASI"
+        ],
+        "readingSensitive": true
+      }
+    },
+    {
+      "scenarioId": "VT-002-patna-2020",
+      "input": {
+        "birthDate": "1995-06-15",
+        "birthTime": "10:30",
+        "latitude": 25.5941,
+        "longitude": 85.1376,
+        "timezone": 5.5,
+        "locationName": "Patna",
+        "targetYear": 2020
+      },
+      "claim": {
+        "type": "NIGHT_CASE",
+        "engineVersion": "varshaphala-engine-2.0.0 (sprint L, honest rebuild)"
+      },
+      "expected": {
+        "status": "CALCULATED",
+        "solarReturnUtc": "2020-06-14T15:00:45.098Z",
+        "dayNight": "NIGHT",
+        "annualLagnaRashiId": 9,
+        "munthaRashiId": 6,
+        "munthaHouseFromAnnualLagna": 10,
+        "varsheshwarPlanet": "Jupiter",
+        "varsheshwarPvTotal": 17.24892880689044,
+        "varsheshwarPortfolios": [
+          "DINA_RATRI",
+          "VARSHA_LAGNA",
+          "THRIRASI"
+        ],
+        "readingSensitive": false
+      }
+    },
+    {
+      "scenarioId": "VT-003-patna-2019",
+      "input": {
+        "birthDate": "1995-06-15",
+        "birthTime": "10:30",
+        "latitude": 25.5941,
+        "longitude": 85.1376,
+        "timezone": 5.5,
+        "locationName": "Patna",
+        "targetYear": 2019
+      },
+      "claim": {
+        "type": "READING_SENSITIVE_CASE",
+        "engineVersion": "varshaphala-engine-2.0.0 (sprint L, honest rebuild)"
+      },
+      "expected": {
+        "status": "CALCULATED",
+        "solarReturnUtc": "2019-06-15T08:44:23.606Z",
+        "dayNight": "DAY",
+        "annualLagnaRashiId": 7,
+        "munthaRashiId": 5,
+        "munthaHouseFromAnnualLagna": 11,
+        "varsheshwarPlanet": "Saturn",
+        "varsheshwarPvTotal": 27.80039242802079,
+        "varsheshwarPortfolios": [
+          "THRIRASI"
+        ],
+        "readingSensitive": true
+      }
+    },
+    {
+      "scenarioId": "VT-004-delhi-2022",
+      "input": {
+        "birthDate": "1983-11-02",
+        "birthTime": "06:15",
+        "latitude": 28.6139,
+        "longitude": 77.209,
+        "timezone": 5.5,
+        "locationName": "Delhi",
+        "targetYear": 2022
+      },
+      "claim": {
+        "type": "MUNTHA_FALLBACK_CASE",
+        "engineVersion": "varshaphala-engine-2.0.0 (sprint L, honest rebuild)"
+      },
+      "expected": {
+        "status": "CALCULATED",
+        "solarReturnUtc": "2022-11-02T00:33:07.552Z",
+        "dayNight": "NIGHT",
+        "annualLagnaRashiId": 7,
+        "munthaRashiId": 10,
+        "munthaHouseFromAnnualLagna": 4,
+        "varsheshwarPlanet": "Saturn",
+        "varsheshwarPvTotal": 45.74996402391187,
+        "varsheshwarPortfolios": [
+          "DINA_RATRI",
+          "MUNTHA"
+        ],
+        "readingSensitive": false
+      }
+    },
+    {
+      "scenarioId": "VT-005-patna-2020",
+      "input": {
+        "birthDate": "1995-06-15",
+        "birthTime": "10:30",
+        "latitude": 25.5941,
+        "longitude": 85.1376,
+        "timezone": 5.5,
+        "locationName": "Patna",
+        "targetYear": 2020
+      },
+      "claim": {
+        "type": "MULTI_PORTFOLIO_CASE",
+        "engineVersion": "varshaphala-engine-2.0.0 (sprint L, honest rebuild)"
+      },
+      "expected": {
+        "status": "CALCULATED",
+        "solarReturnUtc": "2020-06-14T15:00:45.098Z",
+        "dayNight": "NIGHT",
+        "annualLagnaRashiId": 9,
+        "munthaRashiId": 6,
+        "munthaHouseFromAnnualLagna": 10,
+        "varsheshwarPlanet": "Jupiter",
+        "varsheshwarPvTotal": 17.24892880689044,
+        "varsheshwarPortfolios": [
+          "DINA_RATRI",
+          "VARSHA_LAGNA",
+          "THRIRASI"
+        ],
+        "readingSensitive": false
+      }
+    },
+    {
+      "scenarioId": "VT-006-patna-2026",
+      "input": {
+        "birthDate": "1995-06-15",
+        "birthTime": "10:30",
+        "latitude": 25.5941,
+        "longitude": 85.1376,
+        "timezone": 5.5,
+        "locationName": "Patna",
+        "targetYear": 2026
+      },
+      "claim": {
+        "type": "PLAIN_ANCHOR",
+        "engineVersion": "varshaphala-engine-2.0.0 (sprint L, honest rebuild)"
+      },
+      "expected": {
+        "status": "CALCULATED",
+        "solarReturnUtc": "2026-06-15T03:49:59.384Z",
+        "dayNight": "DAY",
+        "annualLagnaRashiId": 4,
+        "munthaRashiId": 12,
+        "munthaHouseFromAnnualLagna": 9,
+        "varsheshwarPlanet": "Moon",
+        "varsheshwarPvTotal": 38.82816267502004,
+        "varsheshwarPortfolios": [
+          "VARSHA_LAGNA"
+        ],
+        "readingSensitive": false
+      }
+    },
+    {
+      "scenarioId": "VT-007-chennai-2026",
+      "input": {
+        "birthDate": "1978-03-21",
+        "birthTime": "21:40",
+        "latitude": 13.0827,
+        "longitude": 80.2707,
+        "timezone": 5.5,
+        "locationName": "Chennai",
+        "targetYear": 2026
+      },
+      "claim": {
+        "type": "PLAIN_ANCHOR",
+        "engineVersion": "varshaphala-engine-2.0.0 (sprint L, honest rebuild)"
+      },
+      "expected": {
+        "status": "CALCULATED",
+        "solarReturnUtc": "2026-03-21T23:33:16.469Z",
+        "dayNight": "NIGHT",
+        "annualLagnaRashiId": 11,
+        "munthaRashiId": 7,
+        "munthaHouseFromAnnualLagna": 9,
+        "varsheshwarPlanet": "Venus",
+        "varsheshwarPvTotal": 37.28411467884861,
+        "varsheshwarPortfolios": [
+          "JANMA_LAGNA",
+          "MUNTHA"
+        ],
+        "readingSensitive": false
+      }
+    }
+  ],
+  "setSha256": "e4b60635d7aa6c42a701dcf2d9b78d001f4a07ba2645adccb4da1e55c5d9540a"
+}

@@ -3,8 +3,8 @@
   "builder": "rule-registry-qualification-runner-1.0.0 (sprint H)",
   "engineNote": "ruleRegistry is in-code; the fixture pins its content fingerprint and orb tables for tamper evidence",
   "registryVersion": "classical-rule-registry-1.0.0 (sprint H)",
-  "fingerprint": "ae1b3749059b24a083f41964de52f4e2492dfcbeb5217436ac1cf4337559e7cd",
-  "ruleCount": 59,
+  "fingerprint": "8191917adcf3f1ce472e153d176e2beff658820dd8a2166a813afad704b6e878",
+  "ruleCount": 63,
   "yogaCrossLinkCount": 45,
   "yogaSourceRegistryVersion": "jyotish-source-registry-v2 (sprint I expansion)",
   "borderlineBandDeg": 1,
@@ -190,6 +190,17 @@
       "evidencePathCount": 2
     },
     {
+      "id": "RULE_MUNTHA_PROGRESSION",
+      "version": "1.0.0",
+      "category": "TRANSIT",
+      "tradition": "Tajika — relayed via SOURCE_SECONDARY digitizations; no licensed edition held",
+      "sourceVerification": "SOURCE_SECONDARY",
+      "validationStatus": "INTERNALLY_VERIFIED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/varshaphalaEngine.ts::computeVarshaphala",
+      "evidencePathCount": 1
+    },
+    {
       "id": "RULE_NAISARGIKA_MAITRI",
       "version": "1.0.0",
       "category": "RELATIONSHIP",
@@ -234,6 +245,17 @@
       "evidencePathCount": 3
     },
     {
+      "id": "RULE_TAJIKA_PANCHAVARGEEYA_BALA",
+      "version": "1.0.0",
+      "category": "DIGNITY",
+      "tradition": "Tajika (Raman ch. 3 arts. 37-46) — relayed via SOURCE_SECONDARY digitizations; no licensed edition held",
+      "sourceVerification": "SOURCE_SECONDARY",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/varshaphalaEngine.ts::panchavargeeyabalaPartial",
+      "evidencePathCount": 1
+    },
+    {
       "id": "RULE_TATKALIKA_MAITRI",
       "version": "1.0.0",
       "category": "RELATIONSHIP",
@@ -242,6 +264,28 @@
       "validationStatus": "IMPLEMENTED",
       "adoption": "ADOPTED",
       "evaluator": "src/lib/jyotish/relationshipEngine.ts::getTatkalikaMaitri",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "RULE_VARSHA_SOLAR_RETURN",
+      "version": "1.0.0",
+      "category": "TRANSIT",
+      "tradition": "Tajika (Neelakanthi/Raman line) — relayed via SOURCE_SECONDARY digitizations; no licensed edition held",
+      "sourceVerification": "SOURCE_SECONDARY",
+      "validationStatus": "INTERNALLY_VERIFIED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/varshaphalaEngine.ts::findSolarReturn",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "RULE_VARSHESHWAR_SELECTION",
+      "version": "1.0.0",
+      "category": "GRAHA_CONDITION",
+      "tradition": "Tajika (Raman ch. 4 arts. 47-52) — relayed via SOURCE_SECONDARY digitizations; no licensed edition held",
+      "sourceVerification": "SOURCE_SECONDARY",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/varshaphalaEngine.ts::computeVarshaphala",
       "evidencePathCount": 2
     },
     {
@@ -751,5 +795,5 @@
       "evidencePathCount": 2
     }
   ],
-  "setSha256": "b1d18e937c9ea0b8c0fde4f8d963d114d79b0498b3600d3b34ac43d908a0778b"
+  "setSha256": "d849fe404aa524fa6a0d0313259e4dd4441f32d2b90dc6e3f0f865cf499bb8fa"
 }
