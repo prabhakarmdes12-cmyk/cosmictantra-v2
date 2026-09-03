@@ -1,0 +1,66 @@
+{
+  "runnerVersion": "why-qualification-runner-1.0.0 (sprint J)",
+  "whyEngineVersion": "why-engine-1.0.0 (sprint J)",
+  "fixtureSetId": "WHY_GRAPH_001",
+  "fixtureSetSha256": "275095b790a47c4f5689fd360f9349806e5c6534fb1f460c0e796547bdeacd71",
+  "gate": "strict",
+  "scenarios": 800,
+  "seed": 53261,
+  "generatedAtUtc": "2026-09-03T07:34:23.520Z",
+  "verdict": "PASS",
+  "streamA": {
+    "charts": 200,
+    "checks": 87620,
+    "violations": 0,
+    "firstViolations": []
+  },
+  "streamB": {
+    "charts": 200,
+    "checks": 15400,
+    "violations": 0,
+    "firstViolations": []
+  },
+  "streamC": {
+    "conclusions": 2900,
+    "checks": 37250,
+    "violations": 0,
+    "firstViolations": []
+  },
+  "streamD": {
+    "scenarios": 50,
+    "checks": 502,
+    "violations": 0,
+    "firstViolations": []
+  },
+  "determinism": {
+    "samples": 1,
+    "mismatches": 0
+  },
+  "findings": [
+    {
+      "id": "DECLARED_WHY_API_ENGINE_SIDE",
+      "severity": "NON_BLOCKING",
+      "statement": "Sprint J delivers the WHY graph API (engine-side); the interactive WHY/SHOW-CALCULATION UI surfaces are wired onto this API in later slices.",
+      "status": "OPEN"
+    },
+    {
+      "id": "DECLARED_CONSENSUS_SCOPE",
+      "severity": "NON_BLOCKING",
+      "statement": "Tradition consensus is implemented for combustion (RSK_002 orbs) and the registered Kalsarpa variant set; other rules expose their alternatives via the WHY capability but have no per-chart consensus computation yet.",
+      "status": "OPEN"
+    },
+    {
+      "id": "DECLARED_LEDGER_CONSENT_GATE",
+      "severity": "NON_BLOCKING",
+      "statement": "PredictionLedger remains an in-memory append-only structure; persistence with D-1 consent enforcement is a later slice.",
+      "status": "OPEN"
+    },
+    {
+      "id": "DECLARED_NATAL_SATURN_ABSENCE_PIN",
+      "severity": "NON_BLOCKING",
+      "statement": "The sadeSati WHY-chain natal-Saturn-exclusion pin is enforced per chart in stream B (graph-level RSK_016 guard).",
+      "status": "OPEN"
+    }
+  ],
+  "totalViolations": 0
+}

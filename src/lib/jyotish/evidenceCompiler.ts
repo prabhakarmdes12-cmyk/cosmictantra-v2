@@ -13,6 +13,7 @@
  */
 
 import type { CanonicalJyotishSnapshot } from './canonicalSnapshot';
+import { getClassicalRule } from './ruleRegistry';
 import {
   EvidenceStore,
   snapshotHash,
@@ -398,15 +399,44 @@ export function compileEvidence(snapshot: CanonicalJyotishSnapshot): CompiledEvi
       });
     }
     if (yd.sadeSati) {
+      // Sprint G/§9/§18: Sade Sati is a TRANSIT phenomenon evaluated at the
+      // explicit reference instant against the natal Moon rashi. The WHY chain
+      // must show: TRANSIT Saturn fact + natal Moon anchor -> verdict. Natal
+      // Saturn is deliberately NOT a dependency (RSK_016).
+      const ss = yd.sadeSati as Record<string, unknown>;
+      const transitRashiId = Number(ss.transitSaturnRashiId) || null;
+      const transitFactId = transitRashiId
+        ? add({
+            domain: 'GRAHA',
+            subject: 'graha:Saturn',
+            claim: 'transit-placement',
+            value: { rashiId: transitRashiId, referenceInstantUtc: ss.referenceInstantUtc ?? null },
+            strength: 0.5,
+            confidence: 0.95,
+            basis: CALC,
+            sourceTag: 'TRANSIT',
+          }).id
+        : null;
+      const moonDep = nodeIds['graha:Moon'] ? [nodeIds['graha:Moon']] : [];
       add({
         domain: 'CONVENTION',
         subject: 'convention:sadeSati',
-        claim: 'sade-sati-phase',
-        value: { isActive: yd.sadeSati.isActive, phase: yd.sadeSati.phase },
+        claim: 'sade-sati-transit-phase',
+        value: {
+          isActive: ss.isActive ?? null,
+          phase: ss.phase ?? null,
+          basis: ss.basis ?? 'TRANSIT',
+          saturnHousesFromMoon: ss.saturnHousesFromMoon ?? null,
+          referenceInstantUtc: ss.referenceInstantUtc ?? null,
+        },
         strength: 0.5,
-        confidence: 0.8,
+        confidence: 0.9,
         basis: CONV,
-        dependencies: nodeIds['graha:Saturn'] ? [nodeIds['graha:Saturn']] : [],
+        dependencies: [...moonDep, ...(transitFactId ? [transitFactId] : [])],
+        ruleRef: (() => {
+          const r = getClassicalRule('RULE_SADE_SATI_BAND');
+          return r ? { ruleId: r.id, ruleVersion: r.version } : undefined;
+        })(),
       });
     }
     if (Array.isArray(yd.rajYogas)) {
@@ -418,6 +448,108 @@ export function compileEvidence(snapshot: CanonicalJyotishSnapshot): CompiledEvi
         strength: yd.rajYogas.length > 0 ? 0.7 : 0.3,
         confidence: 0.8,
         basis: CONV,
+      });
+    }
+    // Sprint I/§16/§18: Kalsarpa verdict with its ADOPTED variant declared.
+    if (yd.kalsarpa && typeof yd.kalsarpa === 'object') {
+      const k = yd.kalsarpa as Record<string, unknown>;
+      const grahaDeps = (['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'] as string[])
+        .map((g) => nodeIds[`graha:${g}`])
+        .filter(Boolean) as string[];
+      add({
+        domain: 'CONVENTION',
+        subject: 'convention:kalsarpa',
+        claim: 'kalsarpa-variant-verdict',
+        value: {
+          status: k.status ?? null,
+          variant: k.variant ?? 'ONE_HEMISPHERE_NODE_AXIS',
+          arc: k.arc ?? null,
+          evidence: Array.isArray(k.evidence) ? (k.evidence as unknown[]).slice(0, 12) : [],
+          typeNamingStatus: (k.typeNaming as Record<string, unknown> | undefined)?.status ?? 'NOT_CALCULATED',
+          notCalculatedReason: k.notCalculatedReason ?? null,
+        },
+        strength: 0.5,
+        confidence: 0.9,
+        basis: CONV,
+        dependencies: grahaDeps,
+        ruleRef: (() => {
+          const r = getClassicalRule('RULE_KALSARPA_HEMISPHERE');
+          return r ? { ruleId: r.id, ruleVersion: r.version } : undefined;
+        })(),
+      });
+    }
+    // Every yoga evaluation becomes its own conclusion node (§18: every
+    // consequential conclusion gets an evidence node).
+    if (Array.isArray(yd.yogas)) {
+      for (const y of yd.yogas as Array<Record<string, unknown>>) {
+        const depPlanets = (y.inputs as Record<string, unknown> | undefined)?.planets;
+        const deps = (Array.isArray(depPlanets) ? (depPlanets as string[]) : [])
+          .map((g) => nodeIds[`graha:${g}`])
+          .filter(Boolean) as string[];
+        const cross = getClassicalRule(String(y.id));
+        add({
+          domain: 'CONVENTION',
+          subject: `convention:yoga:${String(y.id)}`,
+          claim: 'yoga-evaluation',
+          value: {
+            status: y.status ?? null,
+            rule: y.rule ?? null,
+            strength: y.strength ?? null,
+            conditions: Array.isArray(y.conditions)
+              ? (y.conditions as Array<Record<string, unknown>>).map((c) => ({ id: c.id, satisfied: c.satisfied }))
+              : [],
+            notCalculatedReason: y.notCalculatedReason ?? null,
+          },
+          strength: y.status === 'PRESENT' ? 0.7 : 0.3,
+          confidence: 0.85,
+          basis: CONV,
+          dependencies: deps,
+          ruleRef: cross ? { ruleId: cross.id, ruleVersion: cross.version } : undefined,
+        });
+      }
+    }
+  }
+
+  /* ---------------- CONVENTION: combustion (RSK_002 provenance) ---------- */
+  const combustions = (snapshot.relationships as Record<string, unknown> | undefined)?.combustions as Record<string, Record<string, unknown>> | undefined;
+  if (combustions) {
+    for (const [planet, c] of Object.entries(combustions)) {
+      if (!nodeIds[`graha:${planet}`] || !nodeIds['graha:Sun']) continue;
+      const applicable = c.applicable !== false && typeof c.angularDistanceToSun === 'number' && c.angularDistanceToSun < 900;
+      // separation FACT node (depends on both placements), then the rule node.
+      const sepId = applicable
+        ? add({
+            domain: 'GRAHA',
+            subject: `graha:${planet}`,
+            claim: 'sun-separation',
+            value: { angularDistanceToSun: c.angularDistanceToSun },
+            strength: 0.5,
+            confidence: 0.95,
+            basis: CALC,
+            dependencies: [nodeIds[`graha:${planet}`], nodeIds['graha:Sun']],
+          }).id
+        : null;
+      add({
+        domain: 'CONVENTION',
+        subject: `convention:combustion:${planet}`,
+        claim: 'combustion-rule',
+        value: {
+          isCombust: c.isCombust ?? null,
+          severity: c.severity ?? null,
+          adoptedOrb: c.combustionOrb ?? null,
+          angularDistanceToSun: applicable ? c.angularDistanceToSun : null,
+          applicable: c.applicable ?? applicable,
+          borderline: c.borderline ?? false,
+          scholarJudgementRequired: c.scholarJudgementRequired ?? false,
+        },
+        strength: c.isCombust ? 0.7 : 0.3,
+        confidence: 0.9,
+        basis: CONV,
+        dependencies: sepId ? [sepId] : [nodeIds[`graha:${planet}`]],
+        ruleRef: (() => {
+          const r = getClassicalRule('RULE_COMBUSTION_ORBS');
+          return r ? { ruleId: r.id, ruleVersion: r.version } : undefined;
+        })(),
       });
     }
   }

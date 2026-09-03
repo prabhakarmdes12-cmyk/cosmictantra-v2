@@ -26,7 +26,7 @@
 - **Working branch**: `arena/01a0655c-cosmictantra-v2` (Sprint C work; `main` at Sprint B commit `167ad3b`).
 - **TypeScript**: `npx tsc --noEmit` exits with **0 errors**.
 - **Automated Tests**: full 20-spec Playwright sweep — **619 passed / 1 failed / 6 skipped**; the single failure is the pre-existing environmental `MR-07` milan-route case (`net::ERR_CONNECTION_REFUSED`, needs a live app server + DB, not a calculation defect).
-- **Current Milestone**: **Sprint I (Yoga/Dosha expansion) is COMPLETE** (Sprints C astronomy / D varga / E time / F bala / G gochara / H rule-registry gates: PASS at scale).
+- **Current Milestone**: **Sprint J (Evidence Graph + WHY) is COMPLETE** (Sprints C astronomy / D varga / E time / F bala / G gochara / H rule-registry / I yoga-dosha gates: PASS at scale).
 
 ### Sprint C (COMPLETE — this workspace)
 1. **Ayanamsha reconciled (RSK_009 → RESOLVED)**: versioned change `lahiri-registry-aligned-2.0.0` — `getLahiriAyanamsha(jd) = 23.85305556° + 1.39697128°/century · T`, conformant <0.5″ at J2000, <2″ at 1950; engine versioned `V37.0` (CT_INV_008). All engine-derived golden pins (reportId, Vimshottari balance, dasha dates, ayanamsha display, EV-13/14 baselines) re-baselined to the reconciled output with in-test provenance comments.
@@ -86,8 +86,18 @@
 5. **Qualification** `YOGA_CATALOG_001` (`npm run qualify:yoga`): 2,000 real-chart scenarios strict — **170k predicate-identity / 273 catalog / 702 Kalsarpa-geometry / 35.2k existence-strength checks — 0 violations; determinism 60/0. Verdict PASS.** Sprint H registry artifacts regenerated for the 59-rule registry.
 6. See `docs/reference-grade/11-sprint-i-yoga-dosha-expansion.md`.
 
-### Scope for Sprint J (Next Actionable Sprint)
-**Evidence Graph + WHY UX** (Mission §17–§20 area): the evidence graph infrastructure (evidenceGraph.ts / evidenceCompiler.ts exist unqualified) — unify the per-sprint evidence records into a queryable graph behind every user-facing claim; combustion borderline and yoga strength queue into the scholar flow (Sprint K console). Queued engineering: Varshaphala/Tajika year lord (Varsheshwar honestly NOT_CALCULATED), transit Vimshottari overlay + Kaksha tables, curated yoga families toward ~100 (full Nabhasa set, Mahabhagya input gap, Jaimini yogada).
+### Sprint J (COMPLETE — this workspace)
+**Evidence Graph + WHY** (Mission §17–§18):
+1. **Every consequential conclusion is now an evidence node**: `evidenceCompiler` emits CONVENTION nodes for all 44 yogas, 9 combustion verdicts, sade sati, kalsarpa, manglik, raj yogas and avakhada — each with `conditions: [{id, satisfied}]` and dependencies on the exact fact nodes consumed (172 nodes / 12 domains / 58 conclusions on the reference chart).
+2. **Rule provenance**: `ruleRef {ruleId, ruleVersion}` on evidence nodes — kept deliberately OUTSIDE the content hash (identity = what was computed; the rule ref = stable provenance).
+3. **WHY engine** (`whyEngine.ts`): `explainNode` serves the full §18 capability set — chain (cycle-safe), dependency-free roots, calculation + direct inputs, and rule/source/alternativeTraditions/validationStatus **from the live registry only when the node carries a ruleRef**; calculation-only reports never invent a citation (CT_INV_002).
+4. **§17 tradition consensus**: "k of n registered readings …" — NEVER a probability, guard `RULE_AGREEMENT_NOT_PROBABILITY` on every consensus. Combustion: adopted orb + all declared alternatives — Mercury 13° direct 2 of 2, retrograde 1 of 2 (disagreement visible). Kalsarpa: 5 readings, boundary charts stay INDETERMINATE with disagreement shown, inconsistent node axis → null (fail closed).
+5. **One real graph bug fixed**: `traceDependencies` flagged diamonds (shared deps via two paths) as cycles via global visitation; now path-based, both shapes regression-pinned.
+6. **Qualification** `WHY_GRAPH_001` (`npm run qualify:why`, strict 800): **87,620 graph-integrity / 15,400 coverage / 37,250 traversal / 502 consensus-identity checks — 0 violations; determinism byte-equal. Verdict PASS.** Gate spec `tests/why-qualification.spec.ts` 17/17.
+7. See `docs/reference-grade/12-sprint-j-evidence-graph-why.md`.
+
+### Scope for Sprint K (Next Actionable Sprint)
+**Scholar review console + golden-chart corpus** (Mission §19–§20): combustion borderline and yoga strength feed the scholar flow; the evidence graph's WHY API becomes the console's backbone. Queued engineering: golden-chart corpus 100+ charts (boundary + dasha/combustion edges), Varshaphala/Tajika year lord (Varsheshwar honestly NOT_CALCULATED), transit Vimshottari overlay + Kaksha tables, curated yoga families toward ~100 (full Nabhasa set, Mahabhagya input gap, Jaimini yogada).
 
 **Rules of Engagement**:
 - **Preserve working systems**: Do not replace working code; wrap and extend it.

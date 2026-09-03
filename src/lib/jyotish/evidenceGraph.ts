@@ -110,6 +110,13 @@ export interface EvidenceNode {
   };
   /** IDs of nodes this node was derived from (across or within domains). */
   dependencies: string[];
+  /**
+   * Sprint J (§18): which registered classical rule produced this node, when
+   * one did. Deliberately OUTSIDE the content hash: node identity is WHAT was
+   * computed; the rule reference is provenance that must stay stable across
+   * registry version bumps (the registry carries its own version + fingerprint).
+   */
+  ruleRef?: { ruleId: string; ruleVersion: string };
   createdAt: string;
 }
 
@@ -127,6 +134,8 @@ export interface NewEvidenceNode {
    *  Part of the node identity: identical facts from different sources are
    *  DISTINCT nodes that can SUPPORT each other. Default 'CANONICAL'. */
   sourceTag?: string;
+  /** Sprint J (§18): registry rule of record (provenance, not identity — see EvidenceNode.ruleRef). */
+  ruleRef?: { ruleId: string; ruleVersion: string };
 }
 
 export class EvidenceStore {
@@ -195,6 +204,7 @@ export class EvidenceStore {
         snapshotHash: this.snapshotHash,
       },
       dependencies: [...(payload.dependencies ?? [])],
+      ...(payload.ruleRef ? { ruleRef: { ...payload.ruleRef } } : {}),
       createdAt,
     });
     this.nodes.set(id, node);
@@ -205,6 +215,12 @@ export class EvidenceStore {
    * Transitive dependency closure with cycle protection and depth bound.
    * Returns nodes in trace order plus the depth of each, and any cycle
    * detected (cycle nodes are still returned; the trace terminates).
+   *
+   * Sprint J fix: cycle detection tracks the CURRENT DFS PATH, not global
+   * visitation — a diamond (a shared dependency reached via two paths, which
+   * the convention graph legitimately contains, e.g. two rule nodes resting on
+   * one placement fact) is NOT a cycle. The previous global-visited check
+   * false-positived on every diamond.
    */
   traceDependencies(
     rootId: string,
@@ -215,26 +231,29 @@ export class EvidenceStore {
     const depth = new Map<string, number>();
     const nodes: EvidenceNode[] = [];
     const cycles: string[] = [];
-    const visited = new Set<string>();
-    const stack: { id: string; d: number }[] = [{ id: rootId, d: 0 }];
+    const visited = new Set<string>(); // fully explored subtrees (diamond-safe)
+    const onPath = new Set<string>(); // the current DFS path
 
-    while (stack.length > 0) {
-      const { id, d } = stack.pop()!;
-      if (d > maxDepth) continue;
+    const dfs = (id: string, d: number): void => {
+      if (d > maxDepth) return;
       const node = this.nodes.get(id);
-      if (!node) continue;
+      if (!node) return;
       depth.set(id, Math.min(d, depth.get(id) ?? d));
-      if (visited.has(id) && d > 0) {
+      if (onPath.has(id)) {
         if (!cycles.includes(id)) cycles.push(id);
-        continue;
+        return; // true cycle: node re-encountered within the current path
       }
-      visited.add(id);
+      if (visited.has(id)) return; // already fully explored — diamond, not a cycle
+      onPath.add(id);
       nodes.push(node);
       for (const dep of node.dependencies) {
         if (!this.nodes.has(dep)) continue; // dangling ref: recorded, not fatal
-        stack.push({ id: dep, d: d + 1 });
+        dfs(dep, d + 1);
       }
-    }
+      onPath.delete(id);
+      visited.add(id);
+    };
+    dfs(rootId, 0);
     return { nodes, depth, cycles };
   }
 

@@ -1,0 +1,42 @@
+{
+  "fixtureSetId": "WHY_GRAPH_001",
+  "builder": "why-qualification-runner-1.0.0 (sprint J)",
+  "engineNote": "the graph is content-addressed per snapshot; the fixture pins capability sets and registry pins",
+  "whyEngineVersion": "why-engine-1.0.0 (sprint J)",
+  "ruleRegistryVersion": "classical-rule-registry-1.0.0 (sprint H)",
+  "ruleRegistryFingerprint": "ae1b3749059b24a083f41964de52f4e2492dfcbeb5217436ac1cf4337559e7cd",
+  "domains": [
+    "GRAHA",
+    "BHAVA",
+    "DASHA",
+    "PANCHANG",
+    "VARGA",
+    "ASHTAKAVARGA",
+    "JAIMINI",
+    "KP",
+    "BALA",
+    "RELATIONSHIP",
+    "TIMELINE_OUTCOME",
+    "CONVENTION"
+  ],
+  "yogaRuleCount": 44,
+  "combustionTrackedPlanets": [
+    "Jupiter",
+    "Mars",
+    "Mercury",
+    "Moon",
+    "Saturn",
+    "Venus"
+  ],
+  "conclusionsPerChart": 58,
+  "whyCapabilities": [
+    "WHY",
+    "SHOW_CALCULATION",
+    "SHOW_RULE",
+    "SHOW_SOURCE",
+    "SHOW_ALTERNATIVE_TRADITION",
+    "SHOW_VALIDATION_STATUS"
+  ],
+  "kalsarpaConsensusReadings": 5,
+  "setSha256": "275095b790a47c4f5689fd360f9349806e5c6534fb1f460c0e796547bdeacd71"
+}
