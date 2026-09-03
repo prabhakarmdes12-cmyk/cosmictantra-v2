@@ -1,0 +1,64 @@
+{
+  "runnerVersion": "golden-corpus-runner-1.0.0 (sprint K)",
+  "scholarReviewVersion": "scholar-review-1.0.0 (sprint K)",
+  "fixtureSetId": "GOLDEN_CHART_CORPUS_001",
+  "fixtureSetSha256": "052d6f88680880af7b54d683a2ca98202e8fb47d76f8c3960df7ec2895346205",
+  "ruleRegistryVersion": "classical-rule-registry-1.0.0 (sprint H)",
+  "gate": "strict",
+  "charts": 107,
+  "generatedAtUtc": "2026-09-03T08:10:56.803Z",
+  "verdict": "PASS",
+  "streamA": {
+    "name": "A CORPUS_INTEGRITY",
+    "charts": 107,
+    "checks": 122,
+    "violations": 0,
+    "firstViolations": []
+  },
+  "streamB": {
+    "name": "B EXPECTATION_REPLAY",
+    "charts": 107,
+    "checks": 3317,
+    "violations": 0,
+    "firstViolations": []
+  },
+  "streamC": {
+    "name": "C INDEPENDENT_IDENTITY",
+    "charts": 107,
+    "checks": 2675,
+    "violations": 0,
+    "firstViolations": []
+  },
+  "streamD": {
+    "name": "D SCHOLAR_REVIEW_LAYER",
+    "charts": 1,
+    "checks": 19,
+    "violations": 0,
+    "firstViolations": []
+  },
+  "determinism": {
+    "samples": 1,
+    "mismatches": 0
+  },
+  "findings": [
+    {
+      "id": "DECLARED_ENGINE_DERIVED_EXPECTATIONS",
+      "severity": "NON_BLOCKING",
+      "statement": "Corpus expectations are ENGINE_DERIVED regression pins (validationState INTERNALLY_VERIFIED): the astronomy kernel is separately certified vs JPL DE441 (Sprint C); externally-sourced chart corpora (EXTERNALLY_VERIFIED rows) are a later slice.",
+      "status": "OPEN"
+    },
+    {
+      "id": "DECLARED_REVIEW_PERSISTENCE_IN_MEMORY",
+      "severity": "NON_BLOCKING",
+      "statement": "The §19 scholar review store is an in-memory append-only hash chain; persistence with the D-1 consent gate is a later slice.",
+      "status": "OPEN"
+    },
+    {
+      "id": "DECLARED_REVIEWER_IDENTITY_UNVERIFIED",
+      "severity": "NON_BLOCKING",
+      "statement": "Reviewer identity and credentials are RECORDED, never authenticated — a review is provenance of human judgement, not authority; computational truth is never overwritten.",
+      "status": "OPEN"
+    }
+  ],
+  "totalViolations": 0
+}

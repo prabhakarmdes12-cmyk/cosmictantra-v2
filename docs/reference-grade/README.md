@@ -26,7 +26,7 @@
 - **Working branch**: `arena/01a0655c-cosmictantra-v2` (Sprint C work; `main` at Sprint B commit `167ad3b`).
 - **TypeScript**: `npx tsc --noEmit` exits with **0 errors**.
 - **Automated Tests**: full 20-spec Playwright sweep — **619 passed / 1 failed / 6 skipped**; the single failure is the pre-existing environmental `MR-07` milan-route case (`net::ERR_CONNECTION_REFUSED`, needs a live app server + DB, not a calculation defect).
-- **Current Milestone**: **Sprint J (Evidence Graph + WHY) is COMPLETE** (Sprints C astronomy / D varga / E time / F bala / G gochara / H rule-registry / I yoga-dosha gates: PASS at scale).
+- **Current Milestone**: **Sprint K (Scholar Review + Golden Chart Corpus) is COMPLETE** (Sprints C astronomy / D varga / E time / F bala / G gochara / H rule-registry / I yoga-dosha / J evidence-graph gates: PASS at scale).
 
 ### Sprint C (COMPLETE — this workspace)
 1. **Ayanamsha reconciled (RSK_009 → RESOLVED)**: versioned change `lahiri-registry-aligned-2.0.0` — `getLahiriAyanamsha(jd) = 23.85305556° + 1.39697128°/century · T`, conformant <0.5″ at J2000, <2″ at 1950; engine versioned `V37.0` (CT_INV_008). All engine-derived golden pins (reportId, Vimshottari balance, dasha dates, ayanamsha display, EV-13/14 baselines) re-baselined to the reconciled output with in-test provenance comments.
@@ -96,8 +96,17 @@
 6. **Qualification** `WHY_GRAPH_001` (`npm run qualify:why`, strict 800): **87,620 graph-integrity / 15,400 coverage / 37,250 traversal / 502 consensus-identity checks — 0 violations; determinism byte-equal. Verdict PASS.** Gate spec `tests/why-qualification.spec.ts` 17/17.
 7. See `docs/reference-grade/12-sprint-j-evidence-graph-why.md`.
 
-### Scope for Sprint K (Next Actionable Sprint)
-**Scholar review console + golden-chart corpus** (Mission §19–§20): combustion borderline and yoga strength feed the scholar flow; the evidence graph's WHY API becomes the console's backbone. Queued engineering: golden-chart corpus 100+ charts (boundary + dasha/combustion edges), Varshaphala/Tajika year lord (Varsheshwar honestly NOT_CALCULATED), transit Vimshottari overlay + Kaksha tables, curated yoga families toward ~100 (full Nabhasa set, Mahabhagya input gap, Jaimini yogada).
+### Sprint K (COMPLETE — this workspace)
+**Scholar Review + Golden Chart Corpus** (Mission §19–§20):
+1. **§19 review layer** (`scholarReview.ts`): the five charter verdicts (AGREE … INSUFFICIENT_EVIDENCE) recorded with reviewer ID, timestamp, rule version, chart version, commentary and optional cited source — and the cardinal invariant enforced by construction: **reviews never overwrite computational truth, both are stored** (graph pinned byte-identical in the gate spec). Reviews anchor to the reviewed value's digest — engine changes flag `VALUE_CHANGED` instead of silently carrying the opinion. Append-only hash chain (CT_INV_008), content-addressed review ids, fail-closed typed validation (commentary required on every non-AGREE; rule version checked against the LIVE registry; only the four mission source statuses).
+2. **The scholar queue**: derived from the evidence graph — yoga PRESENT strength (§15), combustion borderline rows, INDETERMINATE Kalsarpa — the charter's review flow as an API, ready for the console slice.
+3. **§20 corpus** `GOLDEN_CHART_CORPUS_001`: **107 charts**, 12 charter categories (sign/nakshatra/varga/dasha boundaries, combustion edges within ±0.3° of the adopted orb, retrogrades, latitudes to ±66.8°, 45-min/±13–14h zones, leap-day midnight, yoga/dosha examples) — the founder's reviewed chart as exactly ONE fixture with the charter caveat on it. Each chart stores input, normalized input, expected astronomical + derived facts (1e-6°), tolerance, source and validation state.
+4. **Qualification** (`npm run qualify:corpus`, strict): **122 integrity / 3,317 replay / 2,675 independent-identity / 19 review-layer checks — 0 violations; determinism byte-stable. Verdict PASS.** §21 independent reimplementations (rashi/nakshatra/pada/D9/Vimshottari/combustion/Kalsarpa) agree from the pinned longitudes alone. Gate spec `tests/scholar-qualification.spec.ts` 18/18.
+5. **Honest harness lessons**: the dynamical (TT) Julian Day carries ΔT — corpus normalization comes from the civil input, and the corpus pins the TT-based JD without hiding the relation; `degreeInRasi` is a display field (2 dp) — raw longitudes stay at 1e-6°. Harness-side, both; no engine defect across 107 charts.
+6. See `docs/reference-grade/13-sprint-k-scholar-review-golden-corpus.md`.
+
+### Scope for Sprint L (Next Actionable Sprint)
+**Varshaphala/Tajika + transit overlays + yoga growth** (queued): Varshaphala/Tajika year lord (`varshaphalaEngine.ts` exists unqualified — audit, wrap, qualify; Varsheshwar honestly NOT_CALCULATED where the tradition gap is real), transit Vimshottari overlay + Kaksha tables, curated yoga families toward ~100 (full Nabhasa set, Mahabhagya input gap, Jaimini yogada), and the scholar-console UI slice wiring the §19 queue + §18 WHY API into pages.
 
 **Rules of Engagement**:
 - **Preserve working systems**: Do not replace working code; wrap and extend it.

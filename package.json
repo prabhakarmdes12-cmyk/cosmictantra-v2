@@ -33,7 +33,9 @@
     "qualify:yoga": "tsx qualification/yoga-qualification-runner.ts --scenarios 2000 --gate strict",
     "qualify:yoga:scaffold": "tsx qualification/yoga-qualification-runner.ts --scenarios 400",
     "qualify:why": "tsx qualification/why-qualification-runner.ts --scenarios 800 --gate strict",
-    "qualify:why:scaffold": "tsx qualification/why-qualification-runner.ts --scenarios 150"
+    "qualify:why:scaffold": "tsx qualification/why-qualification-runner.ts --scenarios 150",
+    "qualify:corpus": "tsx qualification/golden-corpus-qualification-runner.ts --gate strict",
+    "qualify:corpus:scaffold": "tsx qualification/golden-corpus-qualification-runner.ts --gate scaffold --charts 3"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.77",
