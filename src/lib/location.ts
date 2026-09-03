@@ -11,7 +11,7 @@
  * Resolves IANA Timezone ID and calculates historical UTC offset for the exact birth instant.
  */
 
-import { CITIES, DEFAULT_CITY, CityCoordinate } from './cities.js';
+import { CITIES, DEFAULT_CITY, CityCoordinate } from './cities';
 
 export interface AdministrativeHierarchy {
   village?: string;
@@ -283,6 +283,7 @@ export function resolveBirthPlace(
     return {
       id: explicitCandidate.id,
       canonicalName: explicitCandidate.displayName,
+      displayName: explicitCandidate.displayName,
       cityName: explicitCandidate.cityName,
       administrativeHierarchy: {
         state: explicitCandidate.state,
@@ -291,7 +292,9 @@ export function resolveBirthPlace(
       latitude: explicitCandidate.latitude,
       longitude: explicitCandidate.longitude,
       ianaTimezone: tz,
+      timezoneId: tz,
       historicalUtcOffset: offset,
+      timezoneAtBirth: offset,
       source: explicitCandidate.source,
       confidence: 1.0
     };
@@ -309,6 +312,7 @@ export function resolveBirthPlace(
     return {
       id: `manual-${lat}-${lon}`,
       canonicalName: cleanQuery || `${lat.toFixed(2)}°N, ${lon.toFixed(2)}°E`,
+      displayName: cleanQuery || `${lat.toFixed(2)}°N, ${lon.toFixed(2)}°E`,
       cityName: cleanQuery.split(',')[0].trim() || 'Manual Location',
       administrativeHierarchy: {
         country: lat >= 6 && lat <= 38 && lon >= 68 && lon <= 98 ? 'India' : 'International'
@@ -316,7 +320,9 @@ export function resolveBirthPlace(
       latitude: lat,
       longitude: lon,
       ianaTimezone: tz,
+      timezoneId: tz,
       historicalUtcOffset: offset,
+      timezoneAtBirth: offset,
       source: 'MANUAL_COORDINATES',
       confidence: 1.0
     };
@@ -332,6 +338,7 @@ export function resolveBirthPlace(
       return {
         id: top.id,
         canonicalName: top.displayName,
+        displayName: top.displayName,
         cityName: top.cityName,
         administrativeHierarchy: {
           state: top.state,
@@ -340,7 +347,9 @@ export function resolveBirthPlace(
         latitude: top.latitude,
         longitude: top.longitude,
         ianaTimezone: tz,
+        timezoneId: tz,
         historicalUtcOffset: offset,
+        timezoneAtBirth: offset,
         source: 'INDEXED_LOCAL_DB',
         confidence: 1.0
       };
