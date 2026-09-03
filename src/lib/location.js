@@ -3,7 +3,7 @@
  * Invariant INV_LOCATION_001: An unresolved birthplace must never become a different birthplace.
  */
 
-import { CITIES, DEFAULT_CITY } from './cities.js';
+import { CITIES, DEFAULT_CITY } from './cities';
 
 /**
  * Calculates historical UTC offset in hours for an IANA timezone at a specific birth instant.
@@ -203,6 +203,7 @@ export function resolveBirthPlace(query, options) {
     return {
       id: 'manual-' + lat + '-' + lon,
       canonicalName: cleanQuery || (lat.toFixed(2) + '°N, ' + lon.toFixed(2) + '°E'),
+      displayName: cleanQuery || (lat.toFixed(2) + '°N, ' + lon.toFixed(2) + '°E'),
       cityName: cleanQuery.split(',')[0].trim() || 'Manual Location',
       administrativeHierarchy: {
         country: lat >= 6 && lat <= 38 && lon >= 68 && lon <= 98 ? 'India' : 'International'
@@ -210,7 +211,9 @@ export function resolveBirthPlace(query, options) {
       latitude: lat,
       longitude: lon,
       ianaTimezone: tz,
+      timezoneId: tz,
       historicalUtcOffset: offset,
+      timezoneAtBirth: offset,
       source: 'MANUAL_COORDINATES',
       confidence: 1.0
     };
@@ -226,6 +229,7 @@ export function resolveBirthPlace(query, options) {
       return {
         id: top.id,
         canonicalName: top.displayName,
+        displayName: top.displayName,
         cityName: top.cityName,
         administrativeHierarchy: {
           state: top.state,
@@ -234,7 +238,9 @@ export function resolveBirthPlace(query, options) {
         latitude: top.latitude,
         longitude: top.longitude,
         ianaTimezone: tz,
+        timezoneId: tz,
         historicalUtcOffset: offset,
+        timezoneAtBirth: offset,
         source: 'INDEXED_LOCAL_DB',
         confidence: 1.0
       };

@@ -27,7 +27,7 @@ import {
   MonthPanchangOverview 
 } from '@/engines/monthlyPanchangEngine';
 import { getProfiles } from '@/lib/profileStore';
-import { CITIES } from '@/lib/cities.js';
+import { CITIES } from '@/lib/cities';
 import { playTick } from '@/lib/chitiAudio';
 
 const HINDI_DIGITS = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९'];

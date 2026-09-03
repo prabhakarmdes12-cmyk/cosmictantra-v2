@@ -10,6 +10,7 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "test": "playwright test",
+    "test:canonical-city": "npx tsx scripts/test-canonical-city-resolver.ts",
     "test:engines": "playwright test tests/astrology.spec.ts tests/features.spec.ts",
     "granth:extract": "node scripts/extract-granth-library.cjs",
     "granth:edition-manifest": "node scripts/build-gita-edition-manifest.cjs",
@@ -17,12 +18,12 @@
     "test:granth": "playwright test tests/granth-canonical-library.spec.ts tests/granth-coverage.spec.ts tests/granth-reading-session.spec.ts tests/granth-interactive-flow.spec.ts",
     "test:granth:http": "playwright test tests/granth-reader-http.spec.ts",
     "typecheck": "tsc --noEmit",
-    "validate:navigation": "tsx scripts/validate-navigation.ts",
-    "qualify:astronomy": "tsx qualification/astronomy-qualification-runner.ts --scenarios 100000 --write-cert-doc",
-    "qualify:astronomy:scaffold": "tsx qualification/astronomy-qualification-runner.ts --scenarios 1000 --write-cert-doc",
+    "validate:navigation": "npx tsx scripts/validate-navigation.ts",
+    "qualify:astronomy": "npx tsx qualification/astronomy-qualification-runner.ts --scenarios 100000 --write-cert-doc",
+    "qualify:astronomy:scaffold": "npx tsx qualification/astronomy-qualification-runner.ts --scenarios 1000 --write-cert-doc",
     "postinstall": "prisma generate",
-    "qualify:varga": "tsx qualification/varga-qualification-runner.ts --scenarios 100000 --write-cert-doc",
-    "qualify:varga:scaffold": "tsx qualification/varga-qualification-runner.ts --scenarios 1000"
+    "qualify:varga": "npx tsx qualification/varga-qualification-runner.ts --scenarios 100000 --write-cert-doc",
+    "qualify:varga:scaffold": "npx tsx qualification/varga-qualification-runner.ts --scenarios 1000"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.77",
