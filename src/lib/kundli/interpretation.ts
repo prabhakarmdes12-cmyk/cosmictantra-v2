@@ -137,7 +137,7 @@ export function interpretFinance(model: KundliCanonicalModel): InterpretationEnt
     sourceFacts: ['houses.2.sign', 'houses.2.sign.lord', `planets.${h2Lord}.house`, 'planets.Jupiter.house'],
     generatorVersion: INTERPRETATION_GENERATOR_VERSION,
     promptVersion: null,
-    text: `Wealth and resources are read from the 2nd house, ${h2.sign.name} (${h2.sign.en}), ruled by ${h2Lord}, who occupies the ${lordPos!.house}${ordinal(lordPos!.house)} house. Jupiter's placement in the ${jupiter.house}${ordinal(jupiter.house)} house indicates where growth and abundance are most likely to accumulate.`,
+    text: `Wealth and resources are read from the 2nd house, ${h2.sign.name} (${h2.sign.en}), ruled by ${h2Lord}, who occupies the ${lordPos!.house}${ordinal(lordPos!.house)} house. Jupiter's placement in the ${jupiter.house}${ordinal(jupiter.house)} house indicates the domain the tradition associates with growth and abundance. It does not say that wealth accrues, and nothing about amount or timing is claimed.`,
   };
 }
 

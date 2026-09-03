@@ -578,7 +578,7 @@ function buildCertificate(
       `Ascendant (${m.ascendant.sign.name} ${D2(m.ascendant.degreeInSign)}°)`,
       `${m.planets.length} graha positions with nakshatra and pada`,
       `${m.houses.length} bhavas (${c.houseSystem})`,
-      `${m.divisionalCharts.length} divisional charts, of which D1 and D9 are independently cross-checked`,
+      `${m.divisionalCharts.length} divisional charts are computed internally; D1 and D9 are the only two independently cross-checked and the only two delivered — the other ${m.divisionalCharts.length - 2} are not delivered and are not relied on here`,
       `Vimshottari dasha: balance at birth plus ${m.dashas.mahadashas.length} mahadashas`,
       `${evaluatedYogas.length} yoga rules evaluated`,
       `${m.doshas.length} dosha assessments`,
