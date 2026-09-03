@@ -295,6 +295,49 @@ test.describe('Sprint C — astrology engine untouched', () => {
 /* 8. Daily page — Ask-about-today entry + Today view analytics        */
 /* ------------------------------------------------------------------ */
 
+test.describe('Sprint C — SEO structure (§24)', () => {
+  test('landing promise, trust strip and explore tools are server-rendered (not client-gated)', () => {
+    const page = read('src/app/page.tsx');
+    const heroIdx = page.indexOf('<HeroSection');
+    const trustIdx = page.indexOf('<TrustStrip');
+    const gateIdx = page.indexOf('{isClientMounted &&');
+    expect(heroIdx).toBeGreaterThan(-1);
+    expect(trustIdx).toBeGreaterThan(-1);
+    // Static conversion content must be OUTSIDE the client-mount gate.
+    expect(heroIdx).toBeLessThan(gateIdx);
+    expect(trustIdx).toBeLessThan(gateIdx);
+    // The time-dependent live dial is the only gated hero part.
+    expect(page).toContain('dialReady={isClientMounted}');
+    expect(page).not.toContain('Loading current Vedic calculations');
+  });
+
+  test('landing emits truthful JSON-LD for existing routes only', () => {
+    const page = read('src/app/page.tsx');
+    expect(page).toContain('application/ld+json');
+    for (const route of ['/dashboard', '/daily', '/calendar', '/milan', '/muhurat/personalized']) {
+      expect(page).toContain(route);
+    }
+    expect(page).toContain('Vedic Precision. Human Wisdom.'); // matches the promise, no overclaim
+  });
+
+  test('hero dial renders a static server teaser instead of time-dependent content', () => {
+    const hero = read('src/components/HeroSection.jsx');
+    expect(hero).toContain('dialReady');
+    expect(hero).toContain('cosmic-dial-static-teaser');
+    // No time-dependent data on the server path: the live component is only
+    // reached when dialReady flips true after hydration.
+    expect(hero).toContain('dialReady ?');
+  });
+
+  test('root metadata mirrors the consumer promise without overclaiming', () => {
+    const layout = read('src/app/layout.tsx');
+    expect(layout).toContain('Vedic Precision. Human Wisdom.');
+    for (const banned of ['100% accurate', 'scientifically proven', 'best astrologer', 'AI predicts your future']) {
+      expect(layout).not.toContain(banned);
+    }
+  });
+});
+
 test.describe('Sprint C — Today page participation', () => {
   test('daily page has ASK ABOUT TODAY and TODAY_VIEW event', () => {
     const src = read('src/app/daily/page.tsx');

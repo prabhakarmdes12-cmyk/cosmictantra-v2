@@ -29,6 +29,28 @@ const CitySelectorModal = nextDynamic(() => import('@/components/CitySelectorMod
 // Disable static prerendering — homepage uses new Date() (panchang) which must be server-rendered fresh
 export const dynamic = 'force-dynamic';
 
+/**
+ * TRUTHFUL STRUCTURED METADATA (§24) — never a claim the product does not
+ * make. Static, safe to index, links only to routes that exist.
+ */
+const LANDING_JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'CosmicTantra',
+  url: 'https://cosmictantra.chiti.tech',
+  description:
+    'Vedic Precision. Human Wisdom. Precise Jyotish calculations, clear explanations, and human scholarly judgement where tradition requires interpretation.',
+  inLanguage: ['en', 'hi'],
+  publisher: { '@type': 'Organization', name: 'CosmicTantra' },
+  hasPart: [
+    { '@type': 'WebPage', name: 'Kundli', url: 'https://cosmictantra.chiti.tech/dashboard' },
+    { '@type': 'WebPage', name: 'Vedic Panchang', url: 'https://cosmictantra.chiti.tech/daily' },
+    { '@type': 'WebPage', name: 'Vedic Calendar', url: 'https://cosmictantra.chiti.tech/calendar' },
+    { '@type': 'WebPage', name: 'Kundli Matching', url: 'https://cosmictantra.chiti.tech/milan' },
+    { '@type': 'WebPage', name: 'Personal Muhurat', url: 'https://cosmictantra.chiti.tech/muhurat/personalized' },
+  ],
+};
+
 export default function AppLandingPage() {
   // Truthful location: null until the canonical resolver finds the user's
   // location; the header shows "Set location" when nothing is known.
@@ -182,9 +204,8 @@ export default function AppLandingPage() {
       />
 
       <main className="flex-1">
-        {isClientMounted ? (
-          <>
-        {/* 3. Hero & Live "Cosmic Now" Precision Instrument */}
+        {/* 3. Hero — static promise + form (server-rendered, §24); only the
+                live dial is client-gated to avoid hydration mismatch. */}
         <HeroSection
           panchangData={panchangData}
           currentCity={currentCity}
@@ -194,21 +215,30 @@ export default function AppLandingPage() {
           onCreateKundali={() => handleNavigateSection('hero-section')}
           lang={lang}
           theme={theme}
+          dialReady={isClientMounted}
         />
 
-        {/* 3b. Trust strip (§5) */}
+        {/* 3b. Trust strip (§5) — static, search-visible */}
         <TrustStrip lang={lang} />
 
-        {/* 4. Today At A Glance (Vedic Day Arc & Stepped Ribbon) */}
-        <TodayAtAGlance
-          panchangData={panchangData}
-          currentCity={currentCity}
-          onOpenConsultation={handleOpenConsultation}
-          lang={lang}
-          theme={theme}
+        {/* Structured metadata (truthful, static — §24) */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(LANDING_JSON_LD) }}
         />
 
-        {/* 5. Compact access to deeper tools without competing with the core journey */}
+        {/* 4. Today At A Glance (time-dependent live data — client-mounted) */}
+        {isClientMounted && (
+          <TodayAtAGlance
+            panchangData={panchangData}
+            currentCity={currentCity}
+            onOpenConsultation={handleOpenConsultation}
+            lang={lang}
+            theme={theme}
+          />
+        )}
+
+        {/* 5. Compact access to deeper tools — static, search-visible */}
         <section className="px-4 py-14 sm:px-6 sm:py-20" aria-labelledby="explore-heading">
           <div className="mx-auto max-w-5xl">
             <div className="mb-8 max-w-2xl">
@@ -247,17 +277,6 @@ export default function AppLandingPage() {
           lang={lang}
           theme={theme}
         />
-
-          </>
-        ) : (
-          <section className="mx-auto flex min-h-[70vh] max-w-5xl items-center px-4 py-20 sm:px-6" aria-label="Loading current Vedic calculations">
-            <div className="w-full animate-pulse space-y-6">
-              <div className="h-5 w-40 rounded-full bg-[#8E6F1D]/15 dark:bg-[#D4AF37]/15" />
-              <div className="h-16 max-w-2xl rounded-2xl bg-black/[0.06] dark:bg-white/[0.06]" />
-              <div className="h-36 rounded-3xl bg-black/[0.04] dark:bg-white/[0.04]" />
-            </div>
-          </section>
-        )}
       </main>
 
       <GlobalFooter lang={lang} />

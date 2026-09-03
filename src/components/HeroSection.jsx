@@ -38,6 +38,7 @@ export default function HeroSection({
   onCreateKundali,
   lang = 'en',
   theme = 'dark',
+  dialReady = true, // server-render safety: live dial is time-dependent (§24)
 }) {
   const router = useRouter();
   const isHi = lang === 'hi';
@@ -652,14 +653,38 @@ export default function HeroSection({
             </div>
           </div>
 
-          {/* Right: Cosmic Now factual dial */}
+          {/* Right: Cosmic Now factual dial (time-dependent — mounted after
+              hydration to keep the server HTML stable; static teaser + promise
+              is what search engines see, §23/§24) */}
           <div className="lg:col-span-5 w-full mt-4 lg:mt-0">
-            <CosmicNowDial
-              panchangData={panchangData}
-              currentCity={currentCity}
-              onOpenCitySelector={onOpenCitySelector}
-              lang={lang}
-            />
+            {dialReady ? (
+              <CosmicNowDial
+                panchangData={panchangData}
+                currentCity={currentCity}
+                onOpenCitySelector={onOpenCitySelector}
+                lang={lang}
+              />
+            ) : (
+              <div
+                data-testid="cosmic-dial-static-teaser"
+                className="rounded-3xl bg-[#FBF6EC] dark:bg-[#0E101D]/90 border border-[#8E6F1D]/30 dark:border-[#D4AF37]/40 p-6 sm:p-8 shadow-xl"
+              >
+                <p className="text-[10px] font-mono-data font-bold uppercase tracking-[0.2em] text-[#8E6F1D] dark:text-[#F0C968]">
+                  {isHi ? 'प्रत्यक्ष खगोल चक्र' : 'COSMIC NOW'}
+                </p>
+                <h2 className="mt-2 font-editorial text-xl font-bold text-[#1C1917] dark:text-white">
+                  {isHi ? 'आज, वैदिक समय में' : 'Today, in Vedic time'}
+                </h2>
+                <p className="mt-2 text-xs leading-6 text-[#57524A] dark:text-[#B3ADA3]">
+                  {isHi
+                    ? 'सूर्योदय–सूर्यास्त, तिथि, नक्षत्र, योग-करण और राहुकाल — आपके स्थान के अनुसार गणना।'
+                    : 'Sunrise–sunset, Tithi, Nakshatra, Yoga–Karana and Rahu Kaal — calculated for your location.'}
+                </p>
+                <p className="mt-3 text-[10px] font-mono-data text-[#696256] dark:text-[#9E988D]">
+                  {isHi ? 'पृष्ठ लोड होते ही वेध सक्रिय होगा।' : 'The dial activates as the page loads.'}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -112,17 +112,19 @@ Specs authored for 320/360/390/430/768/1440+: landing stepper, date/time native 
 
 ## 12. Known UX problems (status after follow-up fixes)
 
-**Resolved in follow-up commit (same sprint, "proceed" pass):**
+**Resolved in follow-up commits (same sprint):**
+4. ~~Landing content client-gated for SEO~~ — **FIXED (§24)**: hero promise/birth form, TrustStrip, explore tools and Festival strip are now **server-rendered**; only the time-dependent live Cosmic dial is client-gated and shows a static "Today, in Vedic time" teaser on the server (no hydration mismatch). Truthful JSON-LD (`WebSite` + existing routes) emitted on the landing page; root metadata description now mirrors the consumer promise with zero overclaiming. Verified in production server HTML: promise/json-ld/trust-strip present, skeleton and prediction language absent. (New node tests: 4 §24 invariants; browser spec now asserts raw server HTML.)
+
+**Resolved earlier (same sprint, "proceed" pass):**
 1. ~~`/daily` demo profiles~~ — **FIXED**: fabricated Priya Sharma / Amit Sharma seeding removed; empty store now shows an intentional `daily-empty-state` ("Start with your own chart") instead of a fake chart. Add-member form no longer defaults to Varanasi/1996-08-12/14:30 — birth fields start empty, city must resolve through `searchCities`, unknown city → visible error, and profile calculations bail when coordinates are missing (no silent Patna fallback).
 2. ~~Insight pre-saved state~~ — **FIXED**: `KundliFirstInsight` detects the already-active chart on mount and shows "Saved ✓" directly; save now sets the real returned profile id.
 
 **Still flagged (unchanged):**
 3. `/daily` heading "72-Hour Vedic Forecast" framing remains (pre-existing interpretation-engine content, not redesigned per §18); alignment with the same product system is next.
-4. Landing main content remains client-gated (server HTML shows the skeleton + fact strip); SEO §24 follow-up needed for hero/trust copy outside JS.
 5. The Kashi Sahayak bridge opens the assistant with the user's question; the assistant's own deterministic pipeline decides next steps (guide behaviour, by design) — its deep conversation tuning is out of this sprint.
-6. Browser suites unexecuted here — CI / normal env must run both `sprint-c-ui.spec.ts` and B.1 `navigation-ui.spec.ts` (new empty-state + member-form steps added to `sprint-c-ui.spec.ts`).
+6. Browser suites unexecuted here — CI / normal env must run both `sprint-c-ui.spec.ts` and B.1 `navigation-ui.spec.ts` (new SEO/empty-state/member-form steps added to `sprint-c-ui.spec.ts`).
 
-**Re-verified after fixes:** `tsc` ✅ · validator ✅ · Sprint-C invariants **15/15** · B.1 22/22 + V40 9/9 ✅ · `next build` ✅ · prod smoke `/`, `/daily`, `/kundli/gandhi-1869` 200 ✅. Engine diff still empty (`git diff 0314aa7 -- src/lib/jyotish src/lib/astronomy src/engines src/lib/dashaEngine.js src/lib/panchang.js` = empty).
+**Re-verified after fixes:** `tsc` ✅ · validator ✅ · Sprint-C invariants **19/19** · B.1 22/22 + V40 9/9 ✅ (50 node tests total) · `next build` ✅ · prod server HTML contains promise + JSON-LD + trust strip, no skeleton/dead routes/prediction language. Engine diff still empty (`git diff 0314aa7 -- src/lib/jyotish src/lib/astronomy src/engines src/lib/dashaEngine.js src/lib/panchang.js` = empty).
 
 ## 13. Exact diff stats
 

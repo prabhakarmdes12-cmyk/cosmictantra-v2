@@ -19,6 +19,17 @@ async function expectNoHorizontalOverflow(page: Page, label: string) {
 }
 
 test.describe('Sprint C — landing', () => {
+  test('server HTML exposes the promise + JSON-LD before any client JS (§24)', async ({ request }) => {
+    const res = await request.get(BASE);
+    expect(res.status()).toBe(200);
+    const html = await res.text();
+    expect(html).toContain('Vedic Precision.');
+    expect(html).toContain('Human Wisdom.');
+    expect(html).toContain('application/ld+json');
+    expect(html).toContain('cosmic-dial-static-teaser');
+    expect(html).not.toContain('Loading current Vedic calculations');
+  });
+
   test('hero promise, dominant Kundli CTA, trust strip, fact-first day strip', async ({ page }) => {
     await page.goto(BASE, { waitUntil: 'domcontentloaded' });
     await expect(page.locator('h1')).toContainText(/Vedic Precision/i);

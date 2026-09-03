@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     default: 'CosmicTantra — Technology-Assisted Jyotish Operations',
     template: '%s | CosmicTantra',
   },
-  description: 'Vedic Panchang ephemeris engine, 2026 Muhurat discovery, Janma Kundali generation, Vimshottari Dasha calculations, and verified traditional scholar consultations.',
+  description: 'Vedic Precision. Human Wisdom. Precise Jyotish calculations, clear explanations, and human scholarly judgement where tradition requires interpretation — Panchang, Kundli, Dasha, Muhurat and scholar consultation.',
   keywords: [
     'Vedic Astrology',
     'Jyotish',
