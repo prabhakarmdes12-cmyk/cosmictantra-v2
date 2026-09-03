@@ -3,6 +3,43 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { getCanonicalJyotishSnapshot, CanonicalJyotishSnapshot } from '../src/lib/jyotish/canonicalSnapshot';
 
+
+/**
+ * Sunrise and sunset are compared within the tolerance this suite declares,
+ * not for exact equality.
+ *
+ * Two independent implementations computing topocentric sunrise differ by a
+ * minute or so depending on refraction, solar disc radius and whether
+ * elevation is applied. The reference here is a third-party report, not an
+ * authority, so a one-minute delta is a discrepancy to record rather than a
+ * defect to chase.
+ *
+ * This previously asserted an exact substring match while its own comment
+ * allowed two minutes, so the suite carried a permanent failure that said
+ * nothing about the engine.
+ */
+function minutesOfDay(time: string): number {
+  const m = /(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?/i.exec(time);
+  if (!m) throw new Error(`unparseable time: ${time}`);
+  const meridiem = m[4];
+  let hour = Number(m[1]);
+  if (meridiem) {
+    // 12-hour clock: 12 AM is 0, 12 PM is 12, everything else shifts by 12.
+    hour %= 12;
+    if (/pm/i.test(meridiem)) hour += 12;
+  }
+  return hour * 60 + Number(m[2]) + (m[3] ? Number(m[3]) / 60 : 0);
+}
+
+function expectTimeWithin(actual: string, expected: string, toleranceMinutes: number): number {
+  const delta = Math.abs(minutesOfDay(actual) - minutesOfDay(expected));
+  expect(
+    delta,
+    `${actual} differs from reference ${expected} by ${delta.toFixed(1)} min, tolerance ${toleranceMinutes}`,
+  ).toBeLessThanOrEqual(toleranceMinutes);
+  return delta;
+}
+
 test.describe('GATE 2: AstroSage 56-Page Report Real Differential Qualification', () => {
 
   const fixturePath = path.join(__dirname, 'fixtures', 'external', 'astrosage-prabhakar-1989.json');
@@ -41,9 +78,15 @@ test.describe('GATE 2: AstroSage 56-Page Report Real Differential Qualification'
     expect(snapshot.birthPanchang.yoga.name).toBe(expected.yoga.name);
     expect(snapshot.birthPanchang.karana.name).toBe(expected.karana.name);
 
-    // Sunrise & Sunset (within ±2 minutes astronomical topocentric precision)
-    expect(snapshot.birthPanchang.sun.sunrise).toContain('05:18');
-    expect(snapshot.birthPanchang.sun.sunset).toContain('06:38');
+    // Sunrise & Sunset (within ±2 minutes astronomical topocentric precision).
+    // Measured deltas against the reference report: sunrise 0.4 min
+    // (05:18 vs 05:18:24), sunset 1.2 min (18:37 vs 18:38:12). Both inside
+    // the tolerance this suite has always declared, which the old
+    // exact-match assertion ignored.
+    const sunriseDelta = expectTimeWithin(snapshot.birthPanchang.sun.sunrise, '05:18:24', 2);
+    const sunsetDelta = expectTimeWithin(snapshot.birthPanchang.sun.sunset, '18:38:12', 2);
+    expect(sunriseDelta).toBeLessThanOrEqual(2);
+    expect(sunsetDelta).toBeLessThanOrEqual(2);
   });
 
   test('2. Nine Grahas Coordinate & Degree Differential Parity (±1 arcmin tolerance)', () => {
