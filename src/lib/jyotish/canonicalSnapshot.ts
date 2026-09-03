@@ -38,6 +38,8 @@ import { calculateJaimini, JaiminiResult } from './jaiminiEngine';
 import { calculateKpSystem, KpSystemResult } from './kpEngine';
 import { calculateVarshaphala, VarshaphalaResult } from './varshaphalaEngine';
 import { calculateAvakhada, AvakhadaResult } from './avakhadaEngine';
+import { buildConventionSnapshotMetadata, DEFAULT_PRESET, type ResolvedConventionSelection } from './conventionCenter';
+import { resolveAstronomyProvider } from '../astronomy/astronomyProvider';
 
 export interface NormalizedBirthContext {
   birthDate: string; // YYYY-MM-DD
@@ -65,6 +67,22 @@ export interface CanonicalJyotishSnapshot {
     ayanamshaName: string;
     ayanamshaValue: number;
     julianDay: number;
+    /** Sprint B (CT_INV_004): explicit declared-convention manifest stamped on every snapshot. */
+    conventionRegistry?: {
+      registryVersion: string;
+      registryDoc: string;
+      presetId: string;
+      manifestSha256: string;
+      selections: ResolvedConventionSelection[];
+      summaryLines: string[];
+    };
+    /** Sprint B: which astronomy provider/kernel produced the astronomical layer. */
+    astronomyProvider?: {
+      providerId: string;
+      version: string;
+      kernel: string;
+      validationStatus: string;
+    };
   };
   context: NormalizedBirthContext;
   
@@ -357,7 +375,14 @@ export function getCanonicalJyotishSnapshot(context: NormalizedBirthContext): Ca
       engineVersion: 'CosmicTantra Professional Kernel V36.0 (Deterministic)',
       ayanamshaName: 'Chitra Paksha (Lahiri Standard)',
       ayanamshaValue: kundli.ayanamsha,
-      julianDay: kundli.julianDay
+      julianDay: kundli.julianDay,
+      // Sprint B (CT_INV_004): every canonical snapshot now declares its full
+      // convention set and the astronomy provider/kernel that produced it.
+      ...buildConventionSnapshotMetadata(DEFAULT_PRESET.id),
+      astronomyProvider: (() => {
+        const d = resolveAstronomyProvider().descriptor;
+        return { providerId: d.providerId, version: d.version, kernel: d.kernel, validationStatus: d.validationStatus };
+      })()
     },
     context,
     lagna: {
