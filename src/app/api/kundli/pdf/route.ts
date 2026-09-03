@@ -31,6 +31,7 @@ import { createRateLimiter, clientKeyFor } from '@/lib/rateLimit';
 import { generateKundliV41Pdf } from '@/lib/kundli/v40/pipelineV3';
 import { parseReportMode, MODE_DEFINITIONS, DOWNLOAD_CONTRACT, type ReportMode } from '@/lib/kundli/v40/reportModes';
 import type { RawBirthInput } from '@/lib/kundli/types';
+import { searchCities } from '@/lib/cities';
 
 /** pdfkit, fontkit and `node:fs` — this cannot run on the edge. */
 export const runtime = 'nodejs';
@@ -88,6 +89,21 @@ export async function POST(request: Request) {
       { ok: false, errorCode: 'KUNDLI_INPUT_INVALID', message: 'No birth details were supplied.' },
       { status: 400 },
     );
+  }
+
+  // Auto-resolve coordinates if city is supplied without coordinates
+  const cityCandidate = (birth.locationName || (birth as any).city || '').trim();
+  if ((!Number.isFinite(birth.latitude) || !Number.isFinite(birth.longitude)) && cityCandidate) {
+    const hits = searchCities(cityCandidate);
+    if (hits.length > 0) {
+      birth.latitude = hits[0].lat;
+      birth.longitude = hits[0].lng;
+      if (!Number.isFinite(birth.utcOffsetHours)) {
+        birth.utcOffsetHours = hits[0].tz ?? 5.5;
+      }
+      birth.locationName = `${hits[0].name}, ${hits[0].state}`;
+      birth.coordinateProvenance = 'MANUAL';
+    }
   }
 
   const mode = parseReportMode(body.mode);

@@ -323,15 +323,15 @@ export default function MasterKundliReportClient() {
   const [locating, setLocating] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  // Dynamic Birth Input State (URL params > localStorage > Default Bilaspur 1989)
+  // Dynamic Birth Input State (starts clean for new visitors; populated from URL or saved profile)
   const [birthState, setBirthState] = useState({
-    name: 'Prabhakar Sharma',
-    birthDate: '1989-05-26',
-    birthTime: '02:20:30',
-    latitude: 22.0797,
-    longitude: 82.1391,
+    name: '',
+    birthDate: '',
+    birthTime: '',
+    latitude: Number.NaN,
+    longitude: Number.NaN,
     timezone: 5.5,
-    locationName: 'Bilaspur, Chhattisgarh, India'
+    locationName: ''
   });
 
   // Pipeline state (KUNDLI_INV_015 / fail-safe UX)
@@ -509,10 +509,16 @@ export default function MasterKundliReportClient() {
       }
     } catch {}
 
-    // 3. Complete demo profile (explicit PROFILE provenance) — clearly
-    // labelled as sample data so nobody mistakes it for their own chart.
-    rawInputRef.current = { ...DEMO_PROFILE, coordinateProvenance: 'PROFILE' };
-    setIsDemoProfile(true);
+    // 3. First-time visitor without URL params or saved profile:
+    // If explicit ?sample=1 was requested, show the sample reference chart.
+    const isExplicitSample = searchParams.get('sample') === '1' || searchParams.get('sample') === 'true';
+    if (isExplicitSample) {
+      setBirthState(DEMO_PROFILE);
+      rawInputRef.current = { ...DEMO_PROFILE, coordinateProvenance: 'PROFILE' };
+      setIsDemoProfile(true);
+    } else {
+      setIsDemoProfile(false);
+    }
   }, [searchParams]);
 
   /**
@@ -626,15 +632,7 @@ export default function MasterKundliReportClient() {
     );
   };
 
-  // Surface the fail-safe immediately when the caller's input was incomplete.
-  useEffect(() => {
-    if (!inputComplete && rawInputRef.current && !isGeneratingPdf) {
-      setFailSafe({
-        message: 'We could not complete this Kundli correctly. Your report has not been issued. Please verify the birth details (name, date, time and both coordinates) or contact CosmicTantra support.',
-        code: 'KUNDLI_INPUT_INVALID'
-      });
-    }
-  }, [inputComplete, isGeneratingPdf]);
+  // Fail-safe is surfaced only when download or generation is explicitly requested with incomplete details
 
   // Compute Canonical Astronomical Snapshot & 17-Volume Book Model
   // (preview only — the PDF path never uses this fallback data)
@@ -976,7 +974,15 @@ export default function MasterKundliReportClient() {
               <span className="font-serif font-bold text-base lg:text-lg tracking-tight text-[#1C1917] dark:text-[#EFECE6]">{t('title')}</span>
             </div>
             <p className="text-[11px] text-[#78716C] dark:text-[#A8A29E] font-mono-data flex flex-wrap items-center gap-1.5">
-              <strong>{birthState.name}</strong> • {birthState.birthDate}, {birthState.birthTime} • {birthState.locationName}
+              {birthState.name ? (
+                <>
+                  <strong>{birthState.name}</strong> • {birthState.birthDate}, {birthState.birthTime} • {birthState.locationName}
+                </>
+              ) : (
+                <span className="text-amber-700 dark:text-amber-400 font-semibold">
+                  {lang === 'hi' ? 'विवरण दर्ज करें' : 'Please enter birth details'}
+                </span>
+              )}
               {isDemoProfile && (
                 <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-[#D4AF37]/15 text-amber-800 dark:text-amber-300 border border-amber-300 uppercase tracking-wide">
                   <Sparkles className="w-2.5 h-2.5" /> {t('sample')}
@@ -1231,6 +1237,34 @@ export default function MasterKundliReportClient() {
           })}
         </div>
       </div>
+
+      {!inputComplete && (
+        <div className="max-w-7xl mx-auto px-4 lg:px-8 pt-6 print:hidden">
+          <div className="rounded-2xl border border-[#8E6F1D]/40 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-amber-500/10 dark:from-[#D4AF37]/15 dark:via-transparent dark:to-[#D4AF37]/15 p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 text-sm font-bold text-[#8E6F1D] dark:text-[#F0C968]">
+                <span>✨</span>
+                <span>{lang === 'hi' ? 'अपनी जन्म पत्रिका बनाएं' : 'Create Your Master Kundli'}</span>
+              </div>
+              <p className="text-xs text-[#78716C] dark:text-[#A8A29E] mt-1">
+                {lang === 'hi'
+                  ? 'अपनी सटीक कुण्डली देखने एवं उच्च-गुणवत्ता वाली पीडीएफ डाउनलोड करने के लिए कृपया अपना जन्म विवरण भरें।'
+                  : 'Enter your birth details once to generate your full Vedic chart, life gauges, planetary dignities, and qualified PDF.'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                chitiSensory.playTick();
+                setIsEditModalOpen(true);
+              }}
+              className="px-4 py-2 rounded-xl text-xs font-bold bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#060709] hover:bg-[#785E18] transition-colors shadow-sm shrink-0"
+            >
+              {t('editTitle')}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 2b. Kundli at a Glance — the Era-2/3 convention: summary before depth */}
       <section className="max-w-7xl mx-auto px-4 lg:px-8 pt-6 print:hidden">

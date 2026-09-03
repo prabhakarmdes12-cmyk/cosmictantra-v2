@@ -82,6 +82,22 @@ export default function MilanReportClient() {
         setLang(savedLang);
         document.documentElement.lang = savedLang;
       }
+      const savedProfile = localStorage.getItem('cosmictantra_active_kundli');
+      if (savedProfile) {
+        const parsed = JSON.parse(savedProfile);
+        if (parsed && parsed.name && parsed.birthDate) {
+          setGroom({
+            name: parsed.name,
+            birthDate: parsed.birthDate,
+            birthTime: parsed.birthTime || '12:00',
+            latitude: Number(parsed.latitude ?? parsed.lat) || 25.5941,
+            longitude: Number(parsed.longitude ?? parsed.lng) || 85.1376,
+            timezone: Number(parsed.timezone) || 5.5,
+            locationName: parsed.city || parsed.locationName || 'India'
+          });
+          setUsingDemo(false);
+        }
+      }
     } catch {}
   }, []);
 
