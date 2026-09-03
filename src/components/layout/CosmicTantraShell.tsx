@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import nextDynamic from 'next/dynamic';
 import GlobalHeader from './GlobalHeader';
 import PrimaryNavigation from './PrimaryNavigation';
 import Breadcrumbs from './Breadcrumbs';
@@ -9,6 +10,9 @@ import GlobalFooter from './GlobalFooter';
 import LanguageSelectorModal from './LanguageSelectorModal';
 import FloatingAIGuruAvatar from '@/components/consultation/FloatingAIGuruAvatar';
 import { getRouteConfig, ShellMode, FooterMode, BreadcrumbItem } from '@/lib/routeRegistry';
+import { persistActiveLocation } from '@/lib/location/activeLocation';
+
+const CitySelectorModal = nextDynamic(() => import('@/components/CitySelectorModal'), { ssr: false });
 
 interface CosmicTantraShellProps {
   children: React.ReactNode;
@@ -41,6 +45,7 @@ export default function CosmicTantraShell({
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [lang, setLang] = useState<string>('en');
   const [languageOpen, setLanguageOpen] = useState(false);
+  const [cityModalOpen, setCityModalOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -87,19 +92,24 @@ export default function CosmicTantraShell({
     window.dispatchEvent(new CustomEvent('cosmictantra:language-change', { detail: nextLang }));
   };
 
+  /** Selection flows through the canonical location resolver (existing stores only). */
+  const handleCitySelect = (city: { name: string; nameHi?: string; lat: number; lng: number; tz?: number; isGps?: boolean; id?: string }) => {
+    persistActiveLocation(city);
+  };
+
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-200 ${
       theme === 'dark' ? 'bg-[#06070B] text-[#FFFFFF]' : 'bg-[#FAF7F2] text-[#1C1917]'
     }`}>
-      {/* 5-Primary-Destination Navigation (Public Mode) or Global Header (Scholar/Presentation) */}
+      {/* Five-destination consumer navigation, or scholar/presentation header */}
       {activeShellMode === 'public' ? (
         <PrimaryNavigation
-          mode={activeShellMode}
+          mode="public"
           theme={theme}
           lang={lang}
-          currentCity={{ name: 'Varanasi', lat: 25.3176, lng: 82.9739 }}
           onThemeToggle={handleThemeToggle}
           onLangToggle={handleLangToggle}
+          onOpenCitySelector={() => setCityModalOpen(true)}
         />
       ) : (
         <GlobalHeader
@@ -121,8 +131,8 @@ export default function CosmicTantraShell({
         />
       )}
 
-      {/* Page Content Room */}
-      <main className="flex-1 w-full">
+      {/* Page Content Room — bottom padding reserves space for the mobile bottom nav */}
+      <main className="flex-1 w-full pb-20 lg:pb-0">
         {children}
       </main>
 
@@ -131,6 +141,15 @@ export default function CosmicTantraShell({
         currentLang={lang}
         onClose={() => setLanguageOpen(false)}
         onSelectLang={handleLanguageSelect}
+      />
+
+      <CitySelectorModal
+        isOpen={cityModalOpen}
+        onClose={() => setCityModalOpen(false)}
+        currentCity={undefined}
+        onSelectCity={handleCitySelect}
+        lang={lang}
+        theme={theme}
       />
 
       {/* FLOATING AI GURU CONCIERGE AVATAR */}

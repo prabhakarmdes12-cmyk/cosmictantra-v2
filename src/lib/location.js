@@ -248,14 +248,14 @@ export function resolveBirthPlace(query, options) {
 // Persist location helper
 const STORAGE_KEY = 'cosmictantra_current_location';
 export const LOCATION_CHANGE_EVENT = 'cosmictantra:location-change';
-
+/** DEPRECATED: DO NOT FALL BACK TO DEFAULT_CITY. Use `src/lib/location/activeLocation.ts`. */
 export function getPersistedLocation() {
-  if (typeof window === 'undefined') return DEFAULT_CITY;
+  if (typeof window === 'undefined') return null;
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) return JSON.parse(saved);
   } catch {}
-  return DEFAULT_CITY;
+  return null;
 }
 
 export function persistLocation(location) {

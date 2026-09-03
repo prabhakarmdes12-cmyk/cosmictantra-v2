@@ -1,461 +1,456 @@
 'use client';
 
 /**
- * PrimaryNavigation - CosmicTantra 2027 UI/UX
- * 
- * The 5 Primary Destinations as specified in UI_UX_DESIGN_DIRECTION_2027.md:
- * 1. Today - Panchanga, daily timing, auspicious muhurtas
- * 2. My Kundli - Narrative chart, planetary conditions, active dasha (with analytical tools embedded)
- * 3. Ask - Context-aware Kashi Sahayak assistant
- * 4. Consult - Verified Vedic pandits, human escalation
- * 5. Darshan & Puja - Live temple darshan, virtual offerings
- * 
- * Architectural Rule: D10, Ashtakavarga, Shadbala, and Ephemeris are 
- * ANALYTICAL VIEWS INSIDE My Kundli, never top-level navigation items.
+ * PrimaryNavigation — CosmicTantra five-destination primary + mobile bottom
+ * navigation.
+ *
+ * Sprint B.1 hardening rules applied here:
+ *   CT_UX_INV_001  Every href comes from `navigationModel` (validator-tested).
+ *   CT_UX_INV_002  No astrology facts in a presentation component — this file
+ *                  carries navigation copy only.
+ *   Location       Uses the canonical `useActiveLocation` resolver; when the
+ *                  location is unknown it shows "Set location" — never a fake
+ *                  city.
+ *   Accessibility  Keyboard navigable, visible focus, Escape, aria-expanded/
+ *                  haspopup, logical tab order, 44px+ touch targets.
+ *   Kashi context  Stamps `data-kashi-context-*` attributes consumed by the
+ *                  assistant contract (see src/lib/kashi/contextContract.ts).
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  Sun, 
-  Moon, 
-  Languages, 
-  MapPin, 
-  Search, 
-  ChevronDown, 
-  Compass,
-  Sparkles,
-  User,
-  Flame,
-  Menu,
-  Eye,
-  Layers,
-  BookOpen,
-  ShieldCheck,
-  Calendar,
-  X
+import {
+  Sun, Moon, Languages, MapPin, ChevronDown, Compass, Sparkles, User, Flame,
+  Calendar, BookOpen, Heart, Clock, Landmark, Telescope, ScrollText, Gem,
+  Layers, FileText, UserCircle, Users, HelpCircle,
 } from 'lucide-react';
 import { chitiSensory } from '@/lib/chitiAudio';
-import { SUPPORTED_LANGUAGES } from '@/lib/translations';
+import { SUPPORTED_LANGUAGES, TRANSLATIONS } from '@/lib/translations';
+import { useActiveLocation } from '@/lib/location/useActiveLocation';
+import { resolveKashiContext } from '@/lib/kashi/contextContract';
+import {
+  PRIMARY_DESTINATIONS,
+  MOBILE_BOTTOM_NAV_ITEMS,
+  resolvePrimaryDestination,
+  type PrimaryDestinationId,
+  type NavIconKey,
+  type NavigationChildLink,
+  type PrimaryDestination,
+} from '@/lib/navigation/navigationModel';
 import CosmicTantraLogo from '@/components/visual/CosmicTantraLogo';
 
-export type PrimaryDestination = 'TODAY' | 'MY_KUNDLI' | 'ASK' | 'CONSULT' | 'DARSHAN';
+type Dict = Record<string, string>;
+type LangDict = { navigation: Dict; context: Dict };
 
-interface NavItem {
-  id: PrimaryDestination;
-  label: string;
-  labelHi: string;
-  href: string;
-  icon: React.ReactNode;
-  description: string;
-  /** Analytical sub-tools that live INSIDE this destination */
-  analyticalTools?: Array<{
-    label: string;
-    labelHi: string;
-    href: string;
-    description: string;
-  }>;
-}
-
-// The 5 Primary Destinations - as specified in UI/UX Design Direction 2027
-const PRIMARY_DESTINATIONS: NavItem[] = [
-  {
-    id: 'TODAY',
-    label: 'Today',
-    labelHi: 'आज',
-    href: '/daily',
-    icon: <Sun className="w-5 h-5" />,
-    description: 'Panchanga, daily timing, auspicious muhurtas, sacred festivals',
-    analyticalTools: [
-      { label: 'Monthly Calendar', labelHi: 'मासिक कैलेंडर', href: '/calendar', description: 'Full 30-day Panchanga with Shubha Muhurats' },
-      { label: 'Family Panchang', labelHi: 'परिवार पञ्चाङ्ग', href: '/family-panchang', description: 'Synchronized family transits' },
-    ]
-  },
-  {
-    id: 'MY_KUNDLI',
-    label: 'My Kundli',
-    labelHi: 'मेरी कुण्डली',
-    href: '/dashboard',
-    icon: <Compass className="w-5 h-5" />,
-    description: 'Narrative chart summary, planetary conditions, active dasha',
-    analyticalTools: [
-      { label: 'D10 - Dasamsa', labelHi: 'दशमांश', href: '/kundli/d10', description: 'Career & profession analysis' },
-      { label: 'Ashtakavarga', labelHi: 'अष्टकवर्ग', href: '/kundli/ashtakavarga', description: 'Planetary strength matrix' },
-      { label: 'Shadbala', labelHi: 'षड्बल', href: '/kundli/shadbala', description: 'Six-fold planetary strength' },
-      { label: 'Ephemeris', labelHi: 'सूर्य सिद्धान्त', href: '/kundli/ephemeris', description: 'Raw astronomical coordinates' },
-    ]
-  },
-  {
-    id: 'ASK',
-    label: 'Ask',
-    labelHi: 'पूछें',
-    href: '/ask',
-    icon: <Sparkles className="w-5 h-5" />,
-    description: 'Context-aware Kashi Sahayak assistant, evidence retrieval',
-  },
-  {
-    id: 'CONSULT',
-    label: 'Consult',
-    labelHi: 'परामर्श',
-    href: '/ask',
-    icon: <User className="w-5 h-5" />,
-    description: 'Verified Vedic pandits, direct telephony handover, ScholarHandoverPacket',
-  },
-  {
-    id: 'DARSHAN',
-    label: 'Darshan & Puja',
-    labelHi: 'दर्शन व पूजा',
-    href: '/darshan',
-    icon: <Flame className="w-5 h-5" />,
-    description: 'Live temple darshan, virtual deep daan & offerings, authentic Vedic pujas',
-    analyticalTools: [
-      { label: 'Aarti & Stotra', labelHi: 'आरती व स्तोत्र', href: '/aarti-stotra', description: 'Sacred verses and recitations' },
-      { label: 'Upaya Studio', labelHi: 'उपाय विधा', href: '/upaya', description: 'Gemstones, Rudraksha, Yantras' },
-    ]
-  },
-];
+const ICONS: Record<NavIconKey, React.ComponentType<{ className?: string }>> = {
+  sun: Sun,
+  compass: Compass,
+  sparkles: Sparkles,
+  user: User,
+  flame: Flame,
+  calendar: Calendar,
+  library: BookOpen,
+  map: MapPin,
+  rings: Heart,
+  clock: Clock,
+  temple: Landmark,
+  observatory: Telescope,
+  scroll: ScrollText,
+  gem: Gem,
+  layers: Layers,
+  file: FileText,
+  profile: UserCircle,
+  moon: Moon,
+  languages: Languages,
+  question: HelpCircle,
+  users: Users,
+};
 
 interface PrimaryNavigationProps {
   mode?: 'public' | 'scholar';
   theme?: string;
   lang?: string;
-  currentCity?: { name: string; lat: number; lng: number; isGps?: boolean };
   onThemeToggle?: () => void;
   onLangToggle?: () => void;
   onOpenCitySelector?: () => void;
-  onOpenConsultation?: () => void;
 }
 
 export default function PrimaryNavigation({
   mode = 'public',
   theme = 'light',
   lang = 'en',
-  currentCity = { name: 'Varanasi', lat: 25.3176, lng: 82.9739 },
   onThemeToggle,
   onLangToggle,
   onOpenCitySelector,
-  onOpenConsultation,
 }: PrimaryNavigationProps) {
   const pathname = usePathname();
-  const [expandedDestination, setExpandedDestination] = useState<PrimaryDestination | null>(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const t: Dict = (TRANSLATIONS[lang] as LangDict)?.navigation || (TRANSLATIONS.en as LangDict).navigation;
+  const ctxT: Dict = (TRANSLATIONS[lang] as LangDict)?.context || (TRANSLATIONS.en as LangDict).context;
 
-  // Determine active destination based on current pathname
-  const activeDestination = useMemo(() => {
-    const path = pathname.toLowerCase();
-    
-    if (path.includes('/daily') || path.includes('/calendar') || path.includes('/family-panchang')) {
-      return 'TODAY';
-    }
-    if (path.includes('/dashboard') || path.includes('/report') || path.includes('/kundli/') || path.includes('/kundali-milan')) {
-      return 'MY_KUNDLI';
-    }
-    if (path.includes('/ask')) {
-      return 'ASK';
-    }
-    if (path.includes('/consult') || pathname.includes('/pandit')) {
-      return 'CONSULT';
-    }
-    if (path.includes('/darshan') || path.includes('/aarti') || path.includes('/store') || path.includes('/remedy') || path.includes('/upaya')) {
-      return 'DARSHAN';
-    }
-    return null;
+  const { location } = useActiveLocation();
+  const kashiContext = useMemo(
+    () => resolveKashiContext(pathname || '/', location),
+    [pathname, location],
+  );
+
+  const activeId = resolvePrimaryDestination(pathname || '/');
+
+  /** Which disclosure (explore menu / child flyout) is open. */
+  const [openMenu, setOpenMenu] = useState<PrimaryDestinationId | null>(null);
+  const [mobileExploreOpen, setMobileExploreOpen] = useState(false);
+  const navRef = useRef<HTMLElement | null>(null);
+  const triggerRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const firstLinkRef = useRef<HTMLAnchorElement | null>(null);
+
+  const closeAll = useCallback(() => {
+    setOpenMenu(null);
+    setMobileExploreOpen(false);
+  }, []);
+
+  /* Escape + outside click + route-change safety */
+  useEffect(() => {
+    if (!openMenu && !mobileExploreOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeAll();
+        (document.activeElement as HTMLElement | null)?.blur?.();
+      }
+    };
+    const onPointer = (e: PointerEvent) => {
+      const target = e.target as Node | null;
+      if (navRef.current && target && !navRef.current.contains(target)) closeAll();
+    };
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('pointerdown', onPointer);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('pointerdown', onPointer);
+    };
+  }, [openMenu, mobileExploreOpen, closeAll]);
+
+  useEffect(() => {
+    closeAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
-  const handleNavClick = (destination: NavItem) => {
-    chitiSensory.playTick();
-    
-    // If destination has analytical tools and we're already on that destination,
-    // toggle the expanded state instead of navigating
-    if (destination.analyticalTools && activeDestination === destination.id) {
-      setExpandedDestination(expandedDestination === destination.id ? null : destination.id);
-    } else {
-      setExpandedDestination(null);
-      if (typeof window !== 'undefined') {
-        window.location.href = destination.href;
-      }
+  /* Focus the first link of a newly opened disclosure */
+  useEffect(() => {
+    if (openMenu || mobileExploreOpen) {
+      requestAnimationFrame(() => firstLinkRef.current?.focus?.());
     }
+  }, [openMenu, mobileExploreOpen]);
+
+  const toggleDest = (dest: PrimaryDestination) => {
+    chitiSensory.playTick();
+    if (dest.isMenu) {
+      setMobileExploreOpen(false);
+      setOpenMenu((cur) => (cur === dest.id ? null : dest.id));
+      return;
+    }
+    // Non-menu destination: navigate via real router link semantics (Link),
+    // this handler only closes any open disclosure.
+    closeAll();
   };
 
-  const isActive = (destinationId: PrimaryDestination) => activeDestination === destinationId;
+  const isActive = (id: PrimaryDestinationId) => activeId === id;
 
-  // Scholar/Technical mode uses dark observatory styling
-  const isScholarMode = mode === 'scholar';
-  
-  // Daylight (Consumer) vs Observatory (Scholar) styling
-  const navBgClass = isScholarMode 
-    ? 'bg-[#06070B]/95 dark:bg-[#06070B]/95' 
-    : 'bg-[#FAF7F2]/95 dark:bg-[#06070B]/95';
-  
-  const textPrimaryClass = isScholarMode 
-    ? 'text-white dark:text-white' 
-    : 'text-[#1C1917] dark:text-white';
-  
-  const textSecondaryClass = isScholarMode 
-    ? 'text-[#9E988D] dark:text-[#9E988D]' 
-    : 'text-[#696256] dark:text-[#9E988D]';
-  
-  const activeIndicatorClass = isScholarMode 
-    ? 'bg-[#D4AF37] text-[#06070B]' 
-    : 'bg-[#8E6F1D] text-white dark:bg-[#D4AF37] dark:text-[#06070B]';
-  
-  const borderColorClass = isScholarMode 
-    ? 'border-[#D4AF37]/35' 
-    : 'border-[#8E6F1D]/25 dark:border-[#D4AF37]/35';
+  const destinationLabel = (d: { labelKey: string; labelHiKey: string }) =>
+    lang === 'hi' ? t[d.labelHiKey] : t[d.labelKey];
 
-  // Mobile: Show a simple tab bar with the 5 destinations
-  if (mobileMenuOpen) {
-    return (
-      <div className={`fixed inset-0 z-[99998] ${navBgClass} backdrop-blur-2xl overflow-y-auto`}>
-        <div className="max-w-lg mx-auto p-4 pt-20">
-          {/* Close button */}
-          <button
-            onClick={() => { chitiSensory.playTick(); setMobileMenuOpen(false); }}
-            className={`absolute top-4 right-4 p-2 rounded-xl ${textSecondaryClass} hover:${textPrimaryClass}`}
-          >
-            <X className="w-6 h-6" />
-          </button>
+  const childLabel = (c: NavigationChildLink) => (lang === 'hi' ? t[c.labelHiKey] : t[c.labelKey]);
+  const childDescription = (c: NavigationChildLink) => t[c.descriptionKey];
 
-          {/* Primary Destinations */}
-          <div className="space-y-2">
-            <h2 className={`text-xs font-mono-data font-bold uppercase tracking-wider ${textSecondaryClass} mb-4`}>
-              5 Primary Destinations
-            </h2>
-            {PRIMARY_DESTINATIONS.map((dest) => (
-              <div key={dest.id}>
+  const languageLabel =
+    SUPPORTED_LANGUAGES.find((l) => l.code === lang)?.label || lang.toUpperCase();
+
+  const isDark = theme === 'dark';
+
+  return (
+    <>
+      {/* ================= DESKTOP / TABLET TOP BAR ================= */}
+      <nav
+        ref={navRef}
+        data-testid="primary-nav"
+        aria-label={t.primaryNav ?? 'Primary navigation'}
+        data-kashi-context-domain={kashiContext.domain}
+        data-kashi-location-source={location.source}
+        data-kashi-suggested-prompt={kashiContext.suggestedPrompts[0] ? ctxT[kashiContext.suggestedPrompts[0].i18nKey] ?? '' : ''}
+        className={`relative z-40 border-b ${
+          isDark ? 'bg-[#06070B]/95 border-[#D4AF37]/25 text-[#F5F2EB]' : 'bg-[#FAF7F2]/95 border-[#8E6F1D]/25 text-[#1C1917]'
+        } backdrop-blur-2xl transition-colors`}
+      >
+        <div className="max-w-7xl mx-auto px-3 sm:px-4">
+          <div className="flex items-center justify-between gap-2 h-16">
+
+            {/* LEFT — brand + location */}
+            <div className="flex items-center gap-2 shrink-0 min-w-0">
+              <Link href="/" aria-label="CosmicTantra home" onClick={() => chitiSensory.playTick()} className="shrink-0">
+                <CosmicTantraLogo size="sm" />
+              </Link>
+
+              {onOpenCitySelector && (
                 <button
-                  onClick={() => handleNavClick(dest)}
-                  className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${
-                    isActive(dest.id) 
-                      ? `${activeIndicatorClass}` 
-                      : 'bg-white/5 hover:bg-white/10 border border-white/10'
+                  type="button"
+                  data-testid="primary-nav-location"
+                  data-location-status={location.status}
+                  onClick={() => { chitiSensory.playTick(); onOpenCitySelector(); }}
+                  aria-label={location.status === 'KNOWN' ? t.changeLocation : t.setLocation}
+                  title={location.status === 'KNOWN' ? t.changeLocation : t.setLocation}
+                  className={`inline-flex items-center gap-1.5 min-h-11 px-2 sm:px-3 rounded-xl border text-xs font-mono-data font-bold transition-all cursor-pointer ${
+                    location.status === 'KNOWN'
+                      ? isDark
+                        ? 'border-[#D4AF37]/30 text-[#F0C968] hover:bg-white/5'
+                        : 'border-[#8E6F1D]/30 text-[#8E6F1D] hover:bg-black/5'
+                      : isDark
+                        ? 'border-amber-500/40 text-amber-300 hover:bg-amber-500/10'
+                        : 'border-amber-500/40 text-amber-700 hover:bg-amber-500/10'
                   }`}
                 >
-                  <span className={isActive(dest.id) ? '' : 'text-amber-400'}>{dest.icon}</span>
-                  <div className="flex-1 text-left">
-                    <div className={`font-editorial font-bold ${isActive(dest.id) ? '' : textPrimaryClass}`}>
-                      {lang === 'hi' ? dest.labelHi : dest.label}
-                    </div>
-                    <div className={`text-xs ${textSecondaryClass}`}>
-                      {dest.description}
-                    </div>
-                  </div>
-                  {dest.analyticalTools && (
-                    <ChevronDown className={`w-5 h-5 ${textSecondaryClass} transition-transform ${
-                      expandedDestination === dest.id ? 'rotate-180' : ''
-                    }`} />
-                  )}
+                  <MapPin className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                  <span className="hidden sm:inline truncate max-w-[9rem]">
+                    {location.status === 'KNOWN' ? location.name : t.setLocation}
+                  </span>
+                  <span className="sm:hidden sr-only">
+                    {location.status === 'KNOWN' ? location.name : t.setLocation}
+                  </span>
                 </button>
+              )}
+            </div>
 
-                {/* Analytical Tools Dropdown */}
-                {dest.analyticalTools && expandedDestination === dest.id && (
-                  <div className="mt-2 ml-4 pl-4 border-l-2 border-amber-500/30 space-y-1">
-                    {dest.analyticalTools.map((tool) => (
-                      <Link
-                        key={tool.href}
-                        href={tool.href}
-                        className={`flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all`}
+            {/* CENTER — five destinations */}
+            <div className="flex items-center justify-center gap-0.5 md:gap-1 min-w-0" role="list">
+              {PRIMARY_DESTINATIONS.map((dest) => {
+                const Icon = ICONS[dest.icon];
+                const active = isActive(dest.id);
+                const expanded = openMenu === dest.id;
+                return (
+                  <div key={dest.id} role="listitem" className="relative shrink-0">
+                    {dest.isMenu || dest.href === null ? (
+                      <button
+                        ref={(el) => { triggerRefs.current[dest.id] = el; }}
+                        type="button"
+                        data-testid={`primary-nav-destination-${dest.id}`}
+                        data-active={active ? 'true' : 'false'}
+                        aria-haspopup="menu"
+                        aria-expanded={expanded}
+                        aria-controls={`nav-menu-${dest.id}`}
+                        onClick={() => toggleDest(dest)}
+                        className={`inline-flex items-center gap-1.5 min-h-11 px-2.5 md:px-3 lg:px-4 rounded-xl text-sm font-mono-data font-bold transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 ${
+                          active
+                            ? 'bg-[#8E6F1D] text-white dark:bg-[#D4AF37] dark:text-[#06070B]'
+                            : 'hover:bg-black/5 dark:hover:bg-white/10'
+                        }`}
                       >
-                        <Layers className="w-4 h-4 text-amber-400/70" />
-                        <div>
-                          <div className={`text-sm font-medium ${textPrimaryClass}`}>
-                            {lang === 'hi' ? tool.labelHi : tool.label}
-                          </div>
-                          <div className={`text-xs ${textSecondaryClass}`}>{tool.description}</div>
-                        </div>
+                        <Icon className={`w-4 h-4 ${active ? '' : 'text-amber-500'}`} aria-hidden="true" />
+                        <span className="hidden xl:inline">{destinationLabel(dest)}</span>
+                        <span className="xl:hidden">{t[dest.labelHiKey === 'exploreHi' ? 'exploreHi' : dest.labelHiKey]}</span>
+                        {dest.isMenu && (
+                          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} aria-hidden="true" />
+                        )}
+                      </button>
+                    ) : (
+                      <Link
+                        href={dest.href}
+                        data-testid={`primary-nav-destination-${dest.id}`}
+                        data-active={active ? 'true' : 'false'}
+                        aria-current={active ? 'page' : undefined}
+                        onClick={() => { chitiSensory.playTick(); closeAll(); }}
+                        className={`inline-flex items-center gap-1.5 min-h-11 px-2.5 md:px-3 lg:px-4 rounded-xl text-sm font-mono-data font-bold transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 ${
+                          active
+                            ? 'bg-[#8E6F1D] text-white dark:bg-[#D4AF37] dark:text-[#06070B]'
+                            : 'hover:bg-black/5 dark:hover:bg-white/10'
+                        }`}
+                      >
+                        <Icon className={`w-4 h-4 ${active ? '' : 'text-amber-500'}`} aria-hidden="true" />
+                        <span className="hidden xl:inline">{destinationLabel(dest)}</span>
+                        <span className="xl:hidden">{t[dest.labelHiKey]}</span>
                       </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+                    )}
 
-          {/* Quick Actions */}
-          <div className="mt-8 pt-6 border-t border-white/10">
-            <div className="flex items-center justify-between gap-4">
-              <span className={`text-xs ${textSecondaryClass}`}>
-                Vedic Precision: Chitra Paksha (Lahiri)
-              </span>
-              <Link
-                href="/ask"
-                onClick={() => { chitiSensory.playTick(); setMobileMenuOpen(false); }}
-                className="px-4 py-2 rounded-xl bg-[#8E6F1D] hover:bg-[#D4AF37] text-white text-sm font-bold transition-all"
-              >
-                Ask Scholar →
-              </Link>
+                    {/* Desktop disclosure (Explore menu / destination children) */}
+                    {expanded && (
+                      <div
+                        id={`nav-menu-${dest.id}`}
+                        role="menu"
+                        data-testid={`primary-nav-menu-${dest.id}`}
+                        className={`absolute left-1/2 -translate-x-1/2 top-full mt-2 w-72 max-h-[70vh] overflow-y-auto rounded-2xl border shadow-2xl p-2 ${
+                          isDark
+                            ? 'bg-[#0E101D] border-[#D4AF37]/30 text-[#F5F2EB]'
+                            : 'bg-white border-[#8E6F1D]/30 text-[#1C1917]'
+                        }`}
+                      >
+                        <div className="px-3 py-2 text-[10px] font-mono-data font-bold uppercase tracking-wider opacity-60">
+                          {t.fiveDestinations}
+                        </div>
+                        {dest.children.length === 0 && (
+                          <div className="px-3 py-3 text-sm opacity-70">—</div>
+                        )}
+                        {dest.children.map((child, i) => {
+                          const ChildIcon = ICONS[child.icon];
+                          return (
+                            <Link
+                              key={child.id}
+                              ref={i === 0 ? firstLinkRef : undefined}
+                              href={child.href}
+                              role="menuitem"
+                              data-testid={`primary-nav-child-${child.id}`}
+                              onClick={() => { chitiSensory.playTick(); closeAll(); }}
+                              className="flex items-start gap-3 p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500"
+                            >
+                              <ChildIcon className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" aria-hidden="true" />
+                              <span className="min-w-0">
+                                <span className="block text-sm font-medium">{childLabel(child)}</span>
+                                <span className="block text-xs opacity-60 mt-0.5">{childDescription(child)}</span>
+                              </span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* RIGHT — controls */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              {onLangToggle && (
+                <button
+                  type="button"
+                  data-testid="primary-nav-language"
+                  onClick={() => { chitiSensory.playTick(); onLangToggle(); }}
+                  aria-label="Language"
+                  className="hidden lg:inline-flex items-center gap-1.5 min-h-11 px-3 rounded-xl border text-xs font-mono-data font-bold transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 border-[#8E6F1D]/25 dark:border-[#D4AF37]/25 hover:bg-black/5 dark:hover:bg-white/10"
+                >
+                  <Languages className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span className="max-w-[4.5rem] truncate">{languageLabel}</span>
+                </button>
+              )}
+              {onThemeToggle && (
+                <button
+                  type="button"
+                  data-testid="primary-nav-theme"
+                  onClick={onThemeToggle}
+                  aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+                  className="w-11 h-11 inline-flex items-center justify-center rounded-xl border border-[#8E6F1D]/25 dark:border-[#D4AF37]/25 hover:bg-black/5 dark:hover:bg-white/10 transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500"
+                >
+                  {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-[#8E6F1D]" />}
+                </button>
+              )}
             </div>
           </div>
         </div>
-      </div>
-    );
-  }
+      </nav>
 
-  // Desktop: 5 Primary Destinations as horizontal tabs
-  return (
-    <nav className={`${navBgClass} backdrop-blur-2xl border-b ${borderColorClass} transition-colors`}>
-      <div className="max-w-7xl mx-auto px-4">
-        {/* Top Row: Logo + Controls + 5 Destinations */}
-        <div className="flex items-center justify-between h-16 gap-4">
-          
-          {/* LEFT: Minimal Controls */}
-          <div className="flex items-center gap-2 shrink-0">
-            {/* Language Selector */}
-            {onLangToggle && (
-              <button
-                onClick={onLangToggle}
-                className={`hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border ${borderColorClass} ${
-                  isScholarMode ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'
-                } ${textSecondaryClass} hover:${textPrimaryClass} text-xs font-mono-data font-bold transition-all cursor-pointer`}
-              >
-                <Languages className="w-3.5 h-3.5" />
-                <span>{SUPPORTED_LANGUAGES.find(l => l.code === lang)?.label || 'भाषा'}</span>
-              </button>
-            )}
-
-            {/* Theme Toggle */}
-            {onThemeToggle && (
-              <button
-                onClick={onThemeToggle}
-                className={`flex items-center justify-center w-10 h-10 rounded-xl border ${borderColorClass} ${
-                  isScholarMode ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'
-                } ${textPrimaryClass} transition-all cursor-pointer`}
-              >
-                {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-[#8E6F1D]" />}
-              </button>
-            )}
-
-            {/* Location Pill */}
-            {onOpenCitySelector && (
-              <button
-                onClick={onOpenCitySelector}
-                className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border ${borderColorClass} ${
-                  currentCity.isGps 
-                    ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-700 dark:text-emerald-400' 
-                    : isScholarMode ? 'bg-white/5' : 'bg-black/5'
-                } ${textSecondaryClass} text-xs font-mono-data font-bold transition-all cursor-pointer`}
-              >
-                <MapPin className="w-3.5 h-3.5" />
-                <span>{currentCity.name}</span>
-              </button>
-            )}
-          </div>
-
-          {/* CENTER: 5 Primary Destinations */}
-          <div className="flex-1 flex items-center justify-center gap-1">
-            {PRIMARY_DESTINATIONS.map((dest) => (
-              <div key={dest.id} className="relative">
+      {/* ================= MOBILE BOTTOM NAVIGATION ================= */}
+      <nav
+        aria-label={t.bottomNav ?? 'Bottom navigation'}
+        data-testid="primary-nav-mobile"
+        className="ct-bottom-nav lg:hidden fixed bottom-0 inset-x-0 z-50 border-t border-[#8E6F1D]/25 dark:border-[#D4AF37]/25 bg-[#FAF7F2]/98 dark:bg-[#06070B]/98 backdrop-blur-2xl pb-[env(safe-area-inset-bottom)]"
+      >
+        <div className="mx-auto max-w-xl grid grid-cols-5 items-end" style={{ minHeight: 64 }}>
+          {MOBILE_BOTTOM_NAV_ITEMS.map((item) => {
+            const Icon = ICONS[item.icon];
+            const active = isActive(item.id);
+            const isExplore = item.id === 'EXPLORE';
+            const label = lang === 'hi' ? t[item.labelHiKey] : t[item.labelKey];
+            if (isExplore) {
+              return (
                 <button
-                  onClick={() => handleNavClick(dest)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
-                    isActive(dest.id)
-                      ? `${activeIndicatorClass}`
-                      : `${textSecondaryClass} hover:${textPrimaryClass} hover:bg-white/5 dark:hover:bg-white/10`
-                  }`}
+                  key={item.id}
+                  type="button"
+                  data-testid={`bottom-nav-${item.id}`}
+                  data-active={active ? 'true' : 'false'}
+                  aria-haspopup="menu"
+                  aria-expanded={mobileExploreOpen}
+                  aria-controls="primary-nav-mobile-explore"
+                  onClick={() => { chitiSensory.playTick(); setMobileExploreOpen((v) => !v); }}
+                  className="flex flex-col items-center justify-center gap-1 min-h-14 py-1.5 text-[10px] font-mono-data font-bold text-[#696256] dark:text-[#9E988D] hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
                 >
-                  <span className={isActive(dest.id) ? '' : 'text-amber-400'}>{dest.icon}</span>
-                  <span className="hidden xl:inline font-mono-data text-sm font-bold">
-                    {lang === 'hi' ? dest.labelHi : dest.label}
-                  </span>
-                  <span className="xl:hidden font-mono-data text-sm font-bold">
-                    {dest.labelHi}
-                  </span>
-                  {dest.analyticalTools && (
-                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${
-                      expandedDestination === dest.id ? 'rotate-180' : ''
-                    }`} />
-                  )}
+                  <Icon className="w-5 h-5 text-amber-500" aria-hidden="true" />
+                  <span>{label}</span>
                 </button>
+              );
+            }
+            if (item.isAsk) {
+              return (
+                <Link
+                  key={item.id}
+                  href={item.href!}
+                  data-testid={`bottom-nav-${item.id}`}
+                  data-active={active ? 'true' : 'false'}
+                  aria-label={t.askCenter}
+                  onClick={() => chitiSensory.playTick()}
+                  className="flex flex-col items-center justify-center gap-0.5 min-h-14 py-1 text-[10px] font-mono-data font-bold text-[#8E6F1D] dark:text-[#F0C968]"
+                >
+                  <span className="w-12 h-12 -mt-4 rounded-full bg-gradient-to-br from-[#8E6F1D] to-[#D4AF37] text-white shadow-lg flex items-center justify-center">
+                    <Icon className="w-6 h-6" aria-hidden="true" />
+                  </span>
+                  <span>{label}</span>
+                </Link>
+              );
+            }
+            return (
+              <Link
+                key={item.id}
+                href={item.href!}
+                data-testid={`bottom-nav-${item.id}`}
+                data-active={active ? 'true' : 'false'}
+                aria-current={active ? 'page' : undefined}
+                onClick={() => chitiSensory.playTick()}
+                className={`flex flex-col items-center justify-center gap-1 min-h-14 py-1.5 text-[10px] font-mono-data font-bold transition-colors ${
+                  active
+                    ? 'text-[#8E6F1D] dark:text-[#F0C968] bg-black/5 dark:bg-white/5'
+                    : 'text-[#696256] dark:text-[#9E988D]'
+                }`}
+              >
+                <Icon className="w-5 h-5" aria-hidden="true" />
+                <span>{label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
 
-                {/* Analytical Tools Dropdown */}
-                {dest.analyticalTools && expandedDestination === dest.id && (
-                  <div className={`absolute top-full left-1/2 -translate-x-1/2 mt-2 w-72 rounded-2xl ${
-                    isScholarMode 
-                      ? 'bg-[#0E101D] border border-[#D4AF37]/30' 
-                      : 'bg-white dark:bg-[#0E101D] border border-[#8E6F1D]/30 shadow-xl'
-                  } shadow-xl overflow-hidden z-50`}>
-                    <div className={`p-3 border-b ${isScholarMode ? 'border-white/10' : 'border-black/10 dark:border-white/10'}`}>
-                      <span className={`text-xs font-mono-data font-bold ${textSecondaryClass}`}>
-                        Analytical Tools inside {dest.labelHi}
-                      </span>
-                    </div>
-                    <div className="p-2 space-y-1">
-                      {dest.analyticalTools.map((tool) => (
-                        <Link
-                          key={tool.href}
-                          href={tool.href}
-                          onClick={() => { chitiSensory.playTick(); setExpandedDestination(null); }}
-                          className={`flex items-start gap-3 p-3 rounded-xl ${
-                            isScholarMode 
-                              ? 'hover:bg-white/10' 
-                              : 'hover:bg-[#8E6F1D]/10 dark:hover:bg-white/10'
-                          } transition-all group`}
-                        >
-                          <Layers className="w-4 h-4 text-amber-400/70 mt-0.5 shrink-0" />
-                          <div>
-                            <div className={`text-sm font-medium ${textPrimaryClass} group-hover:text-amber-400 transition-colors`}>
-                              {lang === 'hi' ? tool.labelHi : tool.label}
-                            </div>
-                            <div className={`text-xs ${textSecondaryClass}`}>{tool.description}</div>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* RIGHT: Actions */}
-          <div className="flex items-center gap-2 shrink-0">
-            {/* Quick Kundali Milan */}
-            <Link
-              href="/kundali-milan"
-              onClick={() => chitiSensory.playTick()}
-              className={`hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl ${
-                isScholarMode ? 'bg-amber-500/20' : 'bg-amber-500/10'
-              } ${isScholarMode ? 'text-amber-300' : 'text-[#8E6F1D]'} text-xs font-mono-data font-bold border ${borderColorClass} hover:opacity-80 transition-all`}
-            >
-              <span>💍</span>
-              <span>{lang === 'hi' ? 'कुण्डली मिलान' : 'Kundali Milan'}</span>
-            </Link>
-
-            {/* Quick Consult CTA */}
-            <Link
-              href="/ask"
-              onClick={() => chitiSensory.playTick()}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl ${
-                isScholarMode 
-                  ? 'bg-[#D4AF37] hover:bg-[#E5C378] text-[#06070B]' 
-                  : 'bg-[#8E6F1D] hover:bg-[#A88424] text-white'
-              } font-mono-data font-bold text-sm shadow-md hover:shadow-lg transition-all`}
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>{lang === 'hi' ? 'परामर्श' : 'Consult'}</span>
-            </Link>
-
-            {/* Mobile Menu Toggle */}
-            <button
-              onClick={() => { chitiSensory.playTick(); setMobileMenuOpen(true); }}
-              className={`lg:hidden flex items-center justify-center w-10 h-10 rounded-xl border ${borderColorClass} ${
-                isScholarMode ? 'bg-white/5' : 'bg-black/5'
-              } ${textPrimaryClass} transition-all cursor-pointer`}
-            >
-              <Menu className="w-5 h-5" />
-            </button>
+      {/* ================= MOBILE EXPLORE SHEET ================= */}
+      {mobileExploreOpen && (
+        <div
+          id="primary-nav-mobile-explore"
+          role="dialog"
+          aria-modal="false"
+          aria-label={t.explore}
+          data-testid="primary-nav-explore-sheet"
+          className="fixed inset-x-0 bottom-[calc(64px+env(safe-area-inset-bottom))] z-40 lg:hidden border-t border-[#8E6F1D]/25 dark:border-[#D4AF37]/25 bg-[#FAF7F2]/98 dark:bg-[#06070B]/98 backdrop-blur-2xl shadow-2xl max-h-[60vh] overflow-y-auto"
+        >
+          <div className="mx-auto max-w-xl px-4 py-3">
+            <div className="text-[10px] font-mono-data font-bold uppercase tracking-wider opacity-60 mb-2">
+              {t.explore} · {t.fiveDestinations}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+              {PRIMARY_DESTINATIONS.find((d) => d.id === 'EXPLORE')?.children.map((child, i) => {
+                const ChildIcon = ICONS[child.icon];
+                return (
+                  <Link
+                    key={child.id}
+                    ref={i === 0 ? firstLinkRef : undefined}
+                    href={child.href}
+                    data-testid={`explore-sheet-${child.id}`}
+                    onClick={() => { chitiSensory.playTick(); closeAll(); }}
+                    className="flex items-start gap-3 p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition-all"
+                  >
+                    <ChildIcon className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" aria-hidden="true" />
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium">{childLabel(child)}</span>
+                      <span className="block text-[11px] opacity-60 mt-0.5">{childDescription(child)}</span>
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* Click outside to close dropdown */}
-      {expandedDestination && (
-        <div 
-          className="fixed inset-0 z-40" 
-          onClick={() => setExpandedDestination(null)}
-        />
       )}
-    </nav>
+    </>
   );
 }

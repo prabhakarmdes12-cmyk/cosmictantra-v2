@@ -20,7 +20,8 @@ import FestivalStrip from '@/components/FestivalStrip';
 import GlobalFooter from '@/components/layout/GlobalFooter';
 import FloatingAIGuruAvatar from '@/components/consultation/FloatingAIGuruAvatar';
 
-import { getPersistedLocation, LOCATION_CHANGE_EVENT, LocationAnchor } from '@/lib/location';
+import { LOCATION_CHANGE_EVENT, LocationAnchor } from '@/lib/location';
+import { resolveActiveLocationFromBrowser, persistActiveLocation, ACTIVE_CITY_CHANGE_EVENT } from '@/lib/location/activeLocation';
 // Dynamic Load for Modals
 const CitySelectorModal = nextDynamic(() => import('@/components/CitySelectorModal'), { ssr: false });
 
@@ -28,7 +29,9 @@ const CitySelectorModal = nextDynamic(() => import('@/components/CitySelectorMod
 export const dynamic = 'force-dynamic';
 
 export default function AppLandingPage() {
-  const [currentCity, setCurrentCity] = useState<any>(DEFAULT_CITY);
+  // Truthful location: null until the canonical resolver finds the user's
+  // location; the header shows "Set location" when nothing is known.
+  const [currentCity, setCurrentCity] = useState<any>(null);
   // Initialize with a computed value; also refreshed client-side via useEffect
   const [panchangData, setPanchangData] = useState<any>(() => calculatePanchang(new Date(), DEFAULT_CITY));
   const [kundaliData, setKundaliData] = useState<any>(null);
@@ -56,10 +59,13 @@ export default function AppLandingPage() {
       if (savedLang) {
         setLang(savedLang);
       }
-      const savedLoc = getPersistedLocation();
-      if (savedLoc && savedLoc.lat && savedLoc.lng) {
-        setCurrentCity(savedLoc);
-      }
+      // Canonical resolver: profile → active city → GPS(granted) → persisted.
+      // Never invents a city when nothing is known.
+      resolveActiveLocationFromBrowser().then((loc) => {
+        if (loc.status === 'KNOWN' && loc.lat !== null && loc.lng !== null) {
+          setCurrentCity(loc);
+        }
+      });
       const savedProfile = localStorage.getItem('cosmictantra_active_kundli');
       if (savedProfile) {
         const parsed = JSON.parse(savedProfile);
@@ -79,13 +85,21 @@ export default function AppLandingPage() {
     } catch {}
 
     const handleLocChange = (e: any) => {
-      if (e?.detail) {
-        setCurrentCity(e.detail);
+      // Both legacy event shapes: underscore event wraps `detail.city`, hyphen
+      // event carries the location directly.
+      const detail = e?.detail;
+      const city = detail?.city ?? detail;
+      if (city && city.name && Number.isFinite(Number(city.lat)) && Number.isFinite(Number(city.lng ?? city.lon))) {
+        setCurrentCity(city);
       }
     };
 
     window.addEventListener(LOCATION_CHANGE_EVENT, handleLocChange);
-    return () => window.removeEventListener(LOCATION_CHANGE_EVENT, handleLocChange);
+    window.addEventListener(ACTIVE_CITY_CHANGE_EVENT, handleLocChange);
+    return () => {
+      window.removeEventListener(LOCATION_CHANGE_EVENT, handleLocChange);
+      window.removeEventListener(ACTIVE_CITY_CHANGE_EVENT, handleLocChange);
+    };
   }, []);
 
   // Sync theme class to root html
@@ -257,7 +271,10 @@ export default function AppLandingPage() {
         isOpen={isCityModalOpen}
         onClose={() => setIsCityModalOpen(false)}
         currentCity={currentCity}
-        onSelectCity={(city: any) => setCurrentCity(city)}
+        onSelectCity={(city: any) => {
+          persistActiveLocation(city);
+          setCurrentCity(city);
+        }}
         lang={lang}
         theme={theme}
       />

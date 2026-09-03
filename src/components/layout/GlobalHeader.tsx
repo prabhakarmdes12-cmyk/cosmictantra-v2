@@ -18,7 +18,8 @@ interface GlobalHeaderProps {
   mode?: ShellMode;
   theme?: string;
   lang?: string;
-  currentCity?: { name: string; lat: number; lng: number };
+  /** Canonical active location (see src/lib/location/activeLocation.ts). null/undefined = UNKNOWN. */
+  currentCity?: { name: string; lat: number; lng: number; isGps?: boolean } | null;
   onThemeToggle?: () => void;
   onLangToggle?: () => void;
   onOpenCitySelector?: () => void;
@@ -33,7 +34,7 @@ export default function GlobalHeader({
   mode = 'public',
   theme = 'light',
   lang = 'en',
-  currentCity = { name: 'Dhanbad', lat: 23.7957, lng: 86.4304 },
+  currentCity = null,
   onThemeToggle,
   onLangToggle,
   onOpenCitySelector,
@@ -186,26 +187,33 @@ export default function GlobalHeader({
               </button>
             )}
 
-            {/* Location City Pill */}
+            {/* Location City Pill — truthful: unknown shows "Set location", never a fake city */}
             {onOpenCitySelector && (
               <button
                 onClick={onOpenCitySelector}
                 className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border ${
                   (currentCity as any)?.isGps
                     ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                    : 'border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 text-[#8E6F1D] dark:text-[#F0C968]'
+                    : currentCity
+                      ? 'border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 text-[#8E6F1D] dark:text-[#F0C968]'
+                      : 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300'
                 } hover:bg-black/10 dark:hover:bg-white/10 text-xs font-mono-data font-bold transition-all cursor-pointer shadow-xs active:scale-95`}
                 title="Select Observing Location / GPS"
               >
                 {(currentCity as any)?.isGps ? (
                   <span className="flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>GPS: {currentCity.name}</span>
+                    <span>GPS: {(currentCity as any)?.name}</span>
                   </span>
-                ) : (
+                ) : currentCity ? (
                   <>
                     <MapPin className="w-3.5 h-3.5 text-[#A6461D] dark:text-[#E2825B]" />
                     <span>{currentCity.name}</span>
+                  </>
+                ) : (
+                  <>
+                    <MapPin className="w-3.5 h-3.5" />
+                    <span>{lang === 'hi' ? 'स्थान सेट करें' : 'Set location'}</span>
                   </>
                 )}
               </button>
@@ -263,6 +271,7 @@ export default function GlobalHeader({
       {/* FULL SCREEN DESCRIPTIVE MEGA MENU MODAL */}
       <FullMegaMenuModal
         isOpen={megaMenuOpen}
+        lang={lang}
         onClose={() => setMegaMenuOpen(false)}
       />
     </>

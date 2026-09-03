@@ -356,3 +356,26 @@ html.light .observatory-varanasi-bg {
     stroke: #5B4636 !important;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Sprint B.1 — mobile bottom navigation coexistence                    */
+/* ------------------------------------------------------------------ */
+
+/* Lift the Kashi Sahayak FAB and chat drawer above the mobile bottom nav
+   (< lg) without redesigning the assistant itself. */
+@media (max-width: 1023.98px) {
+  .ct-avatar-root {
+    bottom: calc(88px + env(safe-area-inset-bottom)) !important;
+  }
+  .ct-kashi-panel {
+    bottom: calc(96px + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+/* Visible focus for keyboard users on nav controls (does not rely on colour
+   alone for state; active destinations additionally use a filled chip). */
+:where(a, button, input, [role='menuitem']):focus-visible {
+  outline: 2px solid #D4AF37;
+  outline-offset: 2px;
+  border-radius: 8px;
+}

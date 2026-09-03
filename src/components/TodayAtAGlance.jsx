@@ -164,7 +164,9 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
             </h2>
             <p className="text-xs sm:text-sm text-[#4A443B] dark:text-[#C4BEB3] font-mono-data mt-1.5">
               {t.subheading} <span className="text-[#181512] dark:text-[#F5F2EB] font-bold">
-                {isHi ? (currentCity.nameHi || currentCity.name) : currentCity.name}, {currentCity.state} ({isHi ? toHindiDigits(currentCity.lat.toFixed(2)) : currentCity.lat.toFixed(2)}°N, {isHi ? toHindiDigits(currentCity.lng.toFixed(2)) : currentCity.lng.toFixed(2)}°E)
+                {currentCity
+                  ? `${isHi ? (currentCity.nameHi || currentCity.name) : currentCity.name}, ${currentCity.state || ''} (${isHi ? toHindiDigits(Number(currentCity.lat).toFixed(2)) : Number(currentCity.lat).toFixed(2)}°N, ${isHi ? toHindiDigits(Number(currentCity.lng).toFixed(2)) : Number(currentCity.lng).toFixed(2)}°E)`
+                  : (isHi ? 'स्थान सेट करें' : 'Set location')}
               </span>
             </p>
           </div>

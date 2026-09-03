@@ -6,7 +6,8 @@ import { chitiSensory } from '@/lib/chitiAudio';
 
 interface CosmicNowDialProps {
   panchangData: any;
-  currentCity: { name: string; lat: number; lng: number; tz: number };
+  /** null/undefined = location unknown. The dial must show "Set location", never a fake city. */
+  currentCity?: { name: string; lat: number; lng: number; tz: number; isGps?: boolean } | null;
   onOpenCitySelector: () => void;
   lang?: string;
 }
@@ -116,6 +117,42 @@ export default function CosmicNowDial({
   }, []);
 
   if (!panchangData) return null;
+
+  // Truthful location gate: never present a panchang computed for a city the
+  // user did not choose. Ask for the location instead.
+  if (!currentCity) {
+    return (
+      <div className="relative rounded-3xl bg-[#FAF7F2]/95 dark:bg-[#0A0C14]/95 backdrop-blur-xl border border-[#8E6F1D]/30 dark:border-[#D4AF37]/45 p-5 sm:p-7 shadow-2xl dark:shadow-[0_0_50px_rgba(212,175,55,0.14)] select-none">
+        <div className="absolute inset-1.5 rounded-[22px] border border-[#8E6F1D]/15 dark:border-[#D4AF37]/20 pointer-events-none" />
+        <div className="relative z-10">
+          <div className="font-editorial text-sm sm:text-base font-bold tracking-wide flex items-center gap-1.5">
+            <span>{isHi ? 'प्रत्यक्ष खगोल चक्र' : 'COSMIC NOW'}</span>
+            <span className="text-[10px] font-mono-data text-[#8E6F1D] dark:text-[#D4AF37] font-semibold">
+              {isHi ? 'वेध' : 'DIAL'}
+            </span>
+          </div>
+          <div className="mt-4 p-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 text-center">
+            <p className="text-sm font-mono-data font-bold text-amber-700 dark:text-amber-300">
+              {isHi ? 'स्थान सेट करें' : 'Set location'}
+            </p>
+            <p className="mt-1 text-xs text-[#696256] dark:text-[#9E988D]">
+              {isHi
+                ? 'अपना स्थान चुनें ताकि पञ्चाङ्ग सही गणना हो सके।'
+                : 'Choose your location so the Panchang can be calculated for you.'}
+            </p>
+            <button
+              type="button"
+              onClick={() => { chitiSensory.playTick(); onOpenCitySelector(); }}
+              className="mt-3 inline-flex items-center gap-1.5 min-h-11 px-4 rounded-xl bg-[#8E6F1D] hover:bg-[#A88424] text-white text-xs font-mono-data font-bold cursor-pointer"
+            >
+              <MapPin className="w-3.5 h-3.5" />
+              {isHi ? 'स्थान चुनें' : 'Choose location'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Astronomical sunrise and sunset strings
   const sunriseStr = panchangData.sun?.sunrise || (panchangData.sunrise instanceof Date ? panchangData.sunrise.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '05:35 AM');

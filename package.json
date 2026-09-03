@@ -17,6 +17,7 @@
     "test:granth": "playwright test tests/granth-canonical-library.spec.ts tests/granth-coverage.spec.ts tests/granth-reading-session.spec.ts tests/granth-interactive-flow.spec.ts",
     "test:granth:http": "playwright test tests/granth-reader-http.spec.ts",
     "typecheck": "tsc --noEmit",
+    "validate:navigation": "tsx scripts/validate-navigation.ts",
     "qualify:astronomy": "tsx qualification/astronomy-qualification-runner.ts --scenarios 100000 --write-cert-doc",
     "qualify:astronomy:scaffold": "tsx qualification/astronomy-qualification-runner.ts --scenarios 1000 --write-cert-doc",
     "postinstall": "prisma generate",

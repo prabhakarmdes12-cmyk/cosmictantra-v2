@@ -2349,7 +2349,8 @@ export default function FloatingAIGuruAvatar() {
   return (
     <>
       {/* FLOATING KASHI SAHAYAK AVATAR BUTTON (Fixed Bottom-Right) */}
-      <div className="fixed bottom-6 right-4 sm:right-6 z-50 flex flex-col items-end pointer-events-auto font-mono-data">
+      {/* `ct-avatar-root` lets the navigation shell lift the FAB above the mobile bottom bar without redesigning the assistant. */}
+      <div className="ct-avatar-root fixed bottom-6 right-4 sm:right-6 z-50 flex flex-col items-end pointer-events-auto font-mono-data">
         
         {/* Dynamic Contextual Tooltip Greeting */}
         {!isOpen && showGreetingTooltip && (
@@ -2414,7 +2415,7 @@ export default function FloatingAIGuruAvatar() {
 
       {/* EXPANDED INTERACTIVE SACRED CONCIERGE CHAT DRAWER */}
       {isOpen && (
-        <div className="fixed inset-x-3 bottom-20 sm:bottom-24 sm:right-6 sm:left-auto sm:w-[460px] max-h-[85vh] sm:max-h-[660px] h-[620px] bg-white/95 dark:bg-[#0C0E1A]/95 backdrop-blur-2xl border-2 border-[#8E6F1D]/40 dark:border-[#D4AF37]/50 rounded-3xl shadow-2xl z-50 flex flex-col overflow-hidden font-mono-data animate-in zoom-in-95 duration-200">
+        <div className="ct-kashi-panel fixed inset-x-3 bottom-20 sm:bottom-24 sm:right-6 sm:left-auto sm:w-[460px] max-h-[85vh] sm:max-h-[660px] h-[620px] bg-white/95 dark:bg-[#0C0E1A]/95 backdrop-blur-2xl border-2 border-[#8E6F1D]/40 dark:border-[#D4AF37]/50 rounded-3xl shadow-2xl z-50 flex flex-col overflow-hidden font-mono-data animate-in zoom-in-95 duration-200">
           
           {/* Top Sanctum Header with Banaras Avatar */}
           <div className="p-3 px-4 bg-gradient-to-r from-[#8E6F1D]/15 via-[#FAF7F2] to-[#D4AF37]/20 dark:from-[#D4AF37]/15 dark:via-[#121526] dark:to-[#8E6F1D]/20 border-b border-black/10 dark:border-white/10 flex items-center justify-between shrink-0">
