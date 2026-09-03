@@ -16,7 +16,7 @@ import type {
 } from './types';
 import { interpretCanonicalModel, INTERPRETATION_GENERATOR_VERSION, ordinal } from './interpretation';
 import { determineDst, formatDst } from './dst';
-import { buildChartRenderModel } from './chartModel';
+import { buildChartRenderModel, PLANET_ABBREVIATIONS, PLANET_IDS, SIGN_NAMES_HI } from './chartModel';
 import { buildScholarSummarySections } from './scholarSummary';
 import type { ChartDivision, ChartLabelMode } from './chartModel';
 import { YOGA_SOURCE_REGISTRY, YOGA_SOURCE_REGISTRY_VERSION } from '../jyotish/yogaSourceRegistry';
@@ -155,7 +155,7 @@ function buildPlanetaryPositions(m: KundliCanonicalModel): ReportSection {
   };
 }
 
-function buildHousePositions(m: KundliCanonicalModel): ReportSection {
+function buildHousePositions(m: KundliCanonicalModel, locale: 'en' | 'hi' = 'en'): ReportSection {
   const rows = m.houses.map((h) => [
     String(h.number),
     `${h.sign.name} (${h.sign.en})`,
@@ -229,6 +229,56 @@ function buildChartTable(
     blocks: [
       para('Every placement drawn above, as text. Nothing in this table is calculated by the renderer, and nothing is omitted.'),
       table(['House', 'Sign', 'Grahas', 'Retrograde', 'Evidence'], rows),
+    ],
+  };
+}
+
+/**
+ * Bhava–Graha matrix: which graha sits in which house, as a grid.
+ *
+ * Nothing here is interpreted and nothing is newly calculated. Occupancy
+ * comes from the canonical model, lordship from the same SIGN_LORDS table
+ * the gate already validates, and the abbreviations from the chart registry,
+ * so the grid and the chart cannot disagree about what they mean.
+ */
+function buildBhavaGrahaMatrix(m: KundliCanonicalModel, locale: 'en' | 'hi'): ReportSection {
+  const hi = locale === 'hi';
+  const abbr = (id: string): string => {
+    const e = PLANET_ABBREVIATIONS[id as keyof typeof PLANET_ABBREVIATIONS];
+    if (!e) return id;
+    return hi ? e.hi : e.en;
+  };
+  const grahaIds = PLANET_IDS;
+  const retro = new Map(m.planets.map((p) => [p.id, p.retrograde]));
+  const houseOf = new Map(m.planets.map((p) => [p.id, p.house]));
+
+  const rows = m.houses.map((h) => {
+    const cells = grahaIds.map((id) => {
+      if (houseOf.get(id) !== h.number) return '\u2014';
+      return retro.get(id) ? '\u2022 R' : '\u2022';
+    });
+    const lord = h.sign?.lord ?? '\u2014';
+    // h.sign.name is IAST transliteration ('Simha'), not Devanagari. The
+    // Hindi column needs the Devanagari name, and guessing it here would
+    // have produced a column that looked translated and was not.
+    const signCell = hi
+      ? SIGN_NAMES_HI[(h.sign?.id ?? 1) - 1] ?? h.sign?.en ?? ''
+      : h.sign?.en ?? '';
+    return [String(h.number), signCell, abbr(lord), ...cells];
+  });
+
+  return {
+    id: 'bhava-graha-matrix',
+    title: hi ? '\u092D\u093E\u0935\u2013\u0917\u094D\u0930\u0939 \u0938\u093E\u0930\u0923\u0940' : 'Bhava\u2013Graha Matrix',
+    status: 'READY',
+    blocks: [
+      para(hi
+        ? '\u0917\u094D\u0930\u0939 \u0915\u093F\u0938 \u092D\u093E\u0935 \u092E\u0947\u0902 \u0939\u0948\u0902\u0964 \u092F\u0939 \u0917\u0923\u0928\u093E \u0939\u0948, \u0935\u094D\u092F\u093E\u0916\u094D\u092F\u093E \u0928\u0939\u0940\u0902\u0964'
+        : 'Which graha occupies which house. This is calculated placement, not interpretation: a mark says a graha is in that house, and nothing about what it means.'),
+      para(hi
+        ? `\u2022 = \u092F\u0939\u093E\u0902 \u0938\u094D\u0925\u093F\u0924 \u0964 \u2022 R = \u0935\u0915\u094D\u0930\u0940 \u0964 \u2014 = \u0916\u093E\u0932\u0940 \u0964 \u0938\u0902\u0915\u0947\u0924: ${grahaIds.map(abbr).join(' ')}`
+        : `\u2022 occupied  \u00B7  \u2022 R occupied and retrograde  \u00B7  \u2014 empty  \u00B7  Columns: ${grahaIds.map((id) => `${abbr(id)} = ${id}`).join(', ')}`),
+      table(['H', hi ? '\u0930\u093E\u0936\u093F' : 'Sign', hi ? '\u0938\u094D\u0935\u093E\u092E\u0940' : 'Lord', ...grahaIds.map(abbr)], rows),
     ],
   };
 }
@@ -528,7 +578,7 @@ function buildCertificate(
       `Ascendant (${m.ascendant.sign.name} ${D2(m.ascendant.degreeInSign)}°)`,
       `${m.planets.length} graha positions with nakshatra and pada`,
       `${m.houses.length} bhavas (${c.houseSystem})`,
-      `${m.divisionalCharts.length} divisional charts, of which D1 and D9 are independently cross-checked`,
+      `${m.divisionalCharts.length} divisional charts are computed internally; D1 and D9 are the only two independently cross-checked and the only two delivered — the other ${m.divisionalCharts.length - 2} are not delivered and are not relied on here`,
       `Vimshottari dasha: balance at birth plus ${m.dashas.mahadashas.length} mahadashas`,
       `${evaluatedYogas.length} yoga rules evaluated`,
       `${m.doshas.length} dosha assessments`,
@@ -610,7 +660,8 @@ function buildAppendix(m: KundliCanonicalModel): ReportSection {
       kv('Input fingerprint', m.subject.fingerprint),
       kv('Coordinate provenance', m.subject.coordinates.provenance),
       kv('Timezone provenance', m.subject.timezone.offsetProvenance),
-      kv('Divisional charts', `${m.divisionalCharts.length} (D1–D60 shodashavarga)`),
+      kv('Divisional charts delivered', '2 — D1 Rashi and D9 Navamsha. These two, and only these two, are drawn and verified.'),
+      kv('Divisional charts computed but not delivered', `${m.divisionalCharts.length - 2} more are computed in the model as part of the shodashavarga set. They are not drawn, not stated and not verified: verifying a varga requires its own boundary fixtures, and that work has not been done. Their presence in the model is not a claim that they are correct.`),
       para('Yogas are evaluated by the CosmicTantra yoga engine against this canonical chart. Each yoga in the Major Yogas section states its rule, its conditions, the evidence for each condition, and a status of Present, Absent, Indeterminate or Not calculated.'),
       para('Limitation: only the yoga rules listed in the Major Yogas section are evaluated. Yogas that are not listed are not claimed to be absent — they are simply not implemented in this engine build.'),
     ],
@@ -655,6 +706,7 @@ export function buildKundliReportModel(
     buildPanchanga(canonical),
     buildPlanetaryPositions(canonical),
     buildHousePositions(canonical),
+    buildBhavaGrahaMatrix(canonical, locale),
     ...buildDashaTables(canonical),
   ];
 

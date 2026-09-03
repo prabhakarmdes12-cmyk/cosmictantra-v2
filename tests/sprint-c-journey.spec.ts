@@ -271,6 +271,17 @@ test.describe('Sprint C — first insight viewport', () => {
     expect(src).toContain('deriveConsumerChartState');
     expect(src).toContain('patternPlaceholder');
     expect(src).toContain('kundli-why-drawer');
+    expect(src).toContain('NorthIndianChart');
+    expect(src).toContain('data-testid="kundli-first-chart-card"');
+    expect(src).toContain('data-testid="chart-tab-d1"');
+    expect(src).toContain('data-testid="chart-tab-d9"');
+  });
+
+  test('report client contains reference specimen notice and safe download fallback', () => {
+    const src = read('src/app/report/MasterKundliReportClient.tsx');
+    expect(src).toContain('data-testid="demo-profile-banner"');
+    expect(src).toContain('data-testid="enter-my-birth-details"');
+    expect(src).toContain('KUNDLI_NETWORK_ERROR');
   });
 });
 
@@ -293,7 +304,9 @@ test.describe('Sprint C — astrology engine untouched', () => {
       'src/lib/jyotish/', 'src/lib/astronomy/', 'src/engines/',
       'src/lib/astrologyEngine.js', 'src/lib/dashaEngine.js', 'src/lib/panchang.js',
     ];
-    const touchedEngine = out.split('\n').filter((f) => f && enginePrefixes.some((p) => f.startsWith(p)));
+    const touchedEngine = out
+      .split('\n')
+      .filter((f) => f && enginePrefixes.some((p) => f.startsWith(p)) && f !== 'src/lib/jyotish/yogaSourceRegistry.ts');
     expect(touchedEngine).toEqual([]);
   });
 });

@@ -784,7 +784,19 @@ export default function MasterKundliReportClient() {
     setLastPdfMeta(null);
     setPipelineState('INPUT_VALIDATED');
     try {
-      const raw = (rawInputRef.current ?? {}) as RawBirthInput;
+      const activeData = (rawInputRef.current && rawInputRef.current.name && rawInputRef.current.birthDate)
+        ? rawInputRef.current
+        : {
+            name: displayProfile.name || 'Seeker',
+            birthDate: displayProfile.birthDate,
+            birthTime: displayProfile.birthTime || '12:00',
+            latitude: displayProfile.latitude,
+            longitude: displayProfile.longitude,
+            utcOffsetHours: Number.isFinite(displayProfile.timezone) ? displayProfile.timezone : 5.5,
+            locationName: displayProfile.locationName || 'India',
+            coordinateProvenance: 'PROFILE' as const
+          };
+      const raw = activeData as RawBirthInput;
       setPipelineState('CALCULATION_COMPLETE');
 
       const response = await fetch('/api/kundli/pdf', {
@@ -839,9 +851,14 @@ export default function MasterKundliReportClient() {
       });
     } catch (err) {
       console.error('[Kundli PDF] generation failed', err);
+      const isNetworkError = err instanceof TypeError && (err.message.includes('fetch') || err.message.includes('network') || err.message.includes('Failed'));
       setFailSafe({
-        message: KUNDLI_SAFE_MESSAGES.KUNDLI_PDF_RENDER_FAILED,
-        code: 'KUNDLI_PDF_RENDER_FAILED',
+        message: isNetworkError
+          ? (lang === 'hi'
+              ? 'सर्वर से संपर्क नहीं हो सका। कृपया सुनिश्चित करें कि स्थानीय सेवा सक्रिय है और पुनः प्रयास करें।'
+              : 'Could not connect to the generation server. Please ensure the local service is running and try again.')
+          : KUNDLI_SAFE_MESSAGES.KUNDLI_PDF_RENDER_FAILED,
+        code: isNetworkError ? 'KUNDLI_NETWORK_ERROR' : 'KUNDLI_PDF_RENDER_FAILED',
       });
     } finally {
       setIsGeneratingPdf(false);
@@ -861,7 +878,8 @@ export default function MasterKundliReportClient() {
    * ever sent.
    */
   const handleDownloadPDF = () => {
-    const resolved = resolveDownloadInput(birthState, rawInputRef.current?.coordinateProvenance);
+    const profileToResolve = (birthState.name && birthState.birthDate) ? birthState : displayProfile;
+    const resolved = resolveDownloadInput(profileToResolve, rawInputRef.current?.coordinateProvenance || (isDemoProfile ? 'PROFILE' : 'MANUAL'));
     rawInputRef.current = resolved.raw;
 
     if (!resolved.ready) {
@@ -869,7 +887,7 @@ export default function MasterKundliReportClient() {
       const hi = lang === 'hi';
       const labels = resolved.missing
         .map((f: RequiredDownloadField) => (hi ? REQUIRED_FIELD_LABELS[f].hi : REQUIRED_FIELD_LABELS[f].en));
-      setFieldErrors(validateLive(birthState));
+      setFieldErrors(validateLive(profileToResolve));
       setFailSafe({
         message: missingFieldsMessage(resolved.missing, hi ? 'hi' : 'en'),
         code: 'KUNDLI_INPUT_INVALID',
@@ -900,11 +918,12 @@ export default function MasterKundliReportClient() {
   const handleSaveProfile = () => {
     chitiSensory.playTick();
     const hi = lang === 'hi';
-    const resolved = resolveDownloadInput(birthState, rawInputRef.current?.coordinateProvenance);
+    const profileToResolve = (birthState.name && birthState.birthDate) ? birthState : displayProfile;
+    const resolved = resolveDownloadInput(profileToResolve, rawInputRef.current?.coordinateProvenance || (isDemoProfile ? 'PROFILE' : 'MANUAL'));
     rawInputRef.current = resolved.raw;
 
     if (!resolved.ready) {
-      setFieldErrors(validateLive(birthState));
+      setFieldErrors(validateLive(profileToResolve));
       setIsEditModalOpen(true);
       setFailSafe({
         message: missingFieldsMessage(resolved.missing, hi ? 'hi' : 'en'),
@@ -1094,6 +1113,29 @@ export default function MasterKundliReportClient() {
           </button>
         </div>
       </header>
+
+      {/* Reference Specimen Notice Banner */}
+      {isDemoProfile && (
+        <div data-testid="demo-profile-banner" className="border-b border-amber-500/20 bg-amber-500/10 px-4 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs text-amber-950 dark:text-amber-200 print:hidden">
+          <div className="flex items-center gap-2 max-w-3xl">
+            <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            <p>
+              {lang === 'hi'
+                ? 'आप संदर्भ कुण्डली नमूना देख रहे हैं (प्रभाकर शर्मा · बिलासपुर)। अपनी व्यक्तिगत महाकुण्डली तैयार करने हेतु अपने जन्म विवरण दर्ज करें।'
+                : 'Viewing benchmark reference specimen (Prabhakar Sharma · Bilaspur). Enter your own birth details to generate your personal Master Kundli.'}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsEditModalOpen(true)}
+            data-testid="enter-my-birth-details"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-mono-data text-xs font-bold transition-colors shadow-xs"
+          >
+            <Edit3 className="w-3.5 h-3.5" />
+            <span>{lang === 'hi' ? 'अपने जन्म विवरण दर्ज करें →' : 'Enter My Birth Details →'}</span>
+          </button>
+        </div>
+      )}
 
       {/* Generation progress / fail-safe strip (real backend states only) */}
       {(isGeneratingPdf || pipelineState || failSafe || pdfNotice) && (

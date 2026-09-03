@@ -1,7 +1,7 @@
 /**
  * CHART AND SUMMARY GATE
  *
- * The fourteen checks must (a) pass on a genuine chart and (b) fail on a
+ * The chart and summary checks must (a) pass on a genuine chart and (b) fail on a
  * tampered one. A gate that only ever passes is decoration, so every check
  * that can be faulted is faulted here.
  */
@@ -91,7 +91,7 @@ test.describe('CHART GATE — passes on a genuine chart', () => {
       'CG_CHART_D1_PLANETS', 'CG_CHART_D9_PLANETS', 'CG_CHART_RETROGRADE_MARKER',
       'CG_CHART_NODES', 'CG_CHART_TEXTUAL_EQUIVALENT', 'CG_SUMMARY_FACT_PRESENT',
       'CG_SUMMARY_YOGA_STATUS', 'CG_SUMMARY_DASHA_MATCH', 'CG_EVIDENCE_RESOLVES',
-      'CG_SUMMARY_LANGUAGE',
+      'CG_SUMMARY_LANGUAGE', 'CG_REPORT_PREDICTIVE_LANGUAGE',
     ]) {
       expect(codes, `gate must check ${required}`).toContain(required);
     }
