@@ -129,7 +129,7 @@ export const PRIMARY_DESTINATIONS: PrimaryDestination[] = [
     labelHiKey: 'myKundliHi',
     descriptionKey: 'myKundliDescription',
     descriptionHiKey: 'myKundliDescriptionHi',
-    href: '/dashboard',
+    href: '/report',
     icon: 'compass',
     isMenu: false,
     children: [
@@ -274,7 +274,7 @@ export const MOBILE_BOTTOM_NAV_ITEMS: MobileNavItem[] = [
     id: 'MY_KUNDLI',
     labelKey: 'kundliMobile',
     labelHiKey: 'kundliMobileHi',
-    href: '/dashboard',
+    href: '/report',
     icon: 'compass',
     isAsk: false,
   },

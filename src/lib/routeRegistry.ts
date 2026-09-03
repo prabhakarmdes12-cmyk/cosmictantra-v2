@@ -1,4 +1,4 @@
-export type ShellMode = 'public' | 'scholar' | 'presentation' | 'minimal';
+export type ShellMode = 'public' | 'scholar' | 'presentation' | 'minimal' | 'report';
 export type FooterMode = 'full' | 'minimal' | 'none';
 export type RouteStatus = 'LIVE' | 'BETA' | 'PRACTITIONER_ASSISTED' | 'COMING_SOON';
 
@@ -51,6 +51,22 @@ export const ROUTE_REGISTRY: Record<string, RouteConfig> = {
     authRequired: false,
     status: 'LIVE',
     roomCharacter: 'observatory'
+  },
+  '/granth': {
+    path: '/granth',
+    title: 'Vedic Granth & Classical Treatises | CosmicTantra',
+    description: 'Classical Vedic literature, Brihat Parashara Hora Shastra, Bhagavad Gita, and foundational Jyotish texts.',
+    category: 'Library',
+    breadcrumbs: [
+      { label: 'Home', href: '/' },
+      { label: 'Granth', href: '/granth' }
+    ],
+    shellMode: 'public',
+    footerMode: 'full',
+    indexable: true,
+    authRequired: false,
+    status: 'LIVE',
+    roomCharacter: 'manuscript'
   },
   '/numerology/name': {
     path: '/numerology/name',

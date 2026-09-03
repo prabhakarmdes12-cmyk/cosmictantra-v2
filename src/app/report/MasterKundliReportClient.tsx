@@ -38,6 +38,7 @@ import NorthIndianChart from '@/components/NorthIndianChart';
 import NoviceCosmicOverview from '@/components/kundli/NoviceCosmicOverview';
 import GlobalHeader from '@/components/layout/GlobalHeader';
 import LanguageSelectorModal from '@/components/layout/LanguageSelectorModal';
+import DownloadChoiceModal from '@/components/kundli/DownloadChoiceModal';
 import { CosmicTantraEmblem } from '@/components/visual/CosmicTantraLogo';
 import { chitiSensory } from '@/lib/chitiAudio';
 import { generateKundliV40Pdf } from '@/lib/kundli/v40/pipelineV2';
@@ -342,6 +343,7 @@ export default function MasterKundliReportClient() {
   // Pipeline state (KUNDLI_INV_015 / fail-safe UX)
   const [pipelineState, setPipelineState] = useState<PipelineState | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isDownloadChoiceOpen, setIsDownloadChoiceOpen] = useState(false);
   const [failSafe, setFailSafe] = useState<{ message: string; code: string } | null>(null);
   const [lastPdfMeta, setLastPdfMeta] = useState<{ pageCount: number; fileSizeKB: number } | null>(null);
   const [pdfNotice, setPdfNotice] = useState<string | null>(null);
@@ -1027,12 +1029,25 @@ export default function MasterKundliReportClient() {
   return (
     <div data-report-hydrated={hydrated ? 'true' : 'false'} className="min-h-screen kundli-paper bg-[#FDFBF7] dark:bg-[#07080C] text-[#1C1917] dark:text-[#EFECE6] font-sans antialiased pb-24 selection:bg-[#E5D7BC] dark:selection:bg-[#D4AF37]/40">
 
-      {/* 0. Global site header (logo, navigation, language, day/night) */}
+      {/* 0. Unified Contextual Header (reclaims 64px, eliminates double header) */}
       <GlobalHeader
+        mode="report"
         lang={lang}
         theme={theme}
         onThemeToggle={handleThemeToggle}
         onLangToggle={() => setIsLangModalOpen(true)}
+        reportData={{
+          subjectName: birthState.name,
+          birthDate: birthState.birthDate,
+          birthTime: birthState.birthTime,
+          locationName: birthState.locationName,
+          isDemoProfile,
+          activeTab,
+          onTabChange: (tab) => setActiveTab(tab as any),
+          onEditDetails: () => setIsEditModalOpen(true),
+          onDownloadPdf: () => setIsDownloadChoiceOpen(true),
+          onPrint: () => window.print(),
+        }}
       />
       <LanguageSelectorModal
         isOpen={isLangModalOpen}
@@ -1040,152 +1055,14 @@ export default function MasterKundliReportClient() {
         onClose={() => setIsLangModalOpen(false)}
         onSelectLang={handleSelectLang}
       />
-
-      {/* 1. Header Toolbar */}
-      <header className="sticky top-16 sm:top-20 z-40 bg-[#FDFBF7]/95 dark:bg-[#07080C]/95 backdrop-blur-md border-b border-[#E5D7BC] dark:border-white/10 px-4 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-4 print:hidden">
-        
-        {/* Left: Branding & Subject Info */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.push('/')}
-            className="w-8 h-8 rounded-full bg-[#8E6F1D]/10 border border-[#8E6F1D]/30 flex items-center justify-center text-[#8E6F1D] dark:text-[#F0C968] hover:bg-[#8E6F1D] dark:hover:bg-[#D4AF37]/20 transition-all font-serif font-bold text-sm"
-            title={t('backHome')}
-          >
-            ॐ
-          </button>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-serif font-bold text-base lg:text-lg tracking-tight text-[#1C1917] dark:text-[#EFECE6]">{t('title')}</span>
-            </div>
-            <p className="text-[11px] text-[#78716C] dark:text-[#A8A29E] font-mono-data flex flex-wrap items-center gap-1.5">
-              {birthState.name ? (
-                <>
-                  <strong>{birthState.name}</strong> • {birthState.birthDate}, {birthState.birthTime} • {birthState.locationName}
-                </>
-              ) : (
-                <span className="text-amber-700 dark:text-amber-400 font-semibold">
-                  {lang === 'hi' ? 'विवरण दर्ज करें' : 'Please enter birth details'}
-                </span>
-              )}
-              {isDemoProfile && (
-                <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-[#D4AF37]/15 text-amber-800 dark:text-amber-300 border border-amber-300 uppercase tracking-wide">
-                  <Sparkles className="w-2.5 h-2.5" /> {t('sample')}
-                </span>
-              )}
-            </p>
-          </div>
-        </div>
-
-        {/* Center: Mode Switcher — the three ways to read the same chart.
-            Harmonized on the site's glass tokens: one translucent rail, a
-            gold-leaf active thumb, Devanagari labels beside the English so a
-            Hindi reader is not translating navigation to use it. */}
-        <div
-          role="tablist"
-          aria-label={lang === 'hi' ? 'कुण्डली दृश्य' : 'Kundli views'}
-          className="flex items-center gap-1 p-1 rounded-2xl border border-[#E5D7BC]/80 dark:border-white/10 bg-white/55 dark:bg-white/[0.04] backdrop-blur-md shadow-[0_1px_2px_rgba(28,25,23,0.06)]"
-        >
-          {([
-            ['OVERVIEW', LayoutDashboard, t('tabOverview'), t('tabOverview'), '📊'],
-            ['FOLIO', BookOpen, t('tabBook'), t('tabBookShort'), '📖'],
-            ['WORKBENCH', Grid, t('tabCharts'), t('tabChartsShort'), '🪐'],
-          ] as const).map(([tab, Icon, fullLabel, shortLabel, emblem]) => {
-            const isActive = activeTab === tab;
-            return (
-              <button
-                key={tab}
-                role="tab"
-                type="button"
-                id={`report-tab-${tab.toLowerCase()}`}
-                aria-selected={isActive}
-                aria-controls={`report-panel-${tab.toLowerCase()}`}
-                onClick={() => {
-                  chitiSensory.playTick();
-                  setActiveTab(tab);
-                }}
-                title={fullLabel}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all flex items-center gap-1.5 border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8E6F1D] focus-visible:ring-offset-1 ${
-                  isActive
-                    ? 'bg-gradient-to-b from-[#8E6F1D] to-[#6E5514] dark:from-[#F0C968] dark:to-[#C9A227] text-[#FDFBF7] dark:text-[#060709] border-[#8E6F1D]/60 dark:border-[#D4AF37]/60 shadow-[0_2px_8px_rgba(142,111,29,0.35)]'
-                    : 'text-[#78716C] dark:text-[#A8A29E] border-transparent hover:text-[#1C1917] dark:hover:text-[#EFECE6] hover:bg-white/70 dark:hover:bg-white/[0.06]'
-                }`}
-              >
-                <span aria-hidden="true" className="text-[11px] leading-none">{emblem}</span>
-                <Icon className="w-3.5 h-3.5" aria-hidden="true" />
-                <span className="hidden sm:inline">{fullLabel}</span>
-                <span className="sm:hidden">{shortLabel}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Right: Actions — the only three things worth a click here:
-            reading depth (in the Book), Save Profile, Download PDF.
-            Print is gone (the downloaded PDF carries its own Print command),
-            and so are the edition and PDF-language pills: the edition is always
-            the complete qualified folio and the language follows the Global
-            Header's sitewide switch (see lib/kundli/downloadPolicy.ts). */}
-        <div className="flex items-center gap-2">
-          {activeTab === 'FOLIO' && (
-            <div className="hidden sm:flex items-center gap-1 bg-[#F5EFE6] dark:bg-[#1C1E27] p-1 rounded-lg border border-[#E5D7BC] dark:border-white/10 text-xs">
-              {(['SIMPLE', 'DETAILED', 'PANDIT'] as const).map((depth) => (
-                <button
-                  key={depth}
-                  onClick={() => setReadingDepth(depth)}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${readingDepth === depth ? 'bg-[#8E6F1D] text-white shadow-xs' : 'text-[#78716C] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#EFECE6]'}`}
-                >
-                  {depth === 'SIMPLE' ? t('simple') : depth === 'DETAILED' ? t('detailed') : t('scholarly')}
-                </button>
-              ))}
-            </div>
-          )}
-
-          <button
-            onClick={() => setIsEditModalOpen(true)}
-            className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-[#E5D7BC] dark:border-white/10 bg-white dark:bg-[#121422] hover:bg-[#F5EFE6] dark:bg-[#1C1E27] dark:hover:bg-[#1C1E27] transition-colors"
-            title={t('editTitle')}
-          >
-            <Edit3 className="w-3.5 h-3.5 text-[#8E6F1D] dark:text-[#F0C968]" />
-            <span className="hidden sm:inline">{t('editDetails')}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleSaveProfile}
-            title={t('saveProfileTitle')}
-            aria-label={t('saveProfileTitle')}
-            data-testid="report-save-profile"
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-[#8E6F1D]/30 bg-white dark:bg-[#121422] hover:bg-[#F5EFE6] dark:bg-[#1C1E27] dark:hover:bg-[#1C1E27] text-[#8E6F1D] dark:text-[#F0C968] transition-colors shadow-xs"
-          >
-            <Save className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{t('saveProfile')}</span>
-            <span className="sm:hidden">{t('saveProfileShort')}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => window.print()}
-            title={lang === 'hi' ? 'कुण्डली प्रिंट करें' : 'Print Kundli'}
-            data-testid="report-print-kundli"
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-[#E5D7BC] dark:border-white/10 bg-white dark:bg-[#121422] hover:bg-[#F5EFE6] dark:hover:bg-[#1C1E27] text-[#8E6F1D] dark:text-[#F0C968] transition-colors shadow-xs cursor-pointer"
-          >
-            <Printer className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{lang === 'hi' ? 'प्रिंट' : 'Print'}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleDownloadPDF}
-            disabled={isGeneratingPdf}
-            data-testid="report-download-pdf"
-            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#8E6F1D] hover:bg-[#785E18] text-white transition-colors shadow-sm disabled:opacity-60 disabled:cursor-wait cursor-pointer"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{isGeneratingPdf ? t('validating') : t('download')}</span>
-            <span className="sr-only">{t('download')}</span>
-          </button>
-        </div>
-      </header>
+      <DownloadChoiceModal
+        isOpen={isDownloadChoiceOpen}
+        onClose={() => setIsDownloadChoiceOpen(false)}
+        lang={lang}
+        birthState={birthState}
+        onDownloadFullPdf={handleDownloadPDF}
+        isGeneratingPdf={isGeneratingPdf}
+      />
 
       {/* Reference Specimen Notice Banner */}
       {isDemoProfile && (
@@ -1819,9 +1696,22 @@ export default function MasterKundliReportClient() {
           id="report-panel-folio"
           role="tabpanel"
           aria-labelledby="report-tab-folio"
-          className="max-w-5xl mx-auto px-4 lg:px-8 py-8 space-y-3">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E] px-1 pb-1">
-            {t('volumes')}
+          className="max-w-5xl mx-auto px-4 lg:px-8 py-8 space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-1 pb-2 border-b border-black/5 dark:border-white/10">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E]">
+              {t('volumes')}
+            </div>
+            <div className="flex items-center gap-1 bg-[#F5EFE6] dark:bg-[#1C1E27] p-1 rounded-xl border border-[#E5D7BC] dark:border-white/10 text-xs">
+              {(['SIMPLE', 'DETAILED', 'PANDIT'] as const).map((depth) => (
+                <button
+                  key={depth}
+                  onClick={() => setReadingDepth(depth)}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${readingDepth === depth ? 'bg-[#8E6F1D] text-white shadow-xs' : 'text-[#78716C] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#EFECE6]'}`}
+                >
+                  {depth === 'SIMPLE' ? t('simple') : depth === 'DETAILED' ? t('detailed') : t('scholarly')}
+                </button>
+              ))}
+            </div>
           </div>
 
           {book.volumes.map((vol, idx) => {
