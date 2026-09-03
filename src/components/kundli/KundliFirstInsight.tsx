@@ -24,6 +24,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import type { StoredKundliRecord } from '@/lib/jyotish/kundliStore';
+import NorthIndianChart from '../NorthIndianChart';
 import {
   adaptKundliAtAGlance,
   buildDashaWhyEvidence,
@@ -102,6 +103,40 @@ export default function KundliFirstInsight({
 
   const [whyOpen, setWhyOpen] = useState(false);
   const [showTechnical, setShowTechnical] = useState(false);
+  const [activeVarga, setActiveVarga] = useState<1 | 9>(1);
+
+  const chartD1Obj = useMemo(() => ({
+    lagna: record.snapshot.lagna,
+    houses: record.snapshot.houses,
+    planets: record.snapshot.planets
+  }), [record.snapshot]);
+
+  const chartD9Obj = useMemo(() => {
+    const v9 = record.snapshot.vargas?.shodashavarga?.[9];
+    if (!v9) return chartD1Obj;
+    return {
+      lagna: {
+        rashiId: v9.lagna.vargaRashiId,
+        rashiName: v9.lagna.vargaRashiName
+      },
+      houses: v9.houses.map((h: any) => ({
+        number: h.houseNumber,
+        rasiId: h.rashiId,
+        rasiName: h.rashiName,
+        planets: (h.planetsInHouse || []).map((pName: string) => {
+          const pObj = v9.planets?.[pName];
+          return {
+            name: pName,
+            degrees: pObj?.divisionDegree || 0,
+            degreeStr: `${Math.floor((pObj?.divisionDegree || 0) % 30)}°`
+          };
+        })
+      })),
+      planets: v9.planets
+    };
+  }, [record.snapshot, chartD1Obj]);
+
+  const displayedChart = activeVarga === 9 ? chartD9Obj : chartD1Obj;
   const whyButtonRef = useRef<HTMLButtonElement>(null);
   const firedInsightRef = useRef(false);
 
@@ -584,9 +619,89 @@ export default function KundliFirstInsight({
           </div>
         )}
 
-        {/* Pattern placeholder — honest empty state (§17) */}
-        <div className="mt-6 rounded-2xl border border-dashed border-[#C9BFA8] p-4 text-center">
-          <p className="text-xs text-[#696256]">{isHi ? t.patternPlaceholderHi : t.patternPlaceholder}</p>
+        {/* RASHI & NAVAMSHA CHART (D1 / D9) — Prominently presented Kundli */}
+        <div data-testid="kundli-first-chart-card" className="mt-6 rounded-3xl border border-[#D4C7B0] bg-[#FFFDF9] dark:bg-[#121422] p-5 sm:p-7 shadow-sm transition-colors">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-[#EADFCB] dark:border-white/10 pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <Compass className="w-5 h-5 text-[#8E6F1D] dark:text-[#E6C665]" />
+                <h2 className="font-editorial text-lg sm:text-xl font-bold text-[#1C1917] dark:text-[#F3EFE6]">
+                  {isHi
+                    ? (activeVarga === 1 ? 'जन्म कुण्डली (लग्न चक्र — D1)' : 'नवांश कुण्डली (भाग्य चक्र — D9)')
+                    : (activeVarga === 1 ? 'Rashi Kundli (Lagna Chart — D1)' : 'Navamsha Kundli (D9 Chart)')}
+                </h2>
+              </div>
+              <p className="mt-1 text-xs text-[#696256] dark:text-[#A8A29E]">
+                {isHi
+                  ? `लग्न: ${record.snapshot.lagna?.rashiName || record.snapshot.lagna?.rashiEn || ''} (${record.snapshot.lagna?.degreeStr || ''}) · लाहिरी अयनांश · उत्तर भारतीय पद्धति`
+                  : `Lagna: ${record.snapshot.lagna?.rashiEn || record.snapshot.lagna?.rashiName || ''} (${record.snapshot.lagna?.degreeStr || ''}) · Lahiri Ayanamsha · North Indian Vedic Layout`}
+              </p>
+            </div>
+
+            {/* Varga Selector: D1 vs D9 */}
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#F0E8D8] dark:bg-white/5 border border-[#DACFBE] dark:border-white/10">
+              <button
+                type="button"
+                onClick={() => setActiveVarga(1)}
+                data-testid="chart-tab-d1"
+                className={`px-3 py-1 text-xs font-mono-data font-bold rounded-lg transition-colors ${
+                  activeVarga === 1
+                    ? 'bg-[#8E6F1D] text-white shadow-xs'
+                    : 'text-[#696256] dark:text-[#A8A29E] hover:text-[#1C1917]'
+                }`}
+              >
+                D1 · {isHi ? 'लग्न' : 'Rashi'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveVarga(9)}
+                data-testid="chart-tab-d9"
+                className={`px-3 py-1 text-xs font-mono-data font-bold rounded-lg transition-colors ${
+                  activeVarga === 9
+                    ? 'bg-[#8E6F1D] text-white shadow-xs'
+                    : 'text-[#696256] dark:text-[#A8A29E] hover:text-[#1C1917]'
+                }`}
+              >
+                D9 · {isHi ? 'नवांश' : 'Navamsha'}
+              </button>
+            </div>
+          </div>
+
+          {/* SVG Kundli Chart */}
+          <div className="mt-6 flex justify-center items-center">
+            <div className="w-full max-w-[340px] aspect-square flex items-center justify-center p-2 rounded-2xl bg-white dark:bg-[#0D0A1E] border border-[#E5D7BC] dark:border-[#21262d] shadow-xs">
+              <NorthIndianChart kundali={displayedChart} theme="light" size={320} />
+            </div>
+          </div>
+
+          {/* Planet placements quick summary strip */}
+          {Array.isArray(record.snapshot.planetsArray) && record.snapshot.planetsArray.length > 0 && (
+            <div className="mt-6 pt-4 border-t border-[#EADFCB] dark:border-white/10">
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                {record.snapshot.planetsArray.map((p: any) => (
+                  <div
+                    key={p.name}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/80 dark:bg-white/5 border border-[#E5D7BC] dark:border-white/10 text-[11px]"
+                  >
+                    <span className="font-bold text-[#8E6F1D] dark:text-[#E6C665]">{p.name}</span>
+                    <span className="text-[#696256] dark:text-[#A8A29E] font-mono-data">
+                      {p.rashiEn || p.rashiName} ({p.degreeStr || `${Math.floor((p.degrees || 0) % 30)}°`})
+                    </span>
+                    {p.isRetrograde && (
+                      <span className="text-[9px] font-bold text-amber-700 dark:text-amber-400 font-mono-data">[R]</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Educational / Pattern placeholder note — preserves honest disclosure */}
+          <div className="mt-4 pt-3 border-t border-dashed border-[#E5D7BC] dark:border-white/10 text-center">
+            <p className="text-[11px] text-[#8B8478] dark:text-[#A8A29E]">
+              {isHi ? t.patternPlaceholderHi : t.patternPlaceholder}
+            </p>
+          </div>
         </div>
 
         {/* SAVE MOMENT (§14) — only for user-created charts, after value delivered */}
