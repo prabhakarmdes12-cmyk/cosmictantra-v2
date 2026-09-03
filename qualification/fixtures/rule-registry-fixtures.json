@@ -3,8 +3,8 @@
   "builder": "rule-registry-qualification-runner-1.0.0 (sprint H)",
   "engineNote": "ruleRegistry is in-code; the fixture pins its content fingerprint and orb tables for tamper evidence",
   "registryVersion": "classical-rule-registry-1.0.0 (sprint H)",
-  "fingerprint": "8191917adcf3f1ce472e153d176e2beff658820dd8a2166a813afad704b6e878",
-  "ruleCount": 63,
+  "fingerprint": "14fe86b8100763322b7e391c25a6459009bf51288ed7b03aff827be18432e474",
+  "ruleCount": 65,
   "yogaCrossLinkCount": 45,
   "yogaSourceRegistryVersion": "jyotish-source-registry-v2 (sprint I expansion)",
   "borderlineBandDeg": 1,
@@ -253,6 +253,28 @@
       "validationStatus": "IMPLEMENTED",
       "adoption": "ADOPTED",
       "evaluator": "src/lib/jyotish/varshaphalaEngine.ts::panchavargeeyabalaPartial",
+      "evidencePathCount": 1
+    },
+    {
+      "id": "RULE_TAJIKA_SAHAMS",
+      "version": "1.0.0",
+      "category": "DEFINITION_CANDIDATE",
+      "tradition": "Tajika (Raman ch. 8) — relayed via SOURCE_SECONDARY digitizations; no licensed edition held",
+      "sourceVerification": "SOURCE_SECONDARY",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/varshaphalaEngine.ts::computeSahams",
+      "evidencePathCount": 1
+    },
+    {
+      "id": "RULE_TAJIKA_VARSHA_DASHA",
+      "version": "1.0.0",
+      "category": "DASHA",
+      "tradition": "Tajika (Raman ch. 5 arts. 53-56) — relayed via SOURCE_SECONDARY digitizations; no licensed edition held",
+      "sourceVerification": "SOURCE_SECONDARY",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/varshaphalaEngine.ts::computeVarshaDasha",
       "evidencePathCount": 1
     },
     {
@@ -795,5 +817,5 @@
       "evidencePathCount": 2
     }
   ],
-  "setSha256": "d849fe404aa524fa6a0d0313259e4dd4441f32d2b90dc6e3f0f865cf499bb8fa"
+  "setSha256": "ce6c9661c0577833801b309760e9c05f8db7f5ce26098a8c2a02a90a34fc1668"
 }

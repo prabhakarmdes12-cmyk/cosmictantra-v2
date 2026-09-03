@@ -72,7 +72,7 @@ test.describe('SPRINT-J: WHY_GRAPH_001 fixture integrity', () => {
 
   test('CT_INV_008: the fixture set is pinned and tamper-evident', () => {
     expect(FIXTURE.fixtureSetId).toBe('WHY_GRAPH_001');
-    expect(FIXTURE.setSha256).toBe('98c6733081e4b9621081445c6514746e3446ca42d5050a03037cf25dee59b9bb');
+    expect(FIXTURE.setSha256).toBe('d42e1d8224d44fe2b4240f147c057531bea3bbb1d1ebdabf826dbad667dd708d');
     expect(FIXTURE.whyEngineVersion).toBe(WHY_ENGINE_VERSION);
     expect(FIXTURE.domains).toEqual(EVIDENCE_DOMAINS);
     expect(FIXTURE.yogaRuleCount).toBe(44);

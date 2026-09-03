@@ -46,7 +46,8 @@ export const DECLARED_FINDINGS: Array<{ id: string; severity: 'BLOCKING' | 'NON_
   { id: 'DECLARED_HADDA_TABLE_UNAVAILABLE', severity: 'NON_BLOCKING', statement: 'Haddabala is NOT_CALCULATED: the Hadda tables exist only as images in the available sources; the PV total is a declared partial used uniformly for ranking.', status: 'OPEN' },
   { id: 'DECLARED_THRIRASI_RAMAN_DISCREPANCY', severity: 'NON_BLOCKING', statement: "Raman's worked example (day Capricorn -> Mars) contradicts his own element day-table (-> Venus); both readings are computed and readingSensitive flags divergence.", status: 'OPEN' },
   { id: 'DECLARED_ASPECT_SIGN_CLASS_READING', severity: 'NON_BLOCKING', statement: "The Year-Lord aspect qualification is the adopted mechanical sign-class reading (houses 2,3,5,9,11,12); Raman's interpretive Deeptamsha-orb 'powerful aspect' filter is declared as an alternative.", status: 'OPEN' },
-  { id: 'DECLARED_SAHAMS_QUEUED', severity: 'NON_BLOCKING', statement: 'Saham day/night formulas are queued; the pre-Sprint-L constant-offset Sahams were fabricated and are withdrawn.', status: 'OPEN' },
+  { id: 'DECLARED_SAHAM_TIMING_NOT_IMPLEMENTED', severity: 'NON_BLOCKING', statement: 'Saham POSITIONS are computed (35 rows, Raman ch. 8) since Sprint M; the two Saham TIMING methods (progression, directional) are not implemented. Raman himself warns many Sahams do not work in practice.', status: 'OPEN' },
+  { id: 'DECLARED_SAHAM_WHOLE_SIGN_CUSPS', severity: 'NON_BLOCKING', statement: 'Saham house-cusp operands (II/VI/VIII/IX) use whole-sign cusps from the varsha lagna; computed madhya (Sripati) cusps are a declared alternative.', status: 'OPEN' },
   { id: 'DECLARED_ENGINE_DERIVED_GOLDENS', severity: 'NON_BLOCKING', statement: 'Golden scenarios are ENGINE_DERIVED regression pins; externally published varsha-chart anchors are a later slice.', status: 'OPEN' }
 ];
 
@@ -212,7 +213,12 @@ export function runStreamA(): StreamReport {
   const res = computeVarshaphala(probe);
   if (res.status !== 'CALCULATED') fail(r, 'probe chart not CALCULATED');
   else pass(r);
-  if (res.sahams.length !== 0 || !res.sahamsNotCalculatedReason.includes('withdrawn')) fail(r, 'sahams must be empty with the withdrawal reason');
+  if (res.sahams.length !== 35) fail(r, `sahams ${res.sahams.length} != 35`);
+  else pass(r);
+  if (!res.sahams.every((x) => Number.isFinite(x.longitude) && x.longitude >= 0 && x.longitude < 360 && x.formulaApplied.minuend && x.formulaApplied.subtrahend && x.formulaApplied.anchor)) {
+    fail(r, 'saham rows malformed');
+  } else pass(r);
+  if (!res.sahamsNote.includes('withdrawn')) fail(r, 'sahams note must carry the withdrawal history');
   else pass(r);
   if (res.varsheshwar.pvComponents === null || res.varsheshwar.pvComponents.hadda !== null) fail(r, 'PV components must be present with hadda=null');
   else pass(r);
@@ -443,6 +449,147 @@ function computeVarshaphalaSafePolar(): string {
   }
 }
 
+
+/* ------------------------------------------------------------------ */
+/* Stream E — SAHAM_DASA_IDENTITY (§21, Sprint M)                      */
+/* ------------------------------------------------------------------ */
+
+/** Independent day-formula table (written from the Raman ch. 8 source table). */
+const INDEP_SAHAMS: Array<{ name: string; min: string; sub: string; anchor: string; same?: boolean }> = [
+  { name: 'Punya', min: 'Moon', sub: 'Sun', anchor: 'ASC' },
+  { name: 'Vidya', min: 'Sun', sub: 'Moon', anchor: 'ASC' },
+  { name: 'Yasa', min: 'Jupiter', sub: 'Punya', anchor: 'ASC' },
+  { name: 'Mitra', min: 'Jupiter', sub: 'Punya', anchor: 'Venus' },
+  { name: 'Mahatmya', min: 'Punya', sub: 'Mars', anchor: 'ASC' },
+  { name: 'Asha', min: 'Saturn', sub: 'Mars', anchor: 'ASC' },
+  { name: 'Samartha', min: 'Mars', sub: 'LORD_ASC', anchor: 'ASC' },
+  { name: 'Bhratru', min: 'Jupiter', sub: 'Saturn', anchor: 'ASC', same: true },
+  { name: 'Gaurava', min: 'Jupiter', sub: 'Moon', anchor: 'Sun' },
+  { name: 'Pitru', min: 'Saturn', sub: 'Sun', anchor: 'ASC' },
+  { name: 'Raja', min: 'Saturn', sub: 'Sun', anchor: 'ASC' },
+  { name: 'Matru', min: 'Moon', sub: 'Venus', anchor: 'ASC' },
+  { name: 'Putra', min: 'Jupiter', sub: 'Moon', anchor: 'ASC' },
+  { name: 'Jeeva', min: 'Saturn', sub: 'Jupiter', anchor: 'ASC' },
+  { name: 'Karma', min: 'Mars', sub: 'Mercury', anchor: 'ASC' },
+  { name: 'Roga', min: 'ASC', sub: 'Moon', anchor: 'ASC' },
+  { name: 'Kali', min: 'Jupiter', sub: 'Mars', anchor: 'ASC' },
+  { name: 'Sastra', min: 'Jupiter', sub: 'Saturn', anchor: 'Mercury' },
+  { name: 'Bandhu', min: 'Mercury', sub: 'Moon', anchor: 'ASC' },
+  { name: 'Mrityu', min: 'CUSP8', sub: 'Moon', anchor: 'ASC' },
+  { name: 'Paradesa', min: 'CUSP9', sub: 'LORD9', anchor: 'ASC' },
+  { name: 'Artha', min: 'CUSP2', sub: 'LORD2', anchor: 'ASC' },
+  { name: 'Paradara', min: 'Venus', sub: 'Sun', anchor: 'ASC' },
+  { name: 'Vanik', min: 'Moon', sub: 'Mercury', anchor: 'ASC' },
+  { name: 'Karyasiddhi', min: 'Saturn', sub: 'Sun', anchor: 'LORD_SUN' },
+  { name: 'Vivaha', min: 'Venus', sub: 'Saturn', anchor: 'ASC' },
+  { name: 'Santapa', min: 'Saturn', sub: 'Moon', anchor: 'CUSP6' },
+  { name: 'Sraddha', min: 'Venus', sub: 'Mars', anchor: 'ASC' },
+  { name: 'Preeti', min: 'SASTRA', sub: 'Punya', anchor: 'ASC' },
+  { name: 'Jadya', min: 'Mars', sub: 'Saturn', anchor: 'Mercury' },
+  { name: 'Vyapara', min: 'Mars', sub: 'Saturn', anchor: 'ASC', same: true },
+  { name: 'Satru', min: 'Mars', sub: 'Saturn', anchor: 'ASC' },
+  { name: 'Jalapathana', min: 'CANCER15', sub: 'Saturn', anchor: 'ASC' },
+  { name: 'Bandhana', min: 'Punya', sub: 'Saturn', anchor: 'ASC' },
+  { name: 'Apamrityu', min: 'CUSP8', sub: 'Mars', anchor: 'ASC' }
+];
+
+export function runStreamE(inputs: Array<{ input: VarshaphalaInput; result: VarshaphalaResult }>): StreamReport {
+  const r: StreamReport = { name: 'E SAHAM_DASA_IDENTITY', scenarios: inputs.length, checks: 0, violations: 0, firstViolations: [] };
+  const SIGN_LORDS_INDEP = ['Mars', 'Venus', 'Mercury', 'Moon', 'Sun', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Saturn', 'Jupiter'];
+  for (const { input, result: res } of inputs) {
+    if (res.status !== 'CALCULATED') { pass(r); continue; }
+    const returnInstant = new Date(res.solarReturnUtc);
+    const annual = calculateCelestialEphemeris({ dateUtc: returnInstant, latitude: input.latitude, longitude: input.longitude });
+    const lagnaLon = annual.lagna.siderealLongitude;
+    const lagnaRashi = Math.floor(lagnaLon / 30);
+    const P: Record<string, number> = {};
+    for (const g of SEVEN) P[g] = (annual.bodies as unknown as Record<string, { siderealLongitude: number }>)[g].siderealLongitude;
+    const cusp = (n: number): number => ((lagnaLon + 30 * (n - 1)) % 360 + 360) % 360;
+    const lordOf = (signIdx: number): number => P[SIGN_LORDS_INDEP[signIdx]];
+    const day = res.dayNight === 'DAY';
+
+    // resolve operands with dependency order (Punya before its dependents)
+    const punyaSwap = !day;
+    const punyaMin = punyaSwap ? P.Sun : P.Moon;
+    const punyaSub = punyaSwap ? P.Moon : P.Sun;
+    let punya = ((punyaMin - punyaSub + lagnaLon) % 360 + 360) % 360;
+    if (!((((lagnaLon - punyaMin) % 360) + 360) % 360 <= (((punyaSub - punyaMin) % 360 + 360) % 360))) punya = (punya + 30) % 360;
+    let sastra = ((P.Jupiter - P.Saturn + P.Mercury) % 360 + 360) % 360;
+    if (!day) sastra = ((P.Saturn - P.Jupiter + P.Mercury) % 360 + 360) % 360;
+    if (!((((lagnaLon - (day ? P.Jupiter : P.Saturn)) % 360 + 360) % 360) <= (((((day ? P.Saturn : P.Jupiter) - (day ? P.Jupiter : P.Saturn)) % 360) + 360) % 360))) {
+      sastra = (sastra + 30) % 360;
+    }
+    const vals: Record<string, number> = {
+      ...P, ASC: lagnaLon,
+      LORD_ASC: lordOf(lagnaRashi), LORD2: lordOf((lagnaRashi + 1) % 12), LORD9: lordOf((lagnaRashi + 8) % 12),
+      LORD_SUN: lordOf(Math.floor(((P.Sun % 360) + 360) % 360 / 30)),
+      CUSP2: cusp(2), CUSP6: cusp(6), CUSP8: cusp(8), CUSP9: cusp(9),
+      CANCER15: 105, Punya: punya, SASTRA: sastra
+    };
+
+    // independent saham recompute vs engine rows
+    let sahamDiverge = 0;
+    for (const def of INDEP_SAHAMS) {
+      const swap = !day && !def.same;
+      const mn = vals[swap ? def.sub : def.min];
+      const sb = vals[swap ? def.min : def.sub];
+      const an = vals[def.anchor];
+      let lon = ((mn - sb + an) % 360 + 360) % 360;
+      if (!((((lagnaLon - mn) % 360 + 360) % 360) <= (((sb - mn) % 360 + 360) % 360))) lon = (lon + 30) % 360;
+      const engineRow = res.sahams.find((x) => x.name === def.name)!;
+      if (!engineRow || Math.abs(engineRow.longitude - lon) > 1e-9) sahamDiverge++;
+    }
+    if (sahamDiverge > 0) fail(r, `${input.birthDate}/${input.targetYear}: independent saham recompute diverges on ${sahamDiverge}/35`);
+    else pass(r);
+
+    // day/night variant selection: Punya must be the DAY formula on day charts
+    const punyaRow = res.sahams.find((x) => x.name === 'Punya')!;
+    const punyaDay = ((P.Moon - P.Sun + lagnaLon) % 360 + 360) % 360;
+    if (!((((lagnaLon - P.Moon) % 360 + 360) % 360) <= (((P.Sun - P.Moon) % 360 + 360) % 360))) { void punyaDay; }
+    const punyaDayCorrected = !((((lagnaLon - P.Moon) % 360 + 360) % 360) <= (((P.Sun - P.Moon) % 360 + 360) % 360)) ? (punyaDay + 30) % 360 : punyaDay;
+    if (day && Math.abs(punyaRow.longitude - punyaDayCorrected) > 1e-9) fail(r, `${input.birthDate}: day chart did not use the day Punya formula`);
+    else pass(r);
+
+    // varsha dasha invariants
+    const vd = res.varshaDasha!;
+    if (vd.periods.length !== 8) fail(r, `${input.birthDate}: dasha periods ${vd.periods.length} != 8`);
+    else pass(r);
+    const lastKrissamsa = vd.periods[vd.periods.length - 1].krissamsaDeg;
+    if (Math.abs(vd.totalPatyamsaDeg - lastKrissamsa) > 1e-9) fail(r, `${input.birthDate}: total patyamsa != last krissamsa`);
+    else pass(r);
+    const sumDur = vd.periods.reduce((a, q) => a + q.durationDays, 0);
+    if (Math.abs(sumDur - 365.25) > 1e-6) fail(r, `${input.birthDate}: dasha durations sum ${sumDur.toFixed(6)} != 365.25`);
+    else pass(r);
+    if (vd.periods[0].startUtc !== res.solarReturnUtc) fail(r, `${input.birthDate}: first dasha does not start at the return`);
+    else pass(r);
+    let sortedOk = true;
+    for (let i = 1; i < vd.periods.length; i++) {
+      if (vd.periods[i].krissamsaDeg < vd.periods[i - 1].krissamsaDeg) { sortedOk = false; break; }
+    }
+    if (!sortedOk) fail(r, `${input.birthDate}: dasha order not ascending by krissamsa`);
+    else pass(r);
+    // patyamsa identity: first == own krissamsa; rest == diffs
+    const p0 = vd.periods[0];
+    if (Math.abs(p0.patyamsaDeg - p0.krissamsaDeg) > 1e-9) fail(r, `${input.birthDate}: first patyamsa != first krissamsa`);
+    else {
+      let patOk = true;
+      for (let i = 1; i < vd.periods.length; i++) {
+        if (Math.abs(vd.periods[i].patyamsaDeg - (vd.periods[i].krissamsaDeg - vd.periods[i - 1].krissamsaDeg)) > 1e-9) { patOk = false; break; }
+      }
+      if (patOk) pass(r);
+      else fail(r, `${input.birthDate}: patyamsa difference identity`);
+    }
+    // period endpoints contiguous
+    let contig = true;
+    for (let i = 1; i < vd.periods.length; i++) {
+      if (vd.periods[i].startUtc !== vd.periods[i - 1].endUtc) { contig = false; break; }
+    }
+    if (!contig) fail(r, `${input.birthDate}: dasha periods not contiguous`);
+    else pass(r);
+  }
+  return r;
+}
+
 /* ------------------------------------------------------------------ */
 /* Orchestration                                                       */
 /* ------------------------------------------------------------------ */
@@ -459,6 +606,7 @@ export interface VarshaphalaReport {
   streamB: StreamReport;
   streamC: StreamReport;
   streamD: StreamReport;
+  streamE: StreamReport;
   goldenReplay: StreamReport;
   determinism: { samples: number; mismatches: number };
   findings: typeof DECLARED_FINDINGS;
@@ -523,6 +671,7 @@ export function runVarshaphalaQualification(opts: { scenarios: number; gate: 'sc
   const b = runStreamB(simpleScenarios);
   const c = runStreamC(scenarios.filter((s) => s.result));
   const d = runStreamD(scenarios.filter((s) => s.result));
+  const e = runStreamE(scenarios.filter((s) => s.result));
 
   // determinism: byte-equal double compute over the golden set
   let detMismatch = 0;
@@ -533,7 +682,7 @@ export function runVarshaphalaQualification(opts: { scenarios: number; gate: 'sc
   }
   if (detMismatch > 0) { b.violations++; b.firstViolations.push(`determinism: ${detMismatch} golden charts not byte-stable`); }
 
-  const totalViolations = a.violations + b.violations + c.violations + d.violations + goldenR.violations + detMismatch;
+  const totalViolations = a.violations + b.violations + c.violations + d.violations + e.violations + goldenR.violations + detMismatch;
   return {
     runnerVersion: VARSHAPHALA_RUNNER_VERSION,
     engineVersion: VARSHAPHALA_ENGINE_VERSION,
@@ -543,7 +692,7 @@ export function runVarshaphalaQualification(opts: { scenarios: number; gate: 'sc
     scenarios: opts.scenarios,
     generatedAtUtc: new Date().toISOString(),
     verdict: totalViolations === 0 ? 'PASS' : 'FAIL',
-    streamA: a, streamB: b, streamC: c, streamD: d,
+    streamA: a, streamB: b, streamC: c, streamD: d, streamE: e,
     goldenReplay: goldenR,
     determinism: { samples: 3, mismatches: detMismatch },
     findings: DECLARED_FINDINGS,
@@ -561,7 +710,7 @@ function main(): void {
   const scenarios = Number(get('--scenarios') ?? (gate === 'strict' ? 400 : 60));
   const report = runVarshaphalaQualification({ scenarios, gate });
   console.log(`[varshaphala] fixture=${report.fixtureSetId} sha256=${report.fixtureSetSha256.slice(0, 16)}... engine=${report.engineVersion}`);
-  for (const s of [report.streamA, report.streamB, report.streamC, report.streamD, report.goldenReplay]) {
+  for (const s of [report.streamA, report.streamB, report.streamC, report.streamD, report.streamE, report.goldenReplay]) {
     console.log(`${s.name}: ${s.checks} checks / ${s.violations} violations (${s.scenarios} scenarios)`);
     for (const v of s.firstViolations.slice(0, 8)) console.log(`   ! ${v}`);
   }
@@ -576,7 +725,7 @@ function main(): void {
       runnerVersion: report.runnerVersion,
       verdict: report.verdict,
       totalViolations: report.totalViolations,
-      failures: [report.streamA, report.streamB, report.streamC, report.streamD].flatMap((s) => s.firstViolations.map((detail) => ({ stream: s.name, detail })))
+      failures: [report.streamA, report.streamB, report.streamC, report.streamD, report.streamE].flatMap((s) => s.firstViolations.map((detail) => ({ stream: s.name, detail })))
     }, null, 2) + '\n'
   );
   console.log('Artifacts: qualification/varshaphala-summary.json, qualification/varshaphala-failures.json');

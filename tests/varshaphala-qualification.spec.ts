@@ -61,10 +61,18 @@ test.describe('SPRINT-L: fabrication pins (CT_INV_001/002/010)', () => {
     expect(['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn']).toContain(res.varsheshwar.planet);
   });
 
-  test('Sahams are withdrawn honestly, not fabricated', () => {
+  test('Sahams are formula-computed (35 rows) and carry the withdrawal history, not the old fabrication', () => {
     const res = computeVarshaphala(PATNA);
-    expect(res.sahams.length).toBe(0);
-    expect(res.sahamsNotCalculatedReason).toContain('withdrawn');
+    expect(res.sahams.length).toBe(35);
+    expect(res.sahamsNote).toContain('withdrawn');
+    // Punya (day) = Moon - Sun + Asc recomputed independently
+    const annual = calculateCelestialEphemeris({ dateUtc: new Date(res.solarReturnUtc), latitude: 25.5941, longitude: 85.1376 });
+    const punya = res.sahams.find((x) => x.name === 'Punya')!;
+    const expectDay = ((annual.bodies.Moon.siderealLongitude - annual.bodies.Sun.siderealLongitude + annual.lagna.siderealLongitude) % 360 + 360) % 360;
+    expect(Math.abs(punya.rawLongitude - expectDay)).toBeLessThan(1e-9);
+    // correction flag consistency: corrected longitude = raw + 30 when flagged
+    const corrected = ((punya.rawLongitude + (punya.correctionApplied ? 30 : 0)) % 360 + 360) % 360;
+    expect(Math.abs(punya.longitude - corrected)).toBeLessThan(1e-9);
   });
 
   test('registry rows exist with honest source statuses and unreconstructed text', () => {
@@ -188,11 +196,71 @@ test.describe('SPRINT-L: annual structure and adopted selection', () => {
   });
 });
 
+test.describe('SPRINT-M: sahams + varsha dasha', () => {
+
+  const FP_REGRESSION_INPUT: VarshaphalaInput = {
+    birthDate: '1955-02-04', birthTime: '10:50', latitude: 25.321, longitude: 85.393, timezone: 5.5, locationName: 'Scan', targetYear: 2025
+  };
+
+  test('all 35 sahams are present with formulas, rashis, and the correction flag consistent with the longitude', () => {
+    const res = computeVarshaphala(PATNA);
+    expect(res.sahams.length).toBe(35);
+    expect(res.sahams.map((x) => x.id)).toEqual(Array.from({ length: 35 }, (_, i) => i + 1));
+    for (const row of res.sahams) {
+      expect(row.formulaApplied.minuend.length).toBeGreaterThan(0);
+      expect(row.rashiId).toBe(Math.floor(row.longitude / 30) + 1);
+      const reconstructed = (((row.rawLongitude + (row.correctionApplied ? 30 : 0)) % 360) + 360) % 360;
+      expect(Math.abs(row.longitude - reconstructed)).toBeLessThan(1e-9);
+    }
+  });
+
+  test('FP regression pin: ascendant-exactly-at-minuend must NOT trigger the 30-degree correction', () => {
+    // The betweenness test once folded each operand through normalizeDeg(),
+    // turning (asc - asc) into 359.9999... and falsely correcting Roga.
+    const res = computeVarshaphala(FP_REGRESSION_INPUT);
+    const roga = res.sahams.find((x) => x.name === 'Roga')!;
+    expect(roga.correctionApplied).toBe(false);
+    expect(roga.longitude).toBeCloseTo(roga.rawLongitude, 9);
+  });
+
+  test('day/night reversal: Vyapara (same-day/night) is identical across a day and a night chart, Punya is not', () => {
+    const day = computeVarshaphala({ ...PATNA, targetYear: 2026 }); // DAY (pinned in goldens)
+    expect(day.dayNight).toBe('DAY');
+    const nightChart = FIXTURE.golden.find((g: { claim: { type: string } }) => g.claim.type === 'NIGHT_CASE');
+    const night = computeVarshaphala(nightChart.input);
+    expect(night.dayNight).toBe('NIGHT');
+    const vyaparaDay = day.sahams.find((x) => x.name === 'Vyapara')!.formulaApplied;
+    const vyaparaNight = night.sahams.find((x) => x.name === 'Vyapara')!.formulaApplied;
+    expect(vyaparaNight).toEqual(vyaparaDay);
+    const punyaDay = day.sahams.find((x) => x.name === 'Punya')!.formulaApplied;
+    const punyaNight = night.sahams.find((x) => x.name === 'Punya')!.formulaApplied;
+    expect(punyaDay.minuend).toBe('Moon');
+    expect(punyaNight.minuend).toBe('Sun'); // reversed at night
+  });
+
+  test('varsha dasha invariants: 8 participants, patyamsa identity, sum 365.25, contiguous from the return', () => {
+    for (const year of [2023, 2026, 2029]) {
+      const res = computeVarshaphala({ ...PATNA, targetYear: year });
+      const vd = res.varshaDasha!;
+      expect(vd.periods.length).toBe(8);
+      expect(vd.yearLengthDays).toBe(365.25);
+      expect(Math.abs(vd.totalPatyamsaDeg - vd.periods[7].krissamsaDeg)).toBeLessThan(1e-9);
+      expect(vd.periods[0].patyamsaDeg).toBeCloseTo(vd.periods[0].krissamsaDeg, 9);
+      for (let i = 1; i < 8; i++) {
+        expect(vd.periods[i].patyamsaDeg).toBeCloseTo(vd.periods[i].krissamsaDeg - vd.periods[i - 1].krissamsaDeg, 9);
+        expect(vd.periods[i].startUtc).toBe(vd.periods[i - 1].endUtc);
+      }
+      expect(vd.periods.reduce((a, q) => a + q.durationDays, 0)).toBeCloseTo(365.25, 6);
+      expect(vd.periods[0].startUtc).toBe(res.solarReturnUtc);
+    }
+  });
+});
+
 test.describe('SPRINT-L: fixture and committed artifacts', () => {
 
   test('CT_INV_008: VARSHAPHALA_TAJIKA_001 is pinned and carries the classical tables', () => {
     expect(FIXTURE.fixtureSetId).toBe('VARSHAPHALA_TAJIKA_001');
-    expect(FIXTURE.setSha256).toBe('e4b60635d7aa6c42a701dcf2d9b78d001f4a07ba2645adccb4da1e55c5d9540a');
+    expect(FIXTURE.setSha256).toBe('594c760da262139924856f44b9ea730ebc5e9ce0596642be49f6207abe86c8db');
     expect(FIXTURE.engineVersion).toBe(VARSHAPHALA_ENGINE_VERSION);
     expect(FIXTURE.componentMaxima).toEqual({ kshetra: 30, ochcha: 20, hadda: 'NOT_CALCULATED (table unavailable)', drekkana: 10, navamsa: 5 });
     expect(FIXTURE.thrirasiDay).toEqual({ fire: 'Sun', earth: 'Venus', air: 'Saturn', water: 'Mars' });
@@ -213,12 +281,19 @@ test.describe('SPRINT-L: fixture and committed artifacts', () => {
         expect(res.varsheshwar.planet).toBe(g.expected.varsheshwarPlanet);
         expect(res.varsheshwar.balaVirupas).toBeCloseTo(g.expected.varsheshwarPvTotal, 9);
         expect(res.varsheshwar.readingSensitive).toBe(g.expected.readingSensitive);
+        expect(res.sahams.length).toBe(g.expected.sahamCount);
+        const punya = res.sahams.find((x) => x.name === 'Punya')!;
+        expect(punya.longitude).toBeCloseTo(g.expected.punyaLongitude, 9);
+        expect(punya.correctionApplied).toBe(g.expected.punyaCorrected);
+        expect(res.varshaDasha!.totalPatyamsaDeg).toBeCloseTo(g.expected.varshaDashaTotalPatyamsa, 9);
+        expect(res.varshaDasha!.periods[0].participant).toBe(g.expected.varshaDashaFirstParticipant);
+        expect(res.varshaDasha!.periods.reduce((a, q) => a + q.durationDays, 0)).toBeCloseTo(365.25, 6);
       }
     }
   });
 
   test('versions are pinned', () => {
-    expect(VARSHAPHALA_ENGINE_VERSION).toBe('varshaphala-engine-2.0.0 (sprint L, honest rebuild)');
+    expect(VARSHAPHALA_ENGINE_VERSION).toBe('varshaphala-engine-2.1.0 (sprint M, sahams + varsha dasha)');
     expect(VARSHAPHALA_RUNNER_VERSION).toBe('varshaphala-runner-1.0.0 (sprint L)');
   });
 
@@ -235,6 +310,7 @@ test.describe('SPRINT-L: fixture and committed artifacts', () => {
     expect(SUMMARY.streamB.violations).toBe(0);
     expect(SUMMARY.streamC.violations).toBe(0);
     expect(SUMMARY.streamD.violations).toBe(0);
+    expect(SUMMARY.streamE.violations).toBe(0);
     expect(SUMMARY.goldenReplay.violations).toBe(0);
     expect(SUMMARY.determinism.mismatches).toBe(0);
   });
@@ -250,7 +326,8 @@ test.describe('SPRINT-L: fixture and committed artifacts', () => {
     expect(ids).toContain('DECLARED_HADDA_TABLE_UNAVAILABLE');
     expect(ids).toContain('DECLARED_THRIRASI_RAMAN_DISCREPANCY');
     expect(ids).toContain('DECLARED_ASPECT_SIGN_CLASS_READING');
-    expect(ids).toContain('DECLARED_SAHAMS_QUEUED');
+    expect(ids).toContain('DECLARED_SAHAM_TIMING_NOT_IMPLEMENTED');
+    expect(ids).toContain('DECLARED_SAHAM_WHOLE_SIGN_CUSPS');
     for (const f of SUMMARY.findings) {
       expect(f.severity).toBe('NON_BLOCKING');
       expect(f.status).toBe('OPEN');

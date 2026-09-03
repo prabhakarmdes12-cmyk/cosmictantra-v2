@@ -42,7 +42,7 @@ import * as Astronomy from 'astronomy-engine';
 import { calculateCelestialEphemeris } from './celestialEngine';
 import { getAyanamsha } from './ayanamsha';
 
-export const VARSHAPHALA_ENGINE_VERSION = 'varshaphala-engine-2.0.0 (sprint L, honest rebuild)';
+export const VARSHAPHALA_ENGINE_VERSION = 'varshaphala-engine-2.1.0 (sprint M, sahams + varsha dasha)';
 
 export type VarshaphalaErrorCode =
   | 'TARGET_PRE_BIRTH'
@@ -233,6 +233,236 @@ export function panchavargeeyabalaPartial(planet: TajikaPlanet, siderealLon: num
   };
 }
 
+
+/* ------------------------------------------------------------------ */
+/* Sprint M — Sahams (Raman ch. 8 arts. 78-81, 35 points)              */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Operand tokens resolved against the ANNUAL chart. House cusps are
+ * WHOLE-SIGN cusps from the varsha lagna (declared convention; Raman's text
+ * may intend computed madhya cusps — alternative declared on the rule).
+ * Positions of lords are the longitudes of the lord PLANETS in the annual chart.
+ */
+export type SahamOperand =
+  | 'Sun' | 'Moon' | 'Mars' | 'Mercury' | 'Jupiter' | 'Venus' | 'Saturn'
+  | 'ASC' | 'LORD_OF_ASC' | 'LORD_OF_CUSP_2' | 'LORD_OF_9' | 'LORD_OF_SUN_SIGN'
+  | 'CUSP_2' | 'CUSP_6' | 'CUSP_8' | 'CUSP_9'
+  | 'CANCER_15'
+  | 'SAHAM_SASTRA' | 'SAHAM_PUNYA';
+
+export interface SahamDef {
+  id: number;
+  name: string;
+  sanskrit: string;
+  signification: string;
+  minuend: SahamOperand;
+  subtrahend: SahamOperand;
+  anchor: SahamOperand;
+  /** Same formula day and night (no minuend/subtrahend reversal). */
+  sameDayNight?: boolean;
+}
+
+/**
+ * The 35 classical Sahams exactly as tabulated in Raman ch. 8 (vedastro.org
+ * Part 11 digitization, fetched 2026-09). Day formulas; unless sameDayNight,
+ * the night chart swaps minuend and subtrahend (anchor unchanged).
+ */
+export const SAHAM_DEFS: SahamDef[] = [
+  { id: 1, name: 'Punya', sanskrit: 'पुण्य', signification: 'Fortune, merit', minuend: 'Moon', subtrahend: 'Sun', anchor: 'ASC' },
+  { id: 2, name: 'Vidya', sanskrit: 'विद्या', signification: 'Learning, education', minuend: 'Sun', subtrahend: 'Moon', anchor: 'ASC' },
+  { id: 3, name: 'Yasa', sanskrit: 'यश', signification: 'Fame, reputation', minuend: 'Jupiter', subtrahend: 'SAHAM_PUNYA', anchor: 'ASC' },
+  { id: 4, name: 'Mitra', sanskrit: 'मित्र', signification: 'Friends', minuend: 'Jupiter', subtrahend: 'SAHAM_PUNYA', anchor: 'Venus' },
+  { id: 5, name: 'Mahatmya', sanskrit: 'महात्म्य', signification: 'Greatness', minuend: 'SAHAM_PUNYA', subtrahend: 'Mars', anchor: 'ASC' },
+  { id: 6, name: 'Asha', sanskrit: 'आशा', signification: 'Desire', minuend: 'Saturn', subtrahend: 'Mars', anchor: 'ASC' },
+  { id: 7, name: 'Samartha', sanskrit: 'सामर्थ्य', signification: 'Ability, competence', minuend: 'Mars', subtrahend: 'LORD_OF_ASC', anchor: 'ASC' },
+  { id: 8, name: 'Bhratru', sanskrit: 'भ्रातृ', signification: 'Brothers', minuend: 'Jupiter', subtrahend: 'Saturn', anchor: 'ASC', sameDayNight: true },
+  { id: 9, name: 'Gaurava', sanskrit: 'गौरव', signification: 'Respect, honor', minuend: 'Jupiter', subtrahend: 'Moon', anchor: 'Sun' },
+  { id: 10, name: 'Pitru', sanskrit: 'पितृ', signification: 'Father', minuend: 'Saturn', subtrahend: 'Sun', anchor: 'ASC' },
+  { id: 11, name: 'Raja', sanskrit: 'राज', signification: 'King, authority', minuend: 'Saturn', subtrahend: 'Sun', anchor: 'ASC' },
+  { id: 12, name: 'Matru', sanskrit: 'मातृ', signification: 'Mother', minuend: 'Moon', subtrahend: 'Venus', anchor: 'ASC' },
+  { id: 13, name: 'Putra', sanskrit: 'पुत्र', signification: 'Children', minuend: 'Jupiter', subtrahend: 'Moon', anchor: 'ASC' },
+  { id: 14, name: 'Jeeva', sanskrit: 'जीव', signification: 'Livelihood, vitality', minuend: 'Saturn', subtrahend: 'Jupiter', anchor: 'ASC' },
+  { id: 15, name: 'Karma', sanskrit: 'कर्म', signification: 'Action, profession', minuend: 'Mars', subtrahend: 'Mercury', anchor: 'ASC' },
+  { id: 16, name: 'Roga', sanskrit: 'रोग', signification: 'Disease', minuend: 'ASC', subtrahend: 'Moon', anchor: 'ASC' },
+  { id: 17, name: 'Kali', sanskrit: 'कलि', signification: 'Strife, conflict', minuend: 'Jupiter', subtrahend: 'Mars', anchor: 'ASC' },
+  { id: 18, name: 'Sastra', sanskrit: 'शास्त्र', signification: 'Science, learning', minuend: 'Jupiter', subtrahend: 'Saturn', anchor: 'Mercury' },
+  { id: 19, name: 'Bandhu', sanskrit: 'बन्धु', signification: 'Relatives', minuend: 'Mercury', subtrahend: 'Moon', anchor: 'ASC' },
+  { id: 20, name: 'Mrityu', sanskrit: 'मृत्यु', signification: 'Death', minuend: 'CUSP_8', subtrahend: 'Moon', anchor: 'ASC' },
+  { id: 21, name: 'Paradesa', sanskrit: 'परदेश', signification: 'Foreign country', minuend: 'CUSP_9', subtrahend: 'LORD_OF_9', anchor: 'ASC' },
+  { id: 22, name: 'Artha', sanskrit: 'अर्थ', signification: 'Finance, wealth', minuend: 'CUSP_2', subtrahend: 'LORD_OF_CUSP_2', anchor: 'ASC' },
+  { id: 23, name: 'Paradara', sanskrit: 'परदार', signification: 'Adultery', minuend: 'Venus', subtrahend: 'Sun', anchor: 'ASC' },
+  { id: 24, name: 'Vanik', sanskrit: 'वणिक्', signification: 'Trade, commerce', minuend: 'Moon', subtrahend: 'Mercury', anchor: 'ASC' },
+  { id: 25, name: 'Karyasiddhi', sanskrit: 'कार्यसिद्धि', signification: 'Success in undertakings', minuend: 'Saturn', subtrahend: 'Sun', anchor: 'LORD_OF_SUN_SIGN' },
+  { id: 26, name: 'Vivaha', sanskrit: 'विवाह', signification: 'Marriage', minuend: 'Venus', subtrahend: 'Saturn', anchor: 'ASC' },
+  { id: 27, name: 'Santapa', sanskrit: 'सन्ताप', signification: 'Sorrow, grief', minuend: 'Saturn', subtrahend: 'Moon', anchor: 'CUSP_6' },
+  { id: 28, name: 'Sraddha', sanskrit: 'श्रद्धा', signification: 'Devotion', minuend: 'Venus', subtrahend: 'Mars', anchor: 'ASC' },
+  { id: 29, name: 'Preeti', sanskrit: 'प्रीति', signification: 'Love, affection', minuend: 'SAHAM_SASTRA', subtrahend: 'SAHAM_PUNYA', anchor: 'ASC' },
+  { id: 30, name: 'Jadya', sanskrit: 'जड्य', signification: 'Chronic disease', minuend: 'Mars', subtrahend: 'Saturn', anchor: 'Mercury' },
+  { id: 31, name: 'Vyapara', sanskrit: 'व्यापार', signification: 'Business', minuend: 'Mars', subtrahend: 'Saturn', anchor: 'ASC', sameDayNight: true },
+  { id: 32, name: 'Satru', sanskrit: 'शत्रु', signification: 'Enemies', minuend: 'Mars', subtrahend: 'Saturn', anchor: 'ASC' },
+  { id: 33, name: 'Jalapathana', sanskrit: 'जलपातन', signification: 'Sea voyage', minuend: 'CANCER_15', subtrahend: 'Saturn', anchor: 'ASC' },
+  { id: 34, name: 'Bandhana', sanskrit: 'बन्धन', signification: 'Imprisonment', minuend: 'SAHAM_PUNYA', subtrahend: 'Saturn', anchor: 'ASC' },
+  { id: 35, name: 'Apamrityu', sanskrit: 'अपमृत्यु', signification: 'Accidental death', minuend: 'CUSP_8', subtrahend: 'Mars', anchor: 'ASC' }
+];
+
+export interface SahamRow {
+  id: number;
+  name: string;
+  sanskrit: string;
+  signification: string;
+  /** The formula as evaluated (after the day/night reversal). */
+  formulaApplied: { minuend: SahamOperand; subtrahend: SahamOperand; anchor: SahamOperand };
+  rawLongitude: number;
+  /** The 30-degree correction of Raman ch. 8 (applied when the ascendant does not fall between minuend and subtrahend). */
+  correctionApplied: boolean;
+  longitude: number;
+  rashiId: number;
+  rashi: string;
+}
+
+export interface SahamContext {
+  lagnaLon: number;
+  lagnaRashiId: number;
+  planetLons: Record<TajikaPlanet, number>;
+  dayNight: 'DAY' | 'NIGHT';
+}
+
+function resolveSahamOperand(token: SahamOperand, ctx: SahamContext, computed: Map<number, number>): number {
+  switch (token) {
+    case 'ASC': return ctx.lagnaLon;
+    case 'LORD_OF_ASC': {
+      const lord = SIGN_LORDS[ctx.lagnaRashiId - 1];
+      return ctx.planetLons[lord as TajikaPlanet];
+    }
+    case 'LORD_OF_CUSP_2': {
+      const cusp2 = ((ctx.lagnaRashiId - 1 + 1) % 12);
+      return ctx.planetLons[SIGN_LORDS[cusp2] as TajikaPlanet];
+    }
+    case 'LORD_OF_9': {
+      const cusp9 = ((ctx.lagnaRashiId - 1 + 8) % 12);
+      return ctx.planetLons[SIGN_LORDS[cusp9] as TajikaPlanet];
+    }
+    case 'LORD_OF_SUN_SIGN': {
+      const sunSign = Math.floor(normalizeDeg(ctx.planetLons.Sun) / 30);
+      return ctx.planetLons[SIGN_LORDS[sunSign] as TajikaPlanet];
+    }
+    case 'CUSP_2': return normalizeDeg(ctx.lagnaLon + 30);
+    case 'CUSP_6': return normalizeDeg(ctx.lagnaLon + 150);
+    case 'CUSP_8': return normalizeDeg(ctx.lagnaLon + 210);
+    case 'CUSP_9': return normalizeDeg(ctx.lagnaLon + 240);
+    case 'CANCER_15': return 105;
+    case 'SAHAM_PUNYA': return computed.get(1)!;
+    case 'SAHAM_SASTRA': return computed.get(18)!;
+    default:
+      return ctx.planetLons[token as TajikaPlanet];
+  }
+}
+
+/**
+ * Compute all 35 Sahams. Adopted mechanical reading of Raman's correction:
+ * "add 30 deg if the Ascendant does NOT fall between the positions of the
+ * Minuend and Subtrahend" — betweenness on the forward arc from minuend to
+ * subtrahend: ((asc - min) mod 360) <= ((sub - min) mod 360). Dependency
+ * sahams (Punya, Sastra) are computed with the SAME day/night rule first.
+ */
+export function computeSahams(ctx: SahamContext): SahamRow[] {
+  const computed = new Map<number, number>();
+  const rows: SahamRow[] = [];
+  const ordered = [...SAHAM_DEFS].sort((a, b) => {
+    const rank = (d: SahamDef): number => (d.subtrahend === 'SAHAM_PUNYA' || d.minuend === 'SAHAM_SASTRA' ? 1 : 0);
+    return rank(a) - rank(b);
+  });
+  for (const def of ordered) {
+    const swap = ctx.dayNight === 'NIGHT' && !def.sameDayNight;
+    const minuend = swap ? def.subtrahend : def.minuend;
+    const subtrahend = swap ? def.minuend : def.subtrahend;
+    const m = resolveSahamOperand(minuend, ctx, computed);
+    const sb = resolveSahamOperand(subtrahend, ctx, computed);
+    const a = resolveSahamOperand(def.anchor, ctx, computed);
+    const raw = normalizeDeg(m - sb + a);
+    // 30-degree correction (declared forward-arc betweenness reading).
+    // FP NOTE: fold the RAW difference exactly once — a normalizeDeg() round
+    // trip on each operand drifted by one ulp and turned "asc == minuend"
+    // into 359.9999… (caught by independent-identity qualification, sprint M).
+    const ascWithin = (((ctx.lagnaLon - m) % 360) + 360) % 360 <= (((sb - m) % 360) + 360) % 360;
+    const correctionApplied = !ascWithin;
+    const longitude = normalizeDeg(raw + (correctionApplied ? 30 : 0));
+    computed.set(def.id, longitude);
+    const rashiId = Math.floor(longitude / 30) + 1;
+    rows.push({
+      id: def.id, name: def.name, sanskrit: def.sanskrit, signification: def.signification,
+      formulaApplied: { minuend, subtrahend, anchor: def.anchor },
+      rawLongitude: raw,
+      correctionApplied,
+      longitude,
+      rashiId,
+      rashi: RASHIS[rashiId - 1]
+    });
+  }
+  return rows.sort((x, y) => x.id - y.id);
+}
+
+/* ------------------------------------------------------------------ */
+/* Sprint M — Varsha Dasa (Raman ch. 5 arts. 53-56)                    */
+/* ------------------------------------------------------------------ */
+
+export const VARSHA_YEAR_LENGTH_DAYS = 365.25; // 365 days 6 hours (Raman)
+
+export interface VarshaDashaPeriod {
+  participant: string;
+  krissamsaDeg: number;
+  patyamsaDeg: number;
+  durationDays: number;
+  startUtc: string;
+  endUtc: string;
+}
+
+export interface VarshaDasha {
+  totalPatyamsaDeg: number;
+  yearLengthDays: number;
+  /** Bhukti length inside a period X of lord Y: (durY * durX) / yearLength. */
+  periods: VarshaDashaPeriod[];
+  note: string;
+}
+
+/**
+ * Krissamsa = degrees within the sign (sign number rejected). Participants:
+ * the seven grahas + the annual ascendant (Raman's worked example: 8 rows).
+ * Sorted ascending; first patyamsa = its own krissamsa; the rest are
+ * differences; total = krissamsa of the LAST (largest) row; each duration =
+ * patyamsa / total * 365.25 days, starting at the varshapravesha instant.
+ */
+export function computeVarshaDasha(annual: SahamContext, returnInstant: Date): VarshaDasha {
+  const rows = (Object.entries(annual.planetLons) as Array<[TajikaPlanet, number]>)
+    .map(([name, lon]) => ({ participant: name as string, krissamsaDeg: normalizeDeg(lon) % 30 }));
+  rows.push({ participant: 'ASC', krissamsaDeg: normalizeDeg(annual.lagnaLon) % 30 });
+  rows.sort((a, b) => a.krissamsaDeg - b.krissamsaDeg);
+  const total = rows[rows.length - 1].krissamsaDeg;
+  let cursor = returnInstant.getTime();
+  const periods: VarshaDashaPeriod[] = [];
+  for (let i = 0; i < rows.length; i++) {
+    const patyamsa = i === 0 ? rows[i].krissamsaDeg : rows[i].krissamsaDeg - rows[i - 1].krissamsaDeg;
+    const durationDays = total > 0 ? (patyamsa / total) * VARSHA_YEAR_LENGTH_DAYS : 0;
+    const startUtc = new Date(cursor).toISOString();
+    cursor += durationDays * 86400000;
+    periods.push({
+      participant: rows[i].participant,
+      krissamsaDeg: rows[i].krissamsaDeg,
+      patyamsaDeg: patyamsa,
+      durationDays,
+      startUtc,
+      endUtc: new Date(cursor).toISOString()
+    });
+  }
+  return {
+    totalPatyamsaDeg: total,
+    yearLengthDays: VARSHA_YEAR_LENGTH_DAYS,
+    periods,
+    note: 'Bhukti of X inside lord Y: (durY * durX) / 365.25, ordered along the ascending krissamsa sequence starting at Y (Raman ch. 5). Raman: the Vimshottari overlay on annual charts was tested and found disappointing — the longitude-based method is adopted.'
+  };
+}
+
 export interface VarshaphalaInput {
   birthDate: string;
   birthTime: string;
@@ -280,8 +510,9 @@ export interface VarshaphalaResult {
   annualLagna: { rashi: string; rashiId: number };
   dayNight: 'DAY' | 'NIGHT' | 'NOT_CALCULATED';
   annualPlanets: AnnualPlanetRow[];
-  sahams: Array<never>;
-  sahamsNotCalculatedReason: string;
+  sahams: SahamRow[];
+  sahamsNote: string;
+  varshaDasha: VarshaDasha | null;
   ruleRefs: string[];
   declaredFindings: string[];
 }
@@ -318,9 +549,10 @@ export function computeVarshaphala(input: VarshaphalaInput): VarshaphalaResult {
     dayNight: 'NOT_CALCULATED',
     annualPlanets: [],
     sahams: [],
-    sahamsNotCalculatedReason: 'Saham day/night formulas are queued (Sprint L scope closed without them); the pre-Sprint-L constant-offset Sahams were FABRICATED and are withdrawn (CT_INV_002 remediation).',
-    ruleRefs: ['RULE_VARSHA_SOLAR_RETURN', 'RULE_MUNTHA_PROGRESSION', 'RULE_TAJIKA_PANCHAVARGEEYA_BALA', 'RULE_VARSHESHWAR_SELECTION'],
-    declaredFindings: ['DECLARED_HADDA_TABLE_UNAVAILABLE', 'DECLARED_THRIRASI_RAMAN_DISCREPANCY', 'DECLARED_ASPECT_SIGN_CLASS_READING', 'DECLARED_SAHAMS_QUEUED']
+    sahamsNote: "Sahams require the day/night verdict at the return; this result is NOT_CALCULATED.",
+    varshaDasha: null,
+    ruleRefs: ['RULE_VARSHA_SOLAR_RETURN', 'RULE_MUNTHA_PROGRESSION', 'RULE_TAJIKA_PANCHAVARGEEYA_BALA', 'RULE_VARSHESHWAR_SELECTION', 'RULE_TAJIKA_SAHAMS', 'RULE_TAJIKA_VARSHA_DASHA'],
+    declaredFindings: ['DECLARED_HADDA_TABLE_UNAVAILABLE', 'DECLARED_THRIRASI_RAMAN_DISCREPANCY', 'DECLARED_ASPECT_SIGN_CLASS_READING', 'DECLARED_SAHAM_TIMING_NOT_IMPLEMENTED', 'DECLARED_SAHAM_WHOLE_SIGN_CUSPS']
   };
 
   const birthYear = Number(input.birthDate.slice(0, 4));
@@ -441,6 +673,10 @@ export function computeVarshaphala(input: VarshaphalaInput): VarshaphalaResult {
   }
   const readingSensitive = yearLordAlt !== yearLord;
 
+  const sahamCtx: SahamContext = { lagnaLon: annualLagnaLon, lagnaRashiId: annualLagnaRashi, planetLons: annualLons, dayNight };
+  const sahams = computeSahams(sahamCtx);
+  const varshaDasha = computeVarshaDasha(sahamCtx, returnInstant);
+
   return {
     ...base,
     status: 'CALCULATED',
@@ -472,8 +708,9 @@ export function computeVarshaphala(input: VarshaphalaInput): VarshaphalaResult {
     annualLagna: { rashi: RASHIS[annualLagnaRashi - 1], rashiId: annualLagnaRashi },
     dayNight,
     annualPlanets: annualPlanetsFrom(annual),
-    sahams: [],
-    sahamsNotCalculatedReason: base.sahamsNotCalculatedReason,
+    sahams,
+    sahamsNote: "35 Sahams computed per Raman ch. 8 (day/night reversal + the 30-deg correction; whole-sign cusps declared). The pre-Sprint-L constant-offset Sahams were FABRICATED and remain withdrawn (CT_INV_002 remediation). Saham TIMING methods are not implemented (DECLARED_SAHAM_TIMING_NOT_IMPLEMENTED). Raman's own caution stands: many Sahams 'do not work in practice'.",
+    varshaDasha,
     ruleRefs: base.ruleRefs,
     declaredFindings: base.declaredFindings
   };
@@ -516,9 +753,10 @@ export function computeVarshaphalaSafe(input: VarshaphalaInput): VarshaphalaResu
         dayNight: 'NOT_CALCULATED',
         annualPlanets: [],
         sahams: [],
-        sahamsNotCalculatedReason: 'Saham day/night formulas are queued (Sprint L scope closed without them); the pre-Sprint-L constant-offset Sahams were FABRICATED and are withdrawn (CT_INV_002 remediation).',
-        ruleRefs: ['RULE_VARSHA_SOLAR_RETURN', 'RULE_MUNTHA_PROGRESSION', 'RULE_TAJIKA_PANCHAVARGEEYA_BALA', 'RULE_VARSHESHWAR_SELECTION'],
-        declaredFindings: ['DECLARED_HADDA_TABLE_UNAVAILABLE', 'DECLARED_THRIRASI_RAMAN_DISCREPANCY', 'DECLARED_ASPECT_SIGN_CLASS_READING', 'DECLARED_SAHAMS_QUEUED']
+        sahamsNote: "The varsha year could not be erected; Sahams and Varsha Dasha are therefore not computed.",
+        varshaDasha: null,
+        ruleRefs: ['RULE_VARSHA_SOLAR_RETURN', 'RULE_MUNTHA_PROGRESSION', 'RULE_TAJIKA_PANCHAVARGEEYA_BALA', 'RULE_VARSHESHWAR_SELECTION', 'RULE_TAJIKA_SAHAMS', 'RULE_TAJIKA_VARSHA_DASHA'],
+        declaredFindings: ['DECLARED_HADDA_TABLE_UNAVAILABLE', 'DECLARED_THRIRASI_RAMAN_DISCREPANCY', 'DECLARED_ASPECT_SIGN_CLASS_READING', 'DECLARED_SAHAM_TIMING_NOT_IMPLEMENTED', 'DECLARED_SAHAM_WHOLE_SIGN_CUSPS']
       };
     }
     throw e;

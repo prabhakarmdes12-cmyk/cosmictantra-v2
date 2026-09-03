@@ -2,11 +2,11 @@
   "runnerVersion": "why-qualification-runner-1.0.0 (sprint J)",
   "whyEngineVersion": "why-engine-1.0.0 (sprint J)",
   "fixtureSetId": "WHY_GRAPH_001",
-  "fixtureSetSha256": "98c6733081e4b9621081445c6514746e3446ca42d5050a03037cf25dee59b9bb",
+  "fixtureSetSha256": "d42e1d8224d44fe2b4240f147c057531bea3bbb1d1ebdabf826dbad667dd708d",
   "gate": "strict",
   "scenarios": 800,
   "seed": 53261,
-  "generatedAtUtc": "2026-09-03T08:27:55.913Z",
+  "generatedAtUtc": "2026-09-03T08:42:21.572Z",
   "verdict": "PASS",
   "streamA": {
     "charts": 200,

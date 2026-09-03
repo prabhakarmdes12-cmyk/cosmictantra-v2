@@ -1,16 +1,16 @@
 {
   "runnerVersion": "varshaphala-runner-1.0.0 (sprint L)",
-  "engineVersion": "varshaphala-engine-2.0.0 (sprint L, honest rebuild)",
+  "engineVersion": "varshaphala-engine-2.1.0 (sprint M, sahams + varsha dasha)",
   "fixtureSetId": "VARSHAPHALA_TAJIKA_001",
-  "fixtureSetSha256": "e4b60635d7aa6c42a701dcf2d9b78d001f4a07ba2645adccb4da1e55c5d9540a",
+  "fixtureSetSha256": "594c760da262139924856f44b9ea730ebc5e9ce0596642be49f6207abe86c8db",
   "gate": "strict",
   "scenarios": 400,
-  "generatedAtUtc": "2026-09-03T08:31:27.200Z",
+  "generatedAtUtc": "2026-09-03T08:46:30.427Z",
   "verdict": "PASS",
   "streamA": {
     "name": "A AUDIT_PINS",
     "scenarios": 1,
-    "checks": 16,
+    "checks": 18,
     "violations": 0,
     "firstViolations": []
   },
@@ -32,6 +32,13 @@
     "name": "D SELECTION_IDENTITY",
     "scenarios": 400,
     "checks": 2003,
+    "violations": 0,
+    "firstViolations": []
+  },
+  "streamE": {
+    "name": "E SAHAM_DASA_IDENTITY",
+    "scenarios": 400,
+    "checks": 3600,
     "violations": 0,
     "firstViolations": []
   },
@@ -66,9 +73,15 @@
       "status": "OPEN"
     },
     {
-      "id": "DECLARED_SAHAMS_QUEUED",
+      "id": "DECLARED_SAHAM_TIMING_NOT_IMPLEMENTED",
       "severity": "NON_BLOCKING",
-      "statement": "Saham day/night formulas are queued; the pre-Sprint-L constant-offset Sahams were fabricated and are withdrawn.",
+      "statement": "Saham POSITIONS are computed (35 rows, Raman ch. 8) since Sprint M; the two Saham TIMING methods (progression, directional) are not implemented. Raman himself warns many Sahams do not work in practice.",
+      "status": "OPEN"
+    },
+    {
+      "id": "DECLARED_SAHAM_WHOLE_SIGN_CUSPS",
+      "severity": "NON_BLOCKING",
+      "statement": "Saham house-cusp operands (II/VI/VIII/IX) use whole-sign cusps from the varsha lagna; computed madhya (Sripati) cusps are a declared alternative.",
       "status": "OPEN"
     },
     {

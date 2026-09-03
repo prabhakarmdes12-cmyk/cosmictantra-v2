@@ -26,7 +26,7 @@
 - **Working branch**: `arena/01a0655c-cosmictantra-v2` (Sprint C work; `main` at Sprint B commit `167ad3b`).
 - **TypeScript**: `npx tsc --noEmit` exits with **0 errors**.
 - **Automated Tests**: full 20-spec Playwright sweep — **619 passed / 1 failed / 6 skipped**; the single failure is the pre-existing environmental `MR-07` milan-route case (`net::ERR_CONNECTION_REFUSED`, needs a live app server + DB, not a calculation defect).
-- **Current Milestone**: **Sprint L (Varshaphala/Tajika honest rebuild) is COMPLETE** (Sprints C astronomy / D varga / E time / F bala / G gochara / H rule-registry / I yoga-dosha / J evidence-graph / K scholar+corpus gates: PASS at scale).
+- **Current Milestone**: **Sprint M (Tajika depth — Sahams + Varsha Dasha) is COMPLETE** (Sprints C astronomy / D varga / E time / F bala / G gochara / H rule-registry / I yoga-dosha / J evidence-graph / K scholar+corpus / L varshaphala gates: PASS at scale).
 
 ### Sprint C (COMPLETE — this workspace)
 1. **Ayanamsha reconciled (RSK_009 → RESOLVED)**: versioned change `lahiri-registry-aligned-2.0.0` — `getLahiriAyanamsha(jd) = 23.85305556° + 1.39697128°/century · T`, conformant <0.5″ at J2000, <2″ at 1950; engine versioned `V37.0` (CT_INV_008). All engine-derived golden pins (reportId, Vimshottari balance, dasha dates, ayanamsha display, EV-13/14 baselines) re-baselined to the reconciled output with in-test provenance comments.
@@ -113,8 +113,17 @@
 4. **Qualification** (`npm run qualify:varshaphala`, strict 400): **1,601 solar-return / 5,200 structure / 2,003 selection-identity / 49 golden checks — 0 violations** vs an independent Newton/secant solver and an independent selection reimplementation. Gate spec 18/18.
 5. See `docs/reference-grade/14-sprint-l-varshaphala-tajika.md`.
 
-### Scope for Sprint M (Next Actionable Sprint)
-**Transit overlays + yoga growth + Tajika depth** (queued): transit Vimshottari overlay + Kaksha tables, curated yoga families toward ~100 (full Nabhasa set, Mahabhagya input gap, Jaimini yogada), Tajika depth (Sahams day/night formulas, Hadda tables if a machine-readable source emerges, Ithasala/Isarapha yogas, Varsha Dasa), and the scholar-console UI slice wiring the §19 queue + §18 WHY API into pages.
+### Sprint M (COMPLETE — this workspace)
+**Tajika depth — Sahams + Varsha Dasha** (completes the Sprint L queue):
+1. **35 Sahams** (`RULE_TAJIKA_SAHAMS`): Raman ch. 8 day-formula table, night reversal (Bhratru/Vyapara same-day/night preserved), the 30° correction under the declared forward-arc betweenness reading, whole-sign cusps declared, dependency sahams ordered, timing honestly NOT implemented, Raman's own "many do not work in practice" caution carried.
+2. **Varsha Dasha** (`RULE_TAJIKA_VARSHA_DASHA`): krissamsa → patyamsa over the 8 annual participants (7 grahas + varsha lagna), periods = patyamsa/total × 365.25 d contiguous from the varshapravesha; bhukti formula carried; Vimshottari overlay deprecation recorded.
+3. **A real FP bug caught by §21**: the betweenness test's normalizeDeg() round-trip drifted one ulp — "asc == minuend" read as 359.9999… and falsely added the 30° correction (2/400 charts). Fixed to a single raw-difference fold; regression-pinned.
+4. **Registry 63 → 65**; registry/yoga/why fixtures re-derived, gates re-run PASS at scale.
+5. **Qualification**: strict 400 — stream E (3,600 checks) adds full independent saham identity + dasha invariants; **PASS, 0 violations**; gate spec 22/22.
+6. See `docs/reference-grade/15-sprint-m-tajika-sahams-varsha-dasha.md`.
+
+### Scope for Sprint N (Next Actionable Sprint)
+**Transit overlays + yoga growth + console** (queued): transit Vimshottari overlay + Kaksha tables, curated yoga families toward ~100 (full Nabhasa set, Mahabhagya input gap, Jaimini yogada), Tajika residue (Saham timing, Hadda/Deeptamsha tables if a machine-readable source emerges, 16 yogas), and the scholar-console UI slice wiring the §19 queue + §18 WHY API into pages.
 
 **Rules of Engagement**:
 - **Preserve working systems**: Do not replace working code; wrap and extend it.

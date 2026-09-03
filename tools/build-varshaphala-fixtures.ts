@@ -39,6 +39,12 @@ interface GoldenScenario {
     varsheshwarPvTotal: number;
     varsheshwarPortfolios: string[];
     readingSensitive: boolean;
+    sahamCount: number;
+    punyaLongitude: number;
+    punyaCorrected: boolean;
+    varshaDashaTotalPatyamsa: number;
+    varshaDashaFirstParticipant: string;
+    varshaDashaSumDays: number;
   };
 }
 
@@ -88,7 +94,13 @@ function build(): unknown {
               varsheshwarPlanet: r.varsheshwar.planet,
               varsheshwarPvTotal: r.varsheshwar.balaVirupas!,
               varsheshwarPortfolios: r.varsheshwar.portfolios,
-              readingSensitive: r.varsheshwar.readingSensitive
+              readingSensitive: r.varsheshwar.readingSensitive,
+              sahamCount: r.sahams.length,
+              punyaLongitude: r.sahams.find((x) => x.name === 'Punya')!.longitude,
+              punyaCorrected: r.sahams.find((x) => x.name === 'Punya')!.correctionApplied,
+              varshaDashaTotalPatyamsa: r.varshaDasha!.totalPatyamsaDeg,
+              varshaDashaFirstParticipant: r.varshaDasha!.periods[0].participant,
+              varshaDashaSumDays: r.varshaDasha!.periods.reduce((a, q) => a + q.durationDays, 0)
             }
           });
           return;
@@ -121,7 +133,13 @@ function build(): unknown {
         varsheshwarPlanet: r.varsheshwar.planet,
         varsheshwarPvTotal: r.varsheshwar.balaVirupas!,
         varsheshwarPortfolios: r.varsheshwar.portfolios,
-        readingSensitive: r.varsheshwar.readingSensitive
+        readingSensitive: r.varsheshwar.readingSensitive,
+        sahamCount: r.sahams.length,
+        punyaLongitude: r.sahams.find((x) => x.name === 'Punya')!.longitude,
+        punyaCorrected: r.sahams.find((x) => x.name === 'Punya')!.correctionApplied,
+        varshaDashaTotalPatyamsa: r.varshaDasha!.totalPatyamsaDeg,
+        varshaDashaFirstParticipant: r.varshaDasha!.periods[0].participant,
+        varshaDashaSumDays: r.varshaDasha!.periods.reduce((a, q) => a + q.durationDays, 0)
       }
     });
   }
@@ -137,6 +155,10 @@ function build(): unknown {
     thrirasiNight: { fire: 'Jupiter', earth: 'Moon', air: 'Mercury', water: 'Mars' },
     aspectQualifyingHouses: [2, 3, 5, 9, 11, 12],
     fallbackRule: 'MUNTHA_LORD',
+    sahamCount: 35,
+    sahamMethod: 'Raman ch.8: Minuend - Subtrahend + Anchor, night reversal, 30-deg correction (forward-arc betweenness), whole-sign cusps',
+    varshaDashaParticipants: 8,
+    varshaYearLengthDays: 365.25,
     tolerance: { seconds: 2, degrees: 1e-5, pvAbs: 1e-9 },
     goldenScenarioCount: golden.length,
     golden: golden

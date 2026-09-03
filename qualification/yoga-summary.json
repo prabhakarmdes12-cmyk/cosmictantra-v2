@@ -3,11 +3,11 @@
   "catalogVersion": "jyotish-source-registry-v2 (sprint I expansion)",
   "doshaEngineVersion": "dosha-engine-1.0.0 (sprint I, kalsarpa variant adopted)",
   "fixtureSetId": "YOGA_CATALOG_001",
-  "fixtureSetSha256": "e041fcfcbaf72f74428e920b9ce78b596a01646e6162ce5aa210b6d183c6828e",
+  "fixtureSetSha256": "8bac9cf4a5492f3cf5ad79a2d812fbb8d86e82042980d68b13cc5d50452375bc",
   "gate": "strict",
   "scenarios": 2000,
   "seed": 37009,
-  "generatedAtUtc": "2026-09-03T08:28:13.124Z",
+  "generatedAtUtc": "2026-09-03T08:42:07.363Z",
   "verdict": "PASS",
   "streamA": {
     "checks": 273,

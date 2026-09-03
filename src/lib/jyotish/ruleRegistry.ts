@@ -680,6 +680,59 @@ function seedRegistry(): void {
     scholarReviews: [],
     version: '1.0.0'
   });
+
+  registerClassicalRule({
+    id: 'RULE_TAJIKA_SAHAMS',
+    sanskritName: 'Saham (सहम)',
+    englishName: 'The 35 Tajika sensitive points (Raman ch. 8 arts. 78-81)',
+    category: 'DEFINITION_CANDIDATE',
+    tradition: 'Tajika (Raman ch. 8) — relayed via SOURCE_SECONDARY digitizations; no licensed edition held',
+    source: 'Raman ch. 8 digitized at vedastro.org Part 11 (35-saham day-formula table, night reversal rule, 30-deg correction rule); Nilakantha 50 / Venkatesa 48 / Kesava 21 counts noted',
+    sourceLocator: 'NOT VERIFIED — no licensed edition held; formula table relayed from SOURCE_SECONDARY web digitization (fetched 2026-09)',
+    sourceVerification: 'SOURCE_SECONDARY',
+    originalText: NO_ORIGINAL_TEXT,
+    translation: NO_ORIGINAL_TEXT,
+    adoptedInterpretation: 'Saham = Minuend - Subtrahend + Anchor, computed on ANNUAL positions; at night the minuend and subtrahend swap (anchor unchanged) unless the saham is marked same-day/night (Bhratru, Vyapara). The 30-deg correction is applied when the ascendant does NOT fall on the forward arc from minuend to subtrahend: ((asc-min) mod 360) <= ((sub-min) mod 360). House-cusp operands (II/VI/VIII/IX) are WHOLE-SIGN cusps from the varsha lagna; lord operands resolve to the lord planet annual longitude. Dependency sahams (Punya, Sastra) are computed first under the same day/night rule. The pre-Sprint-L constant-offset Sahams were FABRICATED and remain withdrawn (CT_INV_002 remediation). Timing methods (progression, directional) are NOT implemented.',
+    alternateInterpretations: [
+      'Raman warns many Sahams do not work in practice — positions are computed, judgment is left to the practitioner/scholar flow.',
+      'Computed madhya (Sripati) cusps instead of whole-sign cusps for the II/VI/VIII/IX operands.',
+      'Betweenness on the reverse arc for the 30-deg correction — the adopted forward-arc reading is the standard one.',
+      'Night formulas that ADD the correction differently per lineage are not adopted.'
+    ],
+    prerequisites: ['RULE_VARSHA_SOLAR_RETURN', 'Annual lagna + seven grahas', 'Day/night verdict at the return'],
+    evaluator: 'src/lib/jyotish/varshaphalaEngine.ts::computeSahams',
+    evidencePaths: ['src/lib/jyotish/varshaphalaEngine.ts'],
+    validationStatus: 'IMPLEMENTED',
+    adoption: 'ADOPTED',
+    scholarReviews: [],
+    version: '1.0.0'
+  });
+
+  registerClassicalRule({
+    id: 'RULE_TAJIKA_VARSHA_DASHA',
+    sanskritName: 'Varsha Dasha (वर्ष दशा)',
+    englishName: 'Tajika year-lord periods from krissamsa differences (patyamsa)',
+    category: 'DASHA',
+    tradition: 'Tajika (Raman ch. 5 arts. 53-56) — relayed via SOURCE_SECONDARY digitizations; no licensed edition held',
+    source: 'Raman ch. 5 digitized at vedastro.org Part 7 (krissamsa/patyamsa method + fully worked Standard-Horoscope example, total 365d 6h)',
+    sourceLocator: 'NOT VERIFIED — no licensed edition held; method relayed from SOURCE_SECONDARY web digitization (fetched 2026-09)',
+    sourceVerification: 'SOURCE_SECONDARY',
+    originalText: NO_ORIGINAL_TEXT,
+    translation: NO_ORIGINAL_TEXT,
+    adoptedInterpretation: 'Participants: the seven grahas + the ANNUAL ascendant (8 rows; Raman worked example). Krissamsa = longitude mod 30 (sign rejected). Sort ascending; first patyamsa = its own krissamsa, the rest are consecutive differences; total = krissamsa of the largest row (identity pinned); each period = patyamsa/total x 365.25 days (365d 6h), starting at the varshapravesha instant in ascending order. Bhukti of X inside lord Y = (durY x durX)/365.25 along the same ascending sequence starting at Y. Raman explicitly deprecates a Vimshottari overlay for annual charts.',
+    alternateInterpretations: [
+      'Some lineages include Rahu in the participant set — NOT adopted (the worked example uses eight).',
+      'Vimshottari-approximate annual periods — explicitly found disappointing by Raman; NOT adopted.',
+      'Year length 365 vs 365.25 days — the worked example uses 365d 6h, adopted.'
+    ],
+    prerequisites: ['RULE_VARSHA_SOLAR_RETURN', 'Annual positions + annual lagna'],
+    evaluator: 'src/lib/jyotish/varshaphalaEngine.ts::computeVarshaDasha',
+    evidencePaths: ['src/lib/jyotish/varshaphalaEngine.ts'],
+    validationStatus: 'IMPLEMENTED',
+    adoption: 'ADOPTED',
+    scholarReviews: [],
+    version: '1.0.0'
+  });
 }
 
 let seeded = false;
