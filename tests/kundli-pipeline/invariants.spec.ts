@@ -154,7 +154,7 @@ test.describe('KUNDLI_INV_004/005/006 — calculation completeness & traceabilit
     expect(calc.ayanamshaName).toContain('Lahiri');
     expect(calc.nodeMode).toBe('MEAN_NODE');
     expect(calc.ephemerisProvider).toContain('VSOP87');
-    expect(calc.engineVersion).toContain('V36.0');
+    expect(calc.engineVersion).toContain('V37.0'); // Sprint C versioned ayanamsha reconciliation (CT_INV_008)
     expect(calc.calculationVersion).toContain('kundli-calc');
   });
 

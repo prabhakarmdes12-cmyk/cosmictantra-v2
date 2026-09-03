@@ -111,7 +111,7 @@ test.describe('the finished pages use DMS where a Pandit reads, decimals where a
 
     // Latitude, longitude and the ayanamsha are coordinates and settings, not
     // graha positions, so they legitimately stay decimal.
-    const allowed = ['25.5941\u00B0', '85.1376\u00B0', '23.7936\u00B0'];
+    const allowed = ['25.5941\u00B0', '85.1376\u00B0', '23.7895\u00B0']; // ayanamsha display, reconciled (RSK_009)
     const decimals = (partA.match(/\d+\.\d+\u00B0/g) ?? []).filter((d) => !allowed.includes(d));
     expect(decimals, `decimal degrees left on a consultation page: ${decimals.join(', ')}`).toEqual([]);
   });

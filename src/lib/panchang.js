@@ -1,4 +1,5 @@
 import { calculateCelestialEphemeris } from './jyotish/celestialEngine';
+import { getLahiriAyanamsha } from './jyotish/ayanamsha';
 /**
  * PROTECTED DOMAIN LOGIC: Panchang Deterministic Astronomical Engine
  * Calculates Tithi, Nakshatra, Yoga, Karana, Sunrise, Sunset, Rahu Kaal,
@@ -85,12 +86,8 @@ function getJulianDate(date) {
   return (time / 86400000) + 2440587.5;
 }
 
-// Lahiri Ayanamsha for epoch (approx 24.16° in 2026)
-function getLahiriAyanamsha(jd) {
-  const t = (jd - 2451545.0) / 36525;
-  return 23.856 + (1.396 * t);
-}
-
+// Ayanamsha unified onto the canonical reconciled implementation (Sprint C, RSK_009).
+// (getLahiriAyanamsha imported from ./jyotish/ayanamsha — lahiri-registry-aligned-2.0.0)
 // Approximate Tropical Sun Longitude
 function getSunLongitude(jd) {
   const d = jd - 2451545.0;

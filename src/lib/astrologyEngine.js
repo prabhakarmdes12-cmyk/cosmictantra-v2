@@ -1,4 +1,5 @@
 import { calculateCelestialEphemeris } from './jyotish/celestialEngine';
+import { getLahiriAyanamsha } from './jyotish/ayanamsha';
 /**
  * PROTECTED CANONICAL DOMAIN LOGIC: Kundali / Vedic Sidereal Chart Engine
  * Generates Lagna (Ascendant), 12 House Cusps (Bhavas), 9 Vedic Grahas,
@@ -181,10 +182,9 @@ export function normalizeAngle(angle) {
   return ((angle % 360) + 360) % 360;
 }
 
-export function getLahiriAyanamsha(jd) {
-  const T = (jd - 2451545.0) / 36525.0;
-  return 23.856 + 1.396 * T;
-}
+// Ayanamsha unified onto the canonical reconciled implementation (Sprint C, RSK_009):
+// single source of truth in src/lib/jyotish/ayanamsha.ts (lahiri-registry-aligned-2.0.0).
+export { getLahiriAyanamsha };
 
 export function toSidereal(tropicalLon, ayanamsha) {
   return normalizeAngle(tropicalLon - ayanamsha);

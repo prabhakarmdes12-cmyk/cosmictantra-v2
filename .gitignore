@@ -42,3 +42,9 @@ test-results/
 # Generated verification artifacts (PDFs, rasters, extracted text)
 artifacts/
 granth_raw/
+
+# reference-grade qualification harness: regenerable pipeline artifacts
+# (regenerate via `npm run qualify:astronomy`; certification doc is committed)
+qualification/astronomy-summary.json
+qualification/astronomy-failures.json
+qualification/astronomy-statistics.json

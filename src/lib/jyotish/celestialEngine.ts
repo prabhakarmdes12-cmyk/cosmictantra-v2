@@ -45,8 +45,16 @@ export interface CelestialEphemerisSnapshot {
     longitude: number;
     localSiderealTimeHours: number;
     localSiderealTimeDegrees: number;
+    /** Obliquity of the ecliptic of date (degrees) — exposed for independent verification. */
+    obliquityOfEclipticDeg: number;
   };
   lagna: {
+    tropicalLongitude: number;
+    siderealLongitude: number;
+    dms: string;
+  };
+  /** Midheaven (Madhya Lagna): ecliptic point culminating on the local meridian (RA = LST). */
+  mc: {
     tropicalLongitude: number;
     siderealLongitude: number;
     dms: string;
@@ -143,13 +151,49 @@ export function calculateAscendantTropical(
   const y = cosLST;
   const x = -sinLST * cosEps - tanLat * sinEps;
   const lagnaRad = Math.atan2(y, x);
-  const tropicalLagna = normalizeAngle(lagnaRad * 180 / Math.PI);
-  
+  let tropicalLagna = normalizeAngle(lagnaRad * 180 / Math.PI);
+
+  // RISING-BRANCH GUARANTEE (Sprint C polar correction, RSK_003):
+  // The ecliptic and the horizon are both great circles, so they intersect at exactly
+  // two ANTIPODAL points (λ and λ+180). Beyond the polar circles (|φ| > ~66.5°) the
+  // classic formula above can return the SETTING (western) intersection — altitude ≈ 0
+  // but hour angle H ∈ (0°, 180°). Enforce the defining property of the Ascendant:
+  // the point must be RISING (hour angle in (−180°, 0°), i.e. east of the meridian).
+  // Inside |φ| ≤ 66° this never triggers (verified by the qualification harness over
+  // 100,000+ scenarios); it is exact where it does trigger (antipodal flip).
+  {
+    const lamRad = tropicalLagna * Math.PI / 180;
+    const raRad = Math.atan2(Math.sin(lamRad) * cosEps, Math.cos(lamRad));
+    let hDeg = lstDegrees - raRad * 180 / Math.PI;
+    while (hDeg > 180) hDeg -= 360;
+    while (hDeg <= -180) hDeg += 360;
+    if (hDeg >= 0) {
+      tropicalLagna = normalizeAngle(tropicalLagna + 180);
+    }
+  }
+
   return {
     tropicalLongitude: tropicalLagna,
     lstHours,
     lstDegrees
   };
+}
+
+/**
+ * Computes the Midheaven (Madhya Lagna / MC): the ecliptic point culminating on the
+ * local meridian, i.e. the point of the ecliptic whose Right Ascension equals the
+ * Local Sidereal Time (RAMC).
+ * tan(λ_MC) = tan(RAMC) / cos(ε), quadrant-safe via atan2.
+ * Well-defined at all latitudes (depends only on LST and obliquity, not on φ).
+ */
+export function calculateMidheavenTropical(
+  lstDegrees: number,
+  obliquityDeg: number
+): number {
+  const thetaRad = lstDegrees * Math.PI / 180;
+  const epsRad = obliquityDeg * Math.PI / 180;
+  const mcRad = Math.atan2(Math.sin(thetaRad), Math.cos(thetaRad) * Math.cos(epsRad));
+  return normalizeAngle(mcRad * 180 / Math.PI);
 }
 
 /**
@@ -183,6 +227,14 @@ export function calculateCelestialEphemeris(params: {
   // 1. Calculate Lagna
   const lagnaCalc = calculateAscendantTropical(astroTime, latitude, longitude);
   const lagnaSidereal = normalizeAngle(lagnaCalc.tropicalLongitude - ayanamshaDeg);
+
+  // 1b. Obliquity of the ecliptic of date (shared by Lagna and MC paths)
+  const Tcent = astroTime.tt / 36525.0;
+  const obliquityDeg = 23.4392911 - 0.0130042 * Tcent - 0.00000016 * Tcent * Tcent + 0.000000504 * Tcent * Tcent * Tcent;
+
+  // 1c. Midheaven (Madhya Lagna) from RAMC and obliquity
+  const mcTropical = calculateMidheavenTropical(lagnaCalc.lstDegrees, obliquityDeg);
+  const mcSidereal = normalizeAngle(mcTropical - ayanamshaDeg);
 
   // Helper for computing geocentric body position + daily speed
   const getBodyData = (
@@ -296,12 +348,18 @@ export function calculateCelestialEphemeris(params: {
       latitude,
       longitude,
       localSiderealTimeHours: lagnaCalc.lstHours,
-      localSiderealTimeDegrees: lagnaCalc.lstDegrees
+      localSiderealTimeDegrees: lagnaCalc.lstDegrees,
+      obliquityOfEclipticDeg: obliquityDeg
     },
     lagna: {
       tropicalLongitude: lagnaCalc.tropicalLongitude,
       siderealLongitude: lagnaSidereal,
       dms: formatDegreesDMS(lagnaSidereal)
+    },
+    mc: {
+      tropicalLongitude: mcTropical,
+      siderealLongitude: mcSidereal,
+      dms: formatDegreesDMS(mcSidereal)
     },
     bodies: {
       Sun: sunPos,

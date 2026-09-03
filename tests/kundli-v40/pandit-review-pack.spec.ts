@@ -132,7 +132,7 @@ test('the cover says plainly that this is not a client document', () => {
   expect(text).toMatch(/PANDIT REVIEW PACK/i);
   expect(text).toMatch(/NOT FOR A CLIENT/i);
   // It must be traceable back to the report it was cut from.
-  expect(text).toContain('CT-KUNDLI-31346AC701E0CFD5');
+  expect(text).toContain('CT-KUNDLI-F03981A49AFCE30F'); // reconciled content hash (Sprint C RSK_009)
 });
 
 test('the pack contains the same words as the real report', async () => {
@@ -140,7 +140,8 @@ test('the pack contains the same words as the real report', async () => {
   const { inspection: golden } = await goldenV3Artifact();
   const sample = [
     'Simha 12\u00B006\u2032', 'Uttara Ashadha', 'Malavya', 'Budhaditya',
-    '5y 0m 4d', 'Rahu', 'Mercury',
+    '5y 0m 3d', // reconciled balance (Sprint C RSK_009)
+    'Rahu', 'Mercury',
   ];
   for (const s of sample) {
     expect(golden.allText, `${s} is not in the source report`).toContain(s);
