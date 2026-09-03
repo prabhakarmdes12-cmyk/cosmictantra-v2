@@ -15,6 +15,7 @@
 | [**`02-validation-gap-analysis.md`**](./02-validation-gap-analysis.md) | **Validation Gap Analysis** — Concrete step-by-step roadmap detailing the progression from `INTERNALLY_VERIFIED` to `REFERENCE-GRADE`. |
 | [**`03-convention-registry.md`**](./03-convention-registry.md) | **Convention Registry** — Immutable declarations for Ayanamsha, Node model, House cusps, Ephemeris basis, Calendar, and Sunrise conventions. |
 | [**`04-risk-register.md`**](./04-risk-register.md) | **Risk Register** — Identified failure modes, combustion thresholds, polar coordinate safeguards, and fail-closed protocols. |
+| [**`../design/UI_UX_DESIGN_DIRECTION_2027.md`**](../design/UI_UX_DESIGN_DIRECTION_2027.md) | **UI/UX Design Direction 2027** — Product, trust, and conversion hierarchies: 5 primary destinations, 3 information-density modes, narrative-first Kundli, and contextual Kashi Sahayak. |
 
 ---
 
