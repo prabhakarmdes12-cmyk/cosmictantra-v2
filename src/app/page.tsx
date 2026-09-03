@@ -31,7 +31,7 @@ export default function AppLandingPage() {
   const [currentCity, setCurrentCity] = useState<any>(DEFAULT_CITY);
   // Initialize with a computed value; also refreshed client-side via useEffect
   const [panchangData, setPanchangData] = useState<any>(() => calculatePanchang(new Date(), DEFAULT_CITY));
-  const [kundaliData, setKundaliData] = useState(null);
+  const [kundaliData, setKundaliData] = useState<any>(null);
 
   // Day/Night & Language State (Chiti UDS v3 compliant — Light/Day mode default, SSR-safe)
   const [theme, setTheme] = useState('light');
@@ -59,6 +59,22 @@ export default function AppLandingPage() {
       const savedLoc = getPersistedLocation();
       if (savedLoc && savedLoc.lat && savedLoc.lng) {
         setCurrentCity(savedLoc);
+      }
+      const savedProfile = localStorage.getItem('cosmictantra_active_kundli');
+      if (savedProfile) {
+        const parsed = JSON.parse(savedProfile);
+        if (parsed && parsed.name && parsed.birthDate && (parsed.latitude !== undefined || parsed.lat !== undefined) && (parsed.longitude !== undefined || parsed.lng !== undefined)) {
+          const kData = calculateKundali({
+            birthDate: parsed.birthDate,
+            birthTime: parsed.birthTime || '12:00',
+            latitude: Number(parsed.latitude ?? parsed.lat),
+            longitude: Number(parsed.longitude ?? parsed.lng),
+            timezone: Number(parsed.timezone ?? parsed.tz) || 5.5,
+            name: parsed.name,
+            locationName: parsed.city || parsed.locationName || 'India'
+          });
+          setKundaliData(kData);
+        }
       }
     } catch {}
 

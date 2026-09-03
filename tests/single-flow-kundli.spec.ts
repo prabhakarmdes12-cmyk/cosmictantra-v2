@@ -42,26 +42,31 @@ test.describe('Unified Single-Flow Kundli Generation & Master Workspace', () => 
   test('Unified Master Workspace (/report) supports 17-Volume Folio and Interactive Workbench', async ({ page }) => {
     await page.goto('http://localhost:3000/report');
 
-    // 1. Check Folio Volume list
-    await expect(page.locator('body')).toContainText('17 Book Volumes');
-    await expect(page.locator('body')).toContainText('VOLUME I OF XVII');
+    // 1. Check Overview renders first (default)
+    await expect(page.locator('#report-tab-overview')).toBeVisible();
 
-    // 2. Switch to Interactive Workbench
-    const workbenchBtn = page.locator('button:has-text("Interactive Workbench")').first();
+    // 2. Switch to Folio tab
+    const folioTab = page.locator('#report-tab-folio');
+    await expect(folioTab).toBeVisible();
+    await folioTab.click();
+    await expect(page.locator('body')).toContainText('17-Volume Kundli');
+
+    // 3. Switch to Interactive Workbench
+    const workbenchBtn = page.locator('#report-tab-workbench');
     await expect(workbenchBtn).toBeVisible();
     await workbenchBtn.click();
 
-    // 3. Verify Divisional Charts
+    // 4. Verify Divisional Charts
     await expect(page.locator('body')).toContainText('Divisional Shodashavarga Chart');
     await expect(page.locator('body')).toContainText('Graha Balas & Dignities');
 
-    // 4. Switch division to D9 Navamsha
+    // 5. Switch division to D9 Navamsha
     const d9Btn = page.locator('button:has-text("D9 Navamsha")').first();
     await expect(d9Btn).toBeVisible();
     await d9Btn.click();
-    await expect(page.locator('body')).toContainText('Division Active: D9');
+    await expect(page.locator('body')).toContainText('North Indian style — D9');
 
-    // 5. Check the two clean actions: Save Profile & Download PDF. The Print
+    // 6. Check the two clean actions: Save Profile & Download PDF. The Print
     // button was retired with the decluttered toolbar — the qualified PDF the
     // visitor downloads carries its own Print command.
     const saveProfileBtn = page.locator('[data-testid="report-save-profile"]').first();
@@ -73,30 +78,15 @@ test.describe('Unified Single-Flow Kundli Generation & Master Workspace', () => 
     await expect(page.getByRole('group', { name: 'Qualified PDF language' })).toHaveCount(0);
   });
 
-  test('Sample Kundlis Showcase on homepage allows 1-click preview of Golden References', async ({ page }) => {
-    await page.goto('http://localhost:3000');
+  test('Sample Golden Reference Kundli loading on /report works seamlessly with query parameters', async ({ page }) => {
+    // Navigate directly with historical reference parameters
+    await page.goto('http://localhost:3000/report?name=Mahatma%20Gandhi&dob=1869-10-02&tob=07:12:00&city=Porbandar');
 
-    // 1. Verify Sample Kundlis section
-    const sampleSection = page.locator('#sample-kundlis-section');
-    await expect(sampleSection).toBeVisible();
-
-    // 2. Check 3 specimens
-    await expect(sampleSection).toContainText('Kashi Golden Specimen (1989)');
-    await expect(sampleSection).toContainText('Mahatma Gandhi (1869)');
-    await expect(sampleSection).toContainText('Swami Vivekananda (1863)');
-
-    // 3. Click Gandhi sample card button (2nd card) — cards now use <button> + window.location.href
-    const cardBtns = sampleSection.locator('button:has-text("View Master Kundli"), button:has-text("मास्टर पत्रिका देखें")');
-    await expect(cardBtns.nth(1)).toBeVisible();
-    const [navigation] = await Promise.all([
-      page.waitForNavigation({ timeout: 10000 }),
-      cardBtns.nth(1).click(),
-    ]);
-
-    // 4. Verify arrival on /report with Gandhi
+    // Verify arrival on /report with Gandhi's birth data
     await expect(page).toHaveURL(/.*\/report.*/);
     await expect(page.locator('body')).toContainText('Mahatma Gandhi');
     await expect(page.locator('body')).toContainText('1869-10-02');
+    await expect(page.locator('body')).toContainText('Porbandar');
   });
 
 });

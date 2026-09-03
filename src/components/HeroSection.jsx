@@ -38,20 +38,20 @@ export default function HeroSection({
   const isHi = lang === 'hi';
   const t = TRANSLATIONS[lang]?.hero || TRANSLATIONS.en.hero;
 
-  // 2-Step Micro-Drawer State
+  // 2-Step Micro-Drawer State (Starts clean for first-time visitors; filled only once user enters/saves)
   const [isExpanded, setIsExpanded] = useState(false);
   const [formData, setFormData] = useState({
-    name: 'Priya Sharma',
-    birthDate: '1995-06-15',
-    birthTime: '10:30',
-    cityName: 'Patna',
-    stateName: 'Bihar',
-    latitude: 25.5941,
-    longitude: 85.1376,
+    name: '',
+    birthDate: '',
+    birthTime: '',
+    cityName: '',
+    stateName: '',
+    latitude: null,
+    longitude: null,
     timezone: 5.5,
   });
 
-  // Prefill from user profile if active
+  // Prefill ONLY from real user profile if active and saved by user
   useEffect(() => {
     let p = null;
     try {
@@ -76,7 +76,7 @@ export default function HeroSection({
         }
       } catch {}
     }
-    if (p && p.birthDate && p.name && p.name !== 'Priya Sharma') {
+    if (p && p.birthDate && p.name) {
       setFormData(prev => ({
         ...prev,
         name: p.name || prev.name,
@@ -93,19 +93,21 @@ export default function HeroSection({
   const [citySearchQuery, setCitySearchQuery] = useState('');
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const [gpsStatus, setGpsStatus] = useState('');
+  const [drawerError, setDrawerError] = useState('');
 
   const handleCitySelect = (city) => {
     chitiSensory.playTick();
     setFormData(prev => ({
       ...prev,
-      cityName: city.name,
+      cityName: `${city.name}, ${city.state}`,
       stateName: city.state,
       latitude: city.lat,
       longitude: city.lng,
       timezone: city.tz || 5.5,
     }));
-    setCitySearchQuery('');
+    setCitySearchQuery(`${city.name}, ${city.state}`);
     setShowCityDropdown(false);
+    setDrawerError('');
   };
 
   const handleUseLiveGps = async () => {
@@ -133,13 +135,45 @@ export default function HeroSection({
     if (e) e.preventDefault();
     chitiSensory.playTick();
 
-    const name = formData.name.trim() || (isHi ? 'जातक' : 'Seeker');
-    const dob = formData.birthDate || '1995-06-15';
-    const tob = formData.birthTime || '10:30';
-    const city = formData.cityName || 'Patna';
-    const lat = formData.latitude || 25.5941;
-    const lng = formData.longitude || 85.1376;
-    const tz = formData.timezone || 5.5;
+    const name = formData.name.trim();
+    const dob = formData.birthDate;
+    const tob = formData.birthTime;
+    let city = (formData.cityName || citySearchQuery || currentCity?.name || 'New Delhi').trim();
+    let lat = Number.isFinite(formData.latitude) ? formData.latitude : currentCity?.lat;
+    let lng = Number.isFinite(formData.longitude) ? formData.longitude : currentCity?.lng;
+    let tz = formData.timezone || currentCity?.tz || 5.5;
+
+    // Validate inputs
+    if (!name) {
+      setDrawerError(isHi ? 'कृपया अपना नाम दर्ज करें' : 'Please enter your name');
+      return;
+    }
+    if (!dob) {
+      setDrawerError(isHi ? 'कृपया जन्म तिथि चुनें' : 'Please select your birth date');
+      return;
+    }
+    if (!tob) {
+      setDrawerError(isHi ? 'कृपया जन्म समय दर्ज करें' : 'Please enter your birth time');
+      setIsExpanded(true);
+      return;
+    }
+
+    // Auto-resolve city coordinates
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || citySearchQuery) {
+      const hits = searchCities(city);
+      if (hits.length > 0) {
+        lat = hits[0].lat;
+        lng = hits[0].lng;
+        tz = hits[0].tz ?? 5.5;
+        city = `${hits[0].name}, ${hits[0].state}`;
+      } else {
+        lat = currentCity?.lat ?? 28.6139;
+        lng = currentCity?.lng ?? 77.2090;
+        tz = currentCity?.tz ?? 5.5;
+      }
+    }
+
+    setDrawerError('');
 
     const payload = {
       name,
@@ -275,7 +309,7 @@ export default function HeroSection({
                       onFocus={() => setIsExpanded(true)}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className="w-full px-3 py-2 rounded-xl bg-[#FAF7F2] dark:bg-[#151824] border border-black/10 dark:border-white/10 text-xs text-[#1C1917] dark:text-[#EFECE6] focus:outline-none focus:border-[#8E6F1D] dark:focus:border-[#D4AF37] font-semibold"
-                      placeholder={isHi ? 'उदा. प्रिया शर्मा' : 'e.g. Priya Sharma'}
+                      placeholder={isHi ? 'उदा. राहुल शर्मा' : 'e.g. Rahul Sharma (उदा. राहुल शर्मा)'}
                     />
                   </div>
 
@@ -364,6 +398,14 @@ export default function HeroSection({
                       </div>
                     </div>
 
+                  </div>
+                )}
+
+                {/* Validation Error Message */}
+                {drawerError && (
+                  <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-300 dark:border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-center gap-2">
+                    <span>⚠️</span>
+                    <span>{drawerError}</span>
                   </div>
                 )}
 
