@@ -113,6 +113,7 @@ export const YOGA_SOURCE_REGISTRY: Record<string, YogaSourceEntry> = {
     ],
     limitations: [
       'SCOPE: because the mutual-aspect variant is contested and no licensed source is held here, only conjunction is implemented. A chart where Moon and Mars merely aspect each other is reported ABSENT under this rule — that is a scope limit of the rule, not a claim that no yoga exists.',
+      'CONTESTED: schools differ on whether mutual aspect between Moon and Mars suffices, and on whether an orb applies instead of same-sign occupancy. This entry implements same-sign conjunction only. A source taking the aspect or orb reading would report this yoga in charts where this implementation reports it absent.',
     ],
     adoption: 'ADOPTED',
   },
@@ -135,6 +136,7 @@ export const YOGA_SOURCE_REGISTRY: Record<string, YogaSourceEntry> = {
     limitations: [
       'Only conjunction and parivartana are evaluated. A chart where the two lords are merely in mutual kendra is reported ABSENT by THIS rule and NOT_CALCULATED by the separate mutual-kendra registration — neither result claims the yoga is absent in the broader literature.',
       'Rahu and Ketu own no sign, so if a house cusp falls in a sign whose lord is a node the rule cannot arise; that cannot happen with the seven-sign-lord scheme used here.',
+      'CONTESTED: authorities differ on what qualifies. Some readings accept mutual kendra between the 9th and 10th lords; this entry adopts the narrower conjunction-or-parivartana reading, and the mutual-kendra variant is registered separately. A source that takes the broader reading would report this yoga in charts where this implementation reports it absent.',
     ],
     adoption: 'ADOPTED',
   },
@@ -155,6 +157,7 @@ export const YOGA_SOURCE_REGISTRY: Record<string, YogaSourceEntry> = {
     ],
     limitations: [
       'No licensed source is held in this repository to settle the disagreement, so this variant is reported NOT_CALCULATED rather than PRESENT or ABSENT. The bhava offset is still computed and reported as evidence so a scholar can adjudicate it.',
+      'CONTESTED: many popular sources treat mutual kendra alone as sufficient; other schools require an additional conjunction, aspect or exchange. No reading is adopted, so the result stays NOT_CALCULATED rather than choosing one side.',
     ],
     adoption: 'NOT_ADOPTED',
   },
@@ -260,6 +263,7 @@ export const YOGA_SOURCE_REGISTRY: Record<string, YogaSourceEntry> = {
     limitations: [
       'QUALIFICATION POLICY: combustion is NOT applied, even though Mercury is the planet most often combust. This is a known weakness of the existence-only policy and is recorded as such.',
       'Kendra is counted from the lagna only.',
+      "CONTESTED: a minority of schools place Mercury's exaltation outside Virgo, which would change the exaltation branch, and some schools require Mercury to be free from combustion, which this implementation deliberately does not apply. A source taking either reading would disagree with this entry in specific charts.",
     ],
     adoption: 'ADOPTED',
   },
@@ -281,6 +285,7 @@ export const YOGA_SOURCE_REGISTRY: Record<string, YogaSourceEntry> = {
     ],
     limitations: [
       'Reported NOT_CALCULATED. The engine does not guess between the disputed definitions.',
+      'CONTESTED: whether the Sun, Rahu or Ketu count as occupants that neutralise the yoga, and whether a kendra Moon cancels it, are each disputed. No reading is adopted, so the result stays NOT_CALCULATED rather than choosing one side.',
     ],
     adoption: 'NOT_ADOPTED',
   },
