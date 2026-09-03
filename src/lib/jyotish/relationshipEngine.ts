@@ -33,6 +33,23 @@ export interface CombustionState {
   angularDistanceToSun: number;
   combustionOrb: number;
   severity: 'DEEP_COMBUST' | 'COMBUST' | 'NEAR_COMBUST' | 'SAFE';
+  /**
+   * Sprint H (RSK_002): false for bodies the combustion rule does not apply to
+   * (the Sun itself and the chhaya grahas Rahu/Ketu). For such bodies
+   * `angularDistanceToSun` carries the legacy 999 sentinel rather than a real
+   * separation — read `applicable` before using that number.
+   */
+  applicable?: boolean;
+  /** |separation − adopted orb| ≤ 1° — the declared borderline band (RSK_002). */
+  borderline?: boolean;
+  /**
+   * True exactly when `borderline` is true: the adopted-orb verdict is NOT
+   * settled because classical texts disagree on the threshold; a scholar must
+   * adjudicate before the result is presented as final (CT_INV_006).
+   */
+  scholarJudgementRequired?: boolean;
+  /** The registry rule of record this evaluation implements. */
+  registryRuleId?: string;
 }
 
 export interface PlanetaryWarState {
@@ -114,16 +131,92 @@ export const NAISARGIKA_MAITRI: Record<string, { friends: string[]; neutrals: st
 };
 
 /**
- * Classical Combustion (Asta) Orbs in Degrees from Sun (Surya).
+ * Sprint H (RSK_002): classical Combustion (Asta) orb table with declared
+ * provenance. The repo holds NO licensed Jyotish edition, so locators are NOT
+ * VERIFIED (mirroring yogaSourceRegistry.ts) and every entry is
+ * SOURCE_SECONDARY "commonly cited classical value" with the alternative orb
+ * sets that other traditions cite — never one silent threshold.
  */
-export const COMBUSTION_ORBS: Record<string, { direct: number; retrograde: number }> = {
-  Moon: { direct: 12, retrograde: 12 },
-  Mars: { direct: 17, retrograde: 17 },
-  Mercury: { direct: 14, retrograde: 12 },
-  Jupiter: { direct: 11, retrograde: 11 },
-  Venus: { direct: 10, retrograde: 8 },
-  Saturn: { direct: 15, retrograde: 15 }
+export interface CombustionOrbEntry {
+  adopted: { direct: number; retrograde: number };
+  /** Alternative orb sets where classical texts disagree — declared, never hidden. */
+  alternatives: Array<{ statement: string; direct: number; retrograde: number }>;
+  source: string;
+  sourceStatus: 'SOURCE_SECONDARY';
+  locator: string;
+}
+
+export const COMBUSTION_LOCATOR_UNVERIFIED =
+  'NOT VERIFIED — no licensed Jyotish edition is held in this repository; the locator is a provenance claim pending verification.';
+
+export const COMBUSTION_ORB_TABLE_V2: Record<string, CombustionOrbEntry> = {
+  Moon: {
+    adopted: { direct: 12, retrograde: 12 },
+    alternatives: [
+      { statement: 'Some traditions exempt the Moon from combustion altogether (Chandra is the comfort-bearing luminary whose nearness to the Sun is read as Paksha strength, not asta).', direct: 12, retrograde: 12 }
+    ],
+    source: 'Classical combustion corpus — 12 deg widely cited for the Moon',
+    sourceStatus: 'SOURCE_SECONDARY',
+    locator: COMBUSTION_LOCATOR_UNVERIFIED
+  },
+  Mars: {
+    adopted: { direct: 17, retrograde: 17 },
+    alternatives: [
+      { statement: '17 deg is the near-universal cited value for Mars; no materially competing orb is common in the secondary literature.', direct: 17, retrograde: 17 }
+    ],
+    source: 'Classical combustion corpus — 17 deg widely cited for Mars',
+    sourceStatus: 'SOURCE_SECONDARY',
+    locator: COMBUSTION_LOCATOR_UNVERIFIED
+  },
+  Mercury: {
+    adopted: { direct: 14, retrograde: 12 },
+    alternatives: [
+      { statement: 'The exact RSK_002 example: several texts apply 14 deg in BOTH states; the reduced 12 deg retrograde orb adopted here is the other commonly cited reading.', direct: 14, retrograde: 14 }
+    ],
+    source: 'Classical combustion corpus — Mercury cited as 14 deg direct, 12 deg when retrograde (RSK_002: contested)',
+    sourceStatus: 'SOURCE_SECONDARY',
+    locator: COMBUSTION_LOCATOR_UNVERIFIED
+  },
+  Jupiter: {
+    adopted: { direct: 11, retrograde: 11 },
+    alternatives: [
+      { statement: '11 deg is the commonly cited value for Jupiter; no materially competing orb is common in the secondary literature.', direct: 11, retrograde: 11 }
+    ],
+    source: 'Classical combustion corpus — 11 deg widely cited for Jupiter',
+    sourceStatus: 'SOURCE_SECONDARY',
+    locator: COMBUSTION_LOCATOR_UNVERIFIED
+  },
+  Venus: {
+    adopted: { direct: 10, retrograde: 8 },
+    alternatives: [
+      { statement: 'Some texts cite 10 deg in both states for Venus; the reduced 8 deg retrograde orb adopted here is the other commonly cited reading.', direct: 10, retrograde: 10 }
+    ],
+    source: 'Classical combustion corpus — Venus cited as 10 deg direct, 8 deg when retrograde (contested)',
+    sourceStatus: 'SOURCE_SECONDARY',
+    locator: COMBUSTION_LOCATOR_UNVERIFIED
+  },
+  Saturn: {
+    adopted: { direct: 15, retrograde: 15 },
+    alternatives: [
+      { statement: '15 deg is the commonly cited value for Saturn; no materially competing orb is common in the secondary literature.', direct: 15, retrograde: 15 }
+    ],
+    source: 'Classical combustion corpus — 15 deg widely cited for Saturn',
+    sourceStatus: 'SOURCE_SECONDARY',
+    locator: COMBUSTION_LOCATOR_UNVERIFIED
+  }
 };
+
+/**
+ * Legacy derived view of the adopted orbs (identical values to the previous
+ * literal). Consumers (v40 grahaCondition, canonicalSnapshot) keep working
+ * unchanged; the provenance lives in COMBUSTION_ORB_TABLE_V2.
+ */
+export const COMBUSTION_ORBS: Record<string, { direct: number; retrograde: number }> = Object.fromEntries(
+  Object.entries(COMBUSTION_ORB_TABLE_V2).map(([planet, entry]) => [planet, entry.adopted])
+);
+
+/** The RSK_002 borderline half-width in degrees: |separation − orb| within this band. */
+export const COMBUSTION_BORDERLINE_BAND_DEG = 1;
 
 /**
  * Computes Temporal Friendship (Tatkalika Maitri) based on house placement from each other.
@@ -173,7 +266,10 @@ export function getPanchadhaMaitri(planet: string, targetPlanet: string, planetR
 export function checkCombustion(planet: string, planetLongitude: number, sunLongitude: number, isRetrograde = false): CombustionState {
   const orbConfig = COMBUSTION_ORBS[planet];
   if (!orbConfig || planet === 'Sun' || planet === 'Rahu' || planet === 'Ketu') {
-    return { planet, isCombust: false, angularDistanceToSun: 999, combustionOrb: 0, severity: 'SAFE' };
+    return {
+      planet, isCombust: false, angularDistanceToSun: 999, combustionOrb: 0, severity: 'SAFE',
+      applicable: false, borderline: false, scholarJudgementRequired: false, registryRuleId: 'RULE_COMBUSTION_ORBS'
+    };
   }
 
   let diff = Math.abs(planetLongitude - sunLongitude);
@@ -186,12 +282,20 @@ export function checkCombustion(planet: string, planetLongitude: number, sunLong
     diff <= allowedOrb ? 'COMBUST' :
     diff <= (allowedOrb + 2) ? 'NEAR_COMBUST' : 'SAFE';
 
+  // RSK_002: within +/-1 deg of the adopted threshold the verdict depends on
+  // WHICH classical orb one adopts — surface that instead of hiding it.
+  const borderline = Math.abs(diff - allowedOrb) <= COMBUSTION_BORDERLINE_BAND_DEG;
+
   return {
     planet,
     isCombust,
     angularDistanceToSun: diff,
     combustionOrb: allowedOrb,
-    severity
+    severity,
+    applicable: true,
+    borderline,
+    scholarJudgementRequired: borderline,
+    registryRuleId: 'RULE_COMBUSTION_ORBS'
   };
 }
 

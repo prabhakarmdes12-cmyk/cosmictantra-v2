@@ -1,0 +1,370 @@
+{
+  "fixtureSetId": "COMBUSTION_RULE_REGISTRY_001",
+  "builder": "rule-registry-qualification-runner-1.0.0 (sprint H)",
+  "engineNote": "ruleRegistry is in-code; the fixture pins its content fingerprint and orb tables for tamper evidence",
+  "registryVersion": "classical-rule-registry-1.0.0 (sprint H)",
+  "fingerprint": "1d662e09251e18590d6f357803c4b51a76d053e9c29767b1818a665342bf7cbb",
+  "ruleCount": 24,
+  "yogaCrossLinkCount": 11,
+  "yogaSourceRegistryVersion": "jyotish-source-registry-v1",
+  "borderlineBandDeg": 1,
+  "combustionOrbTable": {
+    "Moon": {
+      "adopted": {
+        "direct": 12,
+        "retrograde": 12
+      },
+      "alternativeCount": 1,
+      "alternativeOrbs": [
+        {
+          "direct": 12,
+          "retrograde": 12
+        }
+      ],
+      "sourceStatus": "SOURCE_SECONDARY",
+      "locator": "NOT VERIFIED — no licensed Jyotish edition is held in this repository; the locator is a provenance claim pending verification."
+    },
+    "Mars": {
+      "adopted": {
+        "direct": 17,
+        "retrograde": 17
+      },
+      "alternativeCount": 1,
+      "alternativeOrbs": [
+        {
+          "direct": 17,
+          "retrograde": 17
+        }
+      ],
+      "sourceStatus": "SOURCE_SECONDARY",
+      "locator": "NOT VERIFIED — no licensed Jyotish edition is held in this repository; the locator is a provenance claim pending verification."
+    },
+    "Mercury": {
+      "adopted": {
+        "direct": 14,
+        "retrograde": 12
+      },
+      "alternativeCount": 1,
+      "alternativeOrbs": [
+        {
+          "direct": 14,
+          "retrograde": 14
+        }
+      ],
+      "sourceStatus": "SOURCE_SECONDARY",
+      "locator": "NOT VERIFIED — no licensed Jyotish edition is held in this repository; the locator is a provenance claim pending verification."
+    },
+    "Jupiter": {
+      "adopted": {
+        "direct": 11,
+        "retrograde": 11
+      },
+      "alternativeCount": 1,
+      "alternativeOrbs": [
+        {
+          "direct": 11,
+          "retrograde": 11
+        }
+      ],
+      "sourceStatus": "SOURCE_SECONDARY",
+      "locator": "NOT VERIFIED — no licensed Jyotish edition is held in this repository; the locator is a provenance claim pending verification."
+    },
+    "Venus": {
+      "adopted": {
+        "direct": 10,
+        "retrograde": 8
+      },
+      "alternativeCount": 1,
+      "alternativeOrbs": [
+        {
+          "direct": 10,
+          "retrograde": 10
+        }
+      ],
+      "sourceStatus": "SOURCE_SECONDARY",
+      "locator": "NOT VERIFIED — no licensed Jyotish edition is held in this repository; the locator is a provenance claim pending verification."
+    },
+    "Saturn": {
+      "adopted": {
+        "direct": 15,
+        "retrograde": 15
+      },
+      "alternativeCount": 1,
+      "alternativeOrbs": [
+        {
+          "direct": 15,
+          "retrograde": 15
+        }
+      ],
+      "sourceStatus": "SOURCE_SECONDARY",
+      "locator": "NOT VERIFIED — no licensed Jyotish edition is held in this repository; the locator is a provenance claim pending verification."
+    }
+  },
+  "rules": [
+    {
+      "id": "RULE_COMBUSTION_ORBS",
+      "version": "2.0.0",
+      "category": "GRAHA_CONDITION",
+      "tradition": "Parashari (BPHS-attributed mainstream Jyotish) — attribution not verified against a licensed edition",
+      "sourceVerification": "SOURCE_SECONDARY",
+      "validationStatus": "INTERNALLY_VERIFIED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/relationshipEngine.ts::checkCombustion",
+      "evidencePathCount": 4
+    },
+    {
+      "id": "RULE_DHAIYA_4_8",
+      "version": "1.0.0",
+      "category": "TRANSIT",
+      "tradition": "Parashari (BPHS-attributed mainstream Jyotish) — attribution not verified against a licensed edition",
+      "sourceVerification": "SOURCE_SECONDARY",
+      "validationStatus": "INTERNALLY_VERIFIED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/gocharaEngine.ts::computeGochara (dhaiya)",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "RULE_EXALTATION_DEBILITATION_POINTS",
+      "version": "1.0.0",
+      "category": "DIGNITY",
+      "tradition": "Parashari (BPHS-attributed mainstream Jyotish) — attribution not verified against a licensed edition",
+      "sourceVerification": "SOURCE_SECONDARY",
+      "validationStatus": "INTERNALLY_VERIFIED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/balaEngine.ts::DEBILITATION_POINTS + src/lib/astrologyEngine.js::dignity",
+      "evidencePathCount": 3
+    },
+    {
+      "id": "RULE_GRAHA_YUDDHA_1DEG",
+      "version": "1.0.0",
+      "category": "GRAHA_CONDITION",
+      "tradition": "Parashari (BPHS-attributed mainstream Jyotish) — attribution not verified against a licensed edition",
+      "sourceVerification": "SOURCE_SECONDARY",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/relationshipEngine.ts::checkPlanetaryWar",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "RULE_KALSARPA_VARIANTS",
+      "version": "0.1.0",
+      "category": "DEFINITION_CANDIDATE",
+      "tradition": "Multiple conflicting traditions (full-hemisphere vs edge-inclusive; Rahu-inclusive vs axis-only; exclusion of the Lagna varies)",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "NOT_IMPLEMENTED",
+      "adoption": "NOT_ADOPTED",
+      "evaluator": "src/lib/jyotish/canonicalSnapshot.ts::yogasAndDoshas.kalsarpa (NOT_CALCULATED by design)",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "RULE_MANGLIK_HOUSES",
+      "version": "1.0.0",
+      "category": "DOSHA",
+      "tradition": "South-Indian Kuja Dosha tradition + North-Indian Manglik usage — both commonly cited; attribution not verified against a licensed edition",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/canonicalSnapshot.ts::yogasAndDoshas.manglik",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "RULE_MOOLATRIKONA_ZONES",
+      "version": "1.0.0",
+      "category": "DIGNITY",
+      "tradition": "Parashari (BPHS-attributed mainstream Jyotish) — attribution not verified against a licensed edition",
+      "sourceVerification": "SOURCE_SECONDARY",
+      "validationStatus": "INTERNALLY_VERIFIED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/balaEngine.ts::MOOLATRIKONA_ZONES",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "RULE_NAISARGIKA_MAITRI",
+      "version": "1.0.0",
+      "category": "RELATIONSHIP",
+      "tradition": "Parashari (BPHS-attributed mainstream Jyotish) — attribution not verified against a licensed edition",
+      "sourceVerification": "SOURCE_SECONDARY",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/relationshipEngine.ts::getPanchadhaMaitri (NaisargikaMaitri table)",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "RULE_PANCHADHA_MAITRI",
+      "version": "1.0.0",
+      "category": "RELATIONSHIP",
+      "tradition": "Parashari (BPHS-attributed mainstream Jyotish) — attribution not verified against a licensed edition",
+      "sourceVerification": "SOURCE_SECONDARY",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/relationshipEngine.ts::getPanchadhaMaitri",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "RULE_PARASHARI_SPECIAL_ASPECTS",
+      "version": "1.0.0",
+      "category": "GRAHA_CONDITION",
+      "tradition": "Parashari (BPHS-attributed mainstream Jyotish) — attribution not verified against a licensed edition",
+      "sourceVerification": "SOURCE_SECONDARY",
+      "validationStatus": "INTERNALLY_VERIFIED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/gocharaEngine.ts::computeGochara (specialAspectsOnNatal) + src/lib/jyotish/relationshipEngine.ts (GrahaDrishti)",
+      "evidencePathCount": 3
+    },
+    {
+      "id": "RULE_SADE_SATI_BAND",
+      "version": "1.0.0",
+      "category": "TRANSIT",
+      "tradition": "Parashari (BPHS-attributed mainstream Jyotish) — attribution not verified against a licensed edition",
+      "sourceVerification": "SOURCE_SECONDARY",
+      "validationStatus": "EXTERNALLY_VERIFIED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/gocharaEngine.ts::computeGochara + computeSadeSatiPeriod",
+      "evidencePathCount": 3
+    },
+    {
+      "id": "RULE_TATKALIKA_MAITRI",
+      "version": "1.0.0",
+      "category": "RELATIONSHIP",
+      "tradition": "Parashari (BPHS-attributed mainstream Jyotish) — attribution not verified against a licensed edition",
+      "sourceVerification": "SOURCE_SECONDARY",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/relationshipEngine.ts::getTatkalikaMaitri",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "RULE_VIMSHOTTARI_ORDER",
+      "version": "1.0.0",
+      "category": "DASHA",
+      "tradition": "Parashari (BPHS-attributed mainstream Jyotish) — attribution not verified against a licensed edition",
+      "sourceVerification": "SOURCE_SECONDARY",
+      "validationStatus": "EXTERNALLY_VERIFIED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/engines/dashaEngine.ts::calculateVimshottariDasha",
+      "evidencePathCount": 3
+    },
+    {
+      "id": "YOGA_BHADRA",
+      "version": "1.0.0 (from jyotish-source-registry-v1)",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Pancha Mahapurusha yogas — commonly attributed to Brihat Parashara Hora Shastra and later classical works; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_BUDHADITYA",
+      "version": "1.0.0 (from jyotish-source-registry-v1)",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Budhaditya Yoga — commonly attributed to the classical yoga corpus; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_CHANDRA_MANGALA",
+      "version": "1.0.0 (from jyotish-source-registry-v1)",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Chandra-Mangala Yoga — commonly attributed to the classical yoga corpus; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_DHARMA_KARMA_ADHIPATI",
+      "version": "1.0.0 (from jyotish-source-registry-v1)",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Dharma-Karmadhipati Raja Yoga — commonly attributed to the classical raja-yoga corpus; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_DHARMA_KARMA_ADHIPATI_MUTUAL_KENDRA",
+      "version": "1.0.0 (from jyotish-source-registry-v1)",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Dharma-Karmadhipati Raja Yoga, mutual-kendra variant — popular modern attribution; not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "NOT_IMPLEMENTED",
+      "adoption": "NOT_ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_GAJA_KESARI",
+      "version": "1.0.0 (from jyotish-source-registry-v1)",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Gaja-Kesari Yoga — commonly attributed to the classical yoga corpus (widely cited in Brihat Parashara Hora Shastra commentaries); attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_HAMSA",
+      "version": "1.0.0 (from jyotish-source-registry-v1)",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Pancha Mahapurusha yogas — commonly attributed to Brihat Parashara Hora Shastra and later classical works; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_KEMADRUMA",
+      "version": "1.0.0 (from jyotish-source-registry-v1)",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Kemadruma Yoga — commonly attributed to the classical yoga corpus; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "NOT_IMPLEMENTED",
+      "adoption": "NOT_ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_MALAVYA",
+      "version": "1.0.0 (from jyotish-source-registry-v1)",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Pancha Mahapurusha yogas — commonly attributed to Brihat Parashara Hora Shastra and later classical works; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_RUCHAKA",
+      "version": "1.0.0 (from jyotish-source-registry-v1)",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Pancha Mahapurusha yogas — commonly attributed to Brihat Parashara Hora Shastra and later classical works; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_SASA",
+      "version": "1.0.0 (from jyotish-source-registry-v1)",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Pancha Mahapurusha yogas — commonly attributed to Brihat Parashara Hora Shastra and later classical works; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    }
+  ],
+  "setSha256": "94a5213a52da920f4f0bc8ad75ad1f0051f6d0d1fb7a602c452de53ecf818348"
+}

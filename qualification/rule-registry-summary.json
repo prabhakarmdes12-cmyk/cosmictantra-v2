@@ -1,0 +1,59 @@
+{
+  "runnerVersion": "rule-registry-qualification-runner-1.0.0 (sprint H)",
+  "registryVersion": "classical-rule-registry-1.0.0 (sprint H)",
+  "fixtureSetId": "COMBUSTION_RULE_REGISTRY_001",
+  "fixtureSetSha256": "94a5213a52da920f4f0bc8ad75ad1f0051f6d0d1fb7a602c452de53ecf818348",
+  "gate": "strict",
+  "scenarios": 20000,
+  "seed": 32019,
+  "generatedAtUtc": "2026-09-03T06:54:42.729Z",
+  "verdict": "PASS",
+  "streamA": {
+    "checks": 349,
+    "violations": 0,
+    "ruleCount": 24,
+    "firstViolations": []
+  },
+  "streamB": {
+    "scenarios": 20000,
+    "checks": 126665,
+    "violations": 0,
+    "firstViolations": []
+  },
+  "streamC": {
+    "checks": 31,
+    "violations": 0,
+    "firstViolations": []
+  },
+  "determinism": {
+    "samples": 250,
+    "mismatches": 0
+  },
+  "findings": [
+    {
+      "id": "DECLARED_NO_LICENSED_EDITIONS",
+      "severity": "NON_BLOCKING",
+      "statement": "No licensed Jyotish edition is held in the repository: all locators carry the NOT VERIFIED statement and SOURCE_VERIFIED registration fails closed until REPO_HOLDS_LICENSED_EDITIONS flips.",
+      "status": "OPEN"
+    },
+    {
+      "id": "DECLARED_BORDERLINE_NEEDS_SCHOLAR",
+      "severity": "NON_BLOCKING",
+      "statement": "Combustion verdicts within ±1° of the adopted orb are flagged scholarJudgementRequired; the scholar console (Sprint K) is the intended adjudication surface.",
+      "status": "OPEN"
+    },
+    {
+      "id": "DECLARED_OBSERVATORY_SKY_MODEL",
+      "severity": "NON_BLOCKING",
+      "statement": "The observatory page uses a decorative approximate sky model; its combustion flags now share the registry rule but the underlying longitudes are animation approximations, not the certified kernel.",
+      "status": "OPEN"
+    },
+    {
+      "id": "DECLARED_REGISTRY_V1_YOGA_LOCATORS",
+      "severity": "NON_BLOCKING",
+      "statement": "Yoga cross-link rules inherit yogaSourceRegistry v1 honesty (locators unverified, attribution unverified).",
+      "status": "OPEN"
+    }
+  ],
+  "totalViolations": 0
+}

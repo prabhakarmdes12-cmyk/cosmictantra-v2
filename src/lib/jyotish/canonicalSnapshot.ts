@@ -41,6 +41,7 @@ import { calculateAvakhada, AvakhadaResult } from './avakhadaEngine';
 import { buildConventionSnapshotMetadata, DEFAULT_PRESET, type ResolvedConventionSelection } from './conventionCenter';
 import { resolveAstronomyProvider } from '../astronomy/astronomyProvider';
 import { computeGochara, type GocharaResult } from './gocharaEngine';
+import { buildRuleRegistrySnapshotMetadata } from './ruleRegistry';
 
 export interface NormalizedBirthContext {
   birthDate: string; // YYYY-MM-DD
@@ -83,6 +84,18 @@ export interface CanonicalJyotishSnapshot {
       version: string;
       kernel: string;
       validationStatus: string;
+    };
+    /**
+     * Sprint H: provenance stamp of the Classical Rule Registry — which rules
+     * (with which declared sources and validation tiers) govern this snapshot.
+     */
+    ruleRegistry?: {
+      registryVersion: string;
+      registryDoc: string;
+      fingerprint: string;
+      ruleCount: number;
+      statusSummary: Record<string, number>;
+      sourceStatusSummary: Record<string, number>;
     };
   };
   context: NormalizedBirthContext;
@@ -394,6 +407,7 @@ export function getCanonicalJyotishSnapshot(context: NormalizedBirthContext): Ca
       // Sprint B (CT_INV_004): every canonical snapshot now declares its full
       // convention set and the astronomy provider/kernel that produced it.
       ...buildConventionSnapshotMetadata(DEFAULT_PRESET.id),
+      ...buildRuleRegistrySnapshotMetadata(),
       astronomyProvider: (() => {
         const d = resolveAstronomyProvider().descriptor;
         return { providerId: d.providerId, version: d.version, kernel: d.kernel, validationStatus: d.validationStatus };

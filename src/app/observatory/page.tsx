@@ -26,6 +26,7 @@ import CosmicTantraShell from '@/components/layout/CosmicTantraShell';
 import VedicSkyCanvas from '@/components/visual/VedicSkyCanvas';
 import { chitiSensory } from '@/lib/chitiAudio';
 import { getCurrentGpsLocation } from '@/lib/location';
+import { checkCombustion } from '@/lib/jyotish/relationshipEngine';
 
 interface ObservatorySite {
   id: string;
@@ -113,6 +114,10 @@ export default function ObservatoryPage() {
     const mercuryL = (sunL + Math.sin(d * 0.07) * 22 + 360) % 360;
     const jupiterL = (34.351 + 0.083085 * d - 24.238 + 360) % 360;
     const venusL = (sunL + Math.cos(d * 0.04) * 44 + 360) % 360;
+    // Sprint H (RSK_002): combustion states come from the shared Classical Rule
+    // Registry evaluation (declared orbs + borderline flag), not page-local magic numbers.
+    const mercuryCombustion = checkCombustion('Mercury', mercuryL, sunL);
+    const venusCombustion = checkCombustion('Venus', venusL, sunL);
     const saturnL = (50.077 + 0.033444 * d - 24.238 + 360) % 360;
     const rahuL = (250.0 - 0.05295 * d - 24.238 + 360) % 360;
     const ketuL = (rahuL + 180) % 360;
@@ -174,7 +179,8 @@ export default function ObservatoryPage() {
         color: '#34D399',
         longitude: mercuryL,
         speed: 1.2,
-        isCombust: Math.abs(mercuryL - sunL) < 14,
+        isCombust: mercuryCombustion.isCombust,
+        combustBorderline: mercuryCombustion.borderline,
         declination: 8.5,
         nakshatra: 'उत्तराफाल्गुनी (Uttara Phalguni)',
         pada: 4,
@@ -207,7 +213,8 @@ export default function ObservatoryPage() {
         color: '#F472B6',
         longitude: venusL,
         speed: 1.15,
-        isCombust: Math.abs(venusL - sunL) < 10,
+        isCombust: venusCombustion.isCombust,
+        combustBorderline: venusCombustion.borderline,
         declination: 15.3,
         nakshatra: 'मघा (Magha)',
         pada: 2,
@@ -469,6 +476,11 @@ export default function ObservatoryPage() {
                 {activePlanet.isCombust && (
                   <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-400/40 text-rose-400 text-[10px] font-mono-data font-bold animate-pulse">
                     अस्त (Combust)
+                  </span>
+                )}
+                {activePlanet.combustBorderline && (
+                  <span className="px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-500 text-[10px] font-mono-data font-bold">
+                    अस्त-सीमा (Borderline ±1°)
                   </span>
                 )}
                 {activePlanet.isRetrograde && (

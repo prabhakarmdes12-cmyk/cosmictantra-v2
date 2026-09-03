@@ -26,7 +26,7 @@
 - **Working branch**: `arena/01a0655c-cosmictantra-v2` (Sprint C work; `main` at Sprint B commit `167ad3b`).
 - **TypeScript**: `npx tsc --noEmit` exits with **0 errors**.
 - **Automated Tests**: full 20-spec Playwright sweep — **619 passed / 1 failed / 6 skipped**; the single failure is the pre-existing environmental `MR-07` milan-route case (`net::ERR_CONNECTION_REFUSED`, needs a live app server + DB, not a calculation defect).
-- **Current Milestone**: **Sprint G (Gochara + correct Sade Sati) is COMPLETE** (Sprints C astronomy / D varga / E time / F bala gates: PASS at scale).
+- **Current Milestone**: **Sprint H (Classical Rule Registry + source provenance) is COMPLETE** (Sprints C astronomy / D varga / E time / F bala / G gochara gates: PASS at scale).
 
 ### Sprint C (COMPLETE — this workspace)
 1. **Ayanamsha reconciled (RSK_009 → RESOLVED)**: versioned change `lahiri-registry-aligned-2.0.0` — `getLahiriAyanamsha(jd) = 23.85305556° + 1.39697128°/century · T`, conformant <0.5″ at J2000, <2″ at 1950; engine versioned `V37.0` (CT_INV_008). All engine-derived golden pins (reportId, Vimshottari balance, dasha dates, ayanamsha display, EV-13/14 baselines) re-baselined to the reconciled output with in-test provenance comments.
@@ -69,8 +69,16 @@
 5. **Qualification** `GOCHARA_ENGINE_BENCHMARK_001` (`npm run qualify:gochara`): 10,000 scenarios strict — **1.13M transit-identity / 3,062 period-solver / 900 fabrication-regression checks — 0 violations; 5 discovered natal-Saturn-differing chart pairs yield byte-identical Sade Sati (the §9 prohibition, proven); 8 published sidereal-Saturn anchors agree within 6.3 h (declared tolerance ±2 days); determinism 150/0. Verdict PASS.**
 6. See `docs/reference-grade/09-sprint-g-gochara-sade-sati.md`.
 
-### Scope for Sprint H (Next Actionable Sprint)
-Queued candidates: RSK_002 (combustion orbs), Kalsarpa dosha rule (currently NOT_CALCULATED with a frozen definition requirement), Varshaphala/Tajika year lord (Varsheshwar currently honestly NOT_CALCULATED), transit Vimshottari overlay + Kaksha tables (declared Sprint G gaps).
+### Sprint H (COMPLETE — this workspace)
+**Classical Rule Registry + source provenance** (Mission §13–§14):
+1. **Registry** `classical-rule-registry-1.0.0 (sprint H)` (`src/lib/jyotish/ruleRegistry.ts`): charter §14 rule objects (19 provenance fields), the four allowed source statuses only, `SOURCE_VERIFIED` registration fails closed while the repo holds no licensed edition (`REPO_HOLDS_LICENSED_EDITIONS = false`), CT_INV_005 validation ladder + honest NOT_IMPLEMENTED zero, deterministic sha256 content fingerprint, fail-closed `RuleRegistryError` registration. 24 rules: 13 core (combustion, graha yuddha, maitri set, Sade Sati band, Dhaiya, special aspects, Manglik, Kalsarpa variants, Vimshottari, dignity tables) + 11 yoga rules ADAPTED from yogaSourceRegistry (no text duplication).
+2. **RSK_002 (MEDIUM → RESOLVED)**: `COMBUSTION_ORB_TABLE_V2` — adopted orbs with declared alternatives (Mercury 14/14 vs 14/12, Venus 10/10 vs 10/8, Moon exemption) and NOT VERIFIED locators; `checkCombustion` exposes the adopted orb and flags `borderline = scholarJudgementRequired` within ±1° of it; v40 combustion blocks and the observatory page (duplicated `<14`/`<10` magic numbers removed) share the one rule; snapshot meta stamps the registry fingerprint.
+3. **Kalsarpa exposure stays closed** (charter §16): variant axes now REGISTERED (`RULE_KALSARPA_VARIANTS`, NOT_ADOPTED) — adoption decision deferred to Sprint I; the engine keeps answering NOT_CALCULATED.
+4. **Qualification** `COMBUSTION_RULE_REGISTRY_001` (`npm run qualify:registry`): 20,000 scenarios strict — **349 registry-integrity + 126,665 combustion-identity + 31 provenance-surface checks, 0 violations; determinism 250/0. Verdict PASS.** Fixture content-addressed (key-sorted sha), rebuilt via `tools/build-rule-registry-fixtures.ts`.
+5. See `docs/reference-grade/10-sprint-h-rule-registry-provenance.md`.
+
+### Scope for Sprint I (Next Actionable Sprint)
+**Yoga/Dosha expansion** (Mission §15–§16): curated high-value yoga expansion toward ~100 rules (existence and strength kept separate), Kalsarpa variant ADOPTION (the registry prerequisite is now in place), combustion borderline → scholar queue (Sprint K console), plus queued engineering candidates: Varshaphala/Tajika year lord (Varsheshwar honestly NOT_CALCULATED), transit Vimshottari overlay + Kaksha tables (declared Sprint G gaps).
 
 **Rules of Engagement**:
 - **Preserve working systems**: Do not replace working code; wrap and extend it.

@@ -55,6 +55,12 @@ export interface CombustionBlock {
   orbUsed?: number;
   /** True when inside orb + 2°, i.e. approaching but not yet combust. */
   nearCombust?: boolean;
+  /** Sprint H (RSK_002): |arc − orb| ≤ 1° — the verdict is orb-contingent. */
+  borderline?: boolean;
+  /** True when `borderline`: a scholar must adjudicate before the verdict is settled. */
+  scholarJudgementRequired?: boolean;
+  /** Registry rule of record (Sprint H). */
+  registryRuleId?: string;
   ruleId: string;
   evidenceIds: string[];
   note?: string;
@@ -182,6 +188,11 @@ function combustionFor(
     angularDistance: arc,
     orbUsed: orb,
     nearCombust: arc > orb && arc <= orb + 2,
+    // Sprint H (RSK_002): within +/-1 deg of the adopted orb the verdict is
+    // threshold-contingent — flagged for scholar adjudication, never hidden.
+    borderline: Math.abs(arc - orb) <= 1,
+    scholarJudgementRequired: Math.abs(arc - orb) <= 1,
+    registryRuleId: 'RULE_COMBUSTION_ORBS',
     ruleId: 'COMBUSTION_ORB_TABLE_V1',
     evidenceIds: [FACT.planetLongitude(p.id), FACT.planetLongitude('Sun'), FACT.planetRetrograde(p.id)],
   };
