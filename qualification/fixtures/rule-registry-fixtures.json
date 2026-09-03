@@ -3,10 +3,10 @@
   "builder": "rule-registry-qualification-runner-1.0.0 (sprint H)",
   "engineNote": "ruleRegistry is in-code; the fixture pins its content fingerprint and orb tables for tamper evidence",
   "registryVersion": "classical-rule-registry-1.0.0 (sprint H)",
-  "fingerprint": "1d662e09251e18590d6f357803c4b51a76d053e9c29767b1818a665342bf7cbb",
-  "ruleCount": 24,
-  "yogaCrossLinkCount": 11,
-  "yogaSourceRegistryVersion": "jyotish-source-registry-v1",
+  "fingerprint": "ae1b3749059b24a083f41964de52f4e2492dfcbeb5217436ac1cf4337559e7cd",
+  "ruleCount": 59,
+  "yogaCrossLinkCount": 45,
+  "yogaSourceRegistryVersion": "jyotish-source-registry-v2 (sprint I expansion)",
   "borderlineBandDeg": 1,
   "combustionOrbTable": {
     "Moon": {
@@ -146,6 +146,17 @@
       "evidencePathCount": 2
     },
     {
+      "id": "RULE_KALSARPA_HEMISPHERE",
+      "version": "1.0.0",
+      "category": "DOSHA",
+      "tradition": "Parashari (BPHS-attributed mainstream Jyotish) — attribution not verified against a licensed edition",
+      "sourceVerification": "SOURCE_SECONDARY",
+      "validationStatus": "INTERNALLY_VERIFIED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/doshaEngine.ts::evaluateKalsarpa",
+      "evidencePathCount": 3
+    },
+    {
       "id": "RULE_KALSARPA_VARIANTS",
       "version": "0.1.0",
       "category": "DEFINITION_CANDIDATE",
@@ -245,8 +256,41 @@
       "evidencePathCount": 3
     },
     {
+      "id": "YOGA_ADHI",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Adhi Yoga (from the Moon) — commonly attributed to the classical yoga corpus; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_AMALA",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Amala Yoga — commonly attributed to the classical yoga corpus (benefic in the 10th); attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_ANAPHA",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Anapha Yoga — commonly attributed to the classical yoga corpus (Moon-based planet-in-12th family); attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
       "id": "YOGA_BHADRA",
-      "version": "1.0.0 (from jyotish-source-registry-v1)",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
       "category": "YOGA",
       "tradition": "As recorded in yogaSourceRegistry.ts (v1): Pancha Mahapurusha yogas — commonly attributed to Brihat Parashara Hora Shastra and later classical works; attribution not verified here",
       "sourceVerification": "ATTRIBUTION_UNVERIFIED",
@@ -257,7 +301,7 @@
     },
     {
       "id": "YOGA_BUDHADITYA",
-      "version": "1.0.0 (from jyotish-source-registry-v1)",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
       "category": "YOGA",
       "tradition": "As recorded in yogaSourceRegistry.ts (v1): Budhaditya Yoga — commonly attributed to the classical yoga corpus; attribution not verified here",
       "sourceVerification": "ATTRIBUTION_UNVERIFIED",
@@ -268,7 +312,7 @@
     },
     {
       "id": "YOGA_CHANDRA_MANGALA",
-      "version": "1.0.0 (from jyotish-source-registry-v1)",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
       "category": "YOGA",
       "tradition": "As recorded in yogaSourceRegistry.ts (v1): Chandra-Mangala Yoga — commonly attributed to the classical yoga corpus; attribution not verified here",
       "sourceVerification": "ATTRIBUTION_UNVERIFIED",
@@ -278,8 +322,52 @@
       "evidencePathCount": 2
     },
     {
+      "id": "YOGA_DHANA_11L_IN_2ND",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Dhana Yoga (11th lord in the 2nd) — commonly attributed to the classical wealth-yoga corpus; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_DHANA_2L_IN_11TH",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Dhana Yoga (2nd lord in the 11th) — commonly attributed to the classical wealth-yoga corpus; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_DHANA_LORDS_CONJUNCT",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Dhana Yoga (2nd and 11th lords conjunct) — commonly attributed to the classical wealth-yoga corpus; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_DHANA_LORDS_EXCHANGE",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Dhana Yoga (2nd-11th lords in Parivartana) — commonly attributed to the classical wealth-yoga corpus; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
       "id": "YOGA_DHARMA_KARMA_ADHIPATI",
-      "version": "1.0.0 (from jyotish-source-registry-v1)",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
       "category": "YOGA",
       "tradition": "As recorded in yogaSourceRegistry.ts (v1): Dharma-Karmadhipati Raja Yoga — commonly attributed to the classical raja-yoga corpus; attribution not verified here",
       "sourceVerification": "ATTRIBUTION_UNVERIFIED",
@@ -290,7 +378,7 @@
     },
     {
       "id": "YOGA_DHARMA_KARMA_ADHIPATI_MUTUAL_KENDRA",
-      "version": "1.0.0 (from jyotish-source-registry-v1)",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
       "category": "YOGA",
       "tradition": "As recorded in yogaSourceRegistry.ts (v1): Dharma-Karmadhipati Raja Yoga, mutual-kendra variant — popular modern attribution; not verified here",
       "sourceVerification": "ATTRIBUTION_UNVERIFIED",
@@ -300,8 +388,19 @@
       "evidencePathCount": 2
     },
     {
+      "id": "YOGA_DURUDHARA",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Durudhara Yoga — commonly attributed to the classical yoga corpus (planets on both sides of the Moon); attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
       "id": "YOGA_GAJA_KESARI",
-      "version": "1.0.0 (from jyotish-source-registry-v1)",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
       "category": "YOGA",
       "tradition": "As recorded in yogaSourceRegistry.ts (v1): Gaja-Kesari Yoga — commonly attributed to the classical yoga corpus (widely cited in Brihat Parashara Hora Shastra commentaries); attribution not verified here",
       "sourceVerification": "ATTRIBUTION_UNVERIFIED",
@@ -311,8 +410,19 @@
       "evidencePathCount": 2
     },
     {
+      "id": "YOGA_GOLA",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Nabhasa Yoga — Gola (all grahas in one sign) — commonly attributed to the classical yoga corpus; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
       "id": "YOGA_HAMSA",
-      "version": "1.0.0 (from jyotish-source-registry-v1)",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
       "category": "YOGA",
       "tradition": "As recorded in yogaSourceRegistry.ts (v1): Pancha Mahapurusha yogas — commonly attributed to Brihat Parashara Hora Shastra and later classical works; attribution not verified here",
       "sourceVerification": "ATTRIBUTION_UNVERIFIED",
@@ -322,8 +432,41 @@
       "evidencePathCount": 2
     },
     {
+      "id": "YOGA_KALPADRUMA",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Kalpadruma (Kalpavriksha) Yoga — commonly attributed to the classical yoga corpus; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "NOT_IMPLEMENTED",
+      "adoption": "NOT_ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_KAMALA",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Nabhasa Yoga — Kamala/Padma (all grahas in kendras) — commonly attributed to the classical yoga corpus; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_KEDARA",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Nabhasa Yoga — Kedara (all grahas in four signs) — commonly attributed to the classical yoga corpus; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
       "id": "YOGA_KEMADRUMA",
-      "version": "1.0.0 (from jyotish-source-registry-v1)",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
       "category": "YOGA",
       "tradition": "As recorded in yogaSourceRegistry.ts (v1): Kemadruma Yoga — commonly attributed to the classical yoga corpus; attribution not verified here",
       "sourceVerification": "ATTRIBUTION_UNVERIFIED",
@@ -333,10 +476,109 @@
       "evidencePathCount": 2
     },
     {
+      "id": "YOGA_LAGNADHI",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Lagnadhi Yoga — commonly attributed to the classical yoga corpus (Adhi pattern from the lagna); attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_LAKSHMI",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Lakshmi Yoga — commonly attributed to the classical yoga corpus (strong 9th lord in a kendra); attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
       "id": "YOGA_MALAVYA",
-      "version": "1.0.0 (from jyotish-source-registry-v1)",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
       "category": "YOGA",
       "tradition": "As recorded in yogaSourceRegistry.ts (v1): Pancha Mahapurusha yogas — commonly attributed to Brihat Parashara Hora Shastra and later classical works; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_MUSALA",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Nabhasa Yoga — Musala (all grahas in fixed signs) — commonly attributed to the classical yoga corpus; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_NALA",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Nabhasa Yoga — Nala (all grahas in dual signs) — commonly attributed to the classical yoga corpus; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_NEECHA_BHANGA",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Neecha Bhanga (cancellation of debilitation) — commonly attributed to the classical yoga corpus; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_PAPA_KARTARI",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Papa Kartari Yoga — commonly attributed to the classical yoga corpus (malefics flanking); attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_PARIVARTANA",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Parivartana (sign exchange between grahas) — commonly attributed to the classical yoga corpus; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_RAJA_SAMBANDHA",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Raja Yoga (kendra-lord / trikona-lord association, Raja Sambandha) — commonly attributed to the classical yoga corpus; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_RAJJU",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Nabhasa Yoga — Rajju (all grahas in movable signs) — commonly attributed to the classical yoga corpus; attribution not verified here",
       "sourceVerification": "ATTRIBUTION_UNVERIFIED",
       "validationStatus": "IMPLEMENTED",
       "adoption": "ADOPTED",
@@ -345,7 +587,7 @@
     },
     {
       "id": "YOGA_RUCHAKA",
-      "version": "1.0.0 (from jyotish-source-registry-v1)",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
       "category": "YOGA",
       "tradition": "As recorded in yogaSourceRegistry.ts (v1): Pancha Mahapurusha yogas — commonly attributed to Brihat Parashara Hora Shastra and later classical works; attribution not verified here",
       "sourceVerification": "ATTRIBUTION_UNVERIFIED",
@@ -355,8 +597,30 @@
       "evidencePathCount": 2
     },
     {
+      "id": "YOGA_SAKATA",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Sakata Yoga — commonly attributed to the classical yoga corpus (Moon-Jupiter 6/8/12 affliction pattern); attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_SARASWATI",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Saraswati Yoga — commonly attributed to the classical yoga corpus; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
       "id": "YOGA_SASA",
-      "version": "1.0.0 (from jyotish-source-registry-v1)",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
       "category": "YOGA",
       "tradition": "As recorded in yogaSourceRegistry.ts (v1): Pancha Mahapurusha yogas — commonly attributed to Brihat Parashara Hora Shastra and later classical works; attribution not verified here",
       "sourceVerification": "ATTRIBUTION_UNVERIFIED",
@@ -364,7 +628,128 @@
       "adoption": "ADOPTED",
       "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
       "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_SHUBHA_KARTARI",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Shubha Kartari Yoga — commonly attributed to the classical yoga corpus (benefics flanking); attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_SULA",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Nabhasa Yoga — Sula (all grahas in three signs) — commonly attributed to the classical yoga corpus; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_SUNAPHA",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Sunapha Yoga — commonly attributed to the classical yoga corpus (Moon-based planet-in-2nd family); attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_UBHAYACHARI",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Ubhayachari Yoga — commonly attributed to the classical yoga corpus (planets on both sides of the Sun); attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_VASI",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Vasi Yoga — commonly attributed to the classical yoga corpus (planet in the 12th from the Sun); attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_VASUMATI",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Vasumati Yoga — commonly attributed to the classical yoga corpus (benefics in upachayas); attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_VESI",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Vesi Yoga — commonly attributed to the classical yoga corpus (planet in the 2nd from the Sun); attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_VIPARITA_HARSHA",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Viparita Raja Yoga — Harsha (6th lord in a dusthana) — commonly attributed to the classical yoga corpus; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_VIPARITA_SARALA",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Viparita Raja Yoga — Sarala (8th lord in a dusthana) — commonly attributed to the classical yoga corpus; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_VIPARITA_VIMALA",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Viparita Raja Yoga — Vimala (12th lord in a dusthana) — commonly attributed to the classical yoga corpus; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
+    },
+    {
+      "id": "YOGA_YUGA",
+      "version": "1.0.0 (from jyotish-source-registry-v2 (sprint I expansion))",
+      "category": "YOGA",
+      "tradition": "As recorded in yogaSourceRegistry.ts (v1): Nabhasa Yoga — Yuga (all grahas in two signs) — commonly attributed to the classical yoga corpus; attribution not verified here",
+      "sourceVerification": "ATTRIBUTION_UNVERIFIED",
+      "validationStatus": "IMPLEMENTED",
+      "adoption": "ADOPTED",
+      "evaluator": "src/lib/jyotish/yogaEngine.ts::evaluateYogas",
+      "evidencePathCount": 2
     }
   ],
-  "setSha256": "94a5213a52da920f4f0bc8ad75ad1f0051f6d0d1fb7a602c452de53ecf818348"
+  "setSha256": "b1d18e937c9ea0b8c0fde4f8d963d114d79b0498b3600d3b34ac43d908a0778b"
 }

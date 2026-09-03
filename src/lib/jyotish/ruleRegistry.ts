@@ -179,6 +179,7 @@ export function listClassicalRules(): ClassicalRule[] {
 }
 
 export function classicalRuleCount(): number {
+  ensureClassicalRulesSeeded();
   return registry.size;
 }
 
@@ -469,7 +470,7 @@ function seedRegistry(): void {
     sourceVerification: 'ATTRIBUTION_UNVERIFIED',
     originalText: NO_ORIGINAL_TEXT,
     translation: NO_ORIGINAL_TEXT,
-    adoptedInterpretation: 'NOT ADOPTED — charter §16 forbids exposing Kalsarpa until its definition and variants are formally registered. This entry registers the variant axes a Sprint I adoption must decide: (a) whether planets must be strictly on one side of the node axis or the edge graha may touch it; (b) whether the Lagna is counted as an occupying planet; (c) whether outer planets are included; (d) partial (Anant/Vasuki-named) type assignment by head rashi. Until one variant is adopted, kalsarpa stays NOT_CALCULATED with the reason string in canonicalSnapshot.',
+    adoptedInterpretation: 'VARIANT REGISTER (not itself a computed rule): the contested Kalsarpa axes are (a) strict one-hemisphere containment vs boundary-rashi inclusion; (b) direction-qualified vs either arc; (c) Moon counted vs excluded; (d) Anant/Vasuki twelve-name typing. Sprint I ADOPTED one reading as RULE_KALSARPA_HEMISPHERE (doshaEngine.ts::evaluateKalsarpa): all seven grahas within one node-bounded hemisphere, either arc accepted, boundary-rashi placement INDETERMINATE, naming NOT_CALCULATED. The remaining variant readings stay declared alternatives on every result.',
     alternateInterpretations: [
       'Full vs partial hemispheric containment.',
       'Rahu-Ketu axis counted as containing boundaries or not.',
@@ -482,6 +483,33 @@ function seedRegistry(): void {
     adoption: 'NOT_ADOPTED',
     scholarReviews: [],
     version: '0.1.0'
+  });
+
+  registerClassicalRule({
+    id: 'RULE_KALSARPA_HEMISPHERE',
+    sanskritName: 'Kala Sarpa (काल सर्प)',
+    englishName: 'Kalsarpa — all grahas within one node-bounded hemisphere (ADOPTED variant)',
+    category: 'DOSHA',
+    tradition: PARASHARA_TRADITION,
+    source: 'One-hemisphere node-axis reading adopted in Sprint I from the variant axes registered as RULE_KALSARPA_VARIANTS; competing readings declared as alternatives',
+    sourceLocator: 'NOT VERIFIED — no licensed edition held; adopted variant + alternatives declared on every result (doshaEngine.ts)',
+    sourceVerification: 'SOURCE_SECONDARY',
+    originalText: NO_ORIGINAL_TEXT,
+    translation: NO_ORIGINAL_TEXT,
+    adoptedInterpretation: 'Kalsarpa is PRESENT when all seven visible grahas (Sun..Saturn, nodes excluded as the boundary) occupy one closed half of the zodiac bounded by the Rahu-Ketu axis; the arc direction is recorded (RAHU_TO_KETU / KETU_TO_RAHU) but either qualifies. A graha sharing a rashi with a node makes the verdict INDETERMINATE (boundary placement contested — never guessed). The twelve Anant/Vasuki names are NOT_CALCULATED. Direction-qualified, Kala-Amrita and Moon-exclusion readings are declared alternatives.',
+    alternateInterpretations: [
+      'Direction-qualified: only the Rahu-to-Ketu arc qualifies.',
+      'Boundary-inclusive: grahas in the node rashis still count inside.',
+      'Kala Amrita as a separate mirrored verdict.',
+      'Moon excluded from the counted grahas.'
+    ],
+    prerequisites: ['Rashi of all seven grahas', 'Rahu/Ketu rashis (structurally opposite)'],
+    evaluator: 'src/lib/jyotish/doshaEngine.ts::evaluateKalsarpa',
+    evidencePaths: ['src/lib/jyotish/doshaEngine.ts', 'src/lib/jyotish/ruleRegistry.ts', 'qualification/yoga-summary.json'],
+    validationStatus: 'INTERNALLY_VERIFIED',
+    adoption: 'ADOPTED',
+    scholarReviews: [],
+    version: '1.0.0'
   });
 
   registerClassicalRule({

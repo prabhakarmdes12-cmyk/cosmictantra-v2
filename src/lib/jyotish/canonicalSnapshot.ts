@@ -42,6 +42,7 @@ import { buildConventionSnapshotMetadata, DEFAULT_PRESET, type ResolvedConventio
 import { resolveAstronomyProvider } from '../astronomy/astronomyProvider';
 import { computeGochara, type GocharaResult } from './gocharaEngine';
 import { buildRuleRegistrySnapshotMetadata } from './ruleRegistry';
+import { evaluateKalsarpa, type KalsarpaEvaluation } from './doshaEngine';
 
 export interface NormalizedBirthContext {
   birthDate: string; // YYYY-MM-DD
@@ -211,10 +212,7 @@ export interface CanonicalJyotishSnapshot {
       /** The explicit reference instant the transit was evaluated at (CT_INV_007). */
       referenceInstantUtc: string;
     };
-    kalsarpa: {
-      status: 'NOT_CALCULATED';
-      notCalculatedReason: string;
-    };
+    kalsarpa: KalsarpaEvaluation;
     /** Rule evaluations — the authoritative yoga record. */
     yogas: YogaEvaluation[];
     /** Derived: names of yogas whose rules evaluated to PRESENT. */
@@ -497,14 +495,20 @@ export function getCanonicalJyotishSnapshot(context: NormalizedBirthContext): Ca
         saturnHousesFromMoon: saturnFromMoon,
         referenceInstantUtc: targetDate.toISOString()
       },
-      kalsarpa: {
-        // The type allows a kalsarpa dosha, but no rule is implemented yet.
-        // Declared explicitly as NOT_CALCULATED instead of being silently
-        // omitted, so a report cannot imply it was checked and found absent.
-        status: 'NOT_CALCULATED',
-        notCalculatedReason:
-          'Kalsarpa dosha rule not implemented: requires a documented definition of which node axis and which graha inclusion rule this engine adopts.',
-      },
+      kalsarpa: (() => {
+        // Sprint I (charter §16): a Kalsarpa variant is now formally adopted
+        // (RULE_KALSARPA_HEMISPHERE) and evaluated here; the variant and the
+        // declared alternatives travel on the result itself.
+        const grahaRashis: Record<string, number> = {};
+        for (const p of kundli.planets as any[]) {
+          grahaRashis[p.name] = Number(p.rashiId ?? p.rasiId) || 0;
+        }
+        return evaluateKalsarpa({
+          grahaRashis,
+          rahuRashiId: grahaRashis['Rahu'] ?? 0,
+          ketuRashiId: grahaRashis['Ketu'] ?? 0
+        });
+      })(),
       yogas: yogaEvaluations,
       // Derived convenience view for existing UI surfaces. Contains ONLY the
       // yogas the rules above declared PRESENT.

@@ -540,7 +540,19 @@ export function checkCanonicalConsistency(input: CanonicalConsistencyInput): Con
     }
     if (d.id === 'kalsarpa') {
       const r = d.result as any;
-      c.assert('CG_DOSHA_KALSARPA', r.status === 'NOT_CALCULATED' && !!r.notCalculatedReason, 'doshas.kalsarpa.result', r.status, 'kalsarpa must be declared NOT_CALCULATED with a reason, never silently omitted');
+      // Sprint I: a variant (ONE_HEMISPHERE_NODE_AXIS) is now adopted and the
+      // verdict computed. The pin evolves with it: a computed verdict MUST
+      // declare its variant, basis and evidence, and the twelve-name typing
+      // must stay NOT_CALCULATED; a NOT_CALCULATED verdict must still state a
+      // reason. Silence is never allowed in either direction.
+      c.assert('CG_DOSHA_KALSARPA',
+        (r.status === 'NOT_CALCULATED' && !!r.notCalculatedReason) ||
+        (['PRESENT', 'ABSENT', 'INDETERMINATE'].includes(r.status) &&
+          r.variant === 'ONE_HEMISPHERE_NODE_AXIS' && !!r.basis &&
+          Array.isArray(r.evidence) && r.evidence.length > 0 &&
+          r.typeNaming?.status === 'NOT_CALCULATED'),
+        'doshas.kalsarpa.result', r.status,
+        'kalsarpa must be a variant-declared computed verdict or an explicit NOT_CALCULATED with a reason — never silent');
     }
   }
 

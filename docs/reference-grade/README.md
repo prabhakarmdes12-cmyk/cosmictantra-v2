@@ -26,7 +26,7 @@
 - **Working branch**: `arena/01a0655c-cosmictantra-v2` (Sprint C work; `main` at Sprint B commit `167ad3b`).
 - **TypeScript**: `npx tsc --noEmit` exits with **0 errors**.
 - **Automated Tests**: full 20-spec Playwright sweep — **619 passed / 1 failed / 6 skipped**; the single failure is the pre-existing environmental `MR-07` milan-route case (`net::ERR_CONNECTION_REFUSED`, needs a live app server + DB, not a calculation defect).
-- **Current Milestone**: **Sprint H (Classical Rule Registry + source provenance) is COMPLETE** (Sprints C astronomy / D varga / E time / F bala / G gochara gates: PASS at scale).
+- **Current Milestone**: **Sprint I (Yoga/Dosha expansion) is COMPLETE** (Sprints C astronomy / D varga / E time / F bala / G gochara / H rule-registry gates: PASS at scale).
 
 ### Sprint C (COMPLETE — this workspace)
 1. **Ayanamsha reconciled (RSK_009 → RESOLVED)**: versioned change `lahiri-registry-aligned-2.0.0` — `getLahiriAyanamsha(jd) = 23.85305556° + 1.39697128°/century · T`, conformant <0.5″ at J2000, <2″ at 1950; engine versioned `V37.0` (CT_INV_008). All engine-derived golden pins (reportId, Vimshottari balance, dasha dates, ayanamsha display, EV-13/14 baselines) re-baselined to the reconciled output with in-test provenance comments.
@@ -77,8 +77,17 @@
 4. **Qualification** `COMBUSTION_RULE_REGISTRY_001` (`npm run qualify:registry`): 20,000 scenarios strict — **349 registry-integrity + 126,665 combustion-identity + 31 provenance-surface checks, 0 violations; determinism 250/0. Verdict PASS.** Fixture content-addressed (key-sorted sha), rebuilt via `tools/build-rule-registry-fixtures.ts`.
 5. See `docs/reference-grade/10-sprint-h-rule-registry-provenance.md`.
 
-### Scope for Sprint I (Next Actionable Sprint)
-**Yoga/Dosha expansion** (Mission §15–§16): curated high-value yoga expansion toward ~100 rules (existence and strength kept separate), Kalsarpa variant ADOPTION (the registry prerequisite is now in place), combustion borderline → scholar queue (Sprint K console), plus queued engineering candidates: Varshaphala/Tajika year lord (Varsheshwar honestly NOT_CALCULATED), transit Vimshottari overlay + Kaksha tables (declared Sprint G gaps).
+### Sprint I (COMPLETE — this workspace)
+**Yoga/Dosha expansion** (Mission §15–§16):
+1. **Catalog 11 → 44 rules** (`jyotish-source-registry-v2`): Moon flanking (Sunapha/Anapha/Durudhara), benefic triads (Adhi/Lagnadhi/Vasumati), Sun flanking (Vesi/Vasi/Ubhayachari), Amala/Saraswati/Kartari pair, Sakata (registered affliction-pattern), five Dhana, three Viparita + Neecha Bhanga + Raja Sambandha, Parivartana, eight Nabhasa; Kalpadruma joins the honest NOT_ADOPTED set. Every rule = source-registry entry (NOT VERIFIED locator, existence-only policy) + evaluator + registry cross-link.
+2. **Existence/strength separation (§15) is now typed**: every evaluation carries `strength: {status: SCHOLAR_JUDGEMENT_REQUIRED | NOT_APPLICABLE}` — the engine never quantifies strength.
+3. **Kalsarpa ADOPTED** (`dosha-engine-1.0.0`, RULE_KALSARPA_HEMISPHERE): variant ONE_HEMISPHERE_NODE_AXIS; boundary-rashi charts INDETERMINATE (never guessed); arc direction recorded with the direction-qualified reading declared as an alternative; twelve names NOT_CALCULATED; snapshot + consistencyGate + reportModelV2 rewired.
+4. **Independent-implementation catches (§21 vindicated)**: the ADHI off-by-one (houses 7/8/9 instead of 6/7/8 from the Moon) was caught and fixed with a regression pin; the runner's own first Neecha-Bhanga draft (bhava/sign index confusion) was corrected against the engine.
+5. **Qualification** `YOGA_CATALOG_001` (`npm run qualify:yoga`): 2,000 real-chart scenarios strict — **170k predicate-identity / 273 catalog / 702 Kalsarpa-geometry / 35.2k existence-strength checks — 0 violations; determinism 60/0. Verdict PASS.** Sprint H registry artifacts regenerated for the 59-rule registry.
+6. See `docs/reference-grade/11-sprint-i-yoga-dosha-expansion.md`.
+
+### Scope for Sprint J (Next Actionable Sprint)
+**Evidence Graph + WHY UX** (Mission §17–§20 area): the evidence graph infrastructure (evidenceGraph.ts / evidenceCompiler.ts exist unqualified) — unify the per-sprint evidence records into a queryable graph behind every user-facing claim; combustion borderline and yoga strength queue into the scholar flow (Sprint K console). Queued engineering: Varshaphala/Tajika year lord (Varsheshwar honestly NOT_CALCULATED), transit Vimshottari overlay + Kaksha tables, curated yoga families toward ~100 (full Nabhasa set, Mahabhagya input gap, Jaimini yogada).
 
 **Rules of Engagement**:
 - **Preserve working systems**: Do not replace working code; wrap and extend it.

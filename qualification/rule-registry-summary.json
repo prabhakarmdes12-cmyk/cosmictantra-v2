@@ -2,16 +2,16 @@
   "runnerVersion": "rule-registry-qualification-runner-1.0.0 (sprint H)",
   "registryVersion": "classical-rule-registry-1.0.0 (sprint H)",
   "fixtureSetId": "COMBUSTION_RULE_REGISTRY_001",
-  "fixtureSetSha256": "94a5213a52da920f4f0bc8ad75ad1f0051f6d0d1fb7a602c452de53ecf818348",
+  "fixtureSetSha256": "b1d18e937c9ea0b8c0fde4f8d963d114d79b0498b3600d3b34ac43d908a0778b",
   "gate": "strict",
   "scenarios": 20000,
   "seed": 32019,
-  "generatedAtUtc": "2026-09-03T06:54:42.729Z",
+  "generatedAtUtc": "2026-09-03T07:09:18.274Z",
   "verdict": "PASS",
   "streamA": {
-    "checks": 349,
+    "checks": 839,
     "violations": 0,
-    "ruleCount": 24,
+    "ruleCount": 59,
     "firstViolations": []
   },
   "streamB": {

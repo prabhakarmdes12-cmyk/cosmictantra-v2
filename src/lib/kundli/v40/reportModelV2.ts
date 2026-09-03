@@ -997,7 +997,21 @@ function yogaDashboardSection(canonical: KundliCanonicalModel, derived: KundliDe
       });
     }
     if (d.id === 'kalsarpa') {
-      doshaItems.push({ label: tr('Kalsarpa', mode), status: 'NOT_CALCULATED', statusText: statusCaption('NOT_CALCULATED', mode), note: trProse('No rule definition adopted; absence is not claimed.', mode), xref: appendixRef('D-03', mode) });
+      const kr = d.result as any;
+      if (kr.status === 'NOT_CALCULATED') {
+        doshaItems.push({ label: tr('Kalsarpa', mode), status: 'NOT_CALCULATED', statusText: statusCaption('NOT_CALCULATED', mode), note: trProse('No rule definition adopted; absence is not claimed.', mode), xref: appendixRef('D-03', mode) });
+      } else {
+        const st = kr.status as string;
+        doshaItems.push({
+          label: tr('Kalsarpa', mode),
+          status: st === 'PRESENT' ? 'PRESENT' : st === 'ABSENT' ? 'ABSENT' : 'NOT_CALCULATED',
+          statusText: statusCaption(st === 'PRESENT' ? 'PRESENT' : st === 'ABSENT' ? 'ABSENT' : 'NOT_CALCULATED', mode),
+          note: trProse(st === 'INDETERMINATE'
+            ? 'Adopted variant could not decide (boundary case) — not calculated is not absence.'
+            : `Adopted variant: one-hemisphere node-axis containment${kr.arc ? ` (${kr.arc.replace(/_/g, ' ').toLowerCase()} arc)` : ''}.`, mode),
+          xref: appendixRef('D-03', mode),
+        });
+      }
     }
   }
 
@@ -1544,10 +1558,19 @@ function doshaEvidenceSection(canonical: KundliCanonicalModel): V2Section {
         ],
       });
     }
-    if (d.id === 'kalsarpa' && 'notCalculatedReason' in d.result) {
+    if (d.id === 'kalsarpa' && 'notCalculatedReason' in d.result && (d.result as any).status === 'NOT_CALCULATED') {
       blocks.push(h3(tr('D-03  Kalsarpa  —  NOT CALCULATED', mode)));
       blocks.push(p(d.result.notCalculatedReason ?? 'No rule definition adopted for this dosha.', 'small', 'NOT_CALCULATED'));
       blocks.push(p(trProse('Not calculated is not the same as absent. This report makes no claim either way.', mode), 'small', 'NOT_CALCULATED'));
+    } else if (d.id === 'kalsarpa') {
+      const kr = d.result as any;
+      const st = kr.status as string;
+      blocks.push(h3(tr(`D-03  Kalsarpa  —  ${st === 'PRESENT' ? 'PRESENT' : st === 'ABSENT' ? 'ABSENT' : 'INDETERMINATE (boundary case)'}`, mode)));
+      blocks.push(p(trProse(`Adopted variant: ONE_HEMISPHERE_NODE_AXIS — all seven visible grahas within one closed half of the zodiac bounded by the Rahu-Ketu axis${kr.arc ? `; arc: ${String(kr.arc).replace(/_/g, ' ').toLowerCase()}` : ''}.`, mode), 'small', 'TRADITIONAL_RULE'));
+      for (const evLine of (kr.evidence ?? []).slice(0, 12)) {
+        blocks.push(p(String(evLine), 'small', 'TRADITIONAL_RULE'));
+      }
+      blocks.push(p(trProse('Declared alternatives not adopted: direction-qualified arcs, boundary-rashi inclusion, Kala Amrita, Moon exclusion. The twelve classical names are NOT_CALCULATED.', mode), 'small', 'TRADITIONAL_RULE'));
     }
   }
 

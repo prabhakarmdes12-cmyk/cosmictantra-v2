@@ -22,7 +22,7 @@
  * than claiming PRESENT or ABSENT.
  */
 
-export const YOGA_SOURCE_REGISTRY_VERSION = 'jyotish-source-registry-v1';
+export const YOGA_SOURCE_REGISTRY_VERSION = 'jyotish-source-registry-v2 (sprint I expansion)';
 
 export type Adoption = 'ADOPTED' | 'NOT_ADOPTED';
 export type ScholarlyAgreement = 'GENERAL' | 'CONTESTED' | 'UNVERIFIED';
@@ -284,7 +284,714 @@ export const YOGA_SOURCE_REGISTRY: Record<string, YogaSourceEntry> = {
     ],
     adoption: 'NOT_ADOPTED',
   },
+
+  /* ------------------------------------------------------------------ */
+  /* Sprint I expansion — curated classical yoga catalog (charter §15).   */
+  /* Same honesty policy as above: no licensed edition is held, locators  */
+  /* are NOT VERIFIED, and the adopted interpretation is the only         */
+  /* authoritative field. Existence and strength remain separate — the    */
+  /* engine reports existence only.                                       */
+  /* ------------------------------------------------------------------ */
+
+  YOGA_SUNAPHA: {
+    ruleId: 'YOGA_SUNAPHA',
+    sourceWork: 'Sunapha Yoga — commonly attributed to the classical yoga corpus (Moon-based planet-in-2nd family); attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: at least one of Mars, Mercury, Jupiter, Venus or Saturn occupies the 2nd house (rashi) counted from the Moon. The Sun, the nodes and the Moon itself are NOT counted as occupants.',
+    variants: [
+      'Some schools include the Sun as a qualifying occupant for Sunapha/Anapha.',
+      'Some schools count Rahu/Ketu as occupants.',
+      'The 2nd-from vs 12th-from naming is swapped in some compilations (Sunapha as 12th, Anapha as 2nd).',
+    ],
+    limitations: [
+      'CANCELLATION / QUALIFICATION POLICY: none applied — dignity, combustion, retrogression and war affect strength only, not existence.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_ANAPHA: {
+    ruleId: 'YOGA_ANAPHA',
+    sourceWork: 'Anapha Yoga — commonly attributed to the classical yoga corpus (Moon-based planet-in-12th family); attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: at least one of Mars, Mercury, Jupiter, Venus or Saturn occupies the 12th house (rashi) counted from the Moon. The Sun, the nodes and the Moon itself are NOT counted as occupants.',
+    variants: [
+      'Some schools include the Sun as a qualifying occupant.',
+      'Some schools count Rahu/Ketu as occupants.',
+      'The 2nd-from vs 12th-from naming is swapped in some compilations.',
+    ],
+    limitations: [
+      'CANCELLATION / QUALIFICATION POLICY: none applied.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_DURUDHARA: {
+    ruleId: 'YOGA_DURUDHARA',
+    sourceWork: 'Durudhara Yoga — commonly attributed to the classical yoga corpus (planets on both sides of the Moon); attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: at least one of the five taragrahas (Mars, Mercury, Jupiter, Venus, Saturn) occupies the 2nd from the Moon AND at least one occupies the 12th from the Moon. The Sun and the nodes are NOT counted.',
+    variants: [
+      'Some schools include the Sun and/or the nodes as occupants.',
+    ],
+    limitations: [
+      'CANCELLATION / QUALIFICATION POLICY: none applied.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_ADHI: {
+    ruleId: 'YOGA_ADHI',
+    sourceWork: 'Adhi Yoga (from the Moon) — commonly attributed to the classical yoga corpus; attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: ALL THREE natural benefics (Mercury, Jupiter, Venus) occupy houses 6th, 7th or 8th counted from the Moon (any distribution among the three houses).',
+    variants: [
+      'Some schools require only at least one benefic in those houses for a (weaker) Adhi yoga.',
+      'Some schools require the three benefics to occupy the three houses distinctly (one each).',
+    ],
+    limitations: [
+      'CANCELLATION / QUALIFICATION POLICY: none applied.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_LAGNADHI: {
+    ruleId: 'YOGA_LAGNADHI',
+    sourceWork: 'Lagnadhi Yoga — commonly attributed to the classical yoga corpus (Adhi pattern from the lagna); attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: ALL THREE natural benefics (Mercury, Jupiter, Venus) occupy bhavas 6th, 7th or 8th counted from the lagna (any distribution).',
+    variants: [
+      'Some schools require only one benefic; some require the 8th house to be additionally free of malefic occupation.',
+    ],
+    limitations: [
+      'CANCELLATION / QUALIFICATION POLICY: none applied.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_SAKATA: {
+    ruleId: 'YOGA_SAKATA',
+    sourceWork: 'Sakata Yoga — commonly attributed to the classical yoga corpus (Moon-Jupiter 6/8/12 affliction pattern); attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'CONTESTED',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: the Moon occupies the 6th, 8th or 12th house counted from Jupiter.',
+    variants: [
+      'Some schools restrict Sakata to the 6th and 8th from Jupiter only.',
+      'Some schools count the 6/8 from the Moon to Jupiter instead (direction of counting disputed).',
+    ],
+    limitations: [
+      'This is registered as an affliction-pattern yoga; the engine reports existence only and draws no conclusions about fortune.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_AMALA: {
+    ruleId: 'YOGA_AMALA',
+    sourceWork: 'Amala Yoga — commonly attributed to the classical yoga corpus (benefic in the 10th); attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: at least one natural benefic (Mercury, Jupiter or Venus) occupies the 10th bhava from the lagna OR the 10th house counted from the Moon.',
+    variants: [
+      'Some schools count the Amala only from the lagna.',
+      'Some schools include a bright (waxing) Moon among the qualifying benefics.',
+      'Some compilations describe a malefic in the 10th as a distinct (inauspicious Amala variant).',
+    ],
+    limitations: [
+      'CANCELLATION / QUALIFICATION POLICY: none applied.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_VESI: {
+    ruleId: 'YOGA_VESI',
+    sourceWork: 'Vesi Yoga — commonly attributed to the classical yoga corpus (planet in the 2nd from the Sun); attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: at least one planet other than the Sun and Moon (Mars, Mercury, Jupiter, Venus, Saturn) occupies the 2nd house (rashi) counted from the Sun. The nodes are NOT counted.',
+    variants: [
+      'Some schools count Rahu/Ketu as occupants.',
+      'Benefic-only and malefic-only sub-variants (Shubha Vesi / Papa Vesi) are described for effect differentiation.',
+    ],
+    limitations: [
+      'CANCELLATION / QUALIFICATION POLICY: none applied.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_VASI: {
+    ruleId: 'YOGA_VASI',
+    sourceWork: 'Vasi Yoga — commonly attributed to the classical yoga corpus (planet in the 12th from the Sun); attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: at least one planet other than the Sun and Moon (Mars, Mercury, Jupiter, Venus, Saturn) occupies the 12th house (rashi) counted from the Sun. The nodes are NOT counted.',
+    variants: [
+      'Some schools count Rahu/Ketu as occupants.',
+      'Benefic-only and malefic-only sub-variants (Shubha Vasi / Papa Vasi) are described for effect differentiation.',
+    ],
+    limitations: [
+      'CANCELLATION / QUALIFICATION POLICY: none applied.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_UBHAYACHARI: {
+    ruleId: 'YOGA_UBHAYACHARI',
+    sourceWork: 'Ubhayachari Yoga — commonly attributed to the classical yoga corpus (planets on both sides of the Sun); attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: at least one of the five taragrahas occupies the 2nd from the Sun AND at least one occupies the 12th from the Sun. The Sun, Moon and nodes are NOT counted.',
+    variants: [
+      'Some schools include the Moon and/or the nodes as occupants.',
+    ],
+    limitations: [
+      'CANCELLATION / QUALIFICATION POLICY: none applied.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_DHANA_LORDS_EXCHANGE: {
+    ruleId: 'YOGA_DHANA_LORDS_EXCHANGE',
+    sourceWork: 'Dhana Yoga (2nd-11th lords in Parivartana) — commonly attributed to the classical wealth-yoga corpus; attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: the lord of the 2nd bhava and the lord of the 11th bhava occupy each other\'s signs (a Parivartana exchange between the 2nd and 11th lords).',
+    variants: [
+      'Some schools additionally accept mutual aspect between the 2nd and 11th lords as forming a (weaker) dhana association.',
+    ],
+    limitations: [
+      'CANCELLATION / QUALIFICATION POLICY: none applied.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_DHANA_LORDS_CONJUNCT: {
+    ruleId: 'YOGA_DHANA_LORDS_CONJUNCT',
+    sourceWork: 'Dhana Yoga (2nd and 11th lords conjunct) — commonly attributed to the classical wealth-yoga corpus; attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: the lord of the 2nd bhava and the lord of the 11th bhava occupy the same sign (whole-sign conjunction).',
+    variants: [
+      'Some schools require a tighter (degree-based) conjunction orb.',
+    ],
+    limitations: [
+      'CANCELLATION / QUALIFICATION POLICY: none applied.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_DHANA_2L_IN_11TH: {
+    ruleId: 'YOGA_DHANA_2L_IN_11TH',
+    sourceWork: 'Dhana Yoga (2nd lord in the 11th) — commonly attributed to the classical wealth-yoga corpus; attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: the lord of the 2nd bhava occupies the 11th bhava.',
+    variants: [
+      'Some schools give the same standing to the 2nd lord in the 5th or 9th (trikona) placements.',
+    ],
+    limitations: [
+      'CANCELLATION / QUALIFICATION POLICY: none applied.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_DHANA_11L_IN_2ND: {
+    ruleId: 'YOGA_DHANA_11L_IN_2ND',
+    sourceWork: 'Dhana Yoga (11th lord in the 2nd) — commonly attributed to the classical wealth-yoga corpus; attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: the lord of the 11th bhava occupies the 2nd bhava.',
+    variants: [
+      'Some schools give the same standing to the 11th lord in the 5th or 9th placements.',
+    ],
+    limitations: [
+      'CANCELLATION / QUALIFICATION POLICY: none applied.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_LAKSHMI: {
+    ruleId: 'YOGA_LAKSHMI',
+    sourceWork: 'Lakshmi Yoga — commonly attributed to the classical yoga corpus (strong 9th lord in a kendra); attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'CONTESTED',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: the lord of the 9th bhava occupies its own sign or exaltation sign AND stands in a kendra bhava (1st, 4th, 7th or 10th) from the lagna.',
+    variants: [
+      'Most compilations additionally require Venus (the karaka of Lakshmi) to be strong; that strength condition is NOT applied here.',
+      'Some texts require the 6th/8th to be free of occupation.',
+    ],
+    limitations: [
+      'The Venus-strength qualifier is deliberately NOT applied (it is a strength concept, kept separate per charter §15).',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_VASUMATI: {
+    ruleId: 'YOGA_VASUMATI',
+    sourceWork: 'Vasumati Yoga — commonly attributed to the classical yoga corpus (benefics in upachayas); attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: ALL THREE natural benefics (Mercury, Jupiter, Venus) occupy upachaya bhavas (3rd, 6th, 10th or 11th) counted from the lagna (any distribution).',
+    variants: [
+      'Some schools count the upachayas from the Moon (Chandra-lagna) instead.',
+      'Some schools include a bright Moon among the benefics that must be in the upachayas.',
+    ],
+    limitations: [
+      'CANCELLATION / QUALIFICATION POLICY: none applied.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_RAJA_SAMBANDHA: {
+    ruleId: 'YOGA_RAJA_SAMBANDHA',
+    sourceWork: 'Raja Yoga (kendra-lord / trikona-lord association, Raja Sambandha) — commonly attributed to the classical yoga corpus; attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: some lord of a trikona bhava (1st, 5th, 9th) and some lord of a kendra bhava (1st, 4th, 7th, 10th) — two DIFFERENT grahas — are associated by whole-sign conjunction (same sign) or by sign exchange (Parivartana).',
+    variants: [
+      'Some schools accept mutual aspect between the two lords as association; mutual aspect is NOT adopted here.',
+      'Stronger sub-forms (e.g. the 9th lord with the 10th lord) are described for effect grading.',
+    ],
+    limitations: [
+      'The Lagna lord standing on both sides (kendra AND trikona) is handled: pairs must be distinct grahas, so a lone Lagna lord does not self-associate.',
+      'CANCELLATION / QUALIFICATION POLICY: none applied.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_VIPARITA_HARSHA: {
+    ruleId: 'YOGA_VIPARITA_HARSHA',
+    sourceWork: 'Viparita Raja Yoga — Harsha (6th lord in a dusthana) — commonly attributed to the classical yoga corpus; attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: the lord of the 6th bhava occupies the 6th, 8th or 12th bhava.',
+    variants: [
+      'Some schools additionally require the dusthana to be free of other planet occupation.',
+      'Some schools restrict the placement to the same house (6th lord in the 6th).',
+    ],
+    limitations: [
+      'CANCELLATION / QUALIFICATION POLICY: none applied.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_VIPARITA_SARALA: {
+    ruleId: 'YOGA_VIPARITA_SARALA',
+    sourceWork: 'Viparita Raja Yoga — Sarala (8th lord in a dusthana) — commonly attributed to the classical yoga corpus; attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: the lord of the 8th bhava occupies the 6th, 8th or 12th bhava.',
+    variants: [
+      'Some schools additionally require the dusthana to be free of other planet occupation.',
+    ],
+    limitations: [
+      'CANCELLATION / QUALIFICATION POLICY: none applied.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_VIPARITA_VIMALA: {
+    ruleId: 'YOGA_VIPARITA_VIMALA',
+    sourceWork: 'Viparita Raja Yoga — Vimala (12th lord in a dusthana) — commonly attributed to the classical yoga corpus; attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: the lord of the 12th bhava occupies the 6th, 8th or 12th bhava.',
+    variants: [
+      'Some schools additionally require the dusthana to be free of other planet occupation.',
+    ],
+    limitations: [
+      'CANCELLATION / QUALIFICATION POLICY: none applied.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_NEECHA_BHANGA: {
+    ruleId: 'YOGA_NEECHA_BHANGA',
+    sourceWork: 'Neecha Bhanga (cancellation of debilitation) — commonly attributed to the classical yoga corpus; attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'CONTESTED',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: at least one graha stands in its debilitation sign AND its dispositor (the lord of that sign) occupies a kendra bhava (1st, 4th, 7th or 10th) from the lagna OR from the Moon.',
+    variants: [
+      'The exaltation-lord of the debilitation sign standing in a kendra from the lagna or Moon is another classical cancellation condition — NOT adopted here.',
+      'The debilitated planet being itself in a kendra from the lagna or Moon is another listed condition — NOT adopted here.',
+      'Neecha Bhanga RAJA yoga (the cancellation rising to raja-yoga strength) is a further contested elevation — NOT adopted here.',
+    ],
+    limitations: [
+      'This rule registers the cancellation event only, not its raja-yoga elevation.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_PARIVARTANA: {
+    ruleId: 'YOGA_PARIVARTANA',
+    sourceWork: 'Parivartana (sign exchange between grahas) — commonly attributed to the classical yoga corpus; attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: at least two grahas (of the seven Sun..Saturn) occupy each other\'s signs. The observed pair(s) are reported as evidence.',
+    variants: [
+      'Sub-classifications (Maha/Yoga/Khala/Nainya Parivartana by the bhava classes of the exchanged signs) are described for effect grading — NOT evaluated here.',
+      'Some schools include Rahu/Ketu exchanges; the nodes are NOT counted here.',
+    ],
+    limitations: [
+      'CANCELLATION / QUALIFICATION POLICY: none applied.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_SHUBHA_KARTARI: {
+    ruleId: 'YOGA_SHUBHA_KARTARI',
+    sourceWork: 'Shubha Kartari Yoga — commonly attributed to the classical yoga corpus (benefics flanking); attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: natural benefics (Mercury, Jupiter or Venus) occupy BOTH the 2nd and the 12th bhava from the lagna, flanking the ascendant.',
+    variants: [
+      'The same flank-pattern is applied around the Moon by some schools.',
+    ],
+    limitations: [
+      'CANCELLATION / QUALIFICATION POLICY: none applied.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_PAPA_KARTARI: {
+    ruleId: 'YOGA_PAPA_KARTARI',
+    sourceWork: 'Papa Kartari Yoga — commonly attributed to the classical yoga corpus (malefics flanking); attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: malefics (Saturn or Mars) occupy BOTH the 2nd and the 12th bhava from the lagna. The Sun and the nodes are NOT counted as malefics for this rule.',
+    variants: [
+      'Some schools count the Sun and/or Rahu-Ketu among the flanking malefics.',
+      'The Moon-flanked variant is described by some schools.',
+    ],
+    limitations: [
+      'Registered as an affliction-pattern; the engine reports existence only and draws no conclusions about fortune.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_SARASWATI: {
+    ruleId: 'YOGA_SARASWATI',
+    sourceWork: 'Saraswati Yoga — commonly attributed to the classical yoga corpus; attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'CONTESTED',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: Mercury, Jupiter and Venus EACH occupy a kendra (1/4/7/10), trikona (1/5/9) or the 2nd bhava, AND Jupiter additionally occupies its own sign or exaltation sign.',
+    variants: [
+      'Some schools allow Jupiter in a friendly sign instead of own/exaltation.',
+      'Some schools do not require the Jupiter dignity condition at all.',
+    ],
+    limitations: [
+      'The friendly-sign allowance is NOT adopted (own/exaltation only).',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_KALPADRUMA: {
+    ruleId: 'YOGA_KALPADRUMA',
+    sourceWork: 'Kalpadruma (Kalpavriksha) Yoga — commonly attributed to the classical yoga corpus; attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'CONTESTED',
+    adoptedInterpretation: 'NOT IMPLEMENTED. No interpretation adopted.',
+    variants: [
+      'The definition is a long chained sequence (the lagna lord\'s exponent positions through multiple levels of dispositorship) whose exact formulation varies substantially between compilations.',
+    ],
+    limitations: [
+      'Reported NOT_CALCULATED. The engine does not guess between the disputed chains.',
+    ],
+    adoption: 'NOT_ADOPTED',
+  },
+
+  YOGA_RAJJU: {
+    ruleId: 'YOGA_RAJJU',
+    sourceWork: 'Nabhasa Yoga — Rajju (all grahas in movable signs) — commonly attributed to the classical yoga corpus; attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: ALL SEVEN grahas (Sun..Saturn; nodes excluded) occupy movable (chara) signs — Aries, Cancer, Libra or Capricorn.',
+    variants: [
+      'Some Nabhasa compilations classify the asraya group by dual vs movable mixing conditions rather than strict uniformity.',
+    ],
+    limitations: [
+      'CANCELLATION / QUALIFICATION POLICY: none applied.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_MUSALA: {
+    ruleId: 'YOGA_MUSALA',
+    sourceWork: 'Nabhasa Yoga — Musala (all grahas in fixed signs) — commonly attributed to the classical yoga corpus; attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: ALL SEVEN grahas (Sun..Saturn; nodes excluded) occupy fixed (sthira) signs — Taurus, Leo, Scorpio or Aquarius.',
+    variants: [
+      'See YOGA_RAJJU variant note on Nabhasa asraya classification.',
+    ],
+    limitations: [
+      'CANCELLATION / QUALIFICATION POLICY: none applied.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_NALA: {
+    ruleId: 'YOGA_NALA',
+    sourceWork: 'Nabhasa Yoga — Nala (all grahas in dual signs) — commonly attributed to the classical yoga corpus; attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: ALL SEVEN grahas (Sun..Saturn; nodes excluded) occupy dual (ubhaya) signs — Gemini, Virgo, Sagittarius or Pisces.',
+    variants: [
+      'See YOGA_RAJJU variant note on Nabhasa asraya classification.',
+    ],
+    limitations: [
+      'CANCELLATION / QUALIFICATION POLICY: none applied.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_GOLA: {
+    ruleId: 'YOGA_GOLA',
+    sourceWork: 'Nabhasa Yoga — Gola (all grahas in one sign) — commonly attributed to the classical yoga corpus; attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: ALL SEVEN grahas (Sun..Saturn) occupy ONE AND THE SAME sign.',
+    variants: [
+      'Some compilations group Gola under the Sankhya family by count of occupied signs (1).',
+    ],
+    limitations: [
+      'CANCELLATION / QUALIFICATION POLICY: none applied.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_YUGA: {
+    ruleId: 'YOGA_YUGA',
+    sourceWork: 'Nabhasa Yoga — Yuga (all grahas in two signs) — commonly attributed to the classical yoga corpus; attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: ALL SEVEN grahas (Sun..Saturn) occupy exactly TWO distinct signs between them.',
+    variants: [
+      'Some compilations group Yuga under the Sankhya family by count of occupied signs (2).',
+    ],
+    limitations: [
+      'CANCELLATION / QUALIFICATION POLICY: none applied.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_SULA: {
+    ruleId: 'YOGA_SULA',
+    sourceWork: 'Nabhasa Yoga — Sula (all grahas in three signs) — commonly attributed to the classical yoga corpus; attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: ALL SEVEN grahas (Sun..Saturn) occupy exactly THREE distinct signs between them.',
+    variants: [
+      'Some compilations group Sula under the Sankhya family by count of occupied signs (3).',
+    ],
+    limitations: [
+      'CANCELLATION / QUALIFICATION POLICY: none applied.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_KEDARA: {
+    ruleId: 'YOGA_KEDARA',
+    sourceWork: 'Nabhasa Yoga — Kedara (all grahas in four signs) — commonly attributed to the classical yoga corpus; attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: ALL SEVEN grahas (Sun..Saturn) occupy exactly FOUR distinct signs between them.',
+    variants: [
+      'Some compilations group Kedara under the Sankhya family by count of occupied signs (4).',
+    ],
+    limitations: [
+      'CANCELLATION / QUALIFICATION POLICY: none applied.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
+
+  YOGA_KAMALA: {
+    ruleId: 'YOGA_KAMALA',
+    sourceWork: 'Nabhasa Yoga — Kamala/Padma (all grahas in kendras) — commonly attributed to the classical yoga corpus; attribution not verified here',
+    locator: NOT_VERIFIED_LOCATOR,
+    editionOrTranslation: NO_EDITION,
+    verifiedInRepository: false,
+    locatorVerified: false,
+    scholarlyAgreement: 'GENERAL',
+    adoptedInterpretation:
+      'EXISTENCE ONLY: ALL SEVEN grahas (Sun..Saturn) occupy kendra bhavas (1st, 4th, 7th or 10th) counted from the lagna.',
+    variants: [
+      'Some compilations place Kamala in the Acala group and evaluate it by sign position relative to the lagna rather than bhava.',
+    ],
+    limitations: [
+      'CANCELLATION / QUALIFICATION POLICY: none applied.',
+      'Strength of the yoga is not quantified.',
+    ],
+    adoption: 'ADOPTED',
+  },
 };
+
 
 export function sourceEntryFor(ruleId: string): YogaSourceEntry {
   const e = YOGA_SOURCE_REGISTRY[ruleId];

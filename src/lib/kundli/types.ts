@@ -232,8 +232,14 @@ export interface YogaResult {
 }
 
 export interface KalsarpaResult {
-  status: 'NOT_CALCULATED';
-  notCalculatedReason: string;
+  status: 'PRESENT' | 'ABSENT' | 'INDETERMINATE' | 'NOT_CALCULATED';
+  /** Sprint I: the adopted variant is declared on the result, never implied. */
+  variant?: 'ONE_HEMISPHERE_NODE_AXIS';
+  basis?: string;
+  arc?: 'RAHU_TO_KETU' | 'KETU_TO_RAHU';
+  evidence?: string[];
+  typeNaming?: { status: 'NOT_CALCULATED'; reason: string };
+  notCalculatedReason?: string;
 }
 
 export interface DoshaResult {

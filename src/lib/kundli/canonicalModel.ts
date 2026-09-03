@@ -16,6 +16,7 @@ import type {
   KundliCanonicalModel, PlanetPosition, HouseData, PanchangaData,
   AscendantData, DivisionalChartData, DashaTimelineData, SignRef,
   YogaResult, DoshaResult, CalculationConfig, NormalizedBirthProfile, DashaPeriodInfo,
+  KalsarpaResult,
 } from './types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -295,14 +296,14 @@ export function buildYogasAndDoshas(snapshot: any): { yogas: YogaResult[]; dosha
 
   const doshas: DoshaResult[] = [];
   if (yd.kalsarpa) {
+    // Sprint I: the Kalsarpa result is computed by the adopted variant and
+    // passed through as-is (variant, basis, arc, evidence, typeNaming).
+    const k = yd.kalsarpa as Record<string, unknown>;
+    const kStatus = (k.status as string) ?? 'NOT_CALCULATED';
     doshas.push({
       id: 'kalsarpa',
-      status: 'NOT_CALCULATED',
-      result: {
-        status: 'NOT_CALCULATED',
-        notCalculatedReason: (yd.kalsarpa as any).notCalculatedReason
-          ?? 'Kalsarpa dosha rule not implemented.',
-      },
+      status: kStatus === 'NOT_CALCULATED' ? 'NOT_CALCULATED' : 'CALCULATED',
+      result: k as unknown as KalsarpaResult,
     });
   }
   if (yd.manglik) {

@@ -99,7 +99,7 @@ export function buildDerivedModel(
     { id: 'CAP_JAIMINI', name: 'Jaimini chara karakas', status: 'NOT_CALCULATED', note: 'A separate system; mixing it into a Parashari report without declaration is forbidden by KUNDLI_INV_004.' },
     { id: 'CAP_KP', name: 'KP sub-lords', status: 'NOT_CALCULATED', note: 'A separate system; not exposed by this report.' },
     { id: 'CAP_TRANSIT', name: 'Gochara (transits)', status: 'NOT_CALCULATED', note: 'Would make the report non-deterministic and is not validated.' },
-    { id: 'CAP_KALSARPA', name: 'Kalsarpa dosha', status: 'NOT_CALCULATED', note: 'No adopted rule definition.' },
+    { id: 'CAP_KALSARPA', name: 'Kalsarpa dosha', status: 'CALCULATED', note: 'Adopted variant ONE_HEMISPHERE_NODE_AXIS (Sprint I); twelve-name typing NOT_CALCULATED.' },
     { id: 'CAP_PREDICTION', name: 'Event prediction', status: 'NOT_CALCULATED', note: 'Death, disease, marriage, childbirth, litigation and financial outcomes are never predicted (KUNDLI_INV_005).' },
   ];
 

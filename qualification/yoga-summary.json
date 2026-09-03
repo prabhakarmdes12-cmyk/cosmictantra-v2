@@ -1,0 +1,68 @@
+{
+  "runnerVersion": "yoga-qualification-runner-1.0.0 (sprint I)",
+  "catalogVersion": "jyotish-source-registry-v2 (sprint I expansion)",
+  "doshaEngineVersion": "dosha-engine-1.0.0 (sprint I, kalsarpa variant adopted)",
+  "fixtureSetId": "YOGA_CATALOG_001",
+  "fixtureSetSha256": "3d50b163e275ddeb1d31fb71d9a93aa994a179455602b739b8842517f9f508b8",
+  "gate": "strict",
+  "scenarios": 2000,
+  "seed": 37009,
+  "generatedAtUtc": "2026-09-03T07:13:01.904Z",
+  "verdict": "PASS",
+  "streamA": {
+    "checks": 273,
+    "violations": 0,
+    "yogaRuleCount": 44,
+    "firstViolations": []
+  },
+  "streamB": {
+    "scenarios": 2000,
+    "checks": 170000,
+    "violations": 0,
+    "chartsResolved": 2000,
+    "firstViolations": []
+  },
+  "streamC": {
+    "checks": 702,
+    "violations": 0,
+    "geometries": 222,
+    "firstViolations": []
+  },
+  "streamD": {
+    "evaluations": 8800,
+    "checks": 35200,
+    "violations": 0,
+    "firstViolations": []
+  },
+  "determinism": {
+    "samples": 60,
+    "mismatches": 0
+  },
+  "findings": [
+    {
+      "id": "DECLARED_EXISTENCE_ONLY_ENGINE",
+      "severity": "NON_BLOCKING",
+      "statement": "The yoga engine judges EXISTENCE only; strength is SCHOLAR_JUDGEMENT_REQUIRED on every PRESENT verdict (charter §15 separation).",
+      "status": "OPEN"
+    },
+    {
+      "id": "DECLARED_NO_LICENSED_EDITIONS",
+      "severity": "NON_BLOCKING",
+      "statement": "All yoga/dosha rule locators remain NOT VERIFIED; no licensed Jyotish edition is held in the repository.",
+      "status": "OPEN"
+    },
+    {
+      "id": "DECLARED_KALSARPA_NAMING_OPEN",
+      "severity": "NON_BLOCKING",
+      "statement": "The twelve Kalsarpa names (Anant..Vasuki) and three of four variant readings remain unadopted; boundary-rashi charts return INDETERMINATE.",
+      "status": "OPEN"
+    },
+    {
+      "id": "DECLARED_MANGALIK_VARIANTS_DECLARED",
+      "severity": "NON_BLOCKING",
+      "statement": "Manglik is evaluated Lagna-only with houses 1/4/7/8/12; the 2nd-house and Moon/Venus-anchored traditions are declared alternatives (registry).",
+      "status": "OPEN"
+    }
+  ],
+  "totalViolations": 0
+}
