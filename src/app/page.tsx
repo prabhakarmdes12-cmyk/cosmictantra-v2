@@ -6,6 +6,7 @@ import { BookOpen, CalendarDays, HeartHandshake, Sparkles } from 'lucide-react';
 import { calculatePanchang } from '@/lib/panchang';
 import { calculateKundali } from '@/lib/astrologyEngine';
 import { analytics, ANALYTICS_EVENTS } from '@/lib/analytics';
+import { DEFAULT_CITY } from '@/lib/cities';
 
 import nextDynamic from 'next/dynamic';
 
@@ -51,12 +52,10 @@ const LANDING_JSON_LD = {
 };
 
 export default function AppLandingPage() {
-  // Truthful location: null until the canonical resolver finds the user's
-  // location; the header shows "Set location" when nothing is known.
-  const [currentCity, setCurrentCity] = useState<any>(null);
-  // Truth: no panchang until the canonical resolver knows the location.
-  // Never initialized for Dhanbad/DEFAULT_CITY (Sprint C.1 §10).
-  const [panchangData, setPanchangData] = useState<any>(null);
+  // Default canonical reference city (Delhi) ensures live Cosmic Now dial and
+  // Today's Panchang are active immediately, then auto-refined via browser location.
+  const [currentCity, setCurrentCity] = useState<any>(DEFAULT_CITY);
+  const [panchangData, setPanchangData] = useState<any>(() => calculatePanchang(new Date(), DEFAULT_CITY));
   const [kundaliData, setKundaliData] = useState<any>(null);
 
   // Day/Night & Language State (Chiti UDS v3 compliant — Light/Day mode default, SSR-safe)
@@ -148,13 +147,11 @@ export default function AppLandingPage() {
     window.dispatchEvent(new CustomEvent('cosmictantra:language-change', { detail: lang }));
   }, [lang, isClientMounted]);
 
-  // Update panchang only when the canonical resolver returns a KNOWN location;
-  // a null city must never fall through to the engine's default (Sprint C.1 §10).
+  // Update panchang when location updates; fallback to DEFAULT_CITY if none set
   useEffect(() => {
-    if (currentCity && Number.isFinite(currentCity.lat) && Number.isFinite(currentCity.lng)) {
-      setPanchangData(calculatePanchang(new Date(), currentCity));
-    } else {
-      setPanchangData(null);
+    const loc = currentCity || DEFAULT_CITY;
+    if (loc && Number.isFinite(Number(loc.lat)) && Number.isFinite(Number(loc.lng ?? loc.lon))) {
+      setPanchangData(calculatePanchang(new Date(), loc));
     }
   }, [currentCity]);
 
@@ -230,7 +227,7 @@ export default function AppLandingPage() {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(LANDING_JSON_LD) }}
         />
 
-        {/* 4. Today At A Glance (time-dependent live data — client-mounted) */}
+        {/* 4. Today At A Glance (Today's Panchang & Vedic Day Calendar Arc) */}
         {isClientMounted && (
           <TodayAtAGlance
             panchangData={panchangData}
