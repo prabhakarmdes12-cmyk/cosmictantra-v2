@@ -16,16 +16,8 @@ export default function ScholarDashboard() {
   const refreshProfiles = () => {
     const profiles = getProfiles();
     setAllProfiles(profiles);
-    const current = getActiveProfile() || profiles[0] || {
-      name: 'Priya Sharma',
-      cosmicId: 'CT-4821',
-      birthDate: '1995-06-15',
-      birthTime: '10:30',
-      birthCity: 'Patna',
-      lat: 25.5941,
-      lng: 85.1376,
-      tz: 5.5,
-    };
+    // CT_UX_INV_003 — never fabricate a demo user as the visitor's profile.
+    const current = getActiveProfile() || profiles[0] || null;
     setActiveProfileState(current);
   };
 
@@ -79,7 +71,7 @@ export default function ScholarDashboard() {
             href="/daily" 
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-[#8E6F1D]/40 dark:border-[#D4AF37]/40 text-xs font-mono-data font-bold text-[#1C1917] dark:text-white hover:border-[#8E6F1D] transition-all bg-white/70 dark:bg-white/5 shrink-0"
           >
-            <span>Open Full Forecast</span>
+            <span>Open Today's Panchang</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
@@ -90,7 +82,7 @@ export default function ScholarDashboard() {
           <div className="lg:col-span-5 space-y-6">
             <CosmicIdCard 
               profile={{
-                whatsappPhone: activeProfile.whatsappPhone || '+91 98765 43210',
+                whatsappPhone: activeProfile.whatsappPhone || '',
                 fullName: activeProfile.name,
                 cosmicId: activeProfile.cosmicId,
                 consentGiven: true,

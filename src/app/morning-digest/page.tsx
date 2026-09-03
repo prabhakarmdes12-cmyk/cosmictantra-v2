@@ -9,6 +9,10 @@ export default function MorningDigestSimulator() {
       <div className="max-w-md mx-auto">
         <div className="text-center mb-8">
           <div className="inline px-4 py-1 rounded-full bg-[#8E6F1D]/10 text-[#8E6F1D] text-xs tracking-widest">RETENTION FEATURE</div>
+          <div className="mt-2 inline-block px-3 py-1 rounded-full bg-amber-500/15 text-amber-800 text-[10px] font-mono-data font-bold tracking-wider"
+               data-testid="sample-preview-banner">
+            SAMPLE PREVIEW — this is a mock message, not your data
+          </div>
           <h1 className="font-editorial text-4xl font-bold mt-3">Daily WhatsApp Digest</h1>
           <p className="text-sm text-[#57524A] mt-2">Preview of what reaches the seeker every morning at 7:00 AM</p>
         </div>

@@ -5,6 +5,33 @@
 
 const STORAGE_KEY = 'cosmictantra_intent_session';
 
+/**
+ * Sprint C.1 §14 — analytics schema guard. These keys may NEVER appear in a
+ * recorded or transmitted payload (birth PII, exact coordinates, contact).
+ * A violation drops the event at the boundary; it is never silently stored.
+ */
+const ANALYTICS_FORBIDDEN_KEYS = [
+  'birthDate',
+  'birthTime',
+  'fullName',
+  'name',
+  'latitude',
+  'longitude',
+  'lat',
+  'lng',
+  'phone',
+  'email',
+  'birthCity',
+  'locationName',
+  'rawChart',
+  'dob',
+  'tob',
+];
+
+export function auditAnalyticsPayloadKeys(payload: Record<string, unknown>): string[] {
+  return ANALYTICS_FORBIDDEN_KEYS.filter((k) => k in payload && payload[k] !== undefined && payload[k] !== null);
+}
+
 export const ANALYTICS_EVENTS = {
   HOME_VIEW: 'HOME_VIEW',
   LOCATION_CHANGED: 'LOCATION_CHANGED',
@@ -72,6 +99,13 @@ class IntentTracker {
   }
 
   public track(eventName: string, payload: Record<string, any> = {}) {
+    // Sprint C.1 §14 — hard boundary: prohibited personal keys never recorded.
+    const violations = auditAnalyticsPayloadKeys(payload);
+    if (violations.length > 0) {
+      // eslint-disable-next-line no-console
+      console.error('[analytics privacy] dropped event (forbidden keys):', eventName, violations);
+      return;
+    }
     const eventRecord = {
       event: eventName,
       payload,

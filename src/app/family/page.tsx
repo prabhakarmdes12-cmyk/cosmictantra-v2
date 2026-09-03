@@ -11,15 +11,6 @@ export const metadata: Metadata = {
 };
 
 export default function FamilyPage() {
-  // Demo Cosmic ID card data (would come from profile context in real app)
-  const demoCosmicProfile = {
-    whatsappPhone: '+919876543210',
-    fullName: 'Priya Sharma & Family',
-    cosmicId: 'CT-4821',
-    consentGiven: true,
-    familyMembersCount: 4,
-  };
-
   return (
     <main className="min-h-screen bg-[#FAF7F2] dark:bg-[#07080C] text-[#1C1917] dark:text-[#EFECE6]">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-10 pb-20">
@@ -34,9 +25,17 @@ export default function FamilyPage() {
           </p>
         </div>
 
-        {/* Premium Cosmic ID Card */}
-        <div className="mt-10">
-          <CosmicIdCard profile={demoCosmicProfile} />
+        {/* CT_UX_INV_003 — never show a demo Cosmic ID as the visitor's.
+            The real card renders from saved profiles in the manager below. */}
+        <div className="mt-10" data-testid="family-id-placeholder">
+          <div className="rounded-3xl border border-dashed border-[#D4AF37]/40 bg-white/60 dark:bg-[#0A0C12]/60 p-8 text-center">
+            <p className="font-editorial text-lg font-bold text-[#1C1917] dark:text-white">
+              Your family Cosmic ID appears here
+            </p>
+            <p className="mt-1 text-xs font-mono-data text-[#57524A] dark:text-[#AAA49A]">
+              Save at least one member's birth details below to build it from real data.
+            </p>
+          </div>
         </div>
 
         {/* Family Manager Section */}

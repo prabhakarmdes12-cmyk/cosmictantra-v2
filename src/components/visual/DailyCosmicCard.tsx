@@ -67,11 +67,13 @@ export default function DailyCosmicCard({
   const [showDrawer, setShowDrawer] = useState(false);
   const [activeTab, setActiveTab] = useState<'all' | 'career' | 'wealth' | 'relationships' | 'vitality'>('all');
 
-  const finalScore = prediction.score ?? prediction.auspiciousScore ?? 75;
+  // CT_UX truth: never fabricate a score when the engine did not return one.
+  const finalScore = prediction.score ?? prediction.auspiciousScore ?? null;
   const dateDisplay = prediction.dateStr || prediction.date || 'Today';
   const dayLabelDisplay = prediction.dayLabel || prediction.dayName || 'Today';
 
-  const scoreBadgeColor = 
+  const scoreBadgeColor =
+    finalScore === null ? '' :
     finalScore >= 80 ? 'text-[#065F46] dark:text-[#10B981] bg-emerald-500/10 border-emerald-500/30' :
     finalScore >= 60 ? 'text-[#8E6F1D] dark:text-[#F0C968] bg-amber-500/10 border-amber-500/30' :
     'text-rose-700 dark:text-rose-400 bg-rose-500/10 border-rose-500/30';
@@ -104,25 +106,31 @@ export default function DailyCosmicCard({
               {dateDisplay}
             </div>
             <div className="text-[11px] font-mono-data text-[#696256] dark:text-[#9E988D]">
-              {prediction.weekday || 'Vedic Day'} • Moon in {prediction.rashiTransit || prediction.lagna || 'Vrishabha'}
+              {prediction.weekday || 'Vedic Day'}
+              {(prediction.rashiTransit || prediction.lagna) ? ` • Moon in ${prediction.rashiTransit || prediction.lagna}` : ''}
             </div>
           </div>
 
-          {/* Auspicious Score Gauge */}
-          <div className={`px-4 py-2 rounded-2xl text-center border ${scoreBadgeColor}`}>
-            <div className="text-[9px] font-mono-data uppercase tracking-widest font-bold">AUSPICIOUS</div>
-            <div className="text-2xl sm:text-3xl font-bold font-mono-data tabular-nums leading-none mt-0.5">
-              {finalScore}
+          {/* Auspicious Score Gauge — engine value only, interpretation labelled */}
+          {finalScore !== null && (
+            <div className={`px-4 py-2 rounded-2xl text-center border ${scoreBadgeColor}`}>
+              <div className="text-[9px] font-mono-data uppercase tracking-widest font-bold">AUSPICIOUS</div>
+              <div className="text-2xl sm:text-3xl font-bold font-mono-data tabular-nums leading-none mt-0.5">
+                {finalScore}
+              </div>
+              <div className="text-[8px] font-mono-data uppercase tracking-wider opacity-80 mt-0.5">Traditional reading</div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Core Theme Banner */}
         <div className="px-6 py-3.5 bg-[#FAF7F2] dark:bg-[#070912] border-b border-black/[0.06] dark:border-white/[0.08] flex items-center gap-2.5">
           <Sparkles className="w-4 h-4 text-[#8E6F1D] dark:text-[#D4AF37] shrink-0" />
-          <div className="text-xs font-mono-data font-bold text-[#1C1917] dark:text-[#FFFFFF] line-clamp-1">
-            {prediction.theme || prediction.keyInsight || 'Strategic Focus & Favorable Communications'}
-          </div>
+          {prediction.theme || prediction.keyInsight ? (
+            <div className="text-xs font-mono-data font-bold text-[#1C1917] dark:text-[#FFFFFF] line-clamp-1">
+              {prediction.theme || prediction.keyInsight}
+            </div>
+          ) : null}
         </div>
 
         {/* Telemetry Chips (Tara Bala, Tithi, Nakshatra, Dasha) */}
@@ -130,25 +138,25 @@ export default function DailyCosmicCard({
           <div className="p-2 rounded-xl bg-white dark:bg-[#121528] border border-black/5 dark:border-white/5">
             <span className="text-[10px] text-[#696256] dark:text-[#9E988D] block">TARA BALA:</span>
             <strong className="text-[#8E6F1D] dark:text-[#F0C968] truncate block">
-              {prediction.taraBala?.name || 'Sadhana'}
+              {prediction.taraBala?.name || '—'}
             </strong>
           </div>
           <div className="p-2 rounded-xl bg-white dark:bg-[#121528] border border-black/5 dark:border-white/5">
             <span className="text-[10px] text-[#696256] dark:text-[#9E988D] block">NAKSHATRA:</span>
             <strong className="text-[#1C1917] dark:text-white truncate block">
-              {prediction.moonNakshatra || 'Rohini'}
+              {prediction.moonNakshatra || '—'}
             </strong>
           </div>
           <div className="p-2 rounded-xl bg-white dark:bg-[#121528] border border-black/5 dark:border-white/5">
             <span className="text-[10px] text-[#696256] dark:text-[#9E988D] block">TITHI:</span>
             <strong className="text-[#1C1917] dark:text-white truncate block">
-              {prediction.tithi || 'Shukla Navami'}
+              {prediction.tithi || '—'}
             </strong>
           </div>
           <div className="p-2 rounded-xl bg-white dark:bg-[#121528] border border-black/5 dark:border-white/5">
             <span className="text-[10px] text-[#696256] dark:text-[#9E988D] block">DASHA:</span>
             <strong className="text-[#1C1917] dark:text-white truncate block">
-              {prediction.dasha || 'Moon-Jupiter'}
+              {prediction.dasha || '—'}
             </strong>
           </div>
         </div>
@@ -157,6 +165,9 @@ export default function DailyCosmicCard({
         <div className="px-6 py-5 space-y-4 text-xs font-mono-data">
           <div className="text-[10px] uppercase tracking-[2px] font-bold text-[#8E6F1D] dark:text-[#D4AF37]">
             चार स्तम्भ फलकथन • 4 LIFE DIMENSIONS
+          </div>
+          <div className="text-[9px] font-mono-data uppercase tracking-wider text-[#8E6F1D]/70 dark:text-[#D4AF37]/70">
+            Traditional reading · interpretive guidance, not a calculated fact
           </div>
 
           <div className="space-y-3">
@@ -167,7 +178,7 @@ export default function DailyCosmicCard({
                 <span>Career & Karma (कर्म व व्यवसाय)</span>
               </div>
               <p className="text-[#57524A] dark:text-[#D1C9BF] leading-relaxed">
-                {prediction.career || 'Favorable for closing pending agreements, technical planning, and structured client reviews.'}
+                {prediction.career || 'Traditional reading unavailable for this day.'}
               </p>
             </div>
 
@@ -178,7 +189,7 @@ export default function DailyCosmicCard({
                 <span>Artha & Finance (वित्त व निर्णय)</span>
               </div>
               <p className="text-[#57524A] dark:text-[#D1C9BF] leading-relaxed">
-                {prediction.wealth || 'Positive liquidity trends. Good for asset budgeting; defer speculative high-risk spending.'}
+                {prediction.wealth || 'Traditional reading unavailable for this day.'}
               </p>
             </div>
 
@@ -189,7 +200,7 @@ export default function DailyCosmicCard({
                 <span>Sambandh & Family (संबंध व संवाद)</span>
               </div>
               <p className="text-[#57524A] dark:text-[#D1C9BF] leading-relaxed">
-                {prediction.relationships || 'Emotional stability. Calm and empathetic listening will solve lingering domestic friction.'}
+                {prediction.relationships || 'Traditional reading unavailable for this day.'}
               </p>
             </div>
 
@@ -200,7 +211,7 @@ export default function DailyCosmicCard({
                 <span>Vitality & Mind (ऊर्जा व मन)</span>
               </div>
               <p className="text-[#57524A] dark:text-[#D1C9BF] leading-relaxed">
-                {prediction.vitality || 'Alert mental clarity. Prioritize regular hydration and a peaceful screen-free evening.'}
+                {prediction.vitality || 'Traditional reading unavailable for this day.'}
               </p>
             </div>
           </div>
@@ -210,20 +221,20 @@ export default function DailyCosmicCard({
             <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-[#065F46] dark:text-[#10B981]">
               <div className="flex items-center gap-1.5 font-bold mb-1">
                 <Clock className="w-3.5 h-3.5" />
-                <span>POWER HOUR (अभिजीत): {prediction.powerWindow?.time || prediction.abhijit || '11:45–12:35'}</span>
+                <span>POWER HOUR (अभिजीत): {prediction.powerWindow?.time || prediction.abhijit || '—'}</span>
               </div>
               <p className="text-[11px] text-[#065F46] dark:text-[#34D399]">
-                {prediction.powerWindow?.activity || 'Best for important calls, signing contracts, and launching initiatives.'}
+                {prediction.powerWindow?.activity || 'Traditional reading not available for this window.'}
               </p>
             </div>
 
             <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-800 dark:text-rose-300">
               <div className="flex items-center gap-1.5 font-bold mb-1">
                 <Clock className="w-3.5 h-3.5" />
-                <span>CAUTION (राहुकाल): {prediction.cautionWindow?.time || prediction.rahuKaal || '15:00–16:30'}</span>
+                <span>CAUTION (राहुकाल): {prediction.cautionWindow?.time || prediction.rahuKaal || '—'}</span>
               </div>
               <p className="text-[11px] text-rose-700 dark:text-rose-400">
-                {prediction.cautionWindow?.activity || 'Avoid initiating high-risk transfers, confrontation, or critical travels.'}
+                {prediction.cautionWindow?.activity || 'Traditional reading not available for this window.'}
               </p>
             </div>
           </div>
@@ -240,10 +251,10 @@ export default function DailyCosmicCard({
               </Link>
             </div>
             <div className="font-bold text-sm text-[#1C1917] dark:text-white font-editorial">
-              {prediction.sankalpa?.mantra || 'ॐ नमो भगवते वासुदेवाय (27x Japa)'}
+              {prediction.sankalpa?.mantra || '—'}
             </div>
             <p className="text-[11px] text-[#696256] dark:text-[#B3ADA3] mt-1">
-              {prediction.sankalpa?.ritual || prediction.recommendedAction || 'Offer Arghya to Surya at dawn and keep commitments clear.'}
+              {prediction.sankalpa?.ritual || prediction.recommendedAction || 'Traditional reading not available.'}
             </p>
           </div>
         </div>
@@ -261,7 +272,7 @@ export default function DailyCosmicCard({
             </button>
           )}
           <button 
-            onClick={onShareWhatsApp || (() => window.open(`https://wa.me/?text=${encodeURIComponent(`🕉️ CosmicTantra Daily Forecast (${dateDisplay}): ${prediction.theme || 'Vedic Guidance'}`)}`, '_blank'))}
+            onClick={onShareWhatsApp || (() => window.open(`https://wa.me/?text=${encodeURIComponent(`🕉️ CosmicTantra Vedic Panchang (${dateDisplay}): ${prediction.theme || 'Vedic Guidance'}`)}`, '_blank'))}
             className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-[#25D366] text-white text-xs font-mono-data font-bold hover:bg-[#128C7E] transition-all shadow-sm"
           >
             <Share2 className="w-3.5 h-3.5" /> <span>WHATSAPP</span>

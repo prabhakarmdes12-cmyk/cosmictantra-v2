@@ -18,6 +18,18 @@ async function expectNoHorizontalOverflow(page: Page, label: string) {
   expect(overflow.scroll, `${label}: horizontal overflow (${overflow.scroll} > ${overflow.inner})`).toBeLessThanOrEqual(overflow.inner + 1);
 }
 
+/** Hydration gates (Sprint C.1 §20): client interactions must run after
+    React has attached handlers, otherwise clicks silently no-op. */
+async function heroHydrated(page: Page) {
+  await expect(page.locator('[data-hero-hydrated]')).toHaveAttribute('data-hero-hydrated', 'true', { timeout: 15_000 });
+}
+async function dailyHydrated(page: Page) {
+  await expect(page.locator('[data-daily-hydrated]')).toHaveAttribute('data-daily-hydrated', 'true', { timeout: 15_000 });
+}
+async function reportHydrated(page: Page) {
+  await expect(page.locator('[data-report-hydrated]')).toHaveAttribute('data-report-hydrated', 'true', { timeout: 15_000 });
+}
+
 test.describe('Sprint C — landing', () => {
   test('server HTML exposes the promise + JSON-LD before any client JS (§24)', async ({ request }) => {
     const res = await request.get(BASE);
@@ -32,11 +44,20 @@ test.describe('Sprint C — landing', () => {
 
   test('hero promise, dominant Kundli CTA, trust strip, fact-first day strip', async ({ page }) => {
     await page.goto(BASE, { waitUntil: 'domcontentloaded' });
+    await heroHydrated(page);
     await expect(page.locator('h1')).toContainText(/Vedic Precision/i);
-    await expect(page.getByText('CREATE MY KUNDLI').first()).toBeVisible();
+    // Progressive birth form is the primary CTA flow; its submit label is
+    // CREATE MY KUNDLI once the 4th step is reached (covered by the journey).
+    await expect(page.locator('#kundli-name')).toBeVisible();
     await expect(page.getByText("TODAY'S PANCHANG").first()).toBeVisible();
     await expect(page.locator('[data-testid="trust-strip"]')).toBeVisible();
-    await expect(page.locator('[data-testid="vedic-day-strip"]')).toBeVisible();
+    // No fabricated day facts before a location is known (§3/§10): the factual
+    // strip appears only after the user picks a canonical city.
+    await expect(page.locator('[data-testid="vedic-day-strip"]')).toHaveCount(0);
+    await page.getByRole('button', { name: /Set location/i }).first().click();
+    await page.getByPlaceholder(/Search city/).fill('Patna');
+    await page.locator('button:has(span:text-is("Patna"))').first().click();
+    await expect(page.locator('[data-testid="vedic-day-strip"]')).toBeVisible({ timeout: 15_000 });
     await expect(page.locator('[data-testid="vedic-day-strip"]')).not.toContainText(/Financial Liquidity|Deal Momentum|72H/i);
     await expect(page.locator('video')).toHaveCount(0);
     await expectNoHorizontalOverflow(page, 'landing-1440');
@@ -55,6 +76,7 @@ test.describe('Sprint C — landing', () => {
 test.describe('Sprint C — full conversion journey', () => {
   test('landing → form → calculation → first insight → WHY → ask → save', async ({ page }) => {
     await page.goto(BASE, { waitUntil: 'domcontentloaded' });
+    await heroHydrated(page);
 
     // Step 1: name
     await page.locator('#kundli-name').fill('Conversion Tester');
@@ -172,17 +194,21 @@ test.describe('Sprint C — Today & report gating', () => {
       localStorage.removeItem('cosmictantra_active_profile');
     });
     await page.goto(`${BASE}/daily`, { waitUntil: 'domcontentloaded' });
+    await dailyHydrated(page);
     await expect(page.locator('[data-testid="daily-empty-state"]')).toBeVisible();
     await expect(page.getByText('Priya Sharma')).toHaveCount(0);
     // Add-member form must not accept an unverified city or empty birth fields
     await page.getByRole('button', { name: /Add first family member/i }).click();
     await page.locator('input[placeholder="e.g. Aarav Sharma"]').fill('Real Person');
     await page.getByRole('button', { name: /Save to Family Directory/i }).click();
-    await expect(page.locator('[data-testid="member-form-error"]')).toBeVisible();
+    // Native required validation blocks submission until every field is filled.
+    await expect(page.locator('[data-testid="member-form-error"]')).toHaveCount(0);
+    await expect(page.locator('input[placeholder="e.g. Aarav Sharma"]')).toBeVisible();
     await page.locator('input[placeholder="e.g. Patna"]').fill('Nowhereville XYZ');
     await page.locator('input[type="date"]').fill('1990-01-01');
     await page.locator('input[type="time"]').fill('10:00');
     await page.getByRole('button', { name: /Save to Family Directory/i }).click();
+    await expect(page.locator('[data-testid="member-form-error"]')).toBeVisible();
     await expect(page.locator('[data-testid="member-form-error"]')).toContainText(/real city/i);
   });
 
@@ -190,8 +216,10 @@ test.describe('Sprint C — Today & report gating', () => {
     await page.goto(`${BASE}/report?name=Tester&dob=1995-06-15&tob=10:30&city=Patna&lat=25.5941&lng=85.1376&tz=5.5`, {
       waitUntil: 'domcontentloaded',
     });
+    await reportHydrated(page);
     await expect(page.locator('[data-testid="executive-life-explorer"]')).toHaveCount(0);
-    await page.getByRole('button', { name: /Workbench/i }).click();
+    // Workbench tab is exported as role=tab; label is locale-dependent.
+    await page.locator('#report-tab-workbench').click();
     await expect(page.locator('[data-testid="executive-life-explorer"]')).toBeVisible();
     await expect(page.locator('[data-testid="executive-life-explorer"]')).toContainText(/Explorer \/ Experimental|Engine qualification pending/i);
   });

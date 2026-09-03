@@ -73,7 +73,7 @@ export default function PwaRegister() {
               <Sparkles className="w-3 h-3 text-amber-400" />
             </h4>
             <p className="text-[11px] font-mono-data text-[#D1C9BF] leading-tight mt-0.5">
-              Access 72h Horoscopes, Observatory, and Panchang directly from your home screen offline.
+              Access your Panchang, observatory tools, and Kundli workspace directly from your home screen offline.
             </p>
           </div>
         </div>

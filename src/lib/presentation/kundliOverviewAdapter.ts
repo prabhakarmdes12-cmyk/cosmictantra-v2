@@ -412,6 +412,13 @@ export interface KundliAtAGlance {
   timeConfidence: 'EXACT' | 'APPROXIMATE' | 'UNKNOWN' | null;
 }
 
+export type WhyStepClassification =
+  | 'CALCULATED_FACT'
+  | 'DERIVED_FACT'
+  | 'TRADITIONAL_RULE'
+  | 'READING'
+  | 'VALIDATION_PENDING';
+
 export interface DashaWhyStep {
   /** i18n key under `conversion.whySteps`. */
   textKey: string;
@@ -419,6 +426,8 @@ export interface DashaWhyStep {
   values: Record<string, string>;
   /** Which claim grammar chip the UI may show (truthful only). */
   claim: 'CALCULATED' | 'DERIVED' | 'VALIDATION_PENDING';
+  /** Sprint C.1 §12: explicit classification per step — no UI guesswork. */
+  classification: WhyStepClassification;
 }
 
 export interface DashaTechnicalEvidence {
@@ -487,13 +496,15 @@ export function buildDashaWhyEvidence(record: StoredKundliRecord): DashaWhyStep[
       textKey: 'whyMoonNakshatra',
       values: { nakshatra: String(nak.name) },
       claim: 'CALCULATED',
+      classification: 'CALCULATED_FACT',
     });
   }
   if (nak?.lord) {
     steps.push({
       textKey: 'whyNakshatraLord',
       values: { nakshatra: String(nak.name), lord: String(nak.lord) },
-      claim: 'CALCULATED',
+      claim: 'DERIVED',
+      classification: 'DERIVED_FACT',
     });
   }
   if (s.dasha?.startingBalance) {
@@ -501,6 +512,7 @@ export function buildDashaWhyEvidence(record: StoredKundliRecord): DashaWhyStep[
       textKey: 'whyBalance',
       values: { balance: String(s.dasha.startingBalance) },
       claim: 'CALCULATED',
+      classification: 'CALCULATED_FACT',
     });
   }
   const mds = (s.dasha?.mahadashas || []).slice(0, 5).map((m: any) => ({
@@ -513,6 +525,7 @@ export function buildDashaWhyEvidence(record: StoredKundliRecord): DashaWhyStep[
       textKey: 'whySequence',
       values: { sequence: mds.map((m: any) => `${m.lord} (${m.start}–${m.end})`).join(' · ') },
       claim: 'CALCULATED',
+      classification: 'CALCULATED_FACT',
     });
   }
   if (s.dasha?.currentMahadasha) {
@@ -523,6 +536,7 @@ export function buildDashaWhyEvidence(record: StoredKundliRecord): DashaWhyStep[
         dates: strOrNull(s.dasha.currentDateRange) || '',
       },
       claim: 'CALCULATED',
+      classification: 'CALCULATED_FACT',
     });
   }
   if (s.dasha?.currentAntardasha) {
@@ -530,6 +544,7 @@ export function buildDashaWhyEvidence(record: StoredKundliRecord): DashaWhyStep[
       textKey: 'whyAntardasha',
       values: { lord: String(s.dasha.currentAntardasha) },
       claim: 'CALCULATED',
+      classification: 'CALCULATED_FACT',
     });
   }
   if (record.timeConfidence && record.timeConfidence !== 'EXACT') {
@@ -537,6 +552,7 @@ export function buildDashaWhyEvidence(record: StoredKundliRecord): DashaWhyStep[
       textKey: 'whyTimeUncertain',
       values: { confidence: String(record.timeConfidence) },
       claim: 'VALIDATION_PENDING',
+      classification: 'VALIDATION_PENDING',
     });
   }
   if (moon) {
@@ -547,6 +563,7 @@ export function buildDashaWhyEvidence(record: StoredKundliRecord): DashaWhyStep[
         rashi: strOrNull(moon.rashiName) || '',
       },
       claim: 'CALCULATED',
+      classification: 'CALCULATED_FACT',
     });
   }
   return steps;
@@ -606,5 +623,35 @@ export function deriveConsumerChartState(record: StoredKundliRecord | null): Cha
   return {
     state: reasons.length > 0 ? 'VALIDATION_PENDING' : 'READY',
     reasons,
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* Sprint C.1 — time-sensitivity contract (§11)                        */
+/* ------------------------------------------------------------------ */
+
+export interface TimeSensitivityNote {
+  /** i18n key of the headline limitation. */
+  headlineKey: string;
+  /** Identity labels shown as reference-only when time is not EXACT. */
+  restricted: ('LAGNA' | 'HOUSES' | 'VARGAS' | 'DASHA' | 'DASHA_BALANCE')[];
+  /** Engine already computed the house-sensitive values — UI must mark reference-only. */
+  computedForReferenceOnly: boolean;
+}
+
+/**
+ * Honest time-sensitivity mapping. The engine substitutes 12:00 for UNKNOWN
+ * (pre-existing behaviour, not editable here); the consumer layer therefore
+ * restricts the house-sensitive fields from authoritative presentation and
+ * never pretends noon was the birth time.
+ */
+export function buildTimeSensitivityNote(record: StoredKundliRecord | null): TimeSensitivityNote | null {
+  if (!record || record.timeConfidence === 'EXACT') return null;
+  const restricted: TimeSensitivityNote['restricted'] = ['LAGNA', 'HOUSES', 'VARGAS', 'DASHA_BALANCE'];
+  if (record.timeConfidence === 'UNKNOWN') restricted.push('DASHA');
+  return {
+    headlineKey: record.timeConfidence === 'UNKNOWN' ? 'timeSensitivityUnknown' : 'timeSensitivityApproximate',
+    restricted,
+    computedForReferenceOnly: true,
   };
 }

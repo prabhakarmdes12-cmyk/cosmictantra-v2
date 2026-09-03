@@ -11,8 +11,8 @@ import { getCurrentGpsLocation } from '../../lib/location';
 import { chitiSensory } from '../../lib/chitiAudio';
 
 const EMPTY = {
-  name: '', relation: 'Self', birthDate: '', birthTime: '12:00',
-  cityId: 'patna', birthCity: 'Patna', birthLat: 25.5941, birthLon: 85.1376, timezone: 5.5,
+  name: '', relation: 'Self', birthDate: '', birthTime: '',
+  cityId: '', birthCity: '', birthLat: null, birthLon: null, timezone: null,
 };
 
 export default function FamilyManager({ lang = 'en', onOpenConsultation = () => {} }) {
@@ -20,6 +20,7 @@ export default function FamilyManager({ lang = 'en', onOpenConsultation = () => 
   const [form, setForm] = useState({ ...EMPTY });
   const [activeId, setActiveId] = useState(null);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState('');
   const hi = lang === 'hi';
 
   useEffect(() => {
@@ -28,14 +29,23 @@ export default function FamilyManager({ lang = 'en', onOpenConsultation = () => 
   }, []);
 
   const pickCity = (cityId) => {
-    const c = CITIES.find(x => x.id === cityId) || CITIES[1];
+    const c = CITIES.find(x => x.id === cityId);
+    if (!c) return; // never silently substitute another city (Sprint C.1 §10)
     setForm(f => ({ ...f, cityId, birthCity: `${c.name}, ${c.state}`, birthLat: c.lat, birthLon: c.lng, timezone: c.tz }));
   };
 
   const save = (e) => {
     e.preventDefault();
     chitiSensory.playTick();
-    if (!form.name || !form.birthDate) return;
+    if (!form.name || !form.birthDate || !form.birthTime) {
+      setError('Enter the member name, birth date and birth time.');
+      return;
+    }
+    if (!form.cityId || !Number.isFinite(Number(form.birthLat)) || !Number.isFinite(Number(form.birthLon))) {
+      setError('Choose the member birth city — no location is assumed.');
+      return;
+    }
+    setError('');
     const savedP = upsertProfile(profileFromForm(form));
     // Cache the deterministic chart with the profile so family views never diverge
     const k = kundaliForProfile(savedP);
@@ -155,6 +165,12 @@ export default function FamilyManager({ lang = 'en', onOpenConsultation = () => 
           className="py-3 rounded-xl bg-gradient-to-r from-[#8E6F1D] to-[#D4AF37] text-[#060709] font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-sm">
           {saved ? <><Check className="w-4 h-4" /> {hi ? 'सहेजा गया' : 'Saved'}</> : <><Sparkles className="w-4 h-4" /> {hi ? 'प्रोफाइल सहेजें' : 'Save Profile'}</>}
         </button>
+        {error && (
+          <p role="alert" data-testid="family-manager-error"
+             className="sm:col-span-2 text-[10px] font-mono-data font-bold text-rose-700 dark:text-rose-400">
+            {error}
+          </p>
+        )}
         <p className="sm:col-span-2 text-[9px] text-[#857E74] dark:text-[#8E8A82]">
           {hi ? 'डेटा केवल इसी ब्राउज़र में रहता है (DPDP-अनुकूल)। सहेजा गया प्रोफाइल कुंडली मिलान, दैनिक पंचांग व अलर्ट में स्वतः प्रयोग होगा।' : 'Stored locally in this browser only (DPDP-friendly). Saved profiles auto-fill Kundali Milan, daily Panchang and alerts.'}
         </p>

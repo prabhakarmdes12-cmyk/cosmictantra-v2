@@ -15,7 +15,7 @@ interface CosmicIdCardProps {
 }
 
 export default function CosmicIdCard({ profile, onManageFamily }: CosmicIdCardProps) {
-  const cosmicId = profile.cosmicId || `CT-${profile.whatsappPhone.slice(-4)}`;
+  const cosmicId = profile.cosmicId || '—';
 
   return (
     <div className="relative overflow-hidden rounded-3xl border border-[#D4AF37]/40 bg-gradient-to-br from-[#FAF7F2] via-white to-[#F8F1E3] dark:from-[#0A0C12] dark:via-[#11131C] dark:to-[#0A0C12] p-8 shadow-xl">
@@ -27,7 +27,7 @@ export default function CosmicIdCard({ profile, onManageFamily }: CosmicIdCardPr
         <div className="flex justify-between items-start">
           <div>
             <div className="flex items-center gap-2 text-[#8E6F1D] text-xs tracking-[3px] font-mono mb-1">
-              <Award className="w-3.5 h-3.5" /> VERIFIED VEDIC IDENTITY
+              <Award className="w-3.5 h-3.5" /> VEDIC IDENTITY
             </div>
             <div className="font-editorial text-6xl font-bold tracking-[-2.5px] text-[#1C1917] dark:text-white">
               {cosmicId}
@@ -49,7 +49,7 @@ export default function CosmicIdCard({ profile, onManageFamily }: CosmicIdCardPr
             <div className="flex items-center gap-2 text-[#857E74] mb-1">
               <MapPin className="w-4 h-4" /> WHATSAPP
             </div>
-            <div className="font-mono text-lg tracking-wider">{profile.whatsappPhone}</div>
+            <div className="font-mono text-lg tracking-wider">{profile.whatsappPhone || '—'}</div>
           </div>
           <div>
             <div className="flex items-center gap-2 text-[#857E74] mb-1">

@@ -37,13 +37,13 @@ export const ROUTE_REGISTRY: Record<string, RouteConfig> = {
   },
   '/daily': {
     path: '/daily',
-    title: 'Daily Vedic Weather & Forecast | CosmicTantra',
-    description: 'Location-aware daily Panchang weather, auspicious timing score, and shareable 9:16 WhatsApp cards.',
+    title: 'Daily Vedic Panchang (Three Days) | CosmicTantra',
+    description: 'Location-aware daily Panchang facts and auspicious timing windows, with shareable 9:16 WhatsApp cards.',
     category: 'Observatory',
     breadcrumbs: [
       { label: 'Home', href: '/' },
       { label: 'Observatory', href: '/' },
-      { label: 'Daily Forecast', href: '/daily' }
+      { label: 'Daily Panchang', href: '/daily' }
     ],
     shellMode: 'public',
     footerMode: 'full',

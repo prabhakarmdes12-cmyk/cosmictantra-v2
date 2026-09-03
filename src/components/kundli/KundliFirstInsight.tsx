@@ -28,9 +28,16 @@ import {
   adaptKundliAtAGlance,
   buildDashaWhyEvidence,
   buildDashaTechnicalEvidence,
+  buildTimeSensitivityNote,
   deriveConsumerChartState,
   type ChartStateResult,
 } from '@/lib/presentation/kundliOverviewAdapter';
+import {
+  combineChartStates,
+  normalizeChartStatus,
+  type PersistenceState,
+} from '@/lib/kundli/chartStateMachine';
+import { auditAnalyticsPayload, findPrivacyViolations } from '@/lib/invariants/sprintC1';
 import { dispatchKashiJourneyContext } from '@/lib/kashi/journeyContext';
 import { analytics, ANALYTICS_EVENTS } from '@/lib/analytics';
 import { TRANSLATIONS } from '@/lib/translations';
@@ -80,15 +87,21 @@ export default function KundliFirstInsight({
   const t = (TRANSLATIONS[lang] || TRANSLATIONS.en).conversion || TRANSLATIONS.en.conversion;
   const isHi = lang === 'hi';
 
+  // Sprint C.1 §4 — explicit persistence machine: EPHEMERAL → SAVING → SAVED | SAVE_FAILED.
+  const [persistence, setPersistence] = useState<PersistenceState>('EPHEMERAL');
+  const [saveError, setSaveError] = useState(false);
+
   const glance = useMemo(() => adaptKundliAtAGlance(record), [record]);
   const whySteps = useMemo(() => buildDashaWhyEvidence(record), [record]);
   const technical = useMemo(() => buildDashaTechnicalEvidence(record), [record]);
   const state: ChartStateResult = useMemo(() => deriveConsumerChartState(record), [record]);
+  const timeNote = useMemo(() => buildTimeSensitivityNote(record), [record]);
   const isUserCreated = Array.isArray(record.tags) && record.tags.includes('User Created');
+  // Canonical combined state (CT_UX_INV_004) — the UI must satisfy it.
+  const combined = combineChartStates(normalizeChartStatus(state.state), persistence);
 
   const [whyOpen, setWhyOpen] = useState(false);
   const [showTechnical, setShowTechnical] = useState(false);
-  const [saved, setSaved] = useState(false);
   const whyButtonRef = useRef<HTMLButtonElement>(null);
   const firedInsightRef = useRef(false);
 
@@ -99,13 +112,20 @@ export default function KundliFirstInsight({
   useEffect(() => {
     if (firedInsightRef.current) return;
     firedInsightRef.current = true;
-    analytics.track(ANALYTICS_EVENTS.FIRST_INSIGHT_VIEW, {
+    const payload = {
       route: `/kundli/${record.id}`,
       chartId: record.id,
       timeConfidence: record.timeConfidence,
       validationState: state.state,
       lang,
-    });
+    };
+    // CT_PRIV_INV_001 guard — a violation must never be silently dropped before sending.
+    const audit = auditAnalyticsPayload(ANALYTICS_EVENTS.FIRST_INSIGHT_VIEW, payload);
+    if (!audit.ok) {
+      console.warn('[privacy] blocked analytics send:', audit.reason);
+      return;
+    }
+    analytics.track(ANALYTICS_EVENTS.FIRST_INSIGHT_VIEW, payload);
   }, [record.id, record.timeConfidence, state.state, lang]);
 
   // Escape closes the WHY drawer and returns focus (§30 keyboard behaviour)
@@ -133,7 +153,7 @@ export default function KundliFirstInsight({
         p.birthDate === record.birthContext.birthDate &&
         Number(Number(p.latitude ?? p.lat)) === Number(record.birthContext.latitude)
       ) {
-        setSaved(true);
+        setPersistence('SAVED');
       }
     } catch {}
   }, [record]);
@@ -141,12 +161,15 @@ export default function KundliFirstInsight({
   const openWhy = () => {
     chitiSensory.playTick();
     setWhyOpen(true);
-    analytics.track(ANALYTICS_EVENTS.WHY_OPEN, {
+    const payload = {
       chartId: record.id,
       route: `/kundli/${record.id}`,
       evidenceCount: whySteps.length,
       lang,
-    });
+    };
+    if (auditAnalyticsPayload(ANALYTICS_EVENTS.WHY_OPEN, payload).ok) {
+      analytics.track(ANALYTICS_EVENTS.WHY_OPEN, payload);
+    }
   };
 
   const closeWhy = () => {
@@ -176,24 +199,38 @@ export default function KundliFirstInsight({
     e.preventDefault();
     chitiSensory.playTick();
     dispatchAsk(defaultQuestion);
-    analytics.track(ANALYTICS_EVENTS.ASK_ABOUT_CHART, {
+    const payload = {
       chartId: record.id,
       route: `/kundli/${record.id}`,
       lang,
-    });
+    };
+    if (auditAnalyticsPayload(ANALYTICS_EVENTS.ASK_ABOUT_CHART, payload).ok) {
+      analytics.track(ANALYTICS_EVENTS.ASK_ABOUT_CHART, payload);
+    }
   };
 
   const handleAskPandit = () => {
-    analytics.track(ANALYTICS_EVENTS.CONSULT_INTENT, {
+    const payload = {
       chartId: record.id,
       route: `/kundli/${record.id}`,
       dasha: periodString,
       lang,
-    });
+    };
+    if (auditAnalyticsPayload(ANALYTICS_EVENTS.CONSULT_INTENT, payload).ok) {
+      analytics.track(ANALYTICS_EVENTS.CONSULT_INTENT, payload);
+    }
   };
 
   const handleSave = () => {
     chitiSensory.playTick();
+    if (persistence === 'SAVING' || persistence === 'SAVED') return;
+    setPersistence('SAVING');
+    setSaveError(false);
+    // CT_UX_INV_004: a FAILED chart must never be saved.
+    if (combined.contradiction && state.state === 'FAILED') {
+      setPersistence('EPHEMERAL');
+      return;
+    }
     try {
       const bc = record.birthContext;
       window.localStorage.setItem(
@@ -219,15 +256,23 @@ export default function KundliFirstInsight({
         tz: bc.timezone,
         relation: 'Self',
       });
-      setActiveProfileId(savedProfile?.id || null);
-      setSaved(true);
-      analytics.track(ANALYTICS_EVENTS.SAVE_KUNDLI, {
+      if (!savedProfile) throw new Error('profile was not created');
+      setActiveProfileId(savedProfile.id);
+      setPersistence('SAVED');
+      const payload = {
         chartId: record.id,
         route: `/kundli/${record.id}`,
         timeConfidence: record.timeConfidence,
         lang,
-      });
-    } catch {}
+      };
+      if (auditAnalyticsPayload(ANALYTICS_EVENTS.SAVE_KUNDLI, payload).ok) {
+        analytics.track(ANALYTICS_EVENTS.SAVE_KUNDLI, payload);
+      }
+    } catch {
+      // Calm recovery — never claim "saved" when persistence failed (§22).
+      setPersistence('SAVE_FAILED');
+      setSaveError(true);
+    }
   };
 
   const gl = (f: { value: string | null; labelKey: string } | undefined) =>
@@ -269,8 +314,8 @@ export default function KundliFirstInsight({
 
         {/* Title + validation reasons */}
         <div className="mt-6">
-          <p className="text-[10px] font-mono-data font-bold uppercase tracking-[0.2em] text-[#8E6F1D]">
-            {isHi ? t.insightEyebrowHi : t.insightEyebrow}
+          <p data-testid="kundli-ready" className="text-[10px] font-mono-data font-bold uppercase tracking-[0.2em] text-[#8E6F1D]">
+            {isHi ? t.kundliReadyHi : t.kundliReady}
           </p>
           <h1 id="kundli-insight-title" className="mt-1 font-editorial text-2xl sm:text-3xl font-bold tracking-tight">
             {record.personName}
@@ -288,6 +333,22 @@ export default function KundliFirstInsight({
                   <ShieldAlert className="w-3.5 h-3.5 shrink-0" /> {isMarked(r)}
                 </div>
               ))}
+            </div>
+          )}
+          {timeNote && (
+            <div
+              data-testid="time-sensitivity-note"
+              role="status"
+              className="mt-3 max-w-2xl p-3.5 rounded-xl border border-orange-500/40 bg-orange-500/10 text-orange-800 dark:text-orange-300 text-xs leading-6 font-semibold"
+            >
+              <p className="flex items-start gap-2">
+                <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{isHi ? t[`${timeNote.headlineKey}Hi`] : t[timeNote.headlineKey]}</span>
+              </p>
+              <p className="mt-1 pl-6 text-[10px] font-mono-data opacity-90">
+                {isHi ? t.restrictedFieldsHi : t.restrictedFields}:{' '}
+                {timeNote.restricted.join(' · ')}
+              </p>
             </div>
           )}
         </div>
@@ -325,6 +386,11 @@ export default function KundliFirstInsight({
               >
                 <dt className="text-[9px] font-mono-data font-bold uppercase tracking-[0.14em] text-[#8E6F1D]">
                   {item.field?.labelKey ? (isHi ? t[`${item.field.labelKey}Hi`] : t[item.field.labelKey]) : ''}
+                  {timeNote && (item.field?.labelKey === 'lagna' || item.field?.labelKey === 'currentMahadasha') && (
+                    <span className="ml-1.5 text-[8px] text-orange-600 dark:text-orange-400 font-mono-data font-bold">
+                      ({isHi ? t.referenceOnlyHi : t.referenceOnly})
+                    </span>
+                  )}
                 </dt>
                 <dd className="mt-1 font-editorial text-lg font-bold leading-tight">
                   {gl(item.field as any)}
@@ -438,7 +504,24 @@ export default function KundliFirstInsight({
                       {fill(isHi ? (t[`${step.textKey}Hi`] || t[step.textKey]) : t[step.textKey], step.values)}
                     </p>
                     <div className="mt-1">
-                      <ClaimChip kind={step.claim === 'CALCULATED' ? 'CALCULATED' : step.claim === 'DERIVED' ? 'DERIVED' : 'VALIDATION_PENDING'} t={t} isHi={isHi} />
+                      <ClaimChip
+                        kind={
+                          step.classification === 'CALCULATED_FACT'
+                            ? 'CALCULATED'
+                            : step.classification === 'DERIVED_FACT'
+                              ? 'DERIVED'
+                              : step.classification === 'TRADITIONAL_RULE'
+                                ? 'TRADITIONAL'
+                                : step.classification === 'READING'
+                                  ? 'SCHOLAR_JUDGEMENT'
+                                  : 'VALIDATION_PENDING'
+                        }
+                        t={t}
+                        isHi={isHi}
+                      />
+                      <span className="ml-2 text-[9px] font-mono-data font-bold tracking-wider text-[#8E6F1D]/70" data-testid={`why-classification-${i}`}>
+                        {step.classification}
+                      </span>
                     </div>
                   </div>
                 </li>
@@ -516,25 +599,39 @@ export default function KundliFirstInsight({
                 {isHi ? t.saveBenefitTitleHi : t.saveBenefitTitle} {isHi ? t.saveBenefitsHi : t.saveBenefits}
               </p>
             </div>
-            {saved ? (
+            {persistence === 'SAVED' ? (
               <Link
                 href="/dashboard"
                 data-testid="save-kundli-done"
                 className="inline-flex min-h-11 items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600/10 border border-emerald-600/40 text-emerald-700 text-xs font-mono-data font-bold"
               >
                 <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
-                {isHi ? t.saveDoneHi : t.saveDone}
+                {isHi ? t.savedToMySpaceHi : t.savedToMySpace}
               </Link>
             ) : (
-              <button
-                type="button"
-                onClick={handleSave}
-                data-testid="save-kundli"
-                className="inline-flex min-h-11 items-center gap-2 px-5 py-2.5 rounded-xl bg-[#8E6F1D] hover:bg-[#785E18] text-white text-xs font-mono-data font-bold shadow transition-colors"
-              >
-                <Save className="w-4 h-4" aria-hidden="true" />
-                {isHi ? t.saveKundliHi : t.saveKundli}
-              </button>
+              <div className="flex flex-col items-end gap-2">
+                {saveError && (
+                  <p
+                    data-testid="save-failed"
+                    role="alert"
+                    className="max-w-xs text-[10px] font-mono-data font-bold text-rose-700 dark:text-rose-400"
+                  >
+                    {isHi ? t.saveFailedHi : t.saveFailed}
+                  </p>
+                )}
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={persistence === 'SAVING'}
+                  data-testid="save-kundli"
+                  className="inline-flex min-h-11 items-center gap-2 px-5 py-2.5 rounded-xl bg-[#8E6F1D] hover:bg-[#785E18] text-white text-xs font-mono-data font-bold shadow transition-colors disabled:opacity-60"
+                >
+                  <Save className="w-4 h-4" aria-hidden="true" />
+                  {persistence === 'SAVING'
+                    ? (isHi ? t.savingHi : t.saving)
+                    : (isHi ? t.saveKundliHi : t.saveKundli)}
+                </button>
+              </div>
             )}
           </div>
         )}

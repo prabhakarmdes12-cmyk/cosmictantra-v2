@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { BookOpen, CalendarDays, HeartHandshake, Sparkles } from 'lucide-react';
-import { DEFAULT_CITY } from '@/lib/cities';
 import { calculatePanchang } from '@/lib/panchang';
 import { calculateKundali } from '@/lib/astrologyEngine';
 import { analytics, ANALYTICS_EVENTS } from '@/lib/analytics';
@@ -55,8 +54,9 @@ export default function AppLandingPage() {
   // Truthful location: null until the canonical resolver finds the user's
   // location; the header shows "Set location" when nothing is known.
   const [currentCity, setCurrentCity] = useState<any>(null);
-  // Initialize with a computed value; also refreshed client-side via useEffect
-  const [panchangData, setPanchangData] = useState<any>(() => calculatePanchang(new Date(), DEFAULT_CITY));
+  // Truth: no panchang until the canonical resolver knows the location.
+  // Never initialized for Dhanbad/DEFAULT_CITY (Sprint C.1 §10).
+  const [panchangData, setPanchangData] = useState<any>(null);
   const [kundaliData, setKundaliData] = useState<any>(null);
 
   // Day/Night & Language State (Chiti UDS v3 compliant — Light/Day mode default, SSR-safe)
@@ -71,8 +71,7 @@ export default function AppLandingPage() {
   // Sync client-persisted preferences and real-time location on mount to eliminate SSR hydration mismatch
   useEffect(() => {
     setIsClientMounted(true);
-    // Initialize panchang client-side only (uses new Date() which differs between server & client)
-    setPanchangData(calculatePanchang(new Date(), DEFAULT_CITY));
+    // Panchang stays null until a known location arrives — no silent Dhanbad. 
     try {
       const savedTheme = localStorage.getItem('cosmictantra_theme');
       if (savedTheme === 'light' || savedTheme === 'dark') {
@@ -149,10 +148,14 @@ export default function AppLandingPage() {
     window.dispatchEvent(new CustomEvent('cosmictantra:language-change', { detail: lang }));
   }, [lang, isClientMounted]);
 
-  // Update panchang when city changes
+  // Update panchang only when the canonical resolver returns a KNOWN location;
+  // a null city must never fall through to the engine's default (Sprint C.1 §10).
   useEffect(() => {
-    const updated = calculatePanchang(new Date(), currentCity);
-    setPanchangData(updated);
+    if (currentCity && Number.isFinite(currentCity.lat) && Number.isFinite(currentCity.lng)) {
+      setPanchangData(calculatePanchang(new Date(), currentCity));
+    } else {
+      setPanchangData(null);
+    }
   }, [currentCity]);
 
   // Initial visit analytics (§25) — no birth PII in payloads

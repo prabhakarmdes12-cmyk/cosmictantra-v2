@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
@@ -46,11 +46,16 @@ export default function GlobalHeader({
 }: GlobalHeaderProps) {
   const router = useRouter();
   const [megaMenuOpen, setMegaMenuOpen] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+
+  // Interaction gate: the mega-menu trigger must not be clickable before its
+  // onClick has hydrated (Sprint C.1 §20).
+  useEffect(() => setHydrated(true), []);
 
   // === 1. SCHOLAR WORKSPACE HEADER ===
   if (mode === 'scholar') {
     return (
-      <header className="sticky top-0 z-50 w-full bg-[#FAF7F2]/95 dark:bg-[#06070B]/95 backdrop-blur-xl border-b border-[#8E6F1D]/25 dark:border-[#D4AF37]/35 transition-colors">
+      <header data-header-hydrated={hydrated ? 'true' : 'false'} className="sticky top-0 z-50 w-full bg-[#FAF7F2]/95 dark:bg-[#06070B]/95 backdrop-blur-xl border-b border-[#8E6F1D]/25 dark:border-[#D4AF37]/35 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/pandit/workspace" className="flex items-center gap-3">
@@ -95,7 +100,7 @@ export default function GlobalHeader({
   // === 2. PRESENTATION MODE HEADER ===
   if (mode === 'presentation') {
     return (
-      <header className="sticky top-0 z-50 w-full bg-[#FAF7F2]/95 dark:bg-[#06070B]/95 backdrop-blur-xl border-b border-[#8E6F1D]/25 dark:border-[#D4AF37]/35">
+      <header data-header-hydrated={hydrated ? 'true' : 'false'} className="sticky top-0 z-50 w-full bg-[#FAF7F2]/95 dark:bg-[#06070B]/95 backdrop-blur-xl border-b border-[#8E6F1D]/25 dark:border-[#D4AF37]/35">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <CosmicTantraLogo size="sm" />
@@ -128,7 +133,7 @@ export default function GlobalHeader({
   // === 3. MINIMAL AUTH / SECURE ID HEADER ===
   if (mode === 'minimal') {
     return (
-      <header className="sticky top-0 z-50 w-full bg-[#FAF7F2]/95 dark:bg-[#06070B]/95 backdrop-blur-xl border-b border-[#8E6F1D]/25 dark:border-[#D4AF37]/35">
+      <header data-header-hydrated={hydrated ? 'true' : 'false'} className="sticky top-0 z-50 w-full bg-[#FAF7F2]/95 dark:bg-[#06070B]/95 backdrop-blur-xl border-b border-[#8E6F1D]/25 dark:border-[#D4AF37]/35">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link href="/">
             <CosmicTantraLogo size="sm" />
@@ -153,7 +158,7 @@ export default function GlobalHeader({
   // === 4. CANONICAL MINIMALIST CENTERED-LOGO PUBLIC HEADER ===
   return (
     <>
-      <header className="sticky top-0 z-50 w-full bg-[#FAF7F2]/90 dark:bg-[#06070B]/90 backdrop-blur-2xl border-b border-black/[0.06] dark:border-white/[0.08] transition-colors duration-300">
+      <header data-header-hydrated={hydrated ? 'true' : 'false'} className="sticky top-0 z-50 w-full bg-[#FAF7F2]/90 dark:bg-[#06070B]/90 backdrop-blur-2xl border-b border-black/[0.06] dark:border-white/[0.08] transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-1 sm:gap-4">
           
           {/* LEFT COLUMN: Minimal Subtle Controls */}

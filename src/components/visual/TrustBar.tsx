@@ -16,7 +16,7 @@ export default function TrustBar() {
         <Users className="w-4 h-4 text-[#4848A8]" /> <span>Family Profiles</span>
       </div>
       <div className="flex items-center gap-2">
-        <Award className="w-4 h-4 text-[#D4AF37]" /> <span>Practitioner Verified</span>
+        <Award className="w-4 h-4 text-[#D4AF37]" /> <span>Kashi Sahayak Practitioners</span>
       </div>
     </div>
   );

@@ -99,6 +99,7 @@ export default function PrimaryNavigation({
   /** Which disclosure (explore menu / child flyout) is open. */
   const [openMenu, setOpenMenu] = useState<PrimaryDestinationId | null>(null);
   const [mobileExploreOpen, setMobileExploreOpen] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
   const navRef = useRef<HTMLElement | null>(null);
   const triggerRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const firstLinkRef = useRef<HTMLAnchorElement | null>(null);
@@ -106,6 +107,12 @@ export default function PrimaryNavigation({
   const closeAll = useCallback(() => {
     setOpenMenu(null);
     setMobileExploreOpen(false);
+  }, []);
+
+  /* A11y/persistence of interactivity: keyboard users must never act on a
+     button whose onClick has not hydrated yet (§20). */
+  useEffect(() => {
+    setHydrated(true);
   }, []);
 
   /* Escape + outside click + route-change safety */
@@ -172,6 +179,7 @@ export default function PrimaryNavigation({
       <nav
         ref={navRef}
         data-testid="primary-nav"
+        data-nav-hydrated={hydrated ? 'true' : 'false'}
         aria-label={t.primaryNav ?? 'Primary navigation'}
         data-kashi-context-domain={kashiContext.domain}
         data-kashi-location-source={location.source}

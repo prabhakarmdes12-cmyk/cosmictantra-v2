@@ -54,9 +54,11 @@ export default function ProfilePage() {
   const [formGender, setFormGender] = useState('Female');
 
   // Phone OTP state
-  const [phone, setPhone] = useState('+91 98765 43210');
+  const [phone, setPhone] = useState('');
   const [isVerified, setIsVerified] = useState(true);
   const [otpSent, setOtpSent] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
   const [otpCode, setOtpCode] = useState('');
 
   // Notification toggles
@@ -72,24 +74,9 @@ export default function ProfilePage() {
         setProfiles(stored);
         setActiveId(getActiveProfileId() || stored[0].id);
       } else {
-        // Seed initial default profile
-        const defaultProf = {
-          id: 'pf_default_1',
-          cosmicId: 'CT-7708',
-          name: 'प्रिया शर्मा (Priya Sharma)',
-          relation: 'Self',
-          birthDate: '1994-08-15',
-          birthTime: '06:30',
-          birthCity: 'Varanasi',
-          gotra: 'कश्यप (Kashyap)',
-          gender: 'Female',
-          rashi: 'वृश्चिक (Scorpio)',
-          nakshatra: 'अनुराधा (Anuradha - पद 2)',
-          lagna: 'सिंह (Leo)'
-        };
-        upsertProfile(defaultProf);
-        setProfiles([defaultProf]);
-        setActiveId(defaultProf.id);
+        // CT_UX_INV_003 — no demo profile; user must create their own.
+        setProfiles([]);
+        setActiveId('');
       }
     } catch {}
   }, []);
@@ -97,12 +84,12 @@ export default function ProfilePage() {
   const handleOpenAddModal = () => {
     chitiSensory.playTick();
     setEditingProfile(null);
-    setFormName('अमित शर्मा (Amit Sharma)');
+    setFormName('');
     setFormRelation('Spouse');
-    setFormBirthDate('1992-05-20');
-    setFormBirthTime('14:15');
-    setFormBirthCity('Kashi');
-    setFormGotra('Vatsa');
+    setFormBirthDate('');
+    setFormBirthTime('');
+    setFormBirthCity('');
+    setFormGotra('');
     setFormGender('Male');
     setModalOpen(true);
   };
@@ -185,7 +172,7 @@ export default function ProfilePage() {
 
   return (
     <CosmicTantraShell>
-      <div className="py-4 sm:py-8 px-3 sm:px-6 lg:px-8 mx-auto max-w-6xl space-y-6">
+      <div data-profile-hydrated={hydrated ? 'true' : 'false'} className="py-4 sm:py-8 px-3 sm:px-6 lg:px-8 mx-auto max-w-6xl space-y-6">
         
         {/* Top Header Card */}
         <div className="rounded-3xl bg-gradient-to-r from-[#1A140A] via-[#2A1D0B] to-[#120D05] border border-[#8E6F1D]/40 p-6 sm:p-8 text-white shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -210,11 +197,11 @@ export default function ProfilePage() {
               PRIMARY COSMIC ID
             </div>
             <div className="font-editorial text-2xl font-bold text-white tracking-wider">
-              {profiles.find(p => p.id === activeId)?.cosmicId || 'CT-7708'}
+              {profiles.find(p => p.id === activeId)?.cosmicId || '—'}
             </div>
             <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono-data font-bold">
               <CheckCircle className="w-3 h-3" />
-              <span>{phone} (Verified)</span>
+              <span>{phone || 'Not set'}</span>
             </div>
           </div>
         </div>
@@ -279,7 +266,7 @@ export default function ProfilePage() {
                   Family Members & Birth Profiles
                 </h3>
                 <p className="text-xs font-mono-data text-[#78716C]">
-                  Select active person to synchronize Kundali, 72h forecast, and temple sankalpa across the platform.
+                  Select an active person to synchronize Kundali, the three-day Panchang, and temple sankalpa across the platform.
                 </p>
               </div>
 
@@ -385,65 +372,24 @@ export default function ProfilePage() {
 
         {/* TAB 2: SPIRITUAL ORDERS & E-PUJA HISTORY */}
         {activeTab === 'ORDERS' && (
-          <div className="bg-white dark:bg-[#0E101D] p-6 rounded-3xl border border-black/10 dark:border-white/10 shadow-xl space-y-4">
+          <div className="bg-white dark:bg-[#0E101D] p-6 rounded-3xl border border-black/10 dark:border-white/10 shadow-xl space-y-4"
+               data-testid="orders-empty-state">
             <h3 className="font-editorial text-lg font-bold text-[#1C1917] dark:text-white flex items-center gap-2">
               <ShoppingBag className="w-5 h-5 text-[#8E6F1D] dark:text-[#F0C968]" />
               <span>आपके पावन संकल्प एवं पूजा सामग्री ऑर्डर (Orders History)</span>
             </h3>
-
-            <div className="space-y-3">
-              <div className="p-4 rounded-2xl bg-[#FAF7F2] dark:bg-[#161826] border border-black/5 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-mono-data font-bold">
-                      DELIVERED ✓
-                    </span>
-                    <span className="text-xs font-mono-data text-[#78716C]">Order #CT-SAMAGRI-8821</span>
-                  </div>
-                  <h4 className="font-editorial text-sm font-bold text-[#1C1917] dark:text-white">
-                    पीतल अखण्ड दीप + असली भीमसेनी कपूर + A2 देशी गौघृत
-                  </h4>
-                  <p className="text-xs font-mono-data text-[#78716C]">
-                    संकल्प: प्रिया शर्मा (कश्यप गोत्र) • काशी विश्वनाथ अभिषेक
-                  </p>
-                </div>
-                <div className="text-right shrink-0">
-                  <div className="font-editorial text-base font-bold text-[#8E6F1D] dark:text-[#F0C968]">
-                    ₹1,847
-                  </div>
-                  <span className="text-[10px] font-mono-data text-emerald-600">Dispatched via Speed Post</span>
-                </div>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-[#FAF7F2] dark:bg-[#161826] border border-black/5 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-600 dark:text-blue-400 text-[10px] font-mono-data font-bold">
-                      E-PUJA COMPLETED ✓
-                    </span>
-                    <span className="text-xs font-mono-data text-[#78716C]">Sankalpa #CT-PUJA-4019</span>
-                  </div>
-                  <h4 className="font-editorial text-sm font-bold text-[#1C1917] dark:text-white">
-                    श्री महाकालेश्वर ज्योतिर्लिंग भस्म आरती विशेष सङ्कल्प
-                  </h4>
-                  <p className="text-xs font-mono-data text-[#78716C]">
-                    पं. विद्यानन्द शास्त्री द्वारा सम्पन्न • प्रसाद प्रेषित
-                  </p>
-                </div>
-                <div className="text-right shrink-0">
-                  <Link
-                    href="/report"
-                    className="px-3 py-1.5 rounded-xl bg-[#8E6F1D] text-white text-xs font-mono-data font-bold inline-block"
-                  >
-                    प्रमाण पत्र (PDF) देखें
-                  </Link>
-                </div>
-              </div>
+            {/* CT_UX_INV_003 — no fabricated order history is ever displayed as the user's. */}
+            <div className="p-8 rounded-2xl bg-[#FAF7F2] dark:bg-[#161826] border border-dashed border-black/20 dark:border-white/20 text-center">
+              <p className="font-editorial text-base font-bold text-[#1C1917] dark:text-white">
+                No orders yet
+              </p>
+              <p className="mt-1 text-xs font-mono-data text-[#78716C] dark:text-[#A8A29E]">
+                Your sankalpa and pooja-samagri orders will appear here after you place one.
+              </p>
             </div>
           </div>
         )}
 
-        {/* TAB 3: NOTIFICATION & PANCHANG REMINDER SETTINGS */}
         {activeTab === 'NOTIFICATIONS' && (
           <div className="bg-white dark:bg-[#0E101D] p-6 rounded-3xl border border-black/10 dark:border-white/10 shadow-xl space-y-4">
             <h3 className="font-editorial text-lg font-bold text-[#1C1917] dark:text-white flex items-center gap-2">

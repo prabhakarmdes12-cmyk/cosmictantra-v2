@@ -26,7 +26,7 @@ export default function PanditJiPresentation() {
 
           <div className="mt-10 flex justify-center gap-4">
             <Link href="/dashboard" className="px-9 py-4 rounded-2xl bg-[#8E6F1D] text-white font-semibold flex items-center gap-3 text-sm">Enter Scholar’s Desk <Award className="w-4 h-4" /></Link>
-            <Link href="/daily" className="px-9 py-4 rounded-2xl border border-[#8E6F1D]/30 text-sm font-medium flex items-center gap-3">View Daily Forecast</Link>
+            <Link href="/daily" className="px-9 py-4 rounded-2xl border border-[#8E6F1D]/30 text-sm font-medium flex items-center gap-3">View Today's Panchang</Link>
           </div>
         </div>
       </div>

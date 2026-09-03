@@ -256,6 +256,9 @@ export default function MasterKundliReportClient() {
 
   // Active view mode: Overview (default, progressive disclosure) vs
   // 17-Volume Encyclopedic Folio vs Interactive Visual Workbench
+  const [hydrated, setHydrated] = useState(false);
+  // Hydration gate before interacting with the tab bar (Sprint C.1 §20).
+  useEffect(() => setHydrated(true), []);
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'FOLIO' | 'WORKBENCH'>('OVERVIEW');
   const [selectedMdIndex, setSelectedMdIndex] = useState<number>(-1); // -1 => current mahadasha
   const [chartPlanet, setChartPlanet] = useState<{ name: string; house: number } | null>(null);
@@ -941,7 +944,7 @@ export default function MasterKundliReportClient() {
   };
 
   return (
-    <div className="min-h-screen kundli-paper bg-[#FDFBF7] dark:bg-[#07080C] text-[#1C1917] dark:text-[#EFECE6] font-sans antialiased pb-24 selection:bg-[#E5D7BC] dark:selection:bg-[#D4AF37]/40">
+    <div data-report-hydrated={hydrated ? 'true' : 'false'} className="min-h-screen kundli-paper bg-[#FDFBF7] dark:bg-[#07080C] text-[#1C1917] dark:text-[#EFECE6] font-sans antialiased pb-24 selection:bg-[#E5D7BC] dark:selection:bg-[#D4AF37]/40">
 
       {/* 0. Global site header (logo, navigation, language, day/night) */}
       <GlobalHeader
@@ -1704,7 +1707,7 @@ export default function MasterKundliReportClient() {
           <div data-testid="executive-life-explorer" className="rounded-2xl border border-amber-500/40 bg-amber-500/5 p-4">
             <div className="flex flex-wrap items-center gap-2 mb-2">
               <span className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/40 text-[10px] font-mono-data font-bold uppercase tracking-wider">
-                Explorer / Experimental
+                EXPERIMENTAL / NOT FOR AUTHORITATIVE INTERPRETATION
               </span>
               <span className="text-[10px] font-mono-data text-[#78716C] dark:text-[#A8A29E]">
                 Engine qualification pending — not an authoritative reading.

@@ -12,48 +12,13 @@ export default function FamilyPanchang() {
   const [familyData, setFamilyData] = useState<FamilyCollectiveForecast | null>(null);
 
   useEffect(() => {
-    let list = getProfiles();
-    if (!list || list.length === 0) {
-      const defaultProf = {
-        id: 'pf_default',
-        name: 'Priya Sharma',
-        relation: 'Self',
-        cosmicId: 'CT-4821',
-        birthDate: '1995-06-15',
-        birthTime: '10:30',
-        birthCity: 'Patna',
-        lat: 25.5941,
-        lng: 85.1376,
-        tz: 5.5
-      };
-      const spouseProf = {
-        id: 'pf_spouse',
-        name: 'Amit Sharma',
-        relation: 'Spouse',
-        cosmicId: 'CT-4822',
-        birthDate: '1992-11-20',
-        birthTime: '08:15',
-        birthCity: 'Patna',
-        lat: 25.5941,
-        lng: 85.1376,
-        tz: 5.5
-      };
-      const childProf = {
-        id: 'pf_child',
-        name: 'Aarav Sharma',
-        relation: 'Son',
-        cosmicId: 'CT-4823',
-        birthDate: '2020-04-10',
-        birthTime: '15:45',
-        birthCity: 'Patna',
-        lat: 25.5941,
-        lng: 85.1376,
-        tz: 5.5
-      };
-      list = [defaultProf, spouseProf, childProf];
-      saveProfiles(list);
-    }
+    // CT_UX_INV_003 — never fabricate or persist a demo family for the visitor.
+    const list: any[] = getProfiles() || [];
     setProfiles(list);
+    if (list.length === 0) {
+      setFamilyData(null);
+      return;
+    }
     const forecast = getFamilyCollectiveForecast(list, new Date());
     setFamilyData(forecast);
   }, []);
@@ -63,6 +28,35 @@ export default function FamilyPanchang() {
     const text = `🕉️ CosmicTantra Parivaar Panchang (${familyData.date})\n\nFamily Auspicious Score: ${familyData.collectiveScore}/100 (${familyData.status})\n\n${familyData.summary}\n\nCheck daily transits: https://cosmictantra.chiti.tech/daily`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
+
+  // CT_UX_INV_003 — neutral state when the visitor has no family profiles.
+  if (!familyData) {
+    return (
+      <CosmicTantraShell>
+        <div className="min-h-[60vh] flex items-center justify-center p-6">
+          <div className="text-center max-w-md bg-white dark:bg-[#0E101D] border border-[#E5D7BC] dark:border-white/10 rounded-3xl p-8 shadow-sm"
+               data-testid="family-empty-state">
+            <div className="text-5xl mb-4">🪔</div>
+            <h1 className="font-editorial text-2xl font-bold text-[#1C1917] dark:text-white">
+              Build your family's Panchang from real charts
+            </h1>
+            <p className="mt-2 text-xs font-mono-data text-[#57524A] dark:text-[#B3ADA3] leading-6">
+              Add each family member's verified birth details to see their synchronized Vedic days.
+              Nothing is shown for people whose charts were not created.
+            </p>
+            <div className="mt-6 flex justify-center gap-3">
+              <Link href="/" className="px-6 py-2.5 bg-[#8E6F1D] text-white rounded-xl text-xs font-mono-data font-bold">
+                Create my Kundli →
+              </Link>
+              <Link href="/profile" className="px-6 py-2.5 border border-[#8E6F1D]/40 text-[#8E6F1D] rounded-xl text-xs font-mono-data font-bold">
+                Manage family
+              </Link>
+            </div>
+          </div>
+        </div>
+      </CosmicTantraShell>
+    );
+  }
 
   return (
     <CosmicTantraShell>
@@ -183,7 +177,7 @@ export default function FamilyPanchang() {
                     href="/daily"
                     className="w-full py-2.5 rounded-xl border border-[#8E6F1D]/40 dark:border-[#D4AF37]/40 text-xs font-mono-data font-bold text-[#1C1917] dark:text-white hover:bg-[#8E6F1D] hover:text-white dark:hover:bg-[#D4AF37] dark:hover:text-[#060709] transition-all flex items-center justify-center gap-1.5"
                   >
-                    <span>View 72h Forecast →</span>
+                    <span>View Three-Day Panchang →</span>
                   </Link>
                 </div>
               </div>

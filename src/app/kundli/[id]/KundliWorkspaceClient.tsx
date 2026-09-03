@@ -148,6 +148,14 @@ export default function KundliWorkspaceClient({ id }: { id: string }) {
                 <span className="text-xs px-2 py-0.5 rounded-full bg-[#1f6feb]/20 text-[#58a6ff] border border-[#1f6feb]/40 font-mono">
                   {timeConfidence} TIME
                 </span>
+                {kundli.tags?.some((tag) => /benchmark|reference specimen|master reference/i.test(tag)) && (
+                  <span
+                    data-testid="preset-reference"
+                    className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/40 font-mono font-bold uppercase tracking-wider"
+                  >
+                    Reference Specimen — not your chart
+                  </span>
+                )}
               </div>
               <p className="text-xs text-[#8b949e] flex items-center space-x-2">
                 <span>{birthContext.birthDate} • {birthContext.birthTime}</span>
@@ -298,11 +306,11 @@ export default function KundliWorkspaceClient({ id }: { id: string }) {
                 </div>
               </div>
 
-              {/* Verified Birthplace & Engine Footprint */}
+              {/* Birthplace Coordinates & Engine Footprint — resolved via canonical resolver, no overclaim */}
               <div className="bg-[#12161f] border border-[#21262d] rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 text-xs text-[#8b949e]">
                 <div className="flex items-center space-x-2">
                   <CheckCircle className="w-4 h-4 text-[#2ea043]" />
-                  <span>Birthplace Coordinates Verified: <strong className="text-[#c9d1d9]">{birthContext.latitude.toFixed(4)}° N, {birthContext.longitude.toFixed(4)}° E</strong> (UTC +{birthContext.timezone})</span>
+                  <span>Birthplace Coordinates (canonical resolver): <strong className="text-[#c9d1d9]">{birthContext.latitude.toFixed(4)}° N, {birthContext.longitude.toFixed(4)}° E</strong> (UTC +{birthContext.timezone})</span>
                 </div>
                 <div className="font-mono text-[11px] text-[#8b949e]">
                   Engine: {engineVersion}

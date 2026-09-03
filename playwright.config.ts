@@ -21,7 +21,7 @@ export default defineConfig({
       ? {
           launchOptions: {
             executablePath: chromiumPath,
-            args: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'],
+            args: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--no-zygote'],
             env: {
               ...process.env,
               LD_LIBRARY_PATH: process.env.CHROMIUM_LD_LIBRARY_PATH ?? '',

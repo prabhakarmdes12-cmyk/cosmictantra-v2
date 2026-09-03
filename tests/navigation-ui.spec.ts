@@ -20,6 +20,17 @@ function shot(name: string): string {
   return path.join(SHOT_DIR, name);
 }
 
+/** Hydration gate: interactive nav controls must be attached before
+    keyboard/mouse interaction (Sprint C.1 §20 hydration race). */
+async function navHydrated(page: Page) {
+  await expect(page.locator('[data-testid="primary-nav"]')).toHaveAttribute('data-nav-hydrated', 'true', { timeout: 15_000 });
+}
+
+/** Hydration gate for GlobalHeader (landing mega-menu trigger). */
+async function headerHydrated(page: Page) {
+  await expect(page.locator('header[data-header-hydrated]')).toHaveAttribute('data-header-hydrated', 'true', { timeout: 15_000 });
+}
+
 async function expectNoHorizontalOverflow(page: Page, label: string) {
   const overflow = await page.evaluate(() => {
     const doc = document.documentElement;
@@ -49,6 +60,7 @@ test.describe('Desktop primary navigation (>=1024px)', () => {
 
   test('Explore menu opens, closes on Escape and on outside click', async ({ page }) => {
     await page.goto(`${BASE}/daily`, { waitUntil: 'domcontentloaded' });
+    await navHydrated(page);
     const explore = page.locator('[data-testid="primary-nav-destination-EXPLORE"]');
     await explore.click();
     const menu = page.locator('[data-testid="primary-nav-menu-EXPLORE"]');
@@ -68,6 +80,7 @@ test.describe('Desktop primary navigation (>=1024px)', () => {
 
   test('keyboard: focus + Enter opens Explore, Escape closes, focus is visible', async ({ page }) => {
     await page.goto(`${BASE}/daily`, { waitUntil: 'domcontentloaded' });
+    await navHydrated(page);
     const explore = page.locator('[data-testid="primary-nav-destination-EXPLORE"]');
     await explore.focus();
     await expect(explore).toBeFocused();
@@ -99,6 +112,7 @@ test.describe('Desktop primary navigation (>=1024px)', () => {
 
   test('language selector changes nav copy to Hindi', async ({ page }) => {
     await page.goto(`${BASE}/daily`, { waitUntil: 'domcontentloaded' });
+    await navHydrated(page);
     await page.locator('[data-testid="primary-nav-language"]').click();
     const modal = page.locator('[data-testid="language-selector-modal"], .fixed.inset-0.z-50');
     await expect(modal.first()).toBeVisible();
@@ -142,6 +156,7 @@ test.describe('Mobile bottom navigation', () => {
   test('Explore sheet opens from bottom nav and Escape closes', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`${BASE}/daily`, { waitUntil: 'domcontentloaded' });
+    await navHydrated(page);
     await page.locator('[data-testid="bottom-nav-EXPLORE"]').click();
     await expect(page.locator('[data-testid="primary-nav-explore-sheet"]')).toBeVisible();
     await expect(page.locator('[data-testid="explore-sheet-darshanPuja"]')).toBeVisible();
@@ -178,17 +193,21 @@ test.describe('Pages at runtime (no dead links / duplicate headers)', () => {
   ] as const) {
     test(`renders ${label} without horizontal overflow or duplicated nav`, async ({ page }) => {
       await page.goto(`${BASE}${route}`, { waitUntil: 'domcontentloaded' });
+      if (shellNav) await navHydrated(page);
       await expectNoHorizontalOverflow(page, label);
       if (shellNav) {
         await expect(page.locator('[data-testid="primary-nav"]')).toHaveCount(1);
-        await expect(page.locator('[data-testid="primary-nav-mobile"]')).toHaveCount(0); // desktop
+        // Mobile bottom nav stays in the DOM (responsive design) but must be
+        // visually hidden at desktop width — a visible duplicate nav is the bug.
+        await expect(page.locator('[data-testid="primary-nav-mobile"]')).toBeHidden();
       }
     });
   }
 
   test('landing page mega menu contains only resolving links', async ({ page }) => {
     await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
-    await page.getByRole('button', { name: /Menu|अन्वेषण/ }).first().click();
+    await headerHydrated(page);
+    await page.getByRole('button', { name: /menu|अन्वेषण/i }).first().click();
     await expect(page.locator('[data-testid="full-mega-menu"]')).toBeVisible();
     for (const dead of ['/kundli/d10', '/kundli/ashtakavarga', '/kundli/shadbala', '/kundli/ephemeris']) {
       await expect(page.locator(`[data-testid="full-mega-menu"] a[href="${dead}"]`)).toHaveCount(0);

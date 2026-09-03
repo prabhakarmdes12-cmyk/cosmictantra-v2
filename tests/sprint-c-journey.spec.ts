@@ -41,8 +41,15 @@ test.describe('Sprint C — kundli consumer adapter (read-only)', () => {
     expect(steps.some((s) => s.textKey === 'whyMoonNakshatra')).toBe(true);
     expect(steps.some((s) => s.textKey === 'whyBalance' && s.values.balance === record!.snapshot.dasha.startingBalance)).toBe(true);
     expect(steps.some((s) => s.textKey === 'whyMahadasha')).toBe(true);
-    // All claims are truthful: engine numbers are CALCULATED.
-    expect(steps.every((s) => ['CALCULATED', 'VALIDATION_PENDING'].includes(s.claim))).toBe(true);
+    // All claims are truthful: every step declares an explicit C.1 classification
+    // and a supported claim kind (CALCULATED/DERIVED/VALIDATION_PENDING).
+    expect(
+      steps.every((s) =>
+        ['CALCULATED_FACT', 'DERIVED_FACT', 'TRADITIONAL_RULE', 'READING', 'VALIDATION_PENDING'].includes(
+          s.classification
+        ) && ['CALCULATED', 'DERIVED', 'VALIDATION_PENDING'].includes(s.claim)
+      )
+    ).toBe(true);
 
     const tech = buildDashaTechnicalEvidence(record!);
     expect(tech.engineVersion).toBe(record!.snapshot.meta.engineVersion);
@@ -148,7 +155,7 @@ test.describe('Sprint C — Executive Life Matrix gating', () => {
     expect(overviewStart).toBeGreaterThan(-1);
     expect(workbenchStart).toBeGreaterThan(-1);
     expect(gaugeRender).toBeGreaterThan(workbenchStart);
-    expect(src).toContain('Explorer / Experimental');
+    expect(src).toContain('EXPERIMENTAL / NOT FOR AUTHORITATIVE INTERPRETATION');
     expect(src).toContain('Engine qualification pending');
   });
 });

@@ -22,7 +22,7 @@ import { TRANSLATIONS } from '../lib/translations';
 import { chitiSensory } from '../lib/chitiAudio';
 import { searchCities } from '../lib/cities';
 import { getCurrentGpsLocation } from '../lib/location';
-import { getActiveProfile, upsertProfile, setActiveProfileId } from '../lib/profileStore';
+import { getActiveProfile } from '../lib/profileStore';
 import { getCanonicalJyotishSnapshot } from '../lib/jyotish/canonicalSnapshot';
 import { createKundli } from '../lib/jyotish/kundliStore';
 import CosmicNowDial from './visual/CosmicNowDial';
@@ -41,6 +41,10 @@ export default function HeroSection({
   dialReady = true, // server-render safety: live dial is time-dependent (§24)
 }) {
   const router = useRouter();
+  const [hydrated, setHydrated] = useState(false);
+  // Interaction gate: the progressive form must hydrate before any click
+  // advances a step (Sprint C.1 §20 hydration race).
+  useEffect(() => setHydrated(true), []);
   const isHi = lang === 'hi';
   const t = TRANSLATIONS[lang]?.hero || TRANSLATIONS.en.hero;
   const cv = (TRANSLATIONS[lang] || TRANSLATIONS.en).conversion || TRANSLATIONS.en.conversion;
@@ -240,40 +244,16 @@ export default function HeroSection({
       await reveal(4);
       await reveal(5);
 
-      // 5b. Persist chart record + keep legacy profile stores working
+      // 5b. Create the workspace record. Sprint C.1 §4: the chart is
+      // EPHEMERAL until the user explicitly chooses "SAVE MY KUNDLI" on the
+      // first-insight surface — creation must not claim "saved" or create a
+      // profile by itself.
       const record = createKundli(
         formData.name.trim(),
         { birthDate, birthTime, latitude, longitude, timezone, locationName },
         timeConfidence,
         'OTHER'
       );
-
-      try {
-        localStorage.setItem(
-          'cosmictantra_active_kundli',
-          JSON.stringify({
-            name: formData.name.trim(),
-            birthDate,
-            birthTime,
-            city: locationName,
-            latitude,
-            longitude,
-            timezone,
-            timeConfidence,
-          })
-        );
-        const saved = upsertProfile({
-          name: formData.name.trim(),
-          birthDate,
-          birthTime,
-          birthCity: locationName,
-          lat: latitude,
-          lng: longitude,
-          tz: timezone,
-          relation: 'Self',
-        });
-        setActiveProfileId(saved.id);
-      } catch {}
 
       analytics.track(ANALYTICS_EVENTS.KUNDLI_GENERATED, {
         source: 'LANDING_HERO',
@@ -339,7 +319,7 @@ export default function HeroSection({
             {/* PROGRESSIVE KUNDLI FORM (§6/§7) */}
             {/* ============================== */}
             {phase !== 'calculating' && phase !== 'failed' && (
-              <div className="mt-4 rounded-2xl border border-[#8E6F1D]/30 dark:border-[#D4AF37]/35 bg-white/90 dark:bg-[#0C0E18]/90 backdrop-blur-xl p-4 sm:p-5 shadow-2xl transition-all duration-300">
+              <div data-hero-hydrated={hydrated ? 'true' : 'false'} className="mt-4 rounded-2xl border border-[#8E6F1D]/30 dark:border-[#D4AF37]/35 bg-white/90 dark:bg-[#0C0E18]/90 backdrop-blur-xl p-4 sm:p-5 shadow-2xl transition-all duration-300">
                 <div className="flex items-center justify-between gap-2 pb-2 border-b border-black/[0.06] dark:border-white/[0.06]">
                   <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#8E6F1D] dark:text-[#E5C378] uppercase tracking-wider">
                     <Sparkles className="w-3.5 h-3.5 text-[#E29A48]" />
@@ -409,6 +389,8 @@ export default function HeroSection({
                         <input
                           id="kundli-tob"
                           type="time"
+                          aria-invalid={Boolean(drawerError)}
+                          aria-describedby={drawerError ? 'kundli-form-error' : undefined}
                           disabled={formData.timeCertainty === 'UNKNOWN'}
                           value={formData.birthTime}
                           onChange={(e) => setFormData({ ...formData, birthTime: e.target.value })}
@@ -477,6 +459,8 @@ export default function HeroSection({
                           id="kundli-place"
                           ref={cityInputRef}
                           type="text"
+                          aria-invalid={Boolean(drawerError)}
+                          aria-describedby={drawerError ? 'kundli-form-error' : undefined}
                           role="combobox"
                           aria-expanded={showCityDropdown}
                           aria-controls="kundli-city-list"

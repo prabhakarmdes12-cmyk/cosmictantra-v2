@@ -77,60 +77,9 @@ export default function AuraMonthlyCalendar({ initialLang }: AuraMonthlyCalendar
 
   const isHi = lang === 'hi';
 
-  // Initialize Profiles
+  // Initialize Profiles — CT_UX_INV_003 no fabricated demo family.
   useEffect(() => {
-    let list = getProfiles();
-    if (!list || list.length === 0) {
-      const defaultProf = {
-        id: 'pf_default',
-        name: 'Priya Sharma',
-        nameHi: 'प्रिया शर्मा',
-        relation: 'Self',
-        relationHi: 'स्वयं',
-        cosmicId: 'CT-4821',
-        birthDate: '1995-06-15',
-        birthTime: '10:30',
-        birthCity: 'Patna',
-        birthNakshatraIndex: 3, // Rohini
-        birthRasiIndex: 1, // Vrishabha (Taurus)
-        lat: 25.5941,
-        lng: 85.1376,
-        tz: 5.5
-      };
-      const spouseProf = {
-        id: 'pf_spouse',
-        name: 'Amit Sharma',
-        nameHi: 'अमित शर्मा',
-        relation: 'Spouse',
-        relationHi: 'पति/पत्नी',
-        cosmicId: 'CT-4822',
-        birthDate: '1992-11-20',
-        birthTime: '14:15',
-        birthCity: 'Varanasi',
-        birthNakshatraIndex: 12, // Hasta
-        birthRasiIndex: 5, // Kanya (Virgo)
-        lat: 25.3176,
-        lng: 82.9739,
-        tz: 5.5
-      };
-      const childProf = {
-        id: 'pf_child',
-        name: 'Aarav Sharma',
-        nameHi: 'आरव शर्मा',
-        relation: 'Child',
-        relationHi: 'सन्तान',
-        cosmicId: 'CT-4823',
-        birthDate: '2020-04-10',
-        birthTime: '08:45',
-        birthCity: 'Patna',
-        birthNakshatraIndex: 14, // Swati
-        birthRasiIndex: 6, // Tula (Libra)
-        lat: 25.5941,
-        lng: 85.1376,
-        tz: 5.5
-      };
-      list = [defaultProf, spouseProf, childProf];
-    }
+    const list = getProfiles() || [];
     setProfiles(list);
   }, []);
 
@@ -142,15 +91,21 @@ export default function AuraMonthlyCalendar({ initialLang }: AuraMonthlyCalendar
   // City Object
   const currentCityObj = useMemo(() => {
     const found = CITIES.find(c => c.id === selectedCityId);
-    return found ? { name: found.name, nameHi: (found as any).nameHi || found.name, lat: found.lat, lng: found.lng, tz: 5.5 } : { name: 'Patna', nameHi: 'पटना', lat: 25.5941, lng: 85.1376, tz: 5.5 };
+    return found ? { name: found.name, nameHi: (found as any).nameHi || found.name, lat: found.lat, lng: found.lng, tz: found.tz || 5.5 } : null;
   }, [selectedCityId]);
 
   // Compute Full Month Data via calculateMonthPanchang
-  const monthData: MonthPanchangOverview = useMemo(() => {
-    const profileParams = activeProfile ? {
-      birthNakshatraIndex: activeProfile.birthNakshatraIndex !== undefined ? activeProfile.birthNakshatraIndex : 3,
-      birthRasiIndex: activeProfile.birthRasiIndex !== undefined ? activeProfile.birthRasiIndex : 1,
-    } : undefined;
+  const monthData: MonthPanchangOverview | null = useMemo(() => {
+    if (!currentCityObj) return null; // never compute for an unstated city
+    // Only personalise with real profile values; no fabricated indices.
+    const profileParams = activeProfile &&
+      activeProfile.birthNakshatraIndex !== undefined &&
+      activeProfile.birthRasiIndex !== undefined
+      ? {
+          birthNakshatraIndex: activeProfile.birthNakshatraIndex,
+          birthRasiIndex: activeProfile.birthRasiIndex,
+        }
+      : undefined;
 
     return calculateMonthPanchang(
       currentYear, 
@@ -223,7 +178,7 @@ export default function AuraMonthlyCalendar({ initialLang }: AuraMonthlyCalendar
     const details = isHi
       ? `🕉️ CosmicTantra वैदिक पञ्चाङ्ग\n\n• तिथि: ${day.tithi.nameHi}\n• नक्षत्र: ${day.nakshatra.nameHi} (पाद ${toHindiDigits(day.nakshatra.pada)})\n• अभिजित मुहूर्त: ${toHindiDigits(abhijitStr)}\n• राहु काल: ${toHindiDigits(day.timings.rahuKaal.start)} - ${toHindiDigits(day.timings.rahuKaal.end)}\n• ऊर्जा स्तर: ${day.personalEnergy?.badgeLabelHi || 'सन्तुलित'}\n• मार्गदर्शन: ${day.personalEnergy?.adviceHi || 'नित्य कर्म'}`
       : `🕉️ CosmicTantra Vedic Ephemeris\n\n• Tithi: ${day.tithi.name} (${day.tithi.paksha})\n• Nakshatra: ${day.nakshatra.name} (Pada ${day.nakshatra.pada})\n• Abhijit Muhurat: ${abhijitStr}\n• Rahu Kaal: ${day.timings.rahuKaal.start} - ${day.timings.rahuKaal.end}\n• Personal Energy: ${day.personalEnergy?.badgeLabel || 'Balanced'}\n• Guidance: ${day.personalEnergy?.advice || 'N/A'}`;
-    const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startTimeIso}/${endTimeIso}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(currentCityObj.name || 'Patna')}`;
+    const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startTimeIso}/${endTimeIso}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(currentCityObj?.name || '')}`;
     window.open(gCalUrl, '_blank');
   };
 
@@ -248,7 +203,7 @@ export default function AuraMonthlyCalendar({ initialLang }: AuraMonthlyCalendar
       `DTEND;VALUE=DATE:${cleanDate}`,
       `SUMMARY:${title}`,
       `DESCRIPTION:${description}`,
-      `LOCATION:${currentCityObj.name || 'Patna'}`,
+      `LOCATION:${currentCityObj?.name || ''}`,
       'STATUS:CONFIRMED',
       'END:VEVENT',
       'END:VCALENDAR'
@@ -265,6 +220,23 @@ export default function AuraMonthlyCalendar({ initialLang }: AuraMonthlyCalendar
 
   // Today key for indicator
   const todayKey = now.toISOString().slice(0, 10);
+
+  // No silent city — the monthly Panchang is location-based (§10).
+  if (!currentCityObj || !monthData) {
+    return (
+      <div className="space-y-8">
+        <div data-testid="calendar-city-prompt"
+             className="bg-white/90 dark:bg-[#0E101D]/90 backdrop-blur-md rounded-3xl border border-amber-500/40 p-8 text-center shadow-xl">
+          <h2 className="font-editorial text-xl font-bold text-[#1C1917] dark:text-white">
+            Choose a city to see this month's Panchang
+          </h2>
+          <p className="mt-2 text-xs font-mono-data text-[#696256] dark:text-[#9E988D]">
+            Sunrise, Rahu Kalam and Vedic days depend on location — nothing is calculated for a guessed city.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">

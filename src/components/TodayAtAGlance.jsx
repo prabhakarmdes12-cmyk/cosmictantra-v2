@@ -78,22 +78,22 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
 
   if (!panchangData) return null;
 
-  const rawTithiName = panchangData.tithi?.name || 'Ekadashi';
+  const rawTithiName = panchangData.tithi?.name || '—';
   const tithiName = isHi ? (panchangData.tithi?.nameHi || TITHI_HI_MAP[rawTithiName] || rawTithiName) : rawTithiName;
 
-  const rawPaksha = panchangData.tithi?.paksha || 'Shukla Paksha';
+  const rawPaksha = panchangData.tithi?.paksha || '—';
   const tithiPaksha = isHi ? (PAKSHA_HI_MAP[rawPaksha] || rawPaksha) : rawPaksha;
 
-  const rawNakshatraName = panchangData.nakshatra?.name || 'Rohini';
+  const rawNakshatraName = panchangData.nakshatra?.name || '—';
   const nakshatraName = isHi ? (panchangData.nakshatra?.nameHi || NAKSHATRA_HI_MAP[rawNakshatraName] || rawNakshatraName) : rawNakshatraName;
 
-  const rawYogaName = panchangData.yoga?.name || 'Siddha';
+  const rawYogaName = panchangData.yoga?.name || '—';
   const yogaName = isHi ? (panchangData.yoga?.nameHi || YOGA_HI_MAP[rawYogaName] || rawYogaName) : rawYogaName;
 
-  const rawKaranaName = panchangData.karana?.name || 'Bava';
+  const rawKaranaName = panchangData.karana?.name || '—';
   const karanaName = isHi ? (panchangData.karana?.nameHi || KARANA_HI_MAP[rawKaranaName] || rawKaranaName) : rawKaranaName;
 
-  const rawMoonPhase = panchangData.moon?.phase || 'Waxing Moon';
+  const rawMoonPhase = panchangData.moon?.phase || '—';
   const moonPhase = isHi ? (MOON_PHASE_HI_MAP[rawMoonPhase] || rawMoonPhase) : rawMoonPhase;
 
   const sunrise = isHi ? toHindiDigits(panchangData.sun?.sunrise) : panchangData.sun?.sunrise;
@@ -101,8 +101,8 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
   const rahuKalam = isHi ? toHindiDigits(panchangData.timings?.rahuKalam) : panchangData.timings?.rahuKalam;
   const abhijitMuhurat = isHi ? toHindiDigits(panchangData.timings?.abhijitMuhurat) : panchangData.timings?.abhijitMuhurat;
   const yamaganda = isHi ? toHindiDigits(panchangData.timings?.yamaganda) : panchangData.timings?.yamaganda;
-  const pada = isHi ? toHindiDigits(panchangData.nakshatra?.pada || 1) : (panchangData.nakshatra?.pada || 1);
-  const moonIllum = isHi ? toHindiDigits(panchangData.moon?.illumination || 75) : (panchangData.moon?.illumination || 75);
+  const pada = isHi ? toHindiDigits(panchangData.nakshatra?.pada) : (panchangData.nakshatra?.pada);
+  const moonIllum = isHi ? toHindiDigits(panchangData.moon?.illumination) : (panchangData.moon?.illumination);
 
   const today = new Date();
   const year = today.getFullYear();
@@ -120,13 +120,24 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
 
   const englishFullDate = `${ENGLISH_DAYS[dayOfWeek]}, ${dayNum} ${ENGLISH_MONTHS[monthIdx]} ${year}`;
   const hindiFullDate = `${HINDI_DAYS[dayOfWeek]}, ${toHindiDigits(dayNum)} ${HINDI_MONTHS[monthIdx]} ${toHindiDigits(year)}`;
-  const sunSidLon = typeof panchangData.sun?.siderealLongitude === 'number'
-    ? panchangData.sun.siderealLongitude
-    : parseFloat(panchangData.sun?.siderealLongitude || '133');
-  const derivedMasaIndex = (Math.floor(sunSidLon / 30) + 1) % 12;
+  const sunSidLon =
+    typeof panchangData.sun?.siderealLongitude === 'number'
+      ? panchangData.sun.siderealLongitude
+      : Number.isFinite(Number(panchangData.sun?.siderealLongitude))
+        ? Number(panchangData.sun.siderealLongitude)
+        : null;
+  const derivedMasaIndex = sunSidLon === null ? null : (Math.floor(sunSidLon / 30) + 1) % 12;
 
-  const lunarMonthHi = panchangData.masa?.nameHi || panchangData.masa?.hi || LUNAR_MONTHS_HI[derivedMasaIndex] || LUNAR_MONTHS_HI[5];
-  const lunarMonthEn = panchangData.masa?.name || panchangData.masa?.en || LUNAR_MONTHS_EN[derivedMasaIndex] || LUNAR_MONTHS_EN[5];
+  const lunarMonthHi =
+    panchangData.masa?.nameHi ||
+    panchangData.masa?.hi ||
+    (derivedMasaIndex !== null ? LUNAR_MONTHS_HI[derivedMasaIndex] : null) ||
+    '—';
+  const lunarMonthEn =
+    panchangData.masa?.name ||
+    panchangData.masa?.en ||
+    (derivedMasaIndex !== null ? LUNAR_MONTHS_EN[derivedMasaIndex] : null) ||
+    '—';
 
   const getUsefulGuidance = () => {
     return [
@@ -319,7 +330,7 @@ export default function TodayAtAGlance({ panchangData, currentCity, onOpenConsul
             </div>
             <div className="font-bold text-sm text-[#181512] dark:text-[#F5F2EB] mt-1">{yogaName}</div>
             <div className="text-[11px] text-[#A6461D] dark:text-[#E2825B] mt-0.5 font-bold">
-              {isHi ? `योग #${toHindiDigits(panchangData.yoga?.number || 1)}` : `Yoga #${panchangData.yoga?.number || 1}`}
+              {isHi ? `योग #${toHindiDigits(panchangData.yoga?.number)}` : `Yoga #${panchangData.yoga?.number}`}
             </div>
           </div>
 

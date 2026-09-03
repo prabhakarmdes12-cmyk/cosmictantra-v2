@@ -37,7 +37,12 @@ export default function DailyForecastPage() {
   const [activeProfile, setActiveProfile] = useState<any>(null);
   const [selectedProfileId, setSelectedProfileId] = useState<string>('self');
   const [horizon, setHorizon] = useState<HorizonType>('daily');
+  const [hydrated, setHydrated] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Interaction gate: the add-member button must be hydrated before clicks
+  // (Sprint C.1 §20 hydration race).
+  useEffect(() => setHydrated(true), []);
 
   // Horizon Data States
   const [dailyData, setDailyData] = useState<DailyDetail[]>([]);
@@ -195,24 +200,32 @@ export default function DailyForecastPage() {
 
   return (
     <CosmicTantraShell>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <div data-daily-hydrated={hydrated ? 'true' : 'false'} className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <TrustBar />
 
         {/* Hero Header */}
         <div className="mt-8 flex flex-col md:flex-row items-start md:items-end justify-between gap-4 border-b border-black/10 dark:border-white/10 pb-6">
           <div>
             <div className="uppercase tracking-[3px] text-xs text-[#8E6F1D] dark:text-[#F0C968] font-mono-data font-bold">
-              वेदिक काल-चक्र • PARIVAAR INTELLIGENCE & FORECAST
+              वेदिक काल-चक्र • PARIVAAR PANCHANG
             </div>
             <h1 className="font-editorial text-3xl sm:text-5xl font-bold text-[#1C1917] dark:text-white mt-1 tracking-tight">
-              {horizon === 'daily' ? '72-Hour Vedic Forecast (आज • कल • परसों)' :
+              {horizon === 'daily' ? 'Your Next Three Vedic Days (आज • कल • परसों)' :
                horizon === 'weekly' ? 'Weekly Transit Trajectory (7 Days)' :
                horizon === 'monthly' ? 'Monthly Ingress & Solar Chapter' :
                horizon === 'yearly' ? 'Annual Varshaphal & Life Chapter' :
                'Family Panchang & Collective Intelligence'}
             </h1>
             <p className="text-xs sm:text-sm font-mono-data text-[#57524A] dark:text-[#D1C9BF] mt-1">
-              Active Member: <span className="font-bold text-[#1C1917] dark:text-white">{activeProfile?.name}</span> ({activeProfile?.relation || 'Self'}) • {activeProfile?.birthCity || 'Patna'}
+              {activeProfile && selectedProfileId !== 'parivaar' ? (
+                <>
+                  Active Member: <span className="font-bold text-[#1C1917] dark:text-white">{activeProfile.name}</span> ({activeProfile.relation || 'Self'}) • {activeProfile.birthCity || 'location not set'}
+                </>
+              ) : (
+                <span data-testid="daily-no-member">
+                  Personalize today's guidance — add your birth details to see your own Vedic days.
+                </span>
+              )}
             </p>
           </div>
 
@@ -322,7 +335,7 @@ export default function DailyForecastPage() {
                 : 'text-[#696256] dark:text-[#9E988D] hover:text-[#1C1917] dark:hover:text-white'
             }`}
           >
-            📅 Daily (72 Hours)
+            📅 Upcoming 3 Days
           </button>
           <button
             onClick={() => setHorizon('weekly')}
@@ -357,7 +370,7 @@ export default function DailyForecastPage() {
         </div>
         </>)}
 
-        {/* === VIEW 1: DAILY (72 HOURS) === */}
+        {/* === VIEW 1: DAILY (THREE VEDIC DAYS) === */}
         {horizon === 'daily' && (
           <div className="mt-8 space-y-8">
             <div className="grid lg:grid-cols-3 gap-6">
@@ -390,6 +403,7 @@ export default function DailyForecastPage() {
                 <div className="px-5 py-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-center">
                   <div className="text-[10px] font-mono-data font-bold text-[#065F46] dark:text-[#10B981]">WEEKLY AUSPICIOUSNESS</div>
                   <div className="text-3xl font-bold font-mono-data text-[#065F46] dark:text-[#10B981]">{weeklyData.overallScore} / 100</div>
+                  <div className="text-[8px] font-mono-data uppercase tracking-wider opacity-80 text-[#065F46] dark:text-[#10B981] mt-0.5">Traditional reading</div>
                 </div>
               </div>
 
@@ -416,6 +430,9 @@ export default function DailyForecastPage() {
             </div>
 
             {/* 7-Day Matrix */}
+            <p className="text-[9px] font-mono-data uppercase tracking-wider text-[#696256] dark:text-[#9E988D]">
+              Traditional reading — day weights are interpretive, not verified facts.
+            </p>
             <div className="grid sm:grid-cols-7 gap-3">
               {weeklyData.days.map((day, idx) => (
                 <div 
@@ -450,12 +467,15 @@ export default function DailyForecastPage() {
               <p className="mt-3 text-sm font-mono-data text-[#57524A] dark:text-[#D1C9BF] leading-relaxed">
                 {monthlyData.activatedBhava.interpretation}
               </p>
+              <p className="mt-2 text-[9px] font-mono-data uppercase tracking-wider text-[#696256] dark:text-[#9E988D]">
+                Traditional reading — interpretive guidance, not a calculated fact.
+              </p>
 
               <div className="grid md:grid-cols-2 gap-4 mt-6 pt-6 border-t border-black/10 dark:border-white/10">
                 <div className="p-5 rounded-2xl bg-[#FAF7F2] dark:bg-[#070912] border border-black/5 dark:border-white/5">
                   <div className="flex items-center gap-2 font-bold text-xs font-mono-data text-[#065F46] dark:text-[#10B981] mb-1">
                     <Coins className="w-4 h-4" />
-                    <span>BEST ARTHA (FINANCIAL) WINDOW: {monthlyData.arthaWindow.period}</span>
+                    <span>ARTHA (FINANCIAL) WINDOW · TRADITIONAL READING: {monthlyData.arthaWindow.period}</span>
                   </div>
                   <p className="text-xs font-mono-data text-[#57524A] dark:text-[#B3ADA3]">
                     {monthlyData.arthaWindow.recommendation}
@@ -465,7 +485,7 @@ export default function DailyForecastPage() {
                 <div className="p-5 rounded-2xl bg-[#FAF7F2] dark:bg-[#070912] border border-black/5 dark:border-white/5">
                   <div className="flex items-center gap-2 font-bold text-xs font-mono-data text-[#8E6F1D] dark:text-[#F0C968] mb-1">
                     <Heart className="w-4 h-4" />
-                    <span>SAMBANDH (FAMILY HARMONY) WINDOW: {monthlyData.sambandhWindow.period}</span>
+                    <span>SAMBANDH (FAMILY HARMONY) WINDOW · TRADITIONAL READING: {monthlyData.sambandhWindow.period}</span>
                   </div>
                   <p className="text-xs font-mono-data text-[#57524A] dark:text-[#B3ADA3]">
                     {monthlyData.sambandhWindow.recommendation}
