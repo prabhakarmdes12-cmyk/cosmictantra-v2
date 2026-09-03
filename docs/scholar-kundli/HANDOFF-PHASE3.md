@@ -11,13 +11,13 @@ verified, it says so.
 | | |
 |---|---|
 | Branch | `arena/01a0593a-cosmictantra-v2` |
-| Head | `4f921ff` |
+| Head | `470aba5` |
 | Base this session started from | `781c813`, then corrective commit `36a3c1b` |
 | Phase 1 | Done — runtime consistency gate (`2ba20be`) |
 | Phase 2 | Done — passport + certificate (`40a04ae`, `36a3c1b`) |
 | **Phase 3** | **Done — charts + Scholar Summary (`2be0e8e` → `4f921ff`)** |
 | Verdict claimed | `READY_FOR_INDEPENDENT_REVIEW` only |
-| Visual QA | **NOT PERFORMED** — no one has looked at the charts |
+| Visual QA | **NOT PERFORMED** — no one has looked at the charts. `VISUAL-QA.md` states exactly what was and was not checked |
 
 Phases 1–3 are all on the remote. Nothing is merged, deployed, rebased,
 squashed or force-pushed. Held Kashi commits `1698ab6` and `4d5a904` were
@@ -123,13 +123,13 @@ rather than reaching for credentials.
 ```bash
 npm ci --no-audit --no-fund --prefer-offline
 npx tsc --noEmit                                  # must be clean
-npx playwright test tests/kundli-pipeline         # 324 passed, 5 skipped
+npx playwright test tests/kundli-pipeline         # 394 passed, 5 skipped
 TZ=America/New_York npx playwright test tests/kundli-pipeline   # same
 npx next build                                    # ~70 s
 
 npx playwright test tests/golden-kundli tests/incident tests/granth-* \
                      tests/kashi-sahayak tests/astrosage-differential-benchmark
-# 356 passed, 10 failed, 6 skipped
+# 357 passed, 9 failed, 6 skipped — all 9 are the missing browser binary
 ```
 
 The env vars `CHROMIUM_PATH` and `CHROMIUM_LD_LIBRARY_PATH` appear in earlier
@@ -140,11 +140,13 @@ unnecessary.
 
 ## 4. Known failures — none of these are Phase 3 regressions
 
-- **9 failures**: `browserType.launch: Failed to launch chromium because
-  executable doesn't exist`. Pre-existing browser specs, environment-blocked.
-- **1 failure**: AstroSage GATE 2 sunset parity —
-  `expect(snapshot.birthPanchang.sun.sunset).toContain('06:38')`. Pre-existing
-  and unrelated.
+- **9 failures**: `browserType.launch: Executable doesn't exist` in the
+  granth-reader, incident and kashi-sahayak browser specs. Environment-blocked.
+
+The AstroSage sunset failure that was listed here has been resolved: the
+assertion demanded an exact match while its own comment allowed two minutes,
+and the measured delta is 1.2 minutes. It now compares against the tolerance
+it always declared. The engine was not changed.
 - **`npx prisma generate` fails** (TLS to `binaries.prisma.sh` blocked).
   Pre-existing.
 
@@ -206,6 +208,8 @@ right. A human needs to open them.
 
 | Item | State |
 |---|---|
+| Divisional charts beyond D1/D9 | Computed, not delivered, and no longer advertised — see `VARGA-AUDIT.md` |
+| Source locators | Unverified, and disclosed as such in every report — see `SOURCE-VERIFICATION.md` |
 | Bilingual coverage | Hindi in 5 of 31 sections. Gate discloses this as `CG_BILINGUAL_PARTIAL` rather than implying a full translation |
 | PDF Devanagari | Verified by text extraction, not pixels |
 | Divisional charts | D1 and D9 only. D10 must not ship until it has independent boundary fixtures |
@@ -214,22 +218,30 @@ right. A human needs to open them.
 | `prisma generate` | Blocked |
 | Print-shop proof | Never produced |
 
-**Outstanding documents**, carried from the mission:
-`REPORT-SCHEMA-v1.md`, `VISUAL-QA.md`, `SOURCE-VERIFICATION.md`,
-`MARKET-QUALITY-MATRIX.md`. Done already:
+**Documents now written:**
+`REPORT-SCHEMA-v1.md` (executable — parsed by a test),
+`SOURCE-VERIFICATION.md`, `VARGA-AUDIT.md`, `VISUAL-QA.md`,
+`MARKET-QUALITY-MATRIX.md`, plus the earlier
 `RUNTIME-CONSISTENCY-GATE.md`, `CHART-RENDERING-v1.md`,
 `SCHOLAR-SUMMARY-v1.md`, `PHASE3-VERIFICATION.md`.
+
+No mission documents remain outstanding.
 
 **Remaining mission phases**, as carried in the task state (the mission
 document itself is not in this repo, so treat this list as inherited and
 confirm against the original before acting):
 
-1. Bhava–Graha matrix
-2. TZ-aware Dasha — no death, marriage, wealth, court or disease prediction
-3. Scholarly verification — never upgrade a locator's status
-4. Audit Shadbala and the Vargas; D10 only after D1/D9 pass
-5. Visual standard — mark NOT PERFORMED if images cannot be inspected
-6. Comparison matrix on observable qualities only
+Done this session:
+
+1. **Bhava–Graha matrix** — 12×9 grid, delivered, tested (`bhava-graha-matrix.spec.ts`)
+2. **Predictive-language safety** — whole-report scanner wired into the gate as `CG_REPORT_PREDICTIVE_LANGUAGE`; no death, marriage, wealth, court or disease prediction. Dasha dates remain host-independent (TZ matrix)
+3. **Source verification** — no locator status may be upgraded without a licensed edition; enforced by test (`source-verification.spec.ts`)
+4. **Varga and strength audit** — the report was advertising 14 vargas it does not deliver; fixed and gated (`varga-audit.spec.ts`). D10 stays blocked until it has boundary fixtures
+5. **Visual standard** — written, with `VISUAL_QA_NOT_PERFORMED` stated throughout
+6. **Quality matrix** — observable qualities only, against the AstroSage external fixture
+
+Remaining: Bhava–Graha *interpretation* (the matrix is placement only), and
+whatever the owner judges next after reviewing the charts.
 
 ---
 
