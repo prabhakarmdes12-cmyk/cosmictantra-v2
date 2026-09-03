@@ -20,13 +20,13 @@
 
 ---
 
-## 🚀 Guide for Online Agents: Picking Up Sprint F
+## 🚀 Guide for Online Agents: Picking Up Sprint G
 
 ### Current Engineering State
 - **Working branch**: `arena/01a0655c-cosmictantra-v2` (Sprint C work; `main` at Sprint B commit `167ad3b`).
 - **TypeScript**: `npx tsc --noEmit` exits with **0 errors**.
 - **Automated Tests**: full 20-spec Playwright sweep — **619 passed / 1 failed / 6 skipped**; the single failure is the pre-existing environmental `MR-07` milan-route case (`net::ERR_CONNECTION_REFUSED`, needs a live app server + DB, not a calculation defect).
-- **Current Milestone**: **Sprint E (Vimshottari + Panchanga certification) is COMPLETE** (Sprint C astronomy and Sprint D varga gates: PASS at 100k each).
+- **Current Milestone**: **Sprint F (Shadbala + Bhava Bala + Ashtakavarga validation) is COMPLETE** (Sprint C astronomy + Sprint D varga + Sprint E time gates: PASS at scale).
 
 ### Sprint C (COMPLETE — this workspace)
 1. **Ayanamsha reconciled (RSK_009 → RESOLVED)**: versioned change `lahiri-registry-aligned-2.0.0` — `getLahiriAyanamsha(jd) = 23.85305556° + 1.39697128°/century · T`, conformant <0.5″ at J2000, <2″ at 1950; engine versioned `V37.0` (CT_INV_008). All engine-derived golden pins (reportId, Vimshottari balance, dasha dates, ayanamsha display, EV-13/14 baselines) re-baselined to the reconciled output with in-test provenance comments.
@@ -51,8 +51,17 @@
 4. **Declared gaps kept honest**: Purnimanta month NOT_CALCULATED (v40 identity layer), Hora/Choghadiya NOT_IMPLEMENTED — recorded as non-blocking findings, no fabricated numbers.
 5. See `docs/reference-grade/07-sprint-e-time-qualification.md`.
 
-### Scope for Sprint F (Next Actionable Sprint)
-**Shadbala + Bhava Bala + Ashtakavarga validation** (Mission §10–§12): audit the six Shadbala components before changing anything, validate Bhava Bala, certify Bhinna/Sarvashtakavarga bindus against classical tables; RSK_002 (combustion orbs, Sprint H) stays queued.
+### Sprint F (COMPLETE — this workspace)
+**Shadbala + Bhava Bala + Ashtakavarga validation** (Mission §10–§12):
+1. **Fixture set** `BALA_ENGINE_BENCHMARK_001`: classical Ashtakavarga benefic-point tables with binding totals (Sun 48 / Moon 49 / Mars 39 / Mercury 54 / Jupiter 56 / Venus 52 / Saturn 39; SAV 337), Naisargika virupas, exaltation/debilitation points, dignity scale, same-lord pairs; required-Rupas carried honestly as ATTRIBUTION_UNVERIFIED; 2 golden charts (ENGINE_DERIVED).
+2. **Qualification runner** `bala-qualification-runner-1.0.0 (sprint F)` (`npm run qualify:bala`): 50,000 scenarios — **350k Ashtakavarga / 5.25M Shadbala / 200k Bhava-Bala identity checks, 50k day/night consistency checks — 0 violations; 0 golden regressions; 500/0 determinism. Verdict PASS (scaffold + strict).**
+3. **RSK_014 (HIGH → RESOLVED)**: Shadbala day/night strength used the planet's own house instead of the Sun's (one chart, different "days" per planet). Fixed; pinned by spec and runner.
+4. **RSK_015 (MEDIUM → RESOLVED)**: `ekadhipatyaShodhana` was a mislabeled copy of the trikona reduction → withdrawn to NOT_CALCULATED (CT_INV_006); honesty pin enforced per-scenario.
+5. **Declared simplifications surfaced** (varsha/masa nominal constant, Yuddha=0, speed-model Cheshta, house-granular Dig, unverifiable required-Rupas) — six standing NON_BLOCKING findings, never hidden.
+6. See `docs/reference-grade/08-sprint-f-bala-qualification.md`.
+
+### Scope for Sprint G (Next Actionable Sprint)
+**Gochara + correct Sade Sati** (Mission §9): first-class transit engine with explicit query conventions (timestamp, timezone, ayanamsha, node mode), Sade Sati as a real transit phenomenon (phase start/transitions/end with evidence — never inferred from natal positions alone); RSK_002 (combustion orbs, Sprint H) stays queued.
 
 **Rules of Engagement**:
 - **Preserve working systems**: Do not replace working code; wrap and extend it.

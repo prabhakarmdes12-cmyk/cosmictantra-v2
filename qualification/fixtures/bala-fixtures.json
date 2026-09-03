@@ -1,0 +1,1313 @@
+{
+ "fixtureSetId": "BALA_ENGINE_BENCHMARK_001",
+ "builder": "build-bala-fixtures-1.0.0",
+ "createdAtUtc": "2026-09-03T06:13:02.979Z",
+ "engineVersion": "V37.0",
+ "classicalTables": {
+  "source": {
+   "statement": "Brihat Parashara Hora Shastra — Ashtakavarga benefic-point distributions and Shadbala constants (verse-level locators not independently verified; the binding checks are the classical BAV/SAV totals reproduced exactly by these tables).",
+   "status": "SOURCE_SECONDARY"
+  },
+  "ashtakavarga": {
+   "bavRules": {
+    "Sun": {
+     "Sun": [
+      1,
+      2,
+      4,
+      7,
+      8,
+      9,
+      10,
+      11
+     ],
+     "Moon": [
+      3,
+      6,
+      10,
+      11
+     ],
+     "Mars": [
+      1,
+      2,
+      4,
+      7,
+      8,
+      9,
+      10,
+      11
+     ],
+     "Mercury": [
+      3,
+      5,
+      6,
+      9,
+      10,
+      11,
+      12
+     ],
+     "Jupiter": [
+      5,
+      6,
+      9,
+      11
+     ],
+     "Venus": [
+      6,
+      7,
+      12
+     ],
+     "Saturn": [
+      1,
+      2,
+      4,
+      7,
+      8,
+      9,
+      10,
+      11
+     ],
+     "Lagna": [
+      3,
+      4,
+      6,
+      10,
+      11,
+      12
+     ]
+    },
+    "Moon": {
+     "Sun": [
+      3,
+      6,
+      7,
+      8,
+      10,
+      11
+     ],
+     "Moon": [
+      1,
+      3,
+      6,
+      7,
+      10,
+      11
+     ],
+     "Mars": [
+      2,
+      3,
+      5,
+      6,
+      9,
+      10,
+      11
+     ],
+     "Mercury": [
+      1,
+      3,
+      4,
+      5,
+      7,
+      8,
+      10,
+      11
+     ],
+     "Jupiter": [
+      1,
+      4,
+      7,
+      8,
+      10,
+      11,
+      12
+     ],
+     "Venus": [
+      3,
+      4,
+      5,
+      7,
+      9,
+      10,
+      11
+     ],
+     "Saturn": [
+      3,
+      5,
+      6,
+      11
+     ],
+     "Lagna": [
+      3,
+      6,
+      10,
+      11
+     ]
+    },
+    "Mars": {
+     "Sun": [
+      3,
+      5,
+      6,
+      10,
+      11
+     ],
+     "Moon": [
+      3,
+      6,
+      11
+     ],
+     "Mars": [
+      1,
+      2,
+      4,
+      7,
+      8,
+      10,
+      11
+     ],
+     "Mercury": [
+      3,
+      5,
+      6,
+      11
+     ],
+     "Jupiter": [
+      6,
+      10,
+      11,
+      12
+     ],
+     "Venus": [
+      6,
+      8,
+      11,
+      12
+     ],
+     "Saturn": [
+      1,
+      4,
+      7,
+      8,
+      9,
+      10,
+      11
+     ],
+     "Lagna": [
+      1,
+      3,
+      6,
+      10,
+      11
+     ]
+    },
+    "Mercury": {
+     "Sun": [
+      5,
+      6,
+      9,
+      11,
+      12
+     ],
+     "Moon": [
+      2,
+      4,
+      6,
+      8,
+      10,
+      11
+     ],
+     "Mars": [
+      1,
+      2,
+      4,
+      7,
+      8,
+      9,
+      10,
+      11
+     ],
+     "Mercury": [
+      1,
+      3,
+      5,
+      6,
+      9,
+      10,
+      11,
+      12
+     ],
+     "Jupiter": [
+      6,
+      8,
+      11,
+      12
+     ],
+     "Venus": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      8,
+      9,
+      11
+     ],
+     "Saturn": [
+      1,
+      2,
+      4,
+      7,
+      8,
+      9,
+      10,
+      11
+     ],
+     "Lagna": [
+      1,
+      2,
+      4,
+      6,
+      8,
+      10,
+      11
+     ]
+    },
+    "Jupiter": {
+     "Sun": [
+      1,
+      2,
+      3,
+      4,
+      7,
+      8,
+      9,
+      10,
+      11
+     ],
+     "Moon": [
+      2,
+      5,
+      7,
+      9,
+      11
+     ],
+     "Mars": [
+      1,
+      2,
+      4,
+      7,
+      8,
+      10,
+      11
+     ],
+     "Mercury": [
+      1,
+      2,
+      4,
+      5,
+      6,
+      9,
+      10,
+      11
+     ],
+     "Jupiter": [
+      1,
+      2,
+      3,
+      4,
+      7,
+      8,
+      10,
+      11
+     ],
+     "Venus": [
+      2,
+      5,
+      6,
+      9,
+      10,
+      11
+     ],
+     "Saturn": [
+      3,
+      5,
+      6,
+      12
+     ],
+     "Lagna": [
+      1,
+      2,
+      4,
+      5,
+      6,
+      7,
+      9,
+      10,
+      11
+     ]
+    },
+    "Venus": {
+     "Sun": [
+      8,
+      11,
+      12
+     ],
+     "Moon": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      8,
+      9,
+      11,
+      12
+     ],
+     "Mars": [
+      3,
+      5,
+      6,
+      9,
+      11,
+      12
+     ],
+     "Mercury": [
+      3,
+      5,
+      6,
+      9,
+      11
+     ],
+     "Jupiter": [
+      5,
+      8,
+      9,
+      10,
+      11
+     ],
+     "Venus": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      8,
+      9,
+      10,
+      11
+     ],
+     "Saturn": [
+      3,
+      4,
+      5,
+      8,
+      9,
+      10,
+      11
+     ],
+     "Lagna": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      8,
+      9,
+      11
+     ]
+    },
+    "Saturn": {
+     "Sun": [
+      1,
+      2,
+      4,
+      7,
+      8,
+      10,
+      11
+     ],
+     "Moon": [
+      3,
+      6,
+      11
+     ],
+     "Mars": [
+      3,
+      5,
+      6,
+      10,
+      11,
+      12
+     ],
+     "Mercury": [
+      6,
+      8,
+      9,
+      10,
+      11,
+      12
+     ],
+     "Jupiter": [
+      5,
+      6,
+      11,
+      12
+     ],
+     "Venus": [
+      6,
+      11,
+      12
+     ],
+     "Saturn": [
+      3,
+      5,
+      6,
+      11
+     ],
+     "Lagna": [
+      1,
+      3,
+      4,
+      6,
+      10,
+      11
+     ]
+    }
+   },
+   "bavTotals": {
+    "Sun": 48,
+    "Moon": 49,
+    "Mars": 39,
+    "Mercury": 54,
+    "Jupiter": 56,
+    "Venus": 52,
+    "Saturn": 39
+   },
+   "savTotal": 337,
+   "sameLordRashiPairs": [
+    {
+     "lord": "Mars",
+     "rashis": [
+      1,
+      8
+     ]
+    },
+    {
+     "lord": "Venus",
+     "rashis": [
+      2,
+      7
+     ]
+    },
+    {
+     "lord": "Mercury",
+     "rashis": [
+      3,
+      6
+     ]
+    },
+    {
+     "lord": "Jupiter",
+     "rashis": [
+      9,
+      12
+     ]
+    },
+    {
+     "lord": "Saturn",
+     "rashis": [
+      10,
+      11
+     ]
+    }
+   ],
+   "ekadhipatyaStatus": "NOT_IMPLEMENTED (declared; see engine and Sprint F doc)"
+  },
+  "naisargikaVirupas": {
+   "Sun": 60,
+   "Moon": 51.43,
+   "Venus": 42.86,
+   "Jupiter": 34.29,
+   "Mercury": 25.71,
+   "Mars": 17.14,
+   "Saturn": 8.57
+  },
+  "debilitationPoints": {
+   "Sun": 190,
+   "Moon": 213,
+   "Mars": 118,
+   "Mercury": 345,
+   "Jupiter": 275,
+   "Venus": 177,
+   "Saturn": 20
+  },
+  "moolatrikonaZones": {
+   "Sun": {
+    "rashiId": 5,
+    "maxDegree": 20
+   },
+   "Moon": {
+    "rashiId": 2,
+    "maxDegree": 30
+   },
+   "Mars": {
+    "rashiId": 1,
+    "maxDegree": 12
+   },
+   "Mercury": {
+    "rashiId": 6,
+    "maxDegree": 20
+   },
+   "Jupiter": {
+    "rashiId": 9,
+    "maxDegree": 10
+   },
+   "Venus": {
+    "rashiId": 7,
+    "maxDegree": 15
+   },
+   "Saturn": {
+    "rashiId": 11,
+    "maxDegree": 20
+   }
+  },
+  "digBalaStrongHouses": {
+   "Sun": 10,
+   "Mars": 10,
+   "Jupiter": 1,
+   "Mercury": 1,
+   "Saturn": 7,
+   "Moon": 4,
+   "Venus": 4
+  },
+  "specialAspects": {
+   "Mars": [
+    4,
+    8
+   ],
+   "Jupiter": [
+    5,
+    9
+   ],
+   "Saturn": [
+    3,
+    10
+   ]
+  },
+  "saptavargajaScale": {
+   "MOOLATRIKONA": 45,
+   "OWN_SIGN": 30,
+   "ATI_MITRA": 20,
+   "MITRA": 15,
+   "SAMA": 10,
+   "SHATRU": 4,
+   "ATI_SHATRU": 2
+  },
+  "requiredRupas": {
+   "values": {
+    "Sun": 6.5,
+    "Moon": 6,
+    "Mars": 5,
+    "Mercury": 7,
+    "Jupiter": 6.5,
+    "Venus": 5.5,
+    "Saturn": 5
+   },
+   "status": "ATTRIBUTION_UNVERIFIED",
+   "note": "The engine's declared minimums are carried as-is; the verse-level classical values have not been independently verified. Never cited as a verse-verified figure."
+  }
+ },
+ "goldenCharts": [
+  {
+   "chartId": "KERNEL_RELEASE_TEST_CHART",
+   "lagnaLongitude": 103.6864,
+   "ashtakavarga": {
+    "bav": {
+     "Sun": [
+      3,
+      5,
+      4,
+      1,
+      5,
+      6,
+      4,
+      5,
+      5,
+      3,
+      4,
+      3
+     ],
+     "Moon": [
+      6,
+      3,
+      3,
+      5,
+      4,
+      4,
+      6,
+      5,
+      2,
+      3,
+      2,
+      6
+     ],
+     "Mars": [
+      2,
+      6,
+      2,
+      2,
+      2,
+      4,
+      2,
+      5,
+      3,
+      3,
+      3,
+      5
+     ],
+     "Mercury": [
+      3,
+      5,
+      4,
+      2,
+      5,
+      5,
+      4,
+      5,
+      7,
+      3,
+      6,
+      5
+     ],
+     "Jupiter": [
+      6,
+      6,
+      2,
+      5,
+      4,
+      6,
+      6,
+      5,
+      3,
+      5,
+      4,
+      4
+     ],
+     "Venus": [
+      2,
+      2,
+      3,
+      5,
+      5,
+      5,
+      4,
+      5,
+      6,
+      5,
+      5,
+      5
+     ],
+     "Saturn": [
+      4,
+      2,
+      2,
+      4,
+      3,
+      5,
+      5,
+      4,
+      3,
+      3,
+      2,
+      2
+     ]
+    },
+    "sav": [
+     26,
+     29,
+     20,
+     24,
+     28,
+     35,
+     31,
+     34,
+     29,
+     25,
+     26,
+     30
+    ],
+    "totalBindus": 337,
+    "houseSav": [
+     {
+      "house": 1,
+      "bindus": 24
+     },
+     {
+      "house": 2,
+      "bindus": 28
+     },
+     {
+      "house": 3,
+      "bindus": 35
+     },
+     {
+      "house": 4,
+      "bindus": 31
+     },
+     {
+      "house": 5,
+      "bindus": 34
+     },
+     {
+      "house": 6,
+      "bindus": 29
+     },
+     {
+      "house": 7,
+      "bindus": 25
+     },
+     {
+      "house": 8,
+      "bindus": 26
+     },
+     {
+      "house": 9,
+      "bindus": 30
+     },
+     {
+      "house": 10,
+      "bindus": 26
+     },
+     {
+      "house": 11,
+      "bindus": 29
+     },
+     {
+      "house": 12,
+      "bindus": 20
+     }
+    ],
+    "trikonaShodhana": [
+     0,
+     4,
+     0,
+     0,
+     2,
+     10,
+     11,
+     10,
+     3,
+     0,
+     6,
+     6
+    ]
+   },
+   "shadbala": {
+    "Sun": {
+     "sthanaTotal": 149.12,
+     "digTotal": 30,
+     "kalaTotal": 176.51,
+     "nathonnatha": 60,
+     "cheshtaTotal": 0.52,
+     "naisargika": 60,
+     "drikTotal": 9.79,
+     "totalVirupas": 425.94,
+     "totalRupas": 7.1,
+     "strengthRatio": 1.09
+    },
+    "Moon": {
+     "sthanaTotal": 129.44,
+     "digTotal": 50,
+     "kalaTotal": 133.29,
+     "nathonnatha": 0,
+     "cheshtaTotal": 38.02,
+     "naisargika": 51.43,
+     "drikTotal": -18.05,
+     "totalVirupas": 384.13,
+     "totalRupas": 6.4,
+     "strengthRatio": 1.07
+    },
+    "Mars": {
+     "sthanaTotal": 159.01,
+     "digTotal": 40,
+     "kalaTotal": 100.4,
+     "nathonnatha": 0,
+     "cheshtaTotal": 30,
+     "naisargika": 17.14,
+     "drikTotal": 9.24,
+     "totalVirupas": 355.79,
+     "totalRupas": 5.93,
+     "strengthRatio": 1.19
+    },
+    "Mercury": {
+     "sthanaTotal": 114.37,
+     "digTotal": 0,
+     "kalaTotal": 243.99,
+     "nathonnatha": 60,
+     "cheshtaTotal": 30,
+     "naisargika": 25.71,
+     "drikTotal": 8.73,
+     "totalVirupas": 422.8,
+     "totalRupas": 7.05,
+     "strengthRatio": 1.01
+    },
+    "Jupiter": {
+     "sthanaTotal": 200.75,
+     "digTotal": 30,
+     "kalaTotal": 226.52,
+     "nathonnatha": 60,
+     "cheshtaTotal": 30,
+     "naisargika": 34.29,
+     "drikTotal": 3.07,
+     "totalVirupas": 524.63,
+     "totalRupas": 8.74,
+     "strengthRatio": 1.34
+    },
+    "Venus": {
+     "sthanaTotal": 62.52,
+     "digTotal": 40,
+     "kalaTotal": 127.8,
+     "nathonnatha": 60,
+     "cheshtaTotal": 30,
+     "naisargika": 42.86,
+     "drikTotal": -14.25,
+     "totalVirupas": 288.93,
+     "totalRupas": 4.82,
+     "strengthRatio": 0.88
+    },
+    "Saturn": {
+     "sthanaTotal": 156.8,
+     "digTotal": 20,
+     "kalaTotal": 111.87,
+     "nathonnatha": 0,
+     "cheshtaTotal": 30,
+     "naisargika": 8.57,
+     "drikTotal": 8.97,
+     "totalVirupas": 336.21,
+     "totalRupas": 5.6,
+     "strengthRatio": 1.12
+    }
+   },
+   "bhavaBala": [
+    {
+     "house": 1,
+     "lord": "Moon",
+     "totalVirupas": 460.43,
+     "totalRupas": 7.67
+    },
+    {
+     "house": 2,
+     "lord": "Sun",
+     "totalVirupas": 440.57,
+     "totalRupas": 7.34
+    },
+    {
+     "house": 3,
+     "lord": "Mercury",
+     "totalVirupas": 465.95,
+     "totalRupas": 7.77
+    },
+    {
+     "house": 4,
+     "lord": "Venus",
+     "totalVirupas": 355.44,
+     "totalRupas": 5.92
+    },
+    {
+     "house": 5,
+     "lord": "Mars",
+     "totalVirupas": 412.58,
+     "totalRupas": 6.88
+    },
+    {
+     "house": 6,
+     "lord": "Jupiter",
+     "totalVirupas": 559.06,
+     "totalRupas": 9.32
+    },
+    {
+     "house": 7,
+     "lord": "Saturn",
+     "totalVirupas": 368.29,
+     "totalRupas": 6.14
+    },
+    {
+     "house": 8,
+     "lord": "Saturn",
+     "totalVirupas": 377.1,
+     "totalRupas": 6.29
+    },
+    {
+     "house": 9,
+     "lord": "Jupiter",
+     "totalVirupas": 577.94,
+     "totalRupas": 9.63
+    },
+    {
+     "house": 10,
+     "lord": "Mars",
+     "totalVirupas": 425.61,
+     "totalRupas": 7.09
+    },
+    {
+     "house": 11,
+     "lord": "Venus",
+     "totalVirupas": 355.68,
+     "totalRupas": 5.93
+    },
+    {
+     "house": 12,
+     "lord": "Mercury",
+     "totalVirupas": 450.07,
+     "totalRupas": 7.5
+    }
+   ]
+  },
+  {
+   "chartId": "PATNA_GOLDEN_CHART",
+   "lagnaLongitude": 152.0985,
+   "ashtakavarga": {
+    "bav": {
+     "Sun": [
+      3,
+      2,
+      6,
+      5,
+      3,
+      4,
+      3,
+      3,
+      4,
+      5,
+      5,
+      5
+     ],
+     "Moon": [
+      5,
+      4,
+      4,
+      4,
+      3,
+      4,
+      4,
+      5,
+      4,
+      4,
+      3,
+      5
+     ],
+     "Mars": [
+      1,
+      2,
+      6,
+      4,
+      4,
+      4,
+      3,
+      4,
+      2,
+      0,
+      4,
+      5
+     ],
+     "Mercury": [
+      6,
+      4,
+      4,
+      5,
+      5,
+      5,
+      6,
+      4,
+      2,
+      2,
+      7,
+      4
+     ],
+     "Jupiter": [
+      4,
+      6,
+      5,
+      4,
+      4,
+      6,
+      3,
+      5,
+      4,
+      3,
+      6,
+      6
+     ],
+     "Venus": [
+      7,
+      5,
+      2,
+      6,
+      3,
+      5,
+      5,
+      3,
+      3,
+      6,
+      3,
+      4
+     ],
+     "Saturn": [
+      3,
+      3,
+      5,
+      4,
+      1,
+      2,
+      3,
+      2,
+      5,
+      4,
+      4,
+      3
+     ]
+    },
+    "sav": [
+     29,
+     26,
+     32,
+     32,
+     23,
+     30,
+     27,
+     26,
+     24,
+     24,
+     32,
+     32
+    ],
+    "totalBindus": 337,
+    "houseSav": [
+     {
+      "house": 1,
+      "bindus": 30
+     },
+     {
+      "house": 2,
+      "bindus": 27
+     },
+     {
+      "house": 3,
+      "bindus": 26
+     },
+     {
+      "house": 4,
+      "bindus": 24
+     },
+     {
+      "house": 5,
+      "bindus": 24
+     },
+     {
+      "house": 6,
+      "bindus": 32
+     },
+     {
+      "house": 7,
+      "bindus": 32
+     },
+     {
+      "house": 8,
+      "bindus": 29
+     },
+     {
+      "house": 9,
+      "bindus": 26
+     },
+     {
+      "house": 10,
+      "bindus": 32
+     },
+     {
+      "house": 11,
+      "bindus": 32
+     },
+     {
+      "house": 12,
+      "bindus": 23
+     }
+    ],
+    "trikonaShodhana": [
+     6,
+     2,
+     5,
+     6,
+     0,
+     6,
+     0,
+     0,
+     1,
+     0,
+     5,
+     6
+    ]
+   },
+   "shadbala": {
+    "Sun": {
+     "sthanaTotal": 216.07,
+     "digTotal": 60,
+     "kalaTotal": 200.36,
+     "nathonnatha": 60,
+     "cheshtaTotal": 56,
+     "naisargika": 60,
+     "drikTotal": -7.67,
+     "totalVirupas": 584.76,
+     "totalRupas": 9.75,
+     "strengthRatio": 1.5
+    },
+    "Moon": {
+     "sthanaTotal": 218.62,
+     "digTotal": 60,
+     "kalaTotal": 206.27,
+     "nathonnatha": 0,
+     "cheshtaTotal": 101.28,
+     "naisargika": 51.43,
+     "drikTotal": 28.46,
+     "totalVirupas": 666.06,
+     "totalRupas": 11.1,
+     "strengthRatio": 1.85
+    },
+    "Mars": {
+     "sthanaTotal": 147.44,
+     "digTotal": 40,
+     "kalaTotal": 107.63,
+     "nathonnatha": 0,
+     "cheshtaTotal": 30,
+     "naisargika": 17.14,
+     "drikTotal": -2.42,
+     "totalVirupas": 339.79,
+     "totalRupas": 5.66,
+     "strengthRatio": 1.13
+    },
+    "Mercury": {
+     "sthanaTotal": 190.08,
+     "digTotal": 20,
+     "kalaTotal": 267.73,
+     "nathonnatha": 60,
+     "cheshtaTotal": 30,
+     "naisargika": 25.71,
+     "drikTotal": -0.42,
+     "totalVirupas": 533.1,
+     "totalRupas": 8.88,
+     "strengthRatio": 1.27
+    },
+    "Jupiter": {
+     "sthanaTotal": 152.14,
+     "digTotal": 50,
+     "kalaTotal": 262.27,
+     "nathonnatha": 60,
+     "cheshtaTotal": 30,
+     "naisargika": 34.29,
+     "drikTotal": -0.86,
+     "totalVirupas": 527.84,
+     "totalRupas": 8.8,
+     "strengthRatio": 1.35
+    },
+    "Venus": {
+     "sthanaTotal": 138.98,
+     "digTotal": 10,
+     "kalaTotal": 215.64,
+     "nathonnatha": 60,
+     "cheshtaTotal": 30,
+     "naisargika": 42.86,
+     "drikTotal": 17.19,
+     "totalVirupas": 454.67,
+     "totalRupas": 7.58,
+     "strengthRatio": 1.38
+    },
+    "Saturn": {
+     "sthanaTotal": 146.78,
+     "digTotal": 20,
+     "kalaTotal": 124.21,
+     "nathonnatha": 0,
+     "cheshtaTotal": 30,
+     "naisargika": 8.57,
+     "drikTotal": -4.93,
+     "totalVirupas": 324.63,
+     "totalRupas": 5.41,
+     "strengthRatio": 1.08
+    }
+   },
+   "bhavaBala": [
+    {
+     "house": 1,
+     "lord": "Mercury",
+     "totalVirupas": 596.8,
+     "totalRupas": 9.95
+    },
+    {
+     "house": 2,
+     "lord": "Venus",
+     "totalVirupas": 525.38,
+     "totalRupas": 8.76
+    },
+    {
+     "house": 3,
+     "lord": "Mars",
+     "totalVirupas": 421.82,
+     "totalRupas": 7.03
+    },
+    {
+     "house": 4,
+     "lord": "Jupiter",
+     "totalVirupas": 563.25,
+     "totalRupas": 9.39
+    },
+    {
+     "house": 5,
+     "lord": "Saturn",
+     "totalVirupas": 375.38,
+     "totalRupas": 6.26
+    },
+    {
+     "house": 6,
+     "lord": "Saturn",
+     "totalVirupas": 374.28,
+     "totalRupas": 6.24
+    },
+    {
+     "house": 7,
+     "lord": "Jupiter",
+     "totalVirupas": 607.47,
+     "totalRupas": 10.12
+    },
+    {
+     "house": 8,
+     "lord": "Mars",
+     "totalVirupas": 412.12,
+     "totalRupas": 6.87
+    },
+    {
+     "house": 9,
+     "lord": "Venus",
+     "totalVirupas": 509.15,
+     "totalRupas": 8.49
+    },
+    {
+     "house": 10,
+     "lord": "Mercury",
+     "totalVirupas": 576.62,
+     "totalRupas": 9.61
+    },
+    {
+     "house": 11,
+     "lord": "Moon",
+     "totalVirupas": 715.31,
+     "totalRupas": 11.92
+    },
+    {
+     "house": 12,
+     "lord": "Sun",
+     "totalVirupas": 668.07,
+     "totalRupas": 11.13
+    }
+   ]
+  }
+ ],
+ "setSha256": "afb31539bdd9444a8435c4e6b2dcb1f4b2aec7ae4436021989a0416eef417ebc"
+}

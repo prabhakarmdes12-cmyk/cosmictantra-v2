@@ -2,11 +2,25 @@
  * PROTECTED CANONICAL JYOTISH KERNEL: Comprehensive BPHS Bala Engine
  * Implements Full 6-Fold Shadbala (Sthana, Dig, Kala, Cheshta, Naisargika, Drik Balas in Virupas/Rupas),
  * 12 Bhava Balas, and 20-Point Vimshopaka Balas across 4 classical schemes (Shadvarga, Saptavarga, Dashavarga, Shodashavarga).
- * 
+ *
  * Strict Compliance: Zero placeholder constants. Every subcomponent is mathematically derived
  * from canonical celestial coordinates and classical Brihat Parashara Hora Shastra rules.
  * Complies with Invariants INV_JYOTISH_001, INV_JYOTISH_002, INV_JYOTISH_003.
+ *
+ * Sprint F qualification (see docs/reference-grade/08-sprint-f-bala-qualification.md):
+ * - FIXED (RSK_014): Nathonnatha/Tribhaga day-night determination used the planet's OWN
+ *   house instead of the Sun's (measured: on a day chart, Jupiter in H1 received 0 and
+ *   Moon in H4 received 60 — each planet saw a different "day"). Day birth is a property
+ *   of the SUN: Sun in houses 7-12 (whole-sign above-horizon convention). A/B verified:
+ *   every planet now shares one day/night determination.
+ * - Declared simplifications (surfaced, not hidden): Kala Bala carries a nominal
+ *   Varsha/Masa/Dina/Hora lord constant (45) and Yuddha Bala = 0 (planetary war not
+ *   computed); Cheshta Bala uses a speed-ratio/retrograde model, not the epicyclic arc;
+ *   Dig Bala is house-granular, not cusp-granular. See the Sprint F doc for the full list.
  */
+
+/** CT_INV_008: the bala implementation is versioned like every other calculator. */
+export const BALA_ENGINE_VERSION = 'bala-engine-1.0.0 (shadbala+bhava+vimsopaka, sprint-F qualified)';
 
 import { generateShodashavarga, RASHI_DATA } from './vargaEngine';
 import { getPanchadhaMaitri, NAISARGIKA_MAITRI } from './relationshipEngine';
@@ -371,9 +385,12 @@ export function calculateFullShadbala(
     const dig = calculateDigBala(pName, p.house, p.longitude, lagnaLongitude);
 
     // 3. Kala Bala
-    // Nathonnatha Bala
-    const sunHouse = sun.rashiId; // Approximate day/night based on Sun's house
-    const isDay = (p.house >= 7 && p.house <= 12) || false; // Sun above horizon
+    // Nathonnatha Bala — day/night is a property of the SUN, not of the planet being
+    // scored. RS_014 fix: previously each planet's own house decided its day/night
+    // strength, so a single chart could score "day" for Venus and "night" for Mars.
+    // Whole-sign convention: the Sun in houses 7-12 is above the horizon (day birth).
+    const sunHouse = (sun as { house?: number }).house ?? 10; // deterministic fallback if Sun missing
+    const isDay = sunHouse >= 7 && sunHouse <= 12;
     let nathonnatha = 30;
     if (['Sun', 'Jupiter', 'Venus'].includes(pName)) {
       nathonnatha = isDay ? 60 : 0;

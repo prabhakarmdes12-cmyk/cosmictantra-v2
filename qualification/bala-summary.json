@@ -1,0 +1,93 @@
+{
+  "runnerVersion": "bala-qualification-runner-1.0.0 (sprint F)",
+  "startedAtUtc": "2026-09-03T06:14:41.798Z",
+  "durationMs": 4261,
+  "gate": "strict",
+  "fixtureSet": {
+    "id": "BALA_ENGINE_BENCHMARK_001",
+    "sha256": "afb31539bdd9444a8435c4e6b2dcb1f4b2aec7ae4436021989a0416eef417ebc",
+    "sourceStatus": "SOURCE_SECONDARY",
+    "goldenCharts": 2,
+    "requiredRupasStatus": "ATTRIBUTION_UNVERIFIED"
+  },
+  "scenarioCount": 50000,
+  "seed": 47642,
+  "streamFingerprint": "3E059A29",
+  "ashtakavarga": {
+    "identityChecks": 350006,
+    "violations": 0,
+    "goldenRegressions": 0
+  },
+  "shadbala": {
+    "identityChecks": 5250056,
+    "violations": 0,
+    "dayNightChecks": 50000,
+    "dayNightViolations": 0
+  },
+  "bhavaBala": {
+    "identityChecks": 200002,
+    "violations": 0
+  },
+  "goldenRegressions": 0,
+  "determinism": {
+    "samples": 500,
+    "mismatches": 0
+  },
+  "findings": [
+    {
+      "id": "BQF-DECLARED_VARSHAMASA_NOMINAL",
+      "severity": "NON_BLOCKING",
+      "code": "DECLARED_VARSHAMASA_NOMINAL",
+      "detail": {
+        "note": "Varsha/Masa/Dina/Hora lords are a nominal constant (45 virupas), not lord-derived."
+      },
+      "remediation": "Implement lord-derived temporal strength in a future sprint; never present the constant as a computed value."
+    },
+    {
+      "id": "BQF-DECLARED_YUDDHA_BALA_ZERO",
+      "severity": "NON_BLOCKING",
+      "code": "DECLARED_YUDDHA_BALA_ZERO",
+      "detail": {
+        "note": "Yuddha Bala (planetary-war strength) is declared 0 — war geometry is not computed."
+      },
+      "remediation": "Keep the zero declared; implement only with a verified classical war rule."
+    },
+    {
+      "id": "BQF-DECLARED_CHESHTA_SPEED_MODEL",
+      "severity": "NON_BLOCKING",
+      "code": "DECLARED_CHESHTA_SPEED_MODEL",
+      "detail": {
+        "note": "Cheshta Bala uses a clamped speed-ratio/retrograde model, not the epicyclic arc (Manda/Vakra shiras)."
+      },
+      "remediation": "Documented simplification; upgrade requires a verified epicycle derivation."
+    },
+    {
+      "id": "BQF-DECLARED_DIG_HOUSE_GRANULAR",
+      "severity": "NON_BLOCKING",
+      "code": "DECLARED_DIG_HOUSE_GRANULAR",
+      "detail": {
+        "note": "Dig Bala is computed at whole-house granularity, not at the bhava madhya angle."
+      },
+      "remediation": "Cusp-granular upgrade requires the house-division convention to be qualified first."
+    },
+    {
+      "id": "BQF-DECLARED_EKADHIPATYA_NOT_IMPLEMENTED",
+      "severity": "NON_BLOCKING",
+      "code": "DECLARED_EKADHIPATYA_NOT_IMPLEMENTED",
+      "detail": {
+        "note": "Ekadhipatya Shodhana is NOT_CALCULATED (RSK_015: the old field was a mislabeled trikona copy)."
+      },
+      "remediation": "Implement from the classical same-lord pair rule only with a verified source; until then the gap stays declared."
+    },
+    {
+      "id": "BQF-DECLARED_REQUIRED_RUPAS_UNVERIFIED",
+      "severity": "NON_BLOCKING",
+      "code": "DECLARED_REQUIRED_RUPAS_UNVERIFIED",
+      "detail": {
+        "note": "The required-minimum Rupas table is carried as ATTRIBUTION_UNVERIFIED."
+      },
+      "remediation": "Scholar verification required before citing any verse locator."
+    }
+  ],
+  "verdict": "PASS"
+}

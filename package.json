@@ -23,7 +23,9 @@
     "qualify:varga": "tsx qualification/varga-qualification-runner.ts --scenarios 100000 --write-cert-doc",
     "qualify:varga:scaffold": "tsx qualification/varga-qualification-runner.ts --scenarios 1000",
     "qualify:time": "tsx qualification/time-qualification-runner.ts --scenarios 100000 --write-cert-doc",
-    "qualify:time:scaffold": "tsx qualification/time-qualification-runner.ts --scenarios 5000"
+    "qualify:time:scaffold": "tsx qualification/time-qualification-runner.ts --scenarios 5000",
+    "qualify:bala": "tsx qualification/bala-qualification-runner.ts --scenarios 50000 --write-cert-doc",
+    "qualify:bala:scaffold": "tsx qualification/bala-qualification-runner.ts --scenarios 5000"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.77",

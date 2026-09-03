@@ -1,8 +1,21 @@
 /**
  * Classical Parashari Ashtakavarga Engine
  * Computes Bhinna Ashtakavarga (BAV) for 7 Grahas and Sarvashtakavarga (SAV) 337 Bindus.
- * Reference: Brihat Parashara Hora Shastra (BPHS) Chapters 66-72.
+ * Reference: Brihat Parashara Hora Shastra, Ashtakavarga chapters (verse locator not
+ * independently verified; the binding verification is the classical totals:
+ * Sun 48, Moon 49, Mars 39, Mercury 54, Jupiter 56, Venus 52, Saturn 39, SAV 337 —
+ * all reproduced exactly by the tables below and pinned by the Sprint F fixture set).
+ *
+ * Sprint F qualification (docs/reference-grade/08-sprint-f-bala-qualification.md):
+ * - Trikona Shodhana verified: per-trine-group minimum subtraction identity.
+ * - FIXED (RSK_015): `ekadhipatyaShodhana` previously returned a COPY of the trikona
+ *   result while its name promised the Ekadhipatya reduction — a silent mislabel.
+ *   The Ekadhipatya reduction is NOT implemented; the field now declares
+ *   NOT_CALCULATED with a reason (CT_INV_006). It is never fabricated.
  */
+
+/** CT_INV_008: the ashtakavarga implementation is versioned like every other calculator. */
+export const ASHTAKAVARGA_ENGINE_VERSION = 'ashtakavarga-engine-1.0.0 (bav+sav+trikona, sprint-F qualified)';
 
 export interface AshtakavargaResult {
   bav: Record<string, number[]>; // 7 planets x 12 rashis (0-indexed Mesha to Meena)
@@ -11,8 +24,14 @@ export interface AshtakavargaResult {
   houseSav: { house: number; rashi: string; rashiId: number; bindus: number; category: string }[];
   totalBindus: number;
   shodhana: {
+    /** Trikona (trine-group) reduction: each trine group 1-5-9 / 2-6-10 / 3-7-11 / 4-8-12 reduced by its minimum. */
     trikonaShodhana: number[];
-    ekadhipatyaShodhana: number[];
+    /**
+     * Ekadhipatya (co-lordship) reduction — NOT IMPLEMENTED. Declared, never fabricated
+     * (CT_INV_006). Before Sprint F this field carried a copy of the trikona values
+     * under the ekadhipatya name (RSK_015, mislabel removed).
+     */
+    ekadhipatyaShodhana: { status: 'NOT_CALCULATED'; reason: string; values: null };
   };
 }
 
@@ -166,7 +185,11 @@ export function calculateAshtakavarga(planets: Record<string, { rasi?: number; r
     totalBindus,
     shodhana: {
       trikonaShodhana,
-      ekadhipatyaShodhana: [...trikonaShodhana]
+      ekadhipatyaShodhana: {
+        status: 'NOT_CALCULATED',
+        reason: 'Ekadhipatya Shodhana (reduction of same-lord rashi pairs) is not implemented in this engine. The pre-Sprint-F values were a mislabeled copy of the trikona reduction and have been withdrawn rather than shown under the wrong name.',
+        values: null
+      }
     }
   };
 }
