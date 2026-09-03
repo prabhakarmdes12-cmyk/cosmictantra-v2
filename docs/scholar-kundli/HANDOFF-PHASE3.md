@@ -71,7 +71,8 @@ list so the number cannot drift. `BANNED_PHRASES` scanned over every generated
 sentence.
 
 **`src/lib/kundli/consistencyGate.ts`** — `checkChartAndSummaryConsistency`
-runs 14 checks plus the banned-language scan. Every one is critical: failure
+runs 15 checks: fourteen over charts and summary, plus a whole-report scan
+for predictive language. Every one is critical: failure
 returns `ok:false`, `pdfBuffer:null`, a stable named code, both conflicting
 values and both safe paths.
 

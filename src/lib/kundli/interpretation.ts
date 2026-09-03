@@ -245,7 +245,7 @@ export function interpretNearTerm(model: KundliCanonicalModel): InterpretationEn
     sourceFacts: ['dasha.current.antardasha.schedule', `dasha.current.antardasha.next.${next.planet}`],
     generatorVersion: INTERPRETATION_GENERATOR_VERSION,
     promptVersion: null,
-    text: `After the current ${cur.antardasha} Antardasha, the ${next.planet} Antardasha begins (${next.startDate} to ${next.endDate}). Themes related to the ${HOUSE_MEANINGS[planetHouse(model, next.planet) ?? 1]} will progressively come into focus during that sub-period.`,
+    text: `After the current ${cur.antardasha} Antardasha, the ${next.planet} Antardasha begins (${next.startDate} to ${next.endDate}). Themes related to the ${HOUSE_MEANINGS[planetHouse(model, next.planet) ?? 1]} are traditionally held to come into focus during that sub-period. This is a theme, not an event, and the dates are the calculated boundaries of the period only.`,
   };
 }
 

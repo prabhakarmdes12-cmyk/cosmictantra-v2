@@ -20,6 +20,7 @@
 import { sha256Hex } from '../granth/checksum';
 import { computeContentHash, REPORT_MODEL_VERSION } from './reportModel';
 import { buildScholarSummary, scanBannedLanguage } from './scholarSummary';
+import { scanPredictiveLanguage } from './reportLanguage';
 import { PLANET_ABBREVIATIONS } from './chartModel';
 import { YOGA_SOURCE_REGISTRY_VERSION } from '../jyotish/yogaSourceRegistry';
 import type { KundliErrorCode } from './errors';
@@ -1308,6 +1309,33 @@ export function checkChartAndSummaryConsistency(
     }
     c.checked++;
     c.checks.push('charts.CG_SUMMARY_LANGUAGE');
+  }
+
+  /* Language safety, whole report. -------------------------------------
+     CG_SUMMARY_LANGUAGE covers the two Scholar Summary pages. This covers
+     every other section — the interpretive life-area sections and the dasha
+     commentary, which is where a promise about marriage, death, disease,
+     wealth or litigation would most plausibly be written by accident.
+
+     A report that trips this is not delivered. */
+  {
+    const summaryIds = new Set(['scholar-summary-1', 'scholar-summary-2']);
+    for (const section of report.sections) {
+      if (summaryIds.has(section.id)) continue;
+      const text = sectionText(section, false);
+      if (!text) continue;
+      for (const finding of scanPredictiveLanguage(text)) {
+        c.assert(
+          'CG_REPORT_PREDICTIVE_LANGUAGE',
+          false,
+          `report.${section.id}`,
+          finding.phrase,
+          `report section '${section.id}' uses ${finding.kind} construction \"${finding.phrase}\"; context: …${finding.sentence}…`,
+        );
+      }
+    }
+    c.checked++;
+    c.checks.push('charts.CG_REPORT_PREDICTIVE_LANGUAGE');
   }
 
   return c.report();
