@@ -25,6 +25,13 @@ The file content is byte-identical to what was verified; the commit SHAs are
 not the ones the work first carried, and no attempt was made to preserve the
 intermediate states that were lost.
 
+Work continued past Phase 3 into the carried items — the report schema, source
+verification, predictive-language safety, the bhava–graha matrix, the varga
+audit, the visual standard and the quality matrix — in the seven commits
+following `a48959a`. Those are documented in the files they produced:
+`REPORT-SCHEMA-v1.md`, `SOURCE-VERIFICATION.md`, `VARGA-AUDIT.md`,
+`VISUAL-QA.md` and `MARKET-QUALITY-MATRIX.md`.
+
 ## 2. What was built
 
 - `src/lib/kundli/chartModel.ts` — the placement contract. Validates and
@@ -51,9 +58,9 @@ Deliverables: `docs/scholar-kundli/CHART-RENDERING-v1.md`,
 ### Primary suite — `tests/kundli-pipeline`
 
 ```
-TZ=UTC              324 passed, 5 skipped   48.9 s
-TZ=Asia/Kolkata     324 passed, 5 skipped
-TZ=America/New_York 324 passed, 5 skipped
+TZ=UTC              394 passed, 5 skipped
+TZ=Asia/Kolkata     394 passed, 5 skipped
+TZ=America/New_York 394 passed, 5 skipped
 ```
 
 Identical results under all three host timezones. The 5 skipped are the browser

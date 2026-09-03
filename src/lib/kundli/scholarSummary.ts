@@ -20,7 +20,7 @@
 import type { KundliCanonicalModel, YogaResult } from './types';
 import type { HeadingBlock, KeyValueBlock, ParagraphBlock, ReportBlock, ReportSection } from './types';
 import { placementEvidenceId } from './chartModel';
-import { PLANET_ABBREVIATIONS } from './chartModel';
+import { PLANET_ABBREVIATIONS, SIGN_NAMES_HI } from './chartModel';
 
 export const SCHOLAR_SUMMARY_VERSION = 'scholar-summary-v1';
 
@@ -61,11 +61,6 @@ const SIGN_INDEX_BY_NAME: Record<string, number> = {
 };
 
 /** Hindi names for the twelve signs, used for values as well as labels. */
-const SIGN_NAMES_HI = [
-  'मेष', 'वृषभ', 'मिथुन', 'कर्क', 'सिंह', 'कन्या',
-  'तुला', 'वृश्चिक', 'धनु', 'मकर', 'कुम्भ', 'मीन',
-];
-
 const l = (key: string, loc: Loc) => LABELS[key]?.[loc] ?? key;
 const signName = (signIdx1to12: number, loc: Loc, englishName: string) =>
   loc === 'hi' ? (SIGN_NAMES_HI[signIdx1to12 - 1] ?? englishName) : englishName;
@@ -494,16 +489,19 @@ export function buildScholarSummary(
   textParts.push({ where: 'DASHA-INTERPRETATION-CURRENT', text: `${dashaStatement} ${dashaLimitation}` });
 
   /* --- Level 3: reflections --------------------------------------- */
+  // Two prompts, not three: as three separate paragraphs the last one was
+  // left behind as a single line at the top of the following page, which
+  // reads as a mistake rather than as a closing thought.
   const reflections: { id: string; text: string }[] = [
     {
       id: 'REFLECTION-1',
       text:
-        'Check the calculated facts against your own records.',
+        'Check the calculated facts against your own records, and ask which of these themes already match your experience.',
     },
     {
       id: 'REFLECTION-2',
       text:
-        'Which of these themes already match your experience? "Not calculated" means the engine did not compute it.',
+        '"Not calculated" means this engine did not compute it. It does not mean the tradition has nothing to say.',
     },
   ];
   for (const r of reflections) textParts.push({ where: r.id, text: r.text });
@@ -541,6 +539,7 @@ export function buildScholarSummarySections(
   const page1: ReportSection = {
     id: 'scholar-summary-1',
     title: 'Your chart at a glance',
+    pageBreakBefore: true,
     status: 'READY',
     blocks: [
       headingBlock(2, 'Your chart at a glance'),
@@ -576,7 +575,7 @@ export function buildScholarSummarySections(
   const level3: ReportBlock[] = [
     headingBlock(3, l('level3', locale)),
     paraBlock(
-      'These are prompts for your own judgement. They are guidance from the report, not a forecast, and not a substitute for professional advice on health, legal or financial matters.',
+      'Prompts for your own judgement: guidance, not a forecast, and not a substitute for professional advice.',
     ),
     ...s.reflections.map((r) => paraBlock(r.text)),
   ];

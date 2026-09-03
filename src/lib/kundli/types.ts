@@ -305,6 +305,13 @@ export interface ReportSection {
   title: string;
   status: SectionStatus;
   blocks: ReportBlock[];
+  /**
+   * Start this section on a fresh page. Presentation only: it changes where
+   * content falls, never what it says. Used by the Scholar Summary, which
+   * should be a page a reader can turn to without finding the passport above
+   * it and a stranded heading below it.
+   */
+  pageBreakBefore?: boolean;
 }
 
 export interface InterpretationEntry {
