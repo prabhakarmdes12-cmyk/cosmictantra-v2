@@ -49,6 +49,7 @@ import {
   suspendFlow, resumeFlow, resumePromptHi, nextMissingSlot, INTAKE_SLOT_QUESTION_HI,
   routeFollowUp, recordFact, detectLifeConcern, lifeConcernReply, LIFE_PATHWAY_CHIPS,
   nextBestActions, INTERRUPTING_INTENTS, INTENT_LABEL_HI,
+  normalizeBirthDateInput, normalizeBirthTimeInput,
   type ConversationState, type ConversationalIntent, type FlowFrame,
 } from '@/lib/kashi/conversationCore';
 import { useKashiSahayak } from '@/hooks/useKashiSahayak';
@@ -134,6 +135,8 @@ interface ChatMessage {
     transitStatus: 'CAUTION_DAY' | 'POWER_DAY';
     transitMessage: string;
     recommendation: string;
+    /** Executive 6-Dimension Life Gauges — same kernel /report uses. */
+    gauges?: Array<{ titleHi: string; score: number; levelHi: string }>;
   };
   scholarCard?: {
     name: string;
@@ -1470,6 +1473,8 @@ export default function FloatingAIGuruAvatar() {
 
     if (chip.action.startsWith('SET_DOMAIN_')) {
       const domainName = chip.label;
+      // The chosen domain becomes the conversation's activeDomain (Module 2).
+      convStateRef.current = applyEntities(convStateRef.current, { domain: chip.action.replace('SET_DOMAIN_', '') });
       setSeekerData(prev => ({ ...prev, domain: domainName }));
       setIntakeStep('ASK_NAME');
 
@@ -2168,13 +2173,46 @@ export default function FloatingAIGuruAvatar() {
         ? '⚠️ आज का दिन सतर्कता दिवस (Caution Window) है — चन्द्रमा के गोचर व राहुकाल के कारण नए वित्तीय या उग्र निर्णयों में धैर्य रखें।'
         : '✨ आज का दिन शुभ सिद्धि योग (Power Window) है — गुरु-चन्द्र की अनुकूल दृष्टि से सोचे गए कार्यों में प्रगति का योग है।';
 
-      setTimeout(() => {
+      setTimeout(async () => {
+        // Executive Life Gauges (Module 4): computed from the same canonical
+        // kernel /report uses, via dynamic import so the chat bundle stays
+        // light and a kernel failure costs only the gauge strip — never the
+        // pulse card itself.
+        let gauges: Array<{ titleHi: string; score: number; levelHi: string }> | undefined;
+        try {
+          const isoDate = normalizeBirthDateInput(seekerData.birthDate || '');
+          const hhmm = normalizeBirthTimeInput(seekerData.birthTime || '');
+          if (isoDate && hhmm) {
+            const [{ getCanonicalJyotishSnapshot }, { computeExecutiveLifeDimensions }] = await Promise.all([
+              import('@/lib/jyotish/canonicalSnapshot'),
+              import('@/lib/jyotish/executiveLifeGauge'),
+            ]);
+            const snapshot = getCanonicalJyotishSnapshot({
+              birthDate: isoDate,
+              birthTime: hhmm,
+              latitude: Number(seekerData.birthLat ?? 25.5941),
+              longitude: Number(seekerData.birthLon ?? 85.1376),
+              timezone: Number(seekerData.birthTz ?? 5.5),
+              locationName: seekerData.birthCity || 'Varanasi',
+            });
+            const dims = computeExecutiveLifeDimensions(snapshot);
+            if (Array.isArray(dims) && dims.length > 0) {
+              gauges = dims.map((d) => ({ titleHi: d.titleHi, score: Math.round(d.score), levelHi: d.levelHi }));
+            }
+          }
+        } catch (gaugeErr) {
+          console.warn('Executive gauges unavailable for pulse card:', gaugeErr);
+        }
+        const topGauge = gauges ? gauges.slice().sort((a, b) => b.score - a.score)[0] : undefined;
+
         setChatMessages(prev => [
           ...prev,
           {
             id: `g-${Date.now()}`,
             sender: 'GURU',
             text: `चिन्ता न करें ${seekerData.name || ''} जी! 🙏 हर कठिन परिस्थिति का शास्त्रसम्मत समाधान सम्भव है। मैंने आपकी कुण्डली की खगोलीय गणना व आज के गोचर का मिलान पूर्ण कर लिया है:`,
+            // "Recite and display" (Module 4): the pulse is spoken, not just shown.
+            speakText: `${seekerData.name ? `${seekerData.name} जी, ` : ''}आपकी खगोलीय गणना पूर्ण हुई। आपका लग्न ${lagnaName.split(' (')[0]} है, चन्द्र नक्षत्र ${nakshatraName.split(' (')[0]} है और वर्तमान दशा ${dashaStr} चल रही है। ${isCautionDay ? 'आज सतर्कता दिवस है — नए वित्तीय या उग्र निर्णयों में धैर्य रखें।' : 'आज शुभ सिद्धि योग है — सोचे हुए कार्यों में प्रगति का योग है।'}${topGauge ? ` आपका ${topGauge.titleHi} आयाम ${topGauge.score} प्रतिशत पर ${topGauge.levelHi} है।` : ''} पूर्ण कुण्डली के लिए पहला बटन, और पंडित जी से सीधी बात के लिए दूसरा बटन चुनिए।`,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             provenance: {
               calculation: 'Lahiri Ayanamsha 24° 16\' • CosmicTantra Natal Engine',
@@ -2185,6 +2223,7 @@ export default function FloatingAIGuruAvatar() {
               lagna: lagnaName,
               nakshatra: nakshatraName,
               dasha: dashaStr,
+              gauges,
               transitStatus,
               transitMessage,
               recommendation: isCautionDay
@@ -2903,6 +2942,27 @@ export default function FloatingAIGuruAvatar() {
                             <strong className="text-[#8E6F1D] dark:text-[#F0C968] text-xs">{msg.pulseCard.dasha}</strong>
                           </div>
                         </div>
+
+                        {/* Executive 6-Dimension Life Gauges (Module 4) */}
+                        {msg.pulseCard.gauges && msg.pulseCard.gauges.length > 0 && (
+                          <div className="p-2.5 rounded-xl bg-[#FAF7F2] dark:bg-[#070912] border border-black/10 dark:border-white/10 space-y-1.5">
+                            <div className="text-[10.5px] font-bold text-[#8E6F1D] dark:text-[#F0C968] font-editorial">
+                              षड्-आयामी जीवन मापक (Executive Life Gauges)
+                            </div>
+                            {msg.pulseCard.gauges.map((g, gi) => (
+                              <div key={gi} className="flex items-center gap-2">
+                                <span className="w-28 shrink-0 text-[10px] text-[#44403C] dark:text-[#D1C9BF] truncate" title={g.titleHi}>{g.titleHi}</span>
+                                <div className="flex-1 h-1.5 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
+                                  <div
+                                    className="h-full rounded-full bg-gradient-to-r from-[#8E6F1D] to-[#D4AF37]"
+                                    style={{ width: `${Math.max(4, Math.min(100, g.score))}%` }}
+                                  />
+                                </div>
+                                <span className="w-24 shrink-0 text-right text-[9.5px] text-[#696256] dark:text-[#9E988D]">{g.score}% • {g.levelHi}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
 
                         {/* Visual North-Indian Kundali Snapshot Diagram */}
                         {msg.inChatKundaliSvg && (

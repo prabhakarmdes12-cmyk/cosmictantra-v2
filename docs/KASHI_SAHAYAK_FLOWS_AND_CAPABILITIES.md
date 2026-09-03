@@ -38,7 +38,8 @@ so an utterance like `आज राहुकाल?` is never swallowed as a bir
 | `activeSubject` | SELF · PARTNER · CHILD · PARENT · SIBLING | `पति/पत्नी`, `बेटा/बेटी/बच्चा` (stem-matched, inflections included), `माता/पिता`, `भाई/बहन` |
 | `activeDate` + label | ISO date + `आज/कल/परसों/उसी दिन` | date words; `उस दिन` **rebinds** to the already-active date instead of shifting |
 | `activeLocation` | वाराणसी · पटना · दिल्ली · मुंबई · बेंगलुरु · कोलकाता · लखनऊ · प्रयागराज | city cues (incl. `banaras`, `इलाहाबाद`) |
-| `activeDomain` / `activeIntent` / `activeFact` | last delivered factual answer + mined `…तक` validity window | `recordFact()` on every gateway `GET_*` reply |
+| `activeDomain` | CAREER · MARRIAGE · HEALTH · REMEDY · PROPERTY | the intake's `SET_DOMAIN_*` chip, and free-text cues (`विवाह कब होगा` ⇒ MARRIAGE) |
+| `activeIntent` / `activeFact` | last delivered factual answer + mined `…तक` validity window | `recordFact()` on every gateway `GET_*` reply |
 | `pendingFlow` + `stack` | suspended FlowFrames, LIFO | `suspendFlow()` on interruption |
 | `detailLevel` | SHORT · NORMAL · PANDIT | `संक्षेप में` / `विस्तार से` |
 
@@ -97,12 +98,20 @@ Intake order (MissingSlotResolver): **name → birthDate → birthTime →
 birthCity → question**. On completion:
 
 1. Deterministic ephemeris (`calculateKundali`, Lahiri) ⇒ Lagna, चन्द्र
-   Nakshatra, Vimshottari Dasha.
-2. **Astrological Pulse Card**: POWER_DAY / CAUTION_DAY transit message +
-   recommendation naming the seeker's question.
-3. Two doors: **📄 सम्पूर्ण कुण्डली PDF** (`/report`, decluttered per Module 5)
+   Nakshatra, Vimshottari Dasha; birth answers pass through
+   `normalizeBirthDateInput` / `normalizeBirthTimeInput` first — the canonical
+   kernel never receives an un-normalized date.
+2. **Executive Life Gauges**: `getCanonicalJyotishSnapshot` +
+   `computeExecutiveLifeDimensions` (dynamically imported, same kernel as
+   `/report`) ⇒ a six-bar षड्-आयामी जीवन मापक strip; a kernel failure costs
+   only the strip, never the card.
+3. **Astrological Pulse Card — recited and displayed**: POWER_DAY /
+   CAUTION_DAY transit message + recommendation naming the seeker's question;
+   `speakText` reads out lagna, nakshatra, dasha, the day's verdict and the
+   strongest gauge dimension.
+4. Two doors: **📄 सम्पूर्ण कुण्डली PDF** (`/report`, decluttered per Module 5)
    and **📞 पंडित जी से सीधी बात** (VIP Concierge).
-4. A **ScholarHandoverPacket** (`src/lib/kashi/scholarHandover.ts`) is generated
+5. A **ScholarHandoverPacket** (`src/lib/kashi/scholarHandover.ts`) is generated
    at the same moment — see §7.
 
 ## 7. VIP Concierge & ScholarHandoverPacket

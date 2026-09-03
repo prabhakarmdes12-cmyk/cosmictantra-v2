@@ -21,6 +21,7 @@ import {
   suspendFlow, resumeFlow, resumePromptHi, nextMissingSlot, INTAKE_SLOT_ORDER, INTAKE_SLOT_QUESTION_HI,
   routeFollowUp, recordFact, detectLifeConcern, lifeConcernReply, LIFE_PATHWAY_CHIPS,
   nextBestActions, INTERRUPTING_INTENTS, MATCH_THRESHOLD,
+  normalizeBirthDateInput, normalizeBirthTimeInput,
   type ConversationState, type FlowFrame,
 } from '../src/lib/kashi/conversationCore';
 import { buildScholarHandoverPacket } from '../src/lib/kashi/scholarHandover';
@@ -149,12 +150,56 @@ test.describe('KC3 — EntityExtractor and ConversationState', () => {
     }
   });
 
+  test('life domains are extracted from free text and stored as activeDomain', () => {
+    const cases: Array<[string, string]> = [
+      ['करियर में प्रगति कब होगी', 'CAREER'],
+      ['व्यापार में घाटा हो रहा है', 'CAREER'],
+      ['विवाह कब होगा', 'MARRIAGE'],
+      ['रिश्ता तय हो गया है', 'MARRIAGE'],
+      ['सेहत ठीक नहीं रहती', 'HEALTH'],
+      ['कालसर्प दोष का उपाय बताइए', 'REMEDY'],
+      ['विदेश यात्रा के योग हैं?', 'PROPERTY'],
+    ];
+    for (const [utter, dom] of cases) {
+      const st = applyEntities(createConversationState(), extractEntities(normalizeUtterance(utter)));
+      expect(st.activeDomain, utter).toBe(dom);
+    }
+  });
+
   test('"उस दिन" rebinds to the already-active date instead of shifting it', () => {
     let s = applyEntities(createConversationState(), extractEntities(normalizeUtterance('कल का पंचांग')));
     const kalsDate = s.activeDate;
     s = applyEntities(s, extractEntities(normalizeUtterance('उस दिन शुभ समय?')));
     expect(s.activeDate).toBe(kalsDate);
     expect(s.activeDateLabelHi).toBe('उसी दिन');
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* 3b. Birth-input normalizers — the canonical kernel only eats ISO     */
+/* ------------------------------------------------------------------ */
+
+test.describe('KC3b — birth-input normalizers', () => {
+  test('dates: DD/MM/YYYY, dotted, dashed and ISO all normalize; garbage is null', () => {
+    expect(normalizeBirthDateInput('15/06/1995')).toBe('1995-06-15');
+    expect(normalizeBirthDateInput('15.06.1995')).toBe('1995-06-15');
+    expect(normalizeBirthDateInput('15-6-1995')).toBe('1995-06-15');
+    expect(normalizeBirthDateInput('1995-06-15')).toBe('1995-06-15');
+    expect(normalizeBirthDateInput('  01/01/2001 ')).toBe('2001-01-01');
+    expect(normalizeBirthDateInput('15/13/1995')).toBeNull();
+    expect(normalizeBirthDateInput('जून में')).toBeNull();
+    expect(normalizeBirthDateInput('')).toBeNull();
+  });
+
+  test('times: 12-hour with AM/PM folds to 24-hour HH:mm; garbage is null', () => {
+    expect(normalizeBirthTimeInput('10:30 AM')).toBe('10:30');
+    expect(normalizeBirthTimeInput('10:30 pm')).toBe('22:30');
+    expect(normalizeBirthTimeInput('22:30')).toBe('22:30');
+    expect(normalizeBirthTimeInput('12:15 AM')).toBe('00:15');
+    expect(normalizeBirthTimeInput('12:00 PM')).toBe('12:00');
+    expect(normalizeBirthTimeInput('10.30')).toBe('10:30');
+    expect(normalizeBirthTimeInput('25:00')).toBeNull();
+    expect(normalizeBirthTimeInput('सुबह')).toBeNull();
   });
 });
 
@@ -432,6 +477,22 @@ test.describe('KC10 — the core is actually wired into the avatar and darshan',
     expect(suspIdx).toBeGreaterThan(0);
     expect(slotIdx).toBeGreaterThan(0);
     expect(suspIdx).toBeLessThan(slotIdx);
+  });
+
+  test('the intake domain chip feeds activeDomain, and free text feeds it too', () => {
+    expect(componentSource).toContain("applyEntities(convStateRef.current, { domain: chip.action.replace('SET_DOMAIN_', '') })");
+    expect(componentSource).toContain('applyEntities(convStateRef.current, extractEntities(norm))');
+  });
+
+  test('the pulse card is recited and carries the Executive Life Gauges from the canonical kernel', () => {
+    expect(componentSource).toContain('आपकी खगोलीय गणना पूर्ण हुई');           // speakText: recitation
+    expect(componentSource).toContain("import('@/lib/jyotish/canonicalSnapshot')");
+    expect(componentSource).toContain("import('@/lib/jyotish/executiveLifeGauge')");
+    expect(componentSource).toContain('computeExecutiveLifeDimensions(snapshot)');
+    expect(componentSource).toContain('षड्-आयामी जीवन मापक (Executive Life Gauges)');
+    expect(componentSource).toContain('normalizeBirthDateInput(seekerData.birthDate');
+    // gauge failure must never kill the pulse card
+    expect(componentSource).toContain('Executive gauges unavailable for pulse card');
   });
 
   test('resume is a real chip and a real utterance, and the nudge points at it', () => {

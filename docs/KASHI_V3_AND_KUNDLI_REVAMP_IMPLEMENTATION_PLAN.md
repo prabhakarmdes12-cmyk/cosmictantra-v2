@@ -1,6 +1,6 @@
 # Kashi V3 & Kundli Revamp — Implementation Plan
 
-**Status: IMPLEMENTED** (commits `1c38b34`, `666f3d1`, `df5f70a`, `ab02f6b` on branch `arena/01a06413-cosmictantra-v2`)
+**Status: IMPLEMENTED** (commits `1c38b34`, `666f3d1`, `df5f70a`, `ab02f6b`, `7d9a68c` on branch `arena/01a06413-cosmictantra-v2`; merged into the re-rooted `main` snapshot `0d65c24` by the local agent, reconciled back onto the session branch via merge `366eb25`, which also carries main's follow-up fix `f0ddab7`)
 
 This document is the authoritative implementation plan for the Kashi Sahayak V3
 revamp and the Kundli experience cleanup. It is written so a local agent can
@@ -31,7 +31,8 @@ module (no React, no I/O, no network) implementing every stage of the pipeline:
 |---|---|---|
 | LanguageNormalizer | `normalizeUtterance` | Whitespace collapse; case-insensitive synonym folding (`rahu kaal`→राहुकाल, `panchangam`→पंचांग, `kundali`→कुंडली …); `lang` judged *after* folding so Hinglish gets a Hindi voice |
 | WeightedIntentMatcher | `matchIntent`, `INTENT_CUES`, `MATCH_THRESHOLD` | Weighted cues per intent, best-score wins above 0.6. **Devanagari-safe boundaries**: JS `\b` is ASCII-only, so Hindi cues use lookarounds against `\u0900-\u097F` — `/\bक्यों\b/` never matches `क्यों?`, and `क्योंकि` must not match either |
-| EntityExtractor | `extractEntities` / `applyEntities` | Subject (SELF/PARTNER/CHILD/PARENT/SIBLING — stem-matched so `बेटा/बेटे` both hit), date words (आज/कल/परसों/उस दिन), 8 city cues, detail level |
+| EntityExtractor | `extractEntities` / `applyEntities` | Subject (SELF/PARTNER/CHILD/PARENT/SIBLING — stem-matched so `बेटा/बेटे` both hit), date words (आज/कल/परसों/उस दिन), 8 city cues, life domain (CAREER/MARRIAGE/HEALTH/REMEDY/PROPERTY from free text), detail level |
+| Birth-input normalizers | `normalizeBirthDateInput` / `normalizeBirthTimeInput` | Intake answers (`15/06/1995`, `10:30 AM`) → canonical kernel form (`1995-06-15`, `10:30`); garbage → null, never a guessed date |
 | ConversationState & FlowStack | `ConversationState`, `suspendFlow`, `resumeFlow` | Immutable state; LIFO frame stack |
 | MissingSlotResolver | `nextMissingSlot`, `INTAKE_SLOT_ORDER` | name → birthDate → birthTime → birthCity → question |
 | Deterministic Router | `routeFollowUp`, `recordFact`, `detectLifeConcern` | Returns `null` to fall through to the factual engines (`resolveDeterministicKashiIntent` in `src/lib/ai/kashiIntentEngine.ts`, which was already deterministic) |
@@ -41,7 +42,8 @@ module (no React, no I/O, no network) implementing every stage of the pipeline:
 **Wiring.** `src/components/consultation/FloatingAIGuruAvatar.tsx` runs
 normalize → entities → match **before** the guided-intake slot machine, keeps
 the state in `convStateRef`, and records every gateway `GET_*` answer as the
-conversation's active fact (`postGuru`). The LLM gateway (`/api/guru/chat` →
+conversation's active fact (`postGuru`). The `SET_DOMAIN_*` intake chip writes
+`activeDomain` directly, and free-text domain cues keep it updated afterwards. The LLM gateway (`/api/guru/chat` →
 `processKashiSahayakQuery`) remains the *last* resort — deterministic panchang
 first — and the V3 core never calls it.
 
@@ -96,7 +98,18 @@ and continuous narration (`readingAutoAdvanceRef` + `shouldAutoAdvance` from
 ₹501 payment link, pandit group-call patch, PDF + Drive recording on WhatsApp,
 **ScholarHandoverPacket generation** (new)].
 
-**Implementation.** Pulse card + two CTAs + concierge modal existed from
+**Implementation.** The pulse card now also **recites** (a `speakText` reads
+out lagna, nakshatra, active dasha, the day's transit verdict and the top life
+gauge) and displays the **Executive 6-Dimension Life Gauges**: birth answers
+are normalized (`normalizeBirthDateInput`/`normalizeBirthTimeInput`), a
+`CanonicalJyotishSnapshot` is built via *dynamic import* of
+`src/lib/jyotish/canonicalSnapshot.ts` (chat bundle stays light), and
+`computeExecutiveLifeDimensions` feeds a six-bar gauge strip on the card. A
+kernel failure costs only the strip — never the pulse card. Verified at
+runtime: 6 dimensions with real scores (89/85/84/93/71/…% on the golden
+15-06-1995 10:30 Patna chart).
+
+Pulse card + two CTAs + concierge modal existed from
 Component 5. **New:** `src/lib/kashi/scholarHandover.ts` —
 `buildScholarHandoverPacket({seeker, pulse}, now?)` produces a deterministic,
 quotable packet (`SH-YYYYMMDD-XXXX`, FNV-1a suffix) with six Hindi sections:
@@ -142,9 +155,20 @@ would have rendered visibly was fixed into a proper JSX comment.
 
 ## Acceptance checklist
 
-- [x] `npx tsc --noEmit` — 0 errors
-- [x] `tests/kashi-conversation-core.spec.ts` — 36/36 passed
-- [x] `tests/kashi-sahayak-flows.spec.ts` + `tests/darshan-offerings.spec.ts` — 16 passed, 4 browser-skipped (Chromium unavailable in this sandbox; guarded by `tests/support/browserAvailable.ts`)
-- [x] `tests/kundli-download-reliability.spec.ts` — 12/12 (Gate 3e intact)
-- [x] Pre-existing suites untouched (`tests/kundli-v40/*` 165/165 as of `df5f70a`; `kashi-sahayak-corpus` failures are pre-existing, stash-verified)
+- [x] `npx tsc --noEmit` — 0 errors (after `npm install --ignore-scripts` + `node scripts/stub-prisma-client.mjs`; the prisma engine download is network-blocked in this sandbox — the committed stub script makes `tsc` reproducible after every restore)
+- [x] `tests/kashi-conversation-core.spec.ts` — 41/41 passed
+- [x] `tests/kashi-sahayak-flows.spec.ts` + `tests/darshan-offerings.spec.ts` + `tests/kundli-download-reliability.spec.ts` — 69 passed, 4 browser-skipped (Chromium unavailable in this sandbox; guarded by `tests/support/browserAvailable.ts`), Gate 3e intact
+- [x] `tests/kundli-v40/download-route.spec.ts` + `pdf-artifact.spec.ts` — 25/25 (incl. main's `f0ddab7` city-coordinate auto-resolve)
+- [x] Live smoke after history reconciliation: `/`, `/darshan`, `/report` all 200
+- [x] Pre-existing suites untouched (`kashi-sahayak-corpus` failures are pre-existing, stash-verified)
 - [x] Committed & pushed to `arena/01a06413-cosmictantra-v2` after every component
+
+### History note (important for reviewers)
+
+`origin/main` was **re-rooted** by the local agent into a fresh two-commit
+history (`0d65c24` snapshot of all V3 work + `f0ddab7` fixes) with no common
+ancestor to the old line. The session branch reconciled this with
+`git merge --allow-unrelated-histories -X theirs origin/main` (`366eb25`):
+the merged tree is **identical to `origin/main`** — nothing from either side
+was lost, and the session branch is now exactly the merge-ready state of main
+plus the Module-2/4 gap closures described above.

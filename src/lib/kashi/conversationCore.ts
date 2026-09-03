@@ -219,12 +219,26 @@ const LOCATION_CUES: Array<[RegExp, string]> = [
   [/प्रयागराज|इलाहाबाद|prayagraj/, 'प्रयागराज'],
 ];
 
+/**
+ * Life-domain cues — the same five domains the guided intake offers
+ * (SET_DOMAIN_CAREER … SET_DOMAIN_PROPERTY), detected from free text so the
+ * state's activeDomain is set even when the seeker never taps a chip.
+ */
+const DOMAIN_CUES: Array<[RegExp, string]> = [
+  [/करियर|नौकरी|व्यापार|व्यवसाय|business|career|job/, 'CAREER'],
+  [/विवाह|शादी|दाम्पत्य|सम्बंध|रिश्ता|marriage|wedding/, 'MARRIAGE'],
+  [/स्वास्थ्य|सेहत|रोग|बीमारी|आयु|health|disease/, 'HEALTH'],
+  [/राहु[\s-]*केतु|कालसर्प|ग्रह\s*शान्ति|उपाय|remedy/, 'REMEDY'],
+  [/भूमि|भवन|सम्पत्ति|विदेश|कानूनी|property|foreign/, 'PROPERTY'],
+];
+
 export interface EntityPatch {
   subject?: SubjectKind;
   dateShift?: 'ACTIVE' | '0' | '+1' | '+2';
   dateLabelHi?: string;
   location?: string;
   detailLevel?: DetailLevel;
+  domain?: string;
 }
 
 export function extractEntities(n: NormalizedUtterance): EntityPatch {
@@ -232,6 +246,7 @@ export function extractEntities(n: NormalizedUtterance): EntityPatch {
   for (const [re, kind] of SUBJECT_CUES) if (re.test(n.text)) { patch.subject = kind; break; }
   for (const [re, shift, label] of DATE_CUES) if (re.test(n.text)) { patch.dateShift = shift as EntityPatch['dateShift']; patch.dateLabelHi = label; break; }
   for (const [re, loc] of LOCATION_CUES) if (re.test(n.text)) { patch.location = loc; break; }
+  for (const [re, dom] of DOMAIN_CUES) if (re.test(n.text)) { patch.domain = dom; break; }
   if (INTENT_CUES.DETAIL_SHORT.some(([re]) => re.test(n.text))) patch.detailLevel = 'SHORT';
   else if (INTENT_CUES.DETAIL_PANDIT.some(([re]) => re.test(n.text))) patch.detailLevel = 'PANDIT';
   return patch;
@@ -241,6 +256,7 @@ export function applyEntities(state: ConversationState, patch: EntityPatch): Con
   const next: ConversationState = { ...state, stack: [...state.stack] };
   if (patch.subject) next.activeSubject = patch.subject;
   if (patch.location) next.activeLocation = patch.location;
+  if (patch.domain) next.activeDomain = patch.domain;
   if (patch.detailLevel) next.detailLevel = patch.detailLevel;
   if (patch.dateShift === 'ACTIVE' && state.activeDate) {
     next.activeDateLabelHi = patch.dateLabelHi ?? state.activeDateLabelHi;
@@ -251,6 +267,43 @@ export function applyEntities(state: ConversationState, patch: EntityPatch): Con
     next.activeDateLabelHi = patch.dateLabelHi ?? null;
   }
   return next;
+}
+
+/* ------------------------------------------------------------------ */
+/* 3b. Birth-input normalizers — intake answers → canonical kernel form */
+/* ------------------------------------------------------------------ */
+
+/**
+ * `15/06/1995`, `15.06.1995`, `15-6-1995` or `1995-06-15` → `YYYY-MM-DD`,
+ * or null when the answer is not a recognisable date. Deterministic; the
+ * kernel is only ever fed normalized values.
+ */
+export function normalizeBirthDateInput(raw: string): string | null {
+  const s = (raw || '').trim();
+  const iso = (y: string, mo: string, d: string): string | null => {
+    const m = Number(mo); const dd = Number(d);
+    if (!(m >= 1 && m <= 12 && dd >= 1 && dd <= 31)) return null;
+    return `${y}-${String(m).padStart(2, '0')}-${String(dd).padStart(2, '0')}`;
+  };
+  let m = /^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/.exec(s);
+  if (m) return iso(m[1], m[2], m[3]);
+  m = /^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/.exec(s);
+  if (m) return iso(m[3], m[2], m[1]);
+  return null;
+}
+
+/** `10:30 AM` / `10:30 pm` / `22:30` → 24-hour `HH:mm`, or null. */
+export function normalizeBirthTimeInput(raw: string): string | null {
+  const s = (raw || '').trim().toUpperCase().replace(/\s+/g, ' ');
+  const m = /^(\d{1,2})[:.](\d{2})(?::\d{2})?\s*(A\.?M\.?|P\.?M\.?)?$/.exec(s);
+  if (!m) return null;
+  let h = Number(m[1]);
+  const min = Number(m[2]);
+  const ap = (m[3] || '').replace(/\./g, '');
+  if (ap === 'PM' && h < 12) h += 12;
+  if (ap === 'AM' && h === 12) h = 0;
+  if (h > 23 || min > 59) return null;
+  return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
 }
 
 /* ------------------------------------------------------------------ */
