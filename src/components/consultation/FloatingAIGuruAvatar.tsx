@@ -44,6 +44,7 @@ import { ScriptureInsight, findScriptureInsight, SCRIPTURE_WISDOM_REGISTRY } fro
 import { MOOD_OPTIONS, MOOD_QUESTION_HI, getMoodById } from '@/lib/ai/moodOptions';
 import { resolveDeterministicKashiIntent } from '@/lib/ai/kashiIntentEngine';
 import { buildScholarHandoverPacket, type ScholarHandoverPacket } from '@/lib/kashi/scholarHandover';
+import { KASHI_JOURNEY_CONTEXT_EVENT, type KashiJourneyContext } from '@/lib/kashi/journeyContext';
 import {
   createConversationState, normalizeUtterance, matchIntent, extractEntities, applyEntities,
   suspendFlow, resumeFlow, resumePromptHi, nextMissingSlot, INTAKE_SLOT_QUESTION_HI,
@@ -413,6 +414,8 @@ export default function FloatingAIGuruAvatar() {
   const convStateRef = useRef<ConversationState>(createConversationState());
   const [lastSpeakableMsg, setLastSpeakableMsg] = useState<ChatMessage | null>(null);
   const activeCityRef = useRef<any>(null);
+  /** Sprint C §12: structured journey context (chart id / dasha ids / evidence ids / language / statuses). */
+  const journeyCtxRef = useRef<KashiJourneyContext | null>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
   /** Mirrors isOpen for callbacks (speech completion) that outlive a render. */
   const isOpenRef = useRef(false);
@@ -2345,6 +2348,27 @@ export default function FloatingAIGuruAvatar() {
       }, 400);
     }
   };
+
+  // Sprint C §12/§13 — additive bridge: conversion surfaces hand structured
+  // context (chart id, dasha ids, evidence ids, language, validation statuses).
+  // The assistant only opens and runs its OWN deterministic pipeline with the
+  // user's question; it never recalculates astrology from this payload.
+  const handleSendRef = useRef<((text: string) => void) | null>(null);
+  handleSendRef.current = (text: string) => { void handleSendMessage(undefined, text); };
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onJourneyContext = (e: Event) => {
+      const ctx = (e as CustomEvent<KashiJourneyContext>).detail;
+      if (!ctx || ctx.contractVersion !== 'kashi-journey-context-v1') return;
+      journeyCtxRef.current = ctx;
+      setIsOpen(true);
+      if (ctx.question) {
+        window.setTimeout(() => handleSendRef.current?.(ctx.question as string), 350);
+      }
+    };
+    window.addEventListener(KASHI_JOURNEY_CONTEXT_EVENT, onJourneyContext);
+    return () => window.removeEventListener(KASHI_JOURNEY_CONTEXT_EVENT, onJourneyContext);
+  }, []);
 
   return (
     <>

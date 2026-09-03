@@ -52,6 +52,8 @@ function AskQuestionContent() {
   const [showOtpHint, setShowOtpHint] = useState(false);
   const [isAiGuruOpen, setIsAiGuruOpen] = useState(false);
   const [selectedTier, setSelectedTier] = useState<'KUNDLI_PDF' | 'WRITTEN' | 'VOICE' | 'VIDEO' | 'PARIVAAR'>('WRITTEN');
+  const [carriedDasha, setCarriedDasha] = useState('');
+  const [carriedChart, setCarriedChart] = useState('');
 
   const [form, setForm] = useState({
     customerName: '',
@@ -72,6 +74,15 @@ function AskQuestionContent() {
     if (t && (t === 'KUNDLI_PDF' || t === 'WRITTEN' || t === 'VOICE' || t === 'VIDEO' || t === 'PARIVAAR')) {
       setSelectedTier(t as any);
     }
+    // Sprint C §12/§20 — carry context from the first-insight journey:
+    // chart reference, dasha period and the user's own question. Nothing
+    // here is birth data; the user still enters birth details in this flow.
+    const q = searchParams?.get('question');
+    if (q) {
+      setForm((f) => ({ ...f, customerQuestion: q }));
+    }
+    setCarriedDasha(searchParams?.get('dasha') || '');
+    setCarriedChart(searchParams?.get('chart') || '');
   }, [searchParams]);
 
   // Deliberately empty birth fields: prefilled birth data is how
@@ -472,6 +483,12 @@ function AskQuestionContent() {
                 onChange={e => setForm({ ...form, customerQuestion: e.target.value })}
                 placeholder={selectedTier === 'KUNDLI_PDF' ? 'सम्पूर्ण कुण्डली विवरण (वैकल्पिक)' : 'उदा. व्यापार में नया निवेश व साझेदारी करने हेतु आगामी ६ माह में क्या शुभ योग हैं?'}
               />
+              {carriedDasha && (
+                <p data-testid="ask-carried-context" className="mt-1.5 text-[10px] text-[#8E6F1D] dark:text-[#F0C968] font-mono-data">
+                  Carried from your chart · {carriedDasha}
+                  {carriedChart ? ` · chart ${carriedChart}` : ''}
+                </p>
+              )}
             </div>
 
             {/* Submit Bar */}

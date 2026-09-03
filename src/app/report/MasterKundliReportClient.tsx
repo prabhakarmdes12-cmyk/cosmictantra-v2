@@ -1325,13 +1325,6 @@ export default function MasterKundliReportClient() {
           role="tabpanel"
           aria-labelledby="report-tab-overview"
           className="max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-8">
-          {/* Executive 6-Dimension Life Gauge & 4-Quadrant Graha Archetype Dashboard */}
-          <ExecutiveLifeGaugeDashboard
-            dimensions={executiveLifeDimensions}
-            archetypeCards={grahaArchetypeCards}
-            lang={lang}
-          />
-
           {/* Row 1: D1 chart + current period */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-white dark:bg-[#121422] rounded-2xl p-5 border border-[#E5D7BC] dark:border-white/10 shadow-sm space-y-3">
@@ -1704,7 +1697,26 @@ export default function MasterKundliReportClient() {
           role="tabpanel"
           aria-labelledby="report-tab-workbench"
           className="max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-8">
-          
+
+          {/* Sprint C §16 — synthetic score matrix moved out of the consumer
+              overview. Shown here only as a clearly-labelled EXPERIMENTAL
+              Explorer surface; NOT authoritative until engine qualification. */}
+          <div data-testid="executive-life-explorer" className="rounded-2xl border border-amber-500/40 bg-amber-500/5 p-4">
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <span className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/40 text-[10px] font-mono-data font-bold uppercase tracking-wider">
+                Explorer / Experimental
+              </span>
+              <span className="text-[10px] font-mono-data text-[#78716C] dark:text-[#A8A29E]">
+                Engine qualification pending — not an authoritative reading.
+              </span>
+            </div>
+            <ExecutiveLifeGaugeDashboard
+              dimensions={executiveLifeDimensions}
+              archetypeCards={grahaArchetypeCards}
+              lang={lang}
+            />
+          </div>
+
           {/* Top Workbench Row: Divisional Chart Matrix & Live Inspector */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             

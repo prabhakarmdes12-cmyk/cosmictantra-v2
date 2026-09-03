@@ -26,31 +26,64 @@ import {
 } from 'lucide-react';
 import { getKundliById, StoredKundliRecord, listAllKundlis } from '../../../lib/jyotish/kundliStore';
 import NorthIndianChart from '../../../components/NorthIndianChart';
+import KundliFirstInsight from '../../../components/kundli/KundliFirstInsight';
 
 export default function KundliWorkspaceClient({ id }: { id: string }) {
   const [kundli, setKundli] = useState<StoredKundliRecord | null>(null);
+  const [recordStatus, setRecordStatus] = useState<'loading' | 'found' | 'missing'>('loading');
   const [activeTab, setActiveTab] = useState('overview');
   const [chartType, setChartType] = useState<number>(1); // 1 = D1, 9 = D9, 10 = D10, etc.
   const [selectedPlanet, setSelectedPlanet] = useState<string | null>(null);
   const [allCharts, setAllCharts] = useState<StoredKundliRecord[]>([]);
+  const [lang, setLang] = useState('en');
 
   useEffect(() => {
     const record = getKundliById(id);
     if (record) {
       setKundli(record);
+      setRecordStatus('found');
+    } else {
+      setRecordStatus('missing');
     }
     setAllCharts(listAllKundlis());
+    try {
+      const savedLang = window.localStorage.getItem('cosmictantra_lang');
+      if (savedLang) setLang(savedLang);
+    } catch {}
   }, [id]);
 
-  if (!kundli) {
+  if (recordStatus !== 'found' || !kundli) {
     return (
-      <div className="min-h-screen bg-[#0d0f14] text-[#e6edf3] flex items-center justify-center p-6">
-        <div className="text-center max-w-md bg-[#161b22] border border-[#30363d] rounded-2xl p-8 shadow-2xl">
-          <Compass className="w-12 h-12 text-[#d4af37] mx-auto mb-4 animate-spin" />
-          <h2 className="text-xl font-serif text-[#f0e6d2] mb-2">Loading Kundli Workspace...</h2>
-          <p className="text-sm text-[#8b949e]">Retrieving canonical deterministic snapshot for ID: {id}</p>
-        </div>
-      </div>
+      <>
+        {/* Sprint C §31 — coherent FAILED state, never a half-rendered chart. */}
+        <section className="min-h-[70vh] bg-[#FAF7F2] text-[#1C1917] flex items-center justify-center p-6">
+          <div className="text-center max-w-md bg-white border border-[#E5D7BC] rounded-3xl p-8 shadow-sm">
+            <Compass className="w-12 h-12 text-[#8E6F1D] mx-auto mb-4" />
+            <h2 className="font-editorial text-xl font-bold">
+              {recordStatus === 'loading' ? 'Loading your Kundli…' : 'This chart could not be opened'}
+            </h2>
+            <p className="mt-2 text-xs text-[#696256] leading-6">
+              {recordStatus === 'loading'
+                ? 'Reading the stored engine snapshot.'
+                : 'No stored chart exists for this reference. Create a new Kundli with your birth details — nothing partial is shown.'}
+            </p>
+            <div className="mt-5 flex flex-wrap justify-center gap-3">
+              <a
+                href="/"
+                className="inline-flex min-h-11 items-center px-5 py-2 rounded-xl bg-[#8E6F1D] text-white text-xs font-mono-data font-bold"
+              >
+                Create my Kundli →
+              </a>
+              <a
+                href="/dashboard"
+                className="inline-flex min-h-11 items-center px-5 py-2 rounded-xl border border-[#8E6F1D]/40 text-[#8E6F1D] text-xs font-mono-data font-bold"
+              >
+                My Kundli
+              </a>
+            </div>
+          </div>
+        </section>
+      </>
     );
   }
 
@@ -87,7 +120,21 @@ export default function KundliWorkspaceClient({ id }: { id: string }) {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0c10] text-[#e6edf3] font-sans selection:bg-[#d4af37]/30 selection:text-[#fff]">
+    <div className="text-[#1C1917] font-sans selection:bg-[#d4af37]/30 selection:text-[#fff]">
+      {/*
+        SPRINT C §9/§15 — first viewport is the consumer FIRST INSIGHT
+        (light, promise-first). All deeper deterministic content remains
+        accessible below, unchanged.
+      */}
+      <KundliFirstInsight record={kundli} lang={lang} />
+
+      {/* Deep Explorer/Scholar workspace — dark technical styling (§27) */}
+      <div id="kundli-explore" className="bg-[#0a0c10] text-[#e6edf3] min-h-screen">
+        <div className="bg-[#12161f] border-y border-[#21262d] px-6 py-3 text-center">
+          <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#8b949e]">
+            EXPLORE MY CHART — DETERMINISTIC SNAPSHOT · {ayanamshaName} · {engineVersion}
+          </span>
+        </div>
       {/* Top Header Bar */}
       <header className="sticky top-0 z-40 bg-[#12161f]/95 backdrop-blur-md border-b border-[#21262d] px-6 py-3">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
@@ -434,6 +481,7 @@ export default function KundliWorkspaceClient({ id }: { id: string }) {
           )}
 
         </div>
+      </div>
       </div>
     </div>
   );

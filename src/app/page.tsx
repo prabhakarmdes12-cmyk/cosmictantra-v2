@@ -15,6 +15,7 @@ import GlobalHeader from '@/components/layout/GlobalHeader';
 import LanguageSelectorModal from '@/components/layout/LanguageSelectorModal';
 import PersonalisationBridge from '@/components/PersonalisationBridge';
 import HeroSection from '@/components/HeroSection';
+import TrustStrip from '@/components/TrustStrip';
 import TodayAtAGlance from '@/components/TodayAtAGlance';
 import FestivalStrip from '@/components/FestivalStrip';
 import GlobalFooter from '@/components/layout/GlobalFooter';
@@ -132,9 +133,10 @@ export default function AppLandingPage() {
     setPanchangData(updated);
   }, [currentCity]);
 
-  // Initial visit analytics
+  // Initial visit analytics (§25) — no birth PII in payloads
   useEffect(() => {
-    analytics.track(ANALYTICS_EVENTS.HOME_VIEW, { city: currentCity.name, theme, lang });
+    analytics.track(ANALYTICS_EVENTS.HOME_VIEW, { city: currentCity?.name, theme, lang });
+    analytics.track(ANALYTICS_EVENTS.LANDING_VIEW, { route: '/', theme, lang });
   }, []);
 
   const handleToggleTheme = () => {
@@ -170,9 +172,10 @@ export default function AppLandingPage() {
         onLangToggle={() => setIsLanguageModalOpen(true)}
       />
 
-      {/* 2. Personalisation Bridge */}
+      {/* 2. Personalisation Bridge — fact-first day strip (§4) */}
       <PersonalisationBridge
         kundaliData={kundaliData}
+        panchangData={panchangData}
         onClearProfile={() => setKundaliData(null)}
         lang={lang}
         theme={theme}
@@ -192,6 +195,9 @@ export default function AppLandingPage() {
           lang={lang}
           theme={theme}
         />
+
+        {/* 3b. Trust strip (§5) */}
+        <TrustStrip lang={lang} />
 
         {/* 4. Today At A Glance (Vedic Day Arc & Stepped Ribbon) */}
         <TodayAtAGlance

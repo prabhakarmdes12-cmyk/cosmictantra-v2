@@ -11,6 +11,8 @@ import CosmicTantraShell from '@/components/layout/CosmicTantraShell';
 import DailyCosmicCard from '@/components/visual/DailyCosmicCard';
 import WhatsAppShareCard from '@/components/visual/WhatsAppShareCard';
 import TrustBar from '@/components/visual/TrustBar';
+import { analytics, ANALYTICS_EVENTS } from '@/lib/analytics';
+import { dispatchKashiJourneyContext } from '@/lib/kashi/journeyContext';
 import { 
   getProfiles, saveProfiles, getActiveProfile, setActiveProfileId, upsertProfile, RELATIONS 
 } from '@/lib/profileStore.js';
@@ -90,6 +92,11 @@ export default function DailyForecastPage() {
     const curr = getActiveProfile() || list[0];
     setActiveProfile(curr);
     setSelectedProfileId(curr.id);
+  }, []);
+
+  // Sprint C §18/§25 — Today participates in the same product system
+  useEffect(() => {
+    analytics.track(ANALYTICS_EVENTS.TODAY_VIEW, { route: '/daily', horizon: 'daily', lang: 'en' });
   }, []);
 
   // Compute forecasts whenever profile or horizon changes
@@ -201,10 +208,26 @@ export default function DailyForecastPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              data-testid="ask-about-today"
+              onClick={() => {
+                dispatchKashiJourneyContext({
+                  contractVersion: 'kashi-journey-context-v1',
+                  route: '/daily',
+                  language: 'en',
+                  question: 'What should I know about today?',
+                  source: 'CONVERSION_JOURNEY',
+                });
+              }}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#8E6F1D] hover:bg-[#785E18] text-white text-xs font-mono-data font-bold transition-all shadow-xs min-h-11"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>ASK ABOUT TODAY</span>
+            </button>
             <button
               onClick={() => setShowAddMember(true)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[#8E6F1D]/40 dark:border-[#D4AF37]/40 text-xs font-mono-data font-bold text-[#1C1917] dark:text-white hover:border-[#8E6F1D] transition-all bg-white/70 dark:bg-white/5 shadow-xs"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[#8E6F1D]/40 dark:border-[#D4AF37]/40 text-xs font-mono-data font-bold text-[#1C1917] dark:text-white hover:border-[#8E6F1D] transition-all bg-white/70 dark:bg-white/5 shadow-xs min-h-11"
             >
               <UserPlus className="w-3.5 h-3.5 text-[#8E6F1D] dark:text-[#D4AF37]" />
               <span>+ Add Family Member</span>

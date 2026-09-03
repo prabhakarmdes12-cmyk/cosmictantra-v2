@@ -367,3 +367,244 @@ export function adaptKundliOverview(input: KundliOverviewAdapterInput): KundliOv
       : null,
   };
 }
+
+/* ------------------------------------------------------------------ */
+/* Sprint C — consumer at-a-glance / WHAT-IS-ACTIVE-NOW / WHY evidence */
+/* Same read-only contract: engine fields are mapped verbatim. No      */
+/* calculation, no inference, no translation (i18n keys only).         */
+/* ------------------------------------------------------------------ */
+
+import type { StoredKundliRecord } from '@/lib/jyotish/kundliStore';
+
+export type ConsumerChartState =
+  | 'DRAFT'
+  | 'INPUT_INCOMPLETE'
+  | 'CALCULATED'
+  | 'VALIDATION_PENDING'
+  | 'READY'
+  | 'FAILED';
+
+export interface ChartStateResult {
+  state: ConsumerChartState;
+  /** Human-neutral reasons (i18n keys) for the state. */
+  reasons: string[];
+}
+
+export interface AtAGlanceField {
+  /** Engine value, verbatim. null = the engine did not produce it. */
+  value: string | null;
+  /** i18n key for the field label. */
+  labelKey: string;
+  /** True when the record is a preset/benchmark chart rather than user-created. */
+  readonly?: boolean;
+}
+
+export interface KundliAtAGlance {
+  lagna: AtAGlanceField;
+  moonRashi: AtAGlanceField;
+  nakshatra: AtAGlanceField & { pada: string | null; lord: string | null };
+  mahadasha: AtAGlanceField & { dates: string | null };
+  antardasha: AtAGlanceField;
+  periodString: string | null;
+  engineVersion: string | null;
+  ayanamshaName: string | null;
+  calculatedAt: string | null;
+  timeConfidence: 'EXACT' | 'APPROXIMATE' | 'UNKNOWN' | null;
+}
+
+export interface DashaWhyStep {
+  /** i18n key under `conversion.whySteps`. */
+  textKey: string;
+  /** Engine values interpolated by the UI. Never assembled into a claim here. */
+  values: Record<string, string>;
+  /** Which claim grammar chip the UI may show (truthful only). */
+  claim: 'CALCULATED' | 'DERIVED' | 'VALIDATION_PENDING';
+}
+
+export interface DashaTechnicalEvidence {
+  moonLongitude: string | null;
+  moonDegreeStr: string | null;
+  startingBalance: string | null;
+  engineVersion: string | null;
+  ayanamshaName: string | null;
+  ayanamshaValue: number | null;
+  astronomyProvider: { providerId: string | null; kernel: string | null; validationStatus: string | null };
+  conventionSummaryLines: string[];
+}
+
+const moonFrom = (record: StoredKundliRecord): any =>
+  (record.snapshot.planetsArray || (record.snapshot.planets as any[]) || []).find((p: any) => p.name === 'Moon') || null;
+
+function strOrNull(v: unknown): string | null {
+  return v === null || v === undefined || v === '' ? null : String(v);
+}
+
+/**
+ * Maps a stored engine record into the consumer "at a glance" model.
+ * Every value is read straight from the engine snapshot; missing values
+ * stay null and the UI must render them as unavailable, never invent them.
+ */
+export function adaptKundliAtAGlance(record: StoredKundliRecord | null): KundliAtAGlance | null {
+  if (!record || !record.snapshot) return null;
+  const s = record.snapshot;
+  const moon = moonFrom(record);
+  const nak = s.birthPanchang?.nakshatra;
+  return {
+    lagna: { value: strOrNull(s.lagna?.rashiName), labelKey: 'lagna' },
+    moonRashi: { value: strOrNull(moon?.rashiName) || strOrNull(s.birthPanchang?.moon?.rashiName), labelKey: 'moonRashi' },
+    nakshatra: {
+      value: strOrNull(nak?.name),
+      labelKey: 'nakshatra',
+      pada: strOrNull(nak?.pada),
+      lord: strOrNull(nak?.lord) || strOrNull(nak?.nakshatraLord),
+    },
+    mahadasha: {
+      value: strOrNull(s.dasha?.currentMahadasha),
+      labelKey: 'currentMahadasha',
+      dates: strOrNull(s.dasha?.currentDateRange),
+    },
+    antardasha: { value: strOrNull(s.dasha?.currentAntardasha), labelKey: 'currentAntardasha' },
+    periodString: strOrNull(s.dasha?.currentPeriodString),
+    engineVersion: strOrNull(s.meta?.engineVersion),
+    ayanamshaName: strOrNull(s.meta?.ayanamshaName),
+    calculatedAt: strOrNull(s.meta?.calculatedAt),
+    timeConfidence: record.timeConfidence || null,
+  };
+}
+
+/**
+ * Progressive WHY evidence for the CURRENT dasha only (Sprint C §10).
+ * Steps map engine fields verbatim; the UI translates and interpolates.
+ */
+export function buildDashaWhyEvidence(record: StoredKundliRecord): DashaWhyStep[] {
+  const s = record.snapshot;
+  const steps: DashaWhyStep[] = [];
+  const nak = s.birthPanchang?.nakshatra;
+  const moon = moonFrom(record);
+
+  if (nak?.name) {
+    steps.push({
+      textKey: 'whyMoonNakshatra',
+      values: { nakshatra: String(nak.name) },
+      claim: 'CALCULATED',
+    });
+  }
+  if (nak?.lord) {
+    steps.push({
+      textKey: 'whyNakshatraLord',
+      values: { nakshatra: String(nak.name), lord: String(nak.lord) },
+      claim: 'CALCULATED',
+    });
+  }
+  if (s.dasha?.startingBalance) {
+    steps.push({
+      textKey: 'whyBalance',
+      values: { balance: String(s.dasha.startingBalance) },
+      claim: 'CALCULATED',
+    });
+  }
+  const mds = (s.dasha?.mahadashas || []).slice(0, 5).map((m: any) => ({
+    lord: strOrNull(m.lord),
+    start: strOrNull(m.startFormatted),
+    end: strOrNull(m.endFormatted),
+  }));
+  if (mds.length > 0) {
+    steps.push({
+      textKey: 'whySequence',
+      values: { sequence: mds.map((m: any) => `${m.lord} (${m.start}–${m.end})`).join(' · ') },
+      claim: 'CALCULATED',
+    });
+  }
+  if (s.dasha?.currentMahadasha) {
+    steps.push({
+      textKey: 'whyMahadasha',
+      values: {
+        lord: String(s.dasha.currentMahadasha),
+        dates: strOrNull(s.dasha.currentDateRange) || '',
+      },
+      claim: 'CALCULATED',
+    });
+  }
+  if (s.dasha?.currentAntardasha) {
+    steps.push({
+      textKey: 'whyAntardasha',
+      values: { lord: String(s.dasha.currentAntardasha) },
+      claim: 'CALCULATED',
+    });
+  }
+  if (record.timeConfidence && record.timeConfidence !== 'EXACT') {
+    steps.push({
+      textKey: 'whyTimeUncertain',
+      values: { confidence: String(record.timeConfidence) },
+      claim: 'VALIDATION_PENDING',
+    });
+  }
+  if (moon) {
+    steps.push({
+      textKey: 'whyMoonDetail',
+      values: {
+        degree: strOrNull(moon.degreeStr) || (Number.isFinite(Number(moon.longitude)) ? `${Number(moon.longitude).toFixed(2)}°` : ''),
+        rashi: strOrNull(moon.rashiName) || '',
+      },
+      claim: 'CALCULATED',
+    });
+  }
+  return steps;
+}
+
+/** Technical (monospace) evidence — engine values verbatim, never derived. */
+export function buildDashaTechnicalEvidence(record: StoredKundliRecord): DashaTechnicalEvidence {
+  const s = record.snapshot;
+  const moon = moonFrom(record);
+  return {
+    moonLongitude: Number.isFinite(Number(moon?.longitude)) ? String(Number(moon.longitude).toFixed(6)) : null,
+    moonDegreeStr: strOrNull(moon?.degreeStr),
+    startingBalance: strOrNull(s.dasha?.startingBalance),
+    engineVersion: strOrNull(s.meta?.engineVersion),
+    ayanamshaName: strOrNull(s.meta?.ayanamshaName),
+    ayanamshaValue: Number.isFinite(Number(s.meta?.ayanamshaValue)) ? Number(s.meta.ayanamshaValue) : null,
+    astronomyProvider: {
+      providerId: strOrNull(s.meta?.astronomyProvider?.providerId),
+      kernel: strOrNull(s.meta?.astronomyProvider?.kernel),
+      validationStatus: strOrNull(s.meta?.astronomyProvider?.validationStatus),
+    },
+    conventionSummaryLines: Array.isArray(s.meta?.conventionRegistry?.summaryLines)
+      ? (s.meta.conventionRegistry.summaryLines as string[])
+      : [],
+  };
+}
+
+/**
+ * ONE canonical consumer chart state (§31). Maps declared engine statuses
+ * only: a record is VALIDATION_PENDING when the engine declares non-EXACT
+ * time confidence or a non-VALIDATED astronomy layer.
+ */
+export function deriveConsumerChartState(record: StoredKundliRecord | null): ChartStateResult {
+  if (!record) {
+    return { state: 'FAILED', reasons: ['stateChartMissing'] };
+  }
+  const bc = record.birthContext;
+  if (!bc || !bc.birthDate || !bc.birthTime || !Number.isFinite(bc.latitude) || !Number.isFinite(bc.longitude)) {
+    return { state: 'INPUT_INCOMPLETE', reasons: ['stateInputIncomplete'] };
+  }
+  const s = record.snapshot;
+  if (!s || !s.lagna || !s.dasha || !s.birthPanchang || !Array.isArray(s.planetsArray)) {
+    return { state: 'FAILED', reasons: ['stateSnapshotMissing'] };
+  }
+  const reasons: string[] = [];
+  if (record.timeConfidence && record.timeConfidence !== 'EXACT') {
+    reasons.push(record.timeConfidence === 'APPROXIMATE' ? 'stateApproximateTime' : 'stateUnknownTime');
+  }
+  const providerStatus = s.meta?.astronomyProvider?.validationStatus;
+  // Read-only mapping of the engine's own qualification vocabulary: the
+  // kernel reports INTERNALLY_VERIFIED / VALIDATED as trustworthy states;
+  // anything else declared by the engine is NOT trusted for consumer READY.
+  const VERIFIED_ASTRONOMY_STATUSES = new Set(['VALIDATED', 'INTERNALLY_VERIFIED']);
+  if (providerStatus && !VERIFIED_ASTRONOMY_STATUSES.has(providerStatus)) {
+    reasons.push('stateProviderPending');
+  }
+  return {
+    state: reasons.length > 0 ? 'VALIDATION_PENDING' : 'READY',
+    reasons,
+  };
+}
