@@ -154,6 +154,27 @@ test.describe('Sprint C — Today & report gating', () => {
     await expectNoHorizontalOverflow(page, 'daily-390');
   });
 
+  test('Today, with no saved profile, shows an intentional empty state (no demo chart)', async ({ page }) => {
+    await page.goto(BASE, { waitUntil: 'domcontentloaded' });
+    await page.evaluate(() => {
+      localStorage.removeItem('cosmictantra_profiles');
+      localStorage.removeItem('cosmictantra_active_profile');
+    });
+    await page.goto(`${BASE}/daily`, { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('[data-testid="daily-empty-state"]')).toBeVisible();
+    await expect(page.getByText('Priya Sharma')).toHaveCount(0);
+    // Add-member form must not accept an unverified city or empty birth fields
+    await page.getByRole('button', { name: /Add first family member/i }).click();
+    await page.locator('input[placeholder="e.g. Aarav Sharma"]').fill('Real Person');
+    await page.getByRole('button', { name: /Save to Family Directory/i }).click();
+    await expect(page.locator('[data-testid="member-form-error"]')).toBeVisible();
+    await page.locator('input[placeholder="e.g. Patna"]').fill('Nowhereville XYZ');
+    await page.locator('input[type="date"]').fill('1990-01-01');
+    await page.locator('input[type="time"]').fill('10:00');
+    await page.getByRole('button', { name: /Save to Family Directory/i }).click();
+    await expect(page.locator('[data-testid="member-form-error"]')).toContainText(/real city/i);
+  });
+
   test('Executive Life Matrix is not in the default report Overview', async ({ page }) => {
     await page.goto(`${BASE}/report?name=Tester&dob=1995-06-15&tob=10:30&city=Patna&lat=25.5941&lng=85.1376&tz=5.5`, {
       waitUntil: 'domcontentloaded',

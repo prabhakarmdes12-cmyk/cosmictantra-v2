@@ -42,7 +42,7 @@ LAND (/ landing_view)
 | `src/lib/translations.js` | `conversion` dictionary (en + hi, ~90 keys) + regional fallback inherit |
 | `src/app/page.tsx` | TrustStrip + fact strip wiring, LANDING_VIEW |
 | `src/app/report/MasterKundliReportClient.tsx` | Executive Life Matrix removed from Overview; preserved in Workbench (Explorer/Experimental banner) |
-| `src/app/daily/page.tsx` | ASK ABOUT TODAY entry + TODAY_VIEW |
+| `src/app/daily/page.tsx` | ASK ABOUT TODAY entry + TODAY_VIEW; **fabricated demo profiles removed** → intentional empty state; Add-member form: no silent Varanasi/Patna, canonical city resolution, no prefilled birth fields |
 | `src/app/ask/page.tsx` | Carried context (`chart`/`dasha`/`question`/`lang`) prefills question + hint |
 | `src/components/consultation/FloatingAIGuruAvatar.tsx` | Additive journey-context listener (open + seed user question through its own pipeline; no recalc) |
 | `docs/sprint-c-conversion-journey-design-map.md` | §32 design map A–H |
@@ -110,14 +110,19 @@ Specs authored for 320/360/390/430/768/1440+: landing stepper, date/time native 
 
 **Not producible in this sandbox** (Playwright browser CDN + Debian mirrors unreachable; no system browser libs — same limitation reported in Sprint B.1). Committed instead: `artifacts/runtime-evidence/sprint-c/` server-rendered HTML + HTTP status evidence, plus the browser spec that captures the journey in a normal environment (adds `artifacts/screenshots/sprint-c/*.png`).
 
-## 12. Known UX problems (non-blocking, flagged)
+## 12. Known UX problems (status after follow-up fixes)
 
-1. **`/daily` demo profiles** (Priya Sharma / Amit Sharma / Patna) still seed when no profile exists — pre-existing fabricated defaults outside this sprint's scope; needs a data-truth chore.
-2. `/daily` heading "72-Hour Vedic Forecast" framing remains (pre-existing interpretation-engine content, not redesigned per §18); alignment with the same product system is next.
-3. Landing main content remains client-gated (server HTML shows the skeleton + fact strip); SEO §24 follow-up needed for hero/trust copy outside JS.
-4. Insight "already saved" detection only verifies on save click — the Save CTA is idempotent so behaviour is correct, but the pre-saved label can be added later.
+**Resolved in follow-up commit (same sprint, "proceed" pass):**
+1. ~~`/daily` demo profiles~~ — **FIXED**: fabricated Priya Sharma / Amit Sharma seeding removed; empty store now shows an intentional `daily-empty-state` ("Start with your own chart") instead of a fake chart. Add-member form no longer defaults to Varanasi/1996-08-12/14:30 — birth fields start empty, city must resolve through `searchCities`, unknown city → visible error, and profile calculations bail when coordinates are missing (no silent Patna fallback).
+2. ~~Insight pre-saved state~~ — **FIXED**: `KundliFirstInsight` detects the already-active chart on mount and shows "Saved ✓" directly; save now sets the real returned profile id.
+
+**Still flagged (unchanged):**
+3. `/daily` heading "72-Hour Vedic Forecast" framing remains (pre-existing interpretation-engine content, not redesigned per §18); alignment with the same product system is next.
+4. Landing main content remains client-gated (server HTML shows the skeleton + fact strip); SEO §24 follow-up needed for hero/trust copy outside JS.
 5. The Kashi Sahayak bridge opens the assistant with the user's question; the assistant's own deterministic pipeline decides next steps (guide behaviour, by design) — its deep conversation tuning is out of this sprint.
-6. Browser suites unexecuted here — CI / normal env must run both `sprint-c-ui.spec.ts` and B.1 `navigation-ui.spec.ts`.
+6. Browser suites unexecuted here — CI / normal env must run both `sprint-c-ui.spec.ts` and B.1 `navigation-ui.spec.ts` (new empty-state + member-form steps added to `sprint-c-ui.spec.ts`).
+
+**Re-verified after fixes:** `tsc` ✅ · validator ✅ · Sprint-C invariants **15/15** · B.1 22/22 + V40 9/9 ✅ · `next build` ✅ · prod smoke `/`, `/daily`, `/kundli/gandhi-1869` 200 ✅. Engine diff still empty (`git diff 0314aa7 -- src/lib/jyotish src/lib/astronomy src/engines src/lib/dashaEngine.js src/lib/panchang.js` = empty).
 
 ## 13. Exact diff stats
 

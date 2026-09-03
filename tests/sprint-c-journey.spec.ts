@@ -302,4 +302,23 @@ test.describe('Sprint C — Today page participation', () => {
     expect(src).toContain('ASK ABOUT TODAY');
     expect(src).toContain('TODAY_VIEW');
   });
+
+  test('daily page never seeds fabricated demo profiles or silent locations', () => {
+    const src = read('src/app/daily/page.tsx');
+    for (const banned of [
+      'Priya Sharma',
+      'Amit Sharma',
+      "useState('1996-08-12')",
+      "useState('14:30')",
+      "useState('Varanasi')",
+      'lat: 25.5941,\n      lng: 85.1376', // hardcoded member coords
+    ]) {
+      expect(src, `daily page still contains ${banned}`).not.toContain(banned);
+    }
+    expect(src).toContain('daily-empty-state');
+    expect(/no fabricated demo profiles/i.test(src)).toBe(true);
+    expect(src).toContain('searchCities(newMemberCity)');
+    expect(src).toContain('no location is assumed');
+    expect(src).toContain('member-form-error');
+  });
 });

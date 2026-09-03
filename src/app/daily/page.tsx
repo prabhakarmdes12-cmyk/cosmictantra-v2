@@ -13,6 +13,7 @@ import WhatsAppShareCard from '@/components/visual/WhatsAppShareCard';
 import TrustBar from '@/components/visual/TrustBar';
 import { analytics, ANALYTICS_EVENTS } from '@/lib/analytics';
 import { dispatchKashiJourneyContext } from '@/lib/kashi/journeyContext';
+import { searchCities } from '@/lib/cities';
 import { 
   getProfiles, saveProfiles, getActiveProfile, setActiveProfileId, upsertProfile, RELATIONS 
 } from '@/lib/profileStore.js';
@@ -53,45 +54,24 @@ export default function DailyForecastPage() {
   // New Member Form
   const [newMemberName, setNewMemberName] = useState('');
   const [newMemberRelation, setNewMemberRelation] = useState('Spouse');
-  const [newMemberDate, setNewMemberDate] = useState('1996-08-12');
-  const [newMemberTime, setNewMemberTime] = useState('14:30');
-  const [newMemberCity, setNewMemberCity] = useState('Varanasi');
+  // Truthful defaults: a member's birth details must be entered by the user,
+  // never prefilled with fabricated dates or a silent Varanasi location
+  // (Sprint C §6/§7 location truth).
+  const [newMemberDate, setNewMemberDate] = useState('');
+  const [newMemberTime, setNewMemberTime] = useState('');
+  const [newMemberCity, setNewMemberCity] = useState('');
+  const [memberError, setMemberError] = useState('');
 
-  // Load Profiles on mount
+  // Load Profiles on mount — NO fabricated demo profiles (Sprint C §31).
+  // When the user has no saved chart, Today shows an intentional empty state
+  // instead of pretending a fabricated chart exists.
   useEffect(() => {
-    let list = getProfiles();
-    if (!list || list.length === 0) {
-      const defaultProf = {
-        id: 'pf_default',
-        name: 'Priya Sharma',
-        relation: 'Self',
-        cosmicId: 'CT-4821',
-        birthDate: '1995-06-15',
-        birthTime: '10:30',
-        birthCity: 'Patna',
-        lat: 25.5941,
-        lng: 85.1376,
-        tz: 5.5
-      };
-      const spouseProf = {
-        id: 'pf_spouse',
-        name: 'Amit Sharma',
-        relation: 'Spouse',
-        cosmicId: 'CT-4822',
-        birthDate: '1992-11-20',
-        birthTime: '08:15',
-        birthCity: 'Patna',
-        lat: 25.5941,
-        lng: 85.1376,
-        tz: 5.5
-      };
-      list = [defaultProf, spouseProf];
-      saveProfiles(list);
-    }
+    const list = getProfiles() || [];
     setProfiles(list);
-    const curr = getActiveProfile() || list[0];
+    const curr = getActiveProfile() || list[0] || null;
     setActiveProfile(curr);
-    setSelectedProfileId(curr.id);
+    setSelectedProfileId(curr?.id ?? '');
+    setLoading(false);
   }, []);
 
   // Sprint C §18/§25 — Today participates in the same product system
@@ -101,15 +81,27 @@ export default function DailyForecastPage() {
 
   // Compute forecasts whenever profile or horizon changes
   useEffect(() => {
-    if (!activeProfile && selectedProfileId !== 'parivaar') return;
+    if (!activeProfile && selectedProfileId !== 'parivaar') {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
 
+    // Truthful coordinates only: a profile without verified geo data must
+    // never be silently calculated for Patna/Varanasi (Sprint C §6).
+    const lat = Number(activeProfile?.lat);
+    const lng = Number(activeProfile?.lng);
+    const tz = Number(activeProfile?.tz);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || !Number.isFinite(tz)) {
+      setLoading(false);
+      return;
+    }
     const now = new Date();
     const city = {
-      lat: activeProfile?.lat ?? 25.5941,
-      lng: activeProfile?.lng ?? 85.1376,
-      tz: activeProfile?.tz ?? 5.5,
-      name: activeProfile?.birthCity || 'Patna'
+      lat,
+      lng,
+      tz,
+      name: activeProfile?.birthCity || activeProfile?.birthPlace || 'Unknown place'
     };
 
     if (horizon === 'daily') {
@@ -148,6 +140,18 @@ export default function DailyForecastPage() {
   const handleAddMember = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMemberName.trim()) return;
+    if (!newMemberDate || !newMemberTime) {
+      setMemberError('Please enter birth date and time.');
+      return;
+    }
+
+    // Canonical geocoding only — never a silent city fallback.
+    const hits = searchCities(newMemberCity);
+    if (hits.length === 0) {
+      setMemberError('Please choose a real city from the directory — no location is assumed.');
+      return;
+    }
+    const city = hits[0];
 
     const newProf = upsertProfile({
       name: newMemberName,
@@ -155,10 +159,10 @@ export default function DailyForecastPage() {
       cosmicId: `CT-${Math.floor(1000 + Math.random() * 8999)}`,
       birthDate: newMemberDate,
       birthTime: newMemberTime,
-      birthCity: newMemberCity,
-      lat: 25.5941,
-      lng: 85.1376,
-      tz: 5.5
+      birthCity: `${city.name}, ${city.state}`,
+      lat: city.lat,
+      lng: city.lng,
+      tz: city.tz || 5.5
     });
 
     const updated = getProfiles();
@@ -166,7 +170,11 @@ export default function DailyForecastPage() {
     setActiveProfile(newProf);
     setSelectedProfileId(newProf.id);
     setShowAddMember(false);
+    setMemberError('');
     setNewMemberName('');
+    setNewMemberDate('');
+    setNewMemberTime('');
+    setNewMemberCity('');
   };
 
   const openShareCard = (pred: DailyDetail) => {
@@ -235,7 +243,41 @@ export default function DailyForecastPage() {
           </div>
         </div>
 
-        {/* 1. Family Profile Switcher Bar */}
+        {/* 0. Intentional empty state — no fabricated chart ever (§31) */}
+        {profiles.length === 0 && (
+          <section
+            data-testid="daily-empty-state"
+            aria-labelledby="daily-empty-title"
+            className="mt-8 rounded-3xl border border-[#8E6F1D]/30 bg-white/80 dark:bg-[#0E101D] p-8 sm:p-10 text-center shadow-sm"
+          >
+            <Compass className="w-10 h-10 text-[#8E6F1D] dark:text-[#D4AF37] mx-auto mb-4" />
+            <h2 id="daily-empty-title" className="font-editorial text-xl sm:text-2xl font-bold text-[#1C1917] dark:text-white">
+              Start with your own chart
+            </h2>
+            <p className="mx-auto mt-2 max-w-lg text-xs sm:text-sm leading-6 text-[#57524A] dark:text-[#B3ADA3]">
+              Today is calculated from real birth details. Add the first member of your
+              family — or create your Kundli — and this page will show your day. Nothing
+              is invented for you.
+            </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <button
+                onClick={() => setShowAddMember(true)}
+                className="inline-flex min-h-11 items-center gap-2 px-5 py-2.5 rounded-xl bg-[#8E6F1D] hover:bg-[#785E18] text-white text-xs font-mono-data font-bold shadow transition-colors"
+              >
+                <UserPlus className="w-4 h-4" /> + Add first family member
+              </button>
+              <a
+                href="/"
+                className="inline-flex min-h-11 items-center gap-2 px-5 py-2.5 rounded-xl border border-[#8E6F1D]/40 text-[#8E6F1D] text-xs font-mono-data font-bold hover:border-[#8E6F1D] transition-colors"
+              >
+                Create my Kundli →
+              </a>
+            </div>
+          </section>
+        )}
+
+        {/* 1. Family Profile Switcher Bar (only when a real profile exists) */}
+        {profiles.length > 0 && (<>
         <div className="mt-6 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
           {profiles.map((p) => {
             const isSelected = selectedProfileId === p.id && horizon !== 'parivaar';
@@ -313,6 +355,7 @@ export default function DailyForecastPage() {
             🌟 Yearly (Varshaphal)
           </button>
         </div>
+        </>)}
 
         {/* === VIEW 1: DAILY (72 HOURS) === */}
         {horizon === 'daily' && (
@@ -624,7 +667,8 @@ export default function DailyForecastPage() {
                       type="text"
                       required
                       value={newMemberCity}
-                      onChange={e => setNewMemberCity(e.target.value)}
+                      onChange={e => { setNewMemberCity(e.target.value); setMemberError(''); }}
+                      placeholder="e.g. Patna"
                       className="w-full p-3 rounded-xl border border-black/15 dark:border-white/15 bg-[#FAF7F2] dark:bg-[#070912] text-[#1C1917] dark:text-white focus:outline-none focus:border-[#8E6F1D]"
                     />
                   </div>
@@ -653,6 +697,11 @@ export default function DailyForecastPage() {
                   </div>
                 </div>
 
+                {memberError && (
+                  <p role="alert" data-testid="member-form-error" className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-300 dark:border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-semibold">
+                    {memberError}
+                  </p>
+                )}
                 <button
                   type="submit"
                   className="w-full py-3 rounded-xl bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#060709] font-bold hover:bg-[#A35C15] dark:hover:bg-[#E5C378] transition-all shadow-md mt-4"

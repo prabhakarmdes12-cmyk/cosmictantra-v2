@@ -119,17 +119,24 @@ export default function KundliFirstInsight({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [whyOpen]);
 
+  // Pre-saved detection: if this chart is already the active chart, show
+  // "Saved ✓" immediately instead of offering Save twice.
   useEffect(() => {
-    if (!saved || typeof window === 'undefined') return;
-    const stored = window.localStorage.getItem('cosmictantra_active_kundli');
-    if (!stored) return;
+    if (typeof window === 'undefined') return;
     try {
+      const stored = window.localStorage.getItem('cosmictantra_active_kundli');
+      if (!stored) return;
       const p = JSON.parse(stored);
-      if (p && p.name === record.personName && p.birthDate === record.birthContext.birthDate) {
+      if (
+        p &&
+        p.name === record.personName &&
+        p.birthDate === record.birthContext.birthDate &&
+        Number(Number(p.latitude ?? p.lat)) === Number(record.birthContext.latitude)
+      ) {
         setSaved(true);
       }
     } catch {}
-  }, [saved, record]);
+  }, [record]);
 
   const openWhy = () => {
     chitiSensory.playTick();
@@ -202,7 +209,7 @@ export default function KundliFirstInsight({
           timeConfidence: record.timeConfidence,
         })
       );
-      upsertProfile({
+      const savedProfile = upsertProfile({
         name: record.personName,
         birthDate: bc.birthDate,
         birthTime: bc.birthTime,
@@ -212,7 +219,7 @@ export default function KundliFirstInsight({
         tz: bc.timezone,
         relation: 'Self',
       });
-      setActiveProfileId('self');
+      setActiveProfileId(savedProfile?.id || null);
       setSaved(true);
       analytics.track(ANALYTICS_EVENTS.SAVE_KUNDLI, {
         chartId: record.id,
