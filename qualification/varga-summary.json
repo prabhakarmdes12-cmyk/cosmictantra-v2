@@ -1,0 +1,66 @@
+{
+  "runnerVersion": "varga-qualification-runner-1.0.0 (sprint D)",
+  "startedAtUtc": "2026-09-03T04:53:02.607Z",
+  "durationMs": 538,
+  "gate": "strict",
+  "fixtureSet": {
+    "id": "VARGA_BOUNDARY_BPHS_001",
+    "rows": 3420,
+    "probes": 6488,
+    "anchors": 28,
+    "sha256": "c1f7de6130876eececcdd32fb8f901223f2bef2f01f844ca544b63c934016aba",
+    "sourceStatus": "SOURCE_SECONDARY"
+  },
+  "scenarioCount": 100000,
+  "seed": 6209765,
+  "streamFingerprint": "D2CDD623",
+  "comparisons": {
+    "total": 1600000,
+    "fixtureMismatch": 0,
+    "boundaryProbesRun": 6488,
+    "probeMismatch": 0,
+    "anchorMismatch": 0
+  },
+  "independentPropertyChecks": 3606546,
+  "propertyViolations": 0,
+  "determinism": {
+    "samples": 1000,
+    "hardMismatches": 0,
+    "fpNoiseRecords": 0,
+    "maxDeviationDeg": 0
+  },
+  "goldenChartParity": {
+    "entities": 8,
+    "checks": 30,
+    "violations": 0,
+    "d60AscFlipSeconds": 107.42501814289093,
+    "d60MoonFlipSeconds": 777.7199364048056
+  },
+  "d10ExternalGate": {
+    "status": "INTERNAL_CROSSCHECK_ONLY",
+    "mayInfluenceConclusions": false
+  },
+  "findings": [
+    {
+      "id": "VQF-D10-GATE",
+      "severity": "NON_BLOCKING",
+      "code": "D10_EXTERNAL_GATE_OPEN_ITEM",
+      "detail": {
+        "status": "INTERNAL_CROSSCHECK_ONLY",
+        "mayInfluenceConclusions": false
+      },
+      "remediation": "D10 stays display-only until the golden validation register holds a case that AGREES with a named outside reference. Internal agreement must never open this gate."
+    },
+    {
+      "id": "VQF-RSK-004",
+      "severity": "NON_BLOCKING",
+      "code": "D60_SENSITIVITY_MEASURED",
+      "detail": {
+        "d60AscFlipSeconds": 107.42501814289093,
+        "d60MoonFlipSeconds": 777.7199364048056
+      },
+      "remediation": "D60 must never ground a definitive automated life reading without an explicit birth-time confidence qualification (04-risk-register.md RSK_004)."
+    }
+  ],
+  "verdict": "PASS"
+}

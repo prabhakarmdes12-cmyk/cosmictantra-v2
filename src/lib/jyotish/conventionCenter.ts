@@ -277,8 +277,10 @@ export const DECLARED_CONVENTIONS: Record<DeclaredConventionId, DeclaredConventi
     adoptedValueId: 'BPHS_SHODASHAVARGA',
     adoptedLabel: 'Brihat Parashara Hora Shastra Shodashavarga',
     definition:
-      'D1 Rashi: direct 30° divisions. D9 Navamsha: 3°20\' divisions from Mesha (chara), Simha (sthira), ' +
-      'Dhanu (dwisvabhava). D10 Dashamsha: 3°00\' divisions from the same sign (odd) / 9th from it (even).',
+      'D1 Rashi: direct 30° divisions. D9 Navamsha: 3°20\' parts; movable signs count from themselves, ' +
+      'fixed from the 9th from it, dual from the 5th from it (equivalently: Fire→Mesha, Earth→Makara, ' +
+      'Air→Tula, Water→Karka). D10 Dashamsha: 3°00\' parts from the same sign (odd) / 9th from it (even). ' +
+      'All sixteen schemes D1–D60 per BPHS Shodashavarga as tabulated in VARGA_BOUNDARY_BPHS_001.',
     sourceDoc: CONVENTION_REGISTRY_DOC,
     sourceSection: '§2.10 Divisional Chart Convention',
     alternatives: [
@@ -286,7 +288,16 @@ export const DECLARED_CONVENTIONS: Record<DeclaredConventionId, DeclaredConventi
     ],
     status: 'ADOPTED_WITH_OPEN_ITEM',
     notes: [
-      'OPEN ITEM: D10 internal verification continues per existing project evidence (Mission §7); it must not be declared externally verified without Sprint D qualification.'
+      'Sprint D qualification: all 16 divisions compared against the classical scheme tables ' +
+      '(VARGA_BOUNDARY_BPHS_001, 3420 rows + 6488 boundary probes + 28 anchors, sha256 c1f7de61…) with 0 mismatches; ' +
+      'independent D9 harmonic identity and dual-implementation parity verified; see varga-certification.md.',
+      'DECLARATION CORRECTION (Sprint D, CT_INV_004): the earlier text stated the D9 rule as "from Mesha (chara), ' +
+      'Simha (sthira), Dhanu (dwisvabhava)" — the mobility-based pattern of D16/D45, which is NOT the D9 rule the ' +
+      'engine implements. The implementation (movable→self, fixed→9th, dual→5th) was verified correct against the ' +
+      'classical scheme; the declaration now states that rule. No calculation changed — only the declaration text.',
+      'OPEN ITEMS: (1) D10 external-reference promotion gate remains VALIDATION_PENDING — internal agreement never ' +
+      'opens it (Mission §7); (2) RSK_004: D60 changes with ~minutes of clock time (measured: 107 s asc / 778 s Moon ' +
+      'for the golden chart) — D60 must never ground a definitive automated reading without birth-time confidence.'
     ]
   }
 };

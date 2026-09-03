@@ -2,7 +2,16 @@
  * PROTECTED CANONICAL JYOTISH KERNEL: Generic Varga Engine (Shodashavarga)
  * Implements classical Parashari mathematical algorithms for D1 to D60 harmonic divisional charts.
  * Complies with Invariants INV_JYOTISH_001, INV_JYOTISH_002, INV_JYOTISH_003.
+ *
+ * Sprint D qualification: all sixteen schemes verified against VARGA_BOUNDARY_BPHS_001
+ * (3420 scheme rows + 6488 boundary probes + 28 classical anchors, 0 mismatches) plus
+ * independent D9 harmonic identity, dual-implementation parity and vargottama identity
+ * property checks — see docs/reference-grade/varga-certification.md. The mapping rules
+ * were NOT changed by qualification; only verified (and the D9 declaration corrected).
  */
+
+/** CT_INV_008: the varga implementation is versioned like every other calculator. */
+export const VARGA_ENGINE_VERSION = 'varga-engine-1.0.0 (shodashavarga, sprint-D qualified)';
 
 export interface VargaPlanetPlacement {
   planet: string;

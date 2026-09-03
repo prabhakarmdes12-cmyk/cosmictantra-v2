@@ -20,13 +20,13 @@
 
 ---
 
-## 🚀 Guide for Online Agents: Picking Up Sprint D
+## 🚀 Guide for Online Agents: Picking Up Sprint E
 
 ### Current Engineering State
 - **Working branch**: `arena/01a0655c-cosmictantra-v2` (Sprint C work; `main` at Sprint B commit `167ad3b`).
 - **TypeScript**: `npx tsc --noEmit` exits with **0 errors**.
 - **Automated Tests**: full 20-spec Playwright sweep — **619 passed / 1 failed / 6 skipped**; the single failure is the pre-existing environmental `MR-07` milan-route case (`net::ERR_CONNECTION_REFUSED`, needs a live app server + DB, not a calculation defect).
-- **Current Milestone**: **Sprint C (Mass Astronomical Qualification) is COMPLETE** — certification upgraded from scaffold gate to a real gate decision.
+- **Current Milestone**: **Sprint D (D1/D9/D10 + Varga certification) is COMPLETE** (Sprint C astronomy gate: PASS at 100k).
 
 ### Sprint C (COMPLETE — this workspace)
 1. **Ayanamsha reconciled (RSK_009 → RESOLVED)**: versioned change `lahiri-registry-aligned-2.0.0` — `getLahiriAyanamsha(jd) = 23.85305556° + 1.39697128°/century · T`, conformant <0.5″ at J2000, <2″ at 1950; engine versioned `V37.0` (CT_INV_008). All engine-derived golden pins (reportId, Vimshottari balance, dasha dates, ayanamsha display, EV-13/14 baselines) re-baselined to the reconciled output with in-test provenance comments.
@@ -34,8 +34,17 @@
 3. **External reference corpus**: 189-row v2 golden seed (`ASTRO_SEED_JPL_DE441_002`, sha256 `6d0aa39c…`) — 147 rows SOURCE_VERIFIED from JPL Horizons/DE441 (21 epochs × 7 bodies, 1900–2100) + 42 SOURCE_SECONDARY Meeus mean-node rows. Full **100,000-scenario** run: **VERDICT PASS** — 300,000 property checks / 0 violations; 189 external comparisons = 185 match / 4 explained (Moon >2050 `DELTAT_EXTRAPOLATION_BEYOND_2050`, max 78.41″ @2100) / 0 divergences; determinism 0 hard mismatches; 0 blocking findings. See `astronomy-certification.md`.
 4. **Certification gate**: `docs/reference-grade/astronomy-certification.md` now carries the real full-scale decision (STATUS: QUALIFIED — Sprint C full-scale run PASSED). Interim note: the remaining 100k-row *bulk* corpus expansion is deferred to a later sprint (Sprint C+); the certification is against the 189-row seed corpus.
 
-### Scope for Sprint D (Next Actionable Sprint)
-**Divisional Charts (Varga) Qualification** — per the mission roadmap (§40): D9/D10 promotion-gate work and the D60 defect (`RSK_004`), plus ayanamsha-registry parity checks across varga computations.
+### Sprint D (COMPLETE — this workspace)
+**D1/D9/D10 + Varga certification** (Mission §7):
+1. **Fixture set** `VARGA_BOUNDARY_BPHS_001`: all sixteen classical Parashari schemes frozen as literal reference tables (3420 rows + 6488 ±1e-6° boundary probes + 28 classical anchors, sha256 `c1f7de61…`, tamper-evident on load).
+2. **Qualification runner** `varga-qualification-runner-1.0.0 (sprint D)` (`npm run qualify:varga`): 100,000 scenarios × 16 divisions — **1.6M reference comparisons / 0 mismatches, 6488/6488 probes exact, 3.6M independent property checks / 0 violations, 0 blocking findings; verdict PASS (scaffold + strict)**.
+3. **Independent property checks**: pure D9 harmonic identity `floor(lon/(10/3)) mod 12`, dual-implementation parity (`vargaEngine` vs `calculateNavamshaRashi`), D60 shashtiamsha structure, vargottama identity, golden-chart D1 = natal-rashi parity, FP-floor determinism sampling.
+4. **Declaration defect fixed (CT_INV_004)**: `VARGA_CONVENTION` misstated the D9 rule (it described the D16/D45 mobility pattern); implementation verified correct against the classical tables; declaration corrected, calculation untouched.
+5. **RSK_004 quantified**: D60 boundary sensitivity MEASURED on the run — ascendant ≈ 107 s / Moon ≈ 778 s of clock time per D60 step (golden chart); D60 stays excluded from authoritative tiers (`scholarSummary.ts`), gate spec enforces the visibility.
+6. **D10 promotion gate preserved closed** (`INTERNAL_CROSSCHECK_ONLY`) — internal agreement must never open it; only a named external reference can (see `docs/reference-grade/06-sprint-d-varga-qualification.md`).
+
+### Scope for Sprint E (Next Actionable Sprint)
+**Vimshottari + Panchanga certification** (Mission §8/§9): transition-timestamp verification (not just labels), panchanga elements vs independent references, dasha-boundary fixtures; RSK_002 (combustion orbs, Sprint H) stays queued.
 
 **Rules of Engagement**:
 - **Preserve working systems**: Do not replace working code; wrap and extend it.

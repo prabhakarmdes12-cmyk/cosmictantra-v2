@@ -19,7 +19,9 @@
     "typecheck": "tsc --noEmit",
     "qualify:astronomy": "tsx qualification/astronomy-qualification-runner.ts --scenarios 100000 --write-cert-doc",
     "qualify:astronomy:scaffold": "tsx qualification/astronomy-qualification-runner.ts --scenarios 1000 --write-cert-doc",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "qualify:varga": "tsx qualification/varga-qualification-runner.ts --scenarios 100000 --write-cert-doc",
+    "qualify:varga:scaffold": "tsx qualification/varga-qualification-runner.ts --scenarios 1000"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.77",
