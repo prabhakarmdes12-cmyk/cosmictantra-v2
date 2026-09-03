@@ -140,6 +140,11 @@ export interface AscendantReading {
   localSiderealTimeDegrees: number;
 }
 
+export interface McReading {
+  tropicalLongitudeDeg: number;
+  siderealLongitudeDeg: number;
+}
+
 export interface EphemerisReadingMeta {
   providerId: string;
   providerVersion: string;
@@ -149,7 +154,7 @@ export interface EphemerisReadingMeta {
   deltaTSeconds: number;
   ayanamsha: { system: AyanamshaSystem; degrees: number; dms: string };
   nodeMode: LunarNodeMode;
-  observer: { latitudeDeg: number; longitudeDeg: number };
+  observer: { latitudeDeg: number; longitudeDeg: number; obliquityOfEclipticDeg: number };
   /** Flags, not errors: recorded for observability (Mission Section 28). */
   warnings: string[];
 }
@@ -158,8 +163,8 @@ export interface EphemerisReading {
   meta: EphemerisReadingMeta;
   bodies: Record<GrahaId, BodyReading>;
   ascendant: AscendantReading | NotCalculated;
-  /** The working engine does not compute the Midheaven; declared, never faked. */
-  mc: NotCalculated;
+  /** Midheaven (Madhya Lagna). Real values since Sprint C; fixtures still declare NOT_CALCULATED. */
+  mc: McReading | NotCalculated;
   solarTimings: { sunriseUtc: string | null; sunsetUtc: string | null };
   /** Present only on FixtureProvider readings. */
   fixtureCoverage?: {
@@ -265,6 +270,26 @@ export function validateReadingInvariants(reading: EphemerisReading): void {
     }
   }
 
+  // Ascendant / MC, when present, must also be finite and in range.
+  if ('tropicalLongitudeDeg' in reading.ascendant && reading.ascendant) {
+    const asc = reading.ascendant as AscendantReading;
+    assertFinite(asc.tropicalLongitudeDeg, 'ascendant.tropicalLongitudeDeg', {});
+    if (asc.tropicalLongitudeDeg < 0 || asc.tropicalLongitudeDeg >= 360) {
+      throw new AstronomyProviderError('ASTRONOMY_INVARIANT_VIOLATED',
+        `ascendant.tropicalLongitudeDeg out of [0,360): ${asc.tropicalLongitudeDeg}`,
+        { invariantId: 'CT_INV_007', detail: {} });
+    }
+  }
+  if (reading.mc && 'tropicalLongitudeDeg' in reading.mc) {
+    const mc = reading.mc as McReading;
+    assertFinite(mc.tropicalLongitudeDeg, 'mc.tropicalLongitudeDeg', {});
+    if (mc.tropicalLongitudeDeg < 0 || mc.tropicalLongitudeDeg >= 360) {
+      throw new AstronomyProviderError('ASTRONOMY_INVARIANT_VIOLATED',
+        `mc.tropicalLongitudeDeg out of [0,360): ${mc.tropicalLongitudeDeg}`,
+        { invariantId: 'CT_INV_007', detail: {} });
+    }
+  }
+
   // Polar-risk flag (observability only — the math is still well-defined).
   if (Math.abs(reading.meta.observer.latitudeDeg) > POLAR_RISK_LATITUDE_DEG) {
     warn.push(`POLAR_RISK: |latitude| ${Math.abs(reading.meta.observer.latitudeDeg)} > ${POLAR_RISK_LATITUDE_DEG} deg (RSK_003); ascendant intersection behaviour must be reviewed before authoritative use.`);
@@ -304,7 +329,7 @@ export interface AstronomyProvider {
 /* SwissEphemerisProvider — production reference (wraps the working engine)   */
 /* ------------------------------------------------------------------------- */
 
-export const SWISS_EPHEMERIS_PROVIDER_VERSION = 'swisseph-provider-1.0.0 (kernel wrapper)';
+export const SWISS_EPHEMERIS_PROVIDER_VERSION = 'swisseph-provider-2.0.0 (kernel wrapper, ayanamsha-registry-aligned-2.0.0)';
 
 export class SwissEphemerisProvider implements AstronomyProvider {
   readonly descriptor: ProviderDescriptor;
@@ -324,7 +349,9 @@ export class SwissEphemerisProvider implements AstronomyProvider {
       notes: [
         'Wraps the existing, working in-process engine (src/lib/jyotish/celestialEngine.ts). No working calculation code was replaced.',
         'The mission charter names this the production reference provider. The ACTUAL kernel is astronomy-engine (Moshier-class series).',
-        'True Swiss Ephemeris parity must be proven by Sprint C mass qualification (100,000 scenarios vs trusted references) before any EXTERNALLY_VERIFIED claim is made (CT_INV_005).'
+        'v2.0.0 (Sprint C): ayanamsha reconciled to the declared registry standard 23°51\'11" @ J2000 (lahiri-registry-aligned-2.0.0, RSK_009) — a versioned, documented change; all sidereal longitudes shifted by −14.53" vs v1.',
+        'v2.0.0 (Sprint C): Midheaven implemented (RA(MC)=LST identity, verified per scenario); Ascendant rising-branch guarantee added for polar geometries (RSK_003 adversarial harness catch, exact antipodal correction, no effect within ±66°).',
+        'True Swiss Ephemeris parity must be proven by the Sprint C+ mass qualification (100,000 scenarios vs trusted references) before any EXTERNALLY_VERIFIED claim is made (CT_INV_005).'
       ],
       ...overrides
     };
@@ -374,7 +401,8 @@ export class SwissEphemerisProvider implements AstronomyProvider {
         nodeMode: snapshot.nodeMode,
         observer: {
           latitudeDeg: snapshot.observer.latitude,
-          longitudeDeg: snapshot.observer.longitude
+          longitudeDeg: snapshot.observer.longitude,
+          obliquityOfEclipticDeg: snapshot.observer.obliquityOfEclipticDeg
         },
         warnings: []
       },
@@ -395,8 +423,8 @@ export class SwissEphemerisProvider implements AstronomyProvider {
         localSiderealTimeDegrees: snapshot.observer.localSiderealTimeDegrees
       },
       mc: {
-        status: 'NOT_CALCULATED',
-        reason: 'The wrapped working engine does not compute the Midheaven. Declared as NOT_CALCULATED (CT_INV_006); scheduled for Sprint C/M certification.'
+        tropicalLongitudeDeg: normalizeAngle(snapshot.mc.tropicalLongitude),
+        siderealLongitudeDeg: normalizeAngle(snapshot.mc.siderealLongitude)
       },
       solarTimings: {
         sunriseUtc: snapshot.solarTimings.sunriseUtc,
@@ -569,7 +597,7 @@ export class FixtureProvider implements AstronomyProvider {
           dms: '0°00\'00"'
         },
         nodeMode: request.conventions.nodeMode,
-        observer: { latitudeDeg: request.latitudeDeg, longitudeDeg: request.longitudeDeg },
+        observer: { latitudeDeg: request.latitudeDeg, longitudeDeg: request.longitudeDeg, obliquityOfEclipticDeg: 0 },
         warnings: []
       },
       bodies,

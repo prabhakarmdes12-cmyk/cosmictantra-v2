@@ -26,7 +26,6 @@ import {
 } from '../qualification/toleranceModel';
 import {
   DECLARED_AYANAMSHA_J2000_DEG,
-  KNOWN_SPRINT_B_FINDINGS,
   runAstronomyQualificationDetailed,
   writeQualificationArtifacts
 } from '../qualification/astronomy-qualification-runner';
@@ -112,7 +111,7 @@ test.describe('SPRINT-B: tolerance model', () => {
 
 test.describe('SPRINT-B: qualification runner end-to-end', () => {
 
-  test('scaffold gate: full pipeline executes with exactly the two documented findings', () => {
+  test('Sprint C gate: full pipeline PASSES — ayanamsha reconciled, MC computed, properties verified', () => {
     const { report, divergences } = runAstronomyQualificationDetailed({
       scenarioCount: 1000,
       seed: DEFAULT_SCENARIO_SEED,
@@ -128,41 +127,47 @@ test.describe('SPRINT-B: qualification runner end-to-end', () => {
     expect(report.counts.determinismSamplesChecked).toBeGreaterThan(0);
     expect(report.requiredCoverageMissing).toEqual([]);
 
-    // 36 JPL/analytic comparisons: everything within tolerance except the recorded, explained Moon@2100 ΔT case.
-    expect(report.counts.fixtureComparisons).toBe(36);
+    // 189-row JPL/analytic corpus (21 epochs x 9 points): all within tolerance except the
+    // recorded, explained post-2050 Moon ΔT cases. Zero unexplained divergences.
+    expect(report.counts.fixtureComparisons).toBe(189);
     expect(report.counts.referenceDivergence).toBe(0);
-    expect(report.counts.explainedDivergence).toBe(1);
-    const explained = divergences.find(d => d.classification === 'EXPLAINED_DIVERGENCE')!;
-    expect(explained.point).toBe('Moon');
-    expect(explained.explanationCode).toBe('DELTAT_EXTRAPOLATION_BEYOND_2050');
+    expect(report.counts.explainedDivergence).toBe(4);
+    expect(report.counts.match).toBe(185);
+    const explained = divergences.filter(d => d.classification === 'EXPLAINED_DIVERGENCE');
+    for (const d of explained) {
+      expect(d.point).toBe('Moon');
+      expect(d.explanationCode).toBe('DELTAT_EXTRAPOLATION_BEYOND_2050');
+      expect(Number(d.utcTimestamp.slice(0, 4))).toBeGreaterThan(2050);
+    }
 
-    // External agreement floor (per-point means) pinned to actually-measured values.
+    // External agreement floor pinned to measured values (21-epoch worst cases).
     expect(report.perPointStatistics!['Sun'].maxAbsDeltaArcsec).toBeLessThan(36);
     for (const p of ['Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn']) {
       expect(report.perPointStatistics![p].maxAbsDeltaArcsec).toBeLessThan(72);
     }
 
-    // Exactly the two documented Sprint-B blocking findings — fail-closed, honestly reported.
-    const blockingIds = report.findings.filter(f => f.severity === 'BLOCKING').map(f => f.findingId).sort();
-    expect(blockingIds).toEqual([...KNOWN_SPRINT_B_FINDINGS].sort());
-    expect(report.verdict).toBe('FAIL_WITH_ONLY_KNOWN_FINDINGS');
-    expect(report.ok).toBe(true); // scaffold gate passes on known findings only
+    // Independent property verification ran on every scenario with zero violations.
+    expect(report.counts.independentPropertyChecks).toBeGreaterThanOrEqual(3000);
+    expect(report.counts.propertyViolations).toBe(0);
 
-    // Ayanamsha epoch finding carries the measured 14.5" divergence as evidence.
-    const ay = report.findings.find(f => f.findingId === 'AYANAMSHA_EPOCH_DECLARED_VS_IMPLEMENTED')!;
-    expect(ay.evidence!['deltaArcsec']).toBeGreaterThan(14);
-    expect(ay.evidence!['deltaArcsec']).toBeLessThan(15);
+    // Ayanamsha conforms to the declared registry standard (RSK_009 reconciled in v2.0.0).
     expect(DECLARED_AYANAMSHA_J2000_DEG).toBeCloseTo(23.8530555555, 9);
+
+    // ZERO blocking findings — the two Sprint B blockers were resolved by versioned changes.
+    const blocking = report.findings.filter(f => f.severity === 'BLOCKING');
+    expect(blocking.map(f => f.findingId)).toEqual([]);
+    expect(report.verdict).toBe('PASS');
+    expect(report.ok).toBe(true);
   });
 
-  test('strict gate blocks on the same known findings (fail closed doctrine)', () => {
+  test('strict gate also passes with zero blocking findings (fail closed doctrine holds)', () => {
     const { report } = runAstronomyQualificationDetailed({
       scenarioCount: 1000,
       gate: 'strict',
       fixtureSetRaw: fixturesJson
     });
-    expect(report.verdict).toBe('FAIL');
-    expect(report.ok).toBe(false);
+    expect(report.verdict).toBe('PASS');
+    expect(report.ok).toBe(true);
   });
 
   test('artifacts: summary, failures and statistics files are written with the required schemas', () => {
@@ -186,8 +191,8 @@ test.describe('SPRINT-B: qualification runner end-to-end', () => {
         expect(summary[key]).toBeDefined();
       }
       const failures = JSON.parse(fs.readFileSync(paths.failures, 'utf8'));
-      expect(failures.total).toBe(36);
-      expect(failures.divergences.length).toBe(36);
+      expect(failures.total).toBe(189);
+      expect(failures.divergences.length).toBe(189);
       for (const d of failures.divergences) {
         expect(['MATCH', 'EXPLAINED_DIVERGENCE', 'REFERENCE_DIVERGENCE', 'WITHIN_TOLERANCE', 'NOT_CALCULATED']).toContain(d.classification);
         expect(Number.isFinite(d.deltaArcsec)).toBe(true);

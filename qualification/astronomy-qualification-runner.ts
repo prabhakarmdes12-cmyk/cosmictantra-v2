@@ -51,16 +51,21 @@ import {
   type DivergenceRecord
 } from './toleranceModel';
 
-export const QUALIFICATION_RUNNER_VERSION = 'astronomy-qualification-runner-1.0.0';
+export const QUALIFICATION_RUNNER_VERSION = 'astronomy-qualification-runner-2.0.0 (sprint C)';
 /** Registry-declared Lahiri ayanamsha at J2000.0 (03-convention-registry.md §2.1): 23°51'11". */
 export const DECLARED_AYANAMSHA_J2000_DEG = 23 + 51 / 60 + 11 / 3600;
 
 export type QualificationGate = 'scaffold' | 'strict';
 
-/** Findings that are already documented, risk-registered and scheduled (Sprint C). */
+/**
+ * Findings already documented and risk-registered. Since Sprint C they are all
+ * NON_BLOCKING (the Sprint B blocking findings AYANAMSHA_EPOCH_DECLARED_VS_IMPLEMENTED
+ * and MC_NOT_CALCULATED were RESOLVED by the versioned reconciliation lahiri-registry-
+ * aligned-2.0.0 and the Midheaven implementation respectively). Any NEW blocking finding
+ * still fails the gate — documented findings cannot hide new defects.
+ */
 export const KNOWN_SPRINT_B_FINDINGS: readonly string[] = [
-  'AYANAMSHA_EPOCH_DECLARED_VS_IMPLEMENTED',
-  'MC_NOT_CALCULATED'
+  'DETERMINISM_FP_LAST_ULP_NOISE'
 ];
 
 export interface QualificationFinding {
@@ -98,6 +103,8 @@ export interface AstronomyQualificationReport {
     determinismMismatches: number;
     determinismFpNoiseSamples: number;
     determinismMaxFpDeviationDeg: number;
+    independentPropertyChecks: number;
+    propertyViolations: number;
     invariantViolations: number;
     fixtureComparisons: number;
     match: number;
@@ -125,6 +132,71 @@ export interface AstronomyQualificationReport {
 const PROBE_LOCATION = { latitudeDeg: 25.5941, longitudeDeg: 85.1376 }; // Patna (convention anchor)
 const SIGN_BOUNDARY_WINDOW_DEG = 0.05;
 const NAKSHATRA_BOUNDARY_WINDOW_DEG = 0.05;
+/** Property residual tolerance for the independent horizon/meridian identities (≈0.036"). */
+const PROPERTY_RESIDUAL_TOLERANCE_DEG = 1e-5;
+/** Obliquity cross-check tolerance vs the independent IAU 2006 series (arcseconds). */
+const OBLIQUITY_CROSSCHECK_TOLERANCE_ARCSEC = 5;
+
+/* --- Independent implementations for property-based verification (Mission §21) ---
+ * These use spherical-astronomy identities on a DIFFERENT path than the engine formulas,
+ * so agreement demonstrates the engine outputs satisfy their DEFINING properties. */
+
+function normalize180(x: number): number {
+  let v = ((x % 360) + 360) % 360;
+  if (v > 180) v -= 360;
+  return v;
+}
+
+/**
+ * Ascendant defining property: the ascendant ecliptic point lies ON the sensible horizon
+ * (altitude ≈ 0) on the RISING (eastern) branch (hour angle in (−180°, 0°)).
+ * Fully independent path: δ and RA from λ via spherical transforms, altitude from the
+ * standard horizon equation — no shared code with the engine's ascendant formula.
+ */
+function ascendantHorizonResidualDeg(
+  ascTropicalDeg: number, lstDeg: number, latDeg: number, obliquityDeg: number
+): { altitudeDeg: number; hourAngleDeg: number } {
+  const toRad = Math.PI / 180;
+  const lam = ascTropicalDeg * toRad;
+  const eps = obliquityDeg * toRad;
+  const phi = latDeg * toRad;
+  const dec = Math.asin(Math.sin(eps) * Math.sin(lam));
+  const ra = Math.atan2(Math.sin(lam) * Math.cos(eps), Math.cos(lam));
+  const H = normalize180(lstDeg - ra / toRad) * toRad;
+  const sinAlt = Math.sin(phi) * Math.sin(dec) + Math.cos(phi) * Math.cos(dec) * Math.cos(H);
+  const alt = Math.asin(Math.max(-1, Math.min(1, sinAlt)));
+  return { altitudeDeg: alt / toRad, hourAngleDeg: H / toRad };
+}
+
+/**
+ * MC defining property: the Right Ascension of the MC ecliptic point equals the Local
+ * Sidereal Time (upper culmination: |H| ≈ 0, cos H > 0). Independent round-trip path.
+ */
+function mcMeridianResidualDeg(
+  mcTropicalDeg: number, lstDeg: number, obliquityDeg: number
+): { hourAngleDeg: number } {
+  const toRad = Math.PI / 180;
+  const lam = mcTropicalDeg * toRad;
+  const eps = obliquityDeg * toRad;
+  const ra = Math.atan2(Math.sin(lam) * Math.cos(eps), Math.cos(lam));
+  return { hourAngleDeg: normalize180(lstDeg - ra / toRad) };
+}
+
+/**
+ * Independent obliquity series: IAU 2006 precession-nutation polynomial (arcsec → deg),
+ * distinct coefficient set from the engine's IAU 1976-based series.
+ */
+export function independentObliquityIau2006Deg(julianDayTT: number): number {
+  const T = (julianDayTT - 2451545.0) / 36525.0;
+  const arcsec =
+    84381.406 -
+    46.836769 * T -
+    0.0001831 * T * T +
+    0.0020034 * T * T * T -
+    0.000576 * T * T * T * T -
+    0.0000434 * T * T * T * T * T;
+  return arcsec / 3600;
+}
 
 function distanceToNearestBoundary(lonDeg: number, sectorDeg: number): number {
   const pos = ((lonDeg % sectorDeg) + sectorDeg) % sectorDeg;
@@ -174,7 +246,7 @@ export function runAstronomyQualificationDetailed(options: RunOptions = {}): Det
     }
   }
 
-  /* ---------------- 1. Ayanamsha epoch consistency (declared vs implemented) --- */
+  /* ---------------- 1. Ayanamsha epoch CONFORMANCE (declared == implemented) --- */
   let invariantViolations = 0;
   let ayanamshaJ2000Deg: number | null = null;
   try {
@@ -193,10 +265,10 @@ export function runAstronomyQualificationDetailed(options: RunOptions = {}): Det
         message:
           `Engine ayanamsha at J2000.0 is ${ayanamshaJ2000Deg.toFixed(6)}° but convention registry declares ` +
           `${DECLARED_AYANAMSHA_J2000_DEG.toFixed(6)}° (23°51'11") — divergence ${deltaArcsec.toFixed(2)}". ` +
-          'The implementation does not meet its own CT_INV_004 declaration.',
+          'The implementation does not meet its own CT_INV_004 declaration (regression of the Sprint C reconciliation).',
         evidence: { implementedDeg: ayanamshaJ2000Deg, declaredDeg: DECLARED_AYANAMSHA_J2000_DEG, deltaArcsec },
         remediation:
-          'Sprint C: reconcile the engine constant with the PAC/registry standard via a scholar-reviewed, versioned change (this shifts all charts and must never be done silently).'
+          'Restore/enforce the lahiri-registry-aligned-2.0.0 constant (23°51\'11" @ J2000, 50.290966"/yr). Never widen the tolerance to pass.'
       });
     }
   } catch (err) {
@@ -220,6 +292,8 @@ export function runAstronomyQualificationDetailed(options: RunOptions = {}): Det
   let determinismMismatches = 0;
   let determinismFpNoiseSamples = 0;
   let determinismMaxFpDeviation = 0;
+  let propertyChecks = 0;
+  let propertyViolations = 0;
   let signBoundaryScenarios = 0;
   let nakshatraBoundaryScenarios = 0;
   const coverageCounter: Record<string, number> = {};
@@ -300,6 +374,57 @@ export function runAstronomyQualificationDetailed(options: RunOptions = {}): Det
     const lons = Object.values(reading.bodies).map(b => b.tropicalLongitudeDeg);
     if (lons.some(l => distanceToNearestBoundary(l, 30) < SIGN_BOUNDARY_WINDOW_DEG)) signBoundaryScenarios++;
     if (lons.some(l => distanceToNearestBoundary(l, 360 / 27) < NAKSHATRA_BOUNDARY_WINDOW_DEG)) nakshatraBoundaryScenarios++;
+
+    // Independent property verification (Mission §21) — executed on EVERY scenario.
+    const asc = reading.ascendant;
+    const mcR = reading.mc;
+    if (asc && 'tropicalLongitudeDeg' in asc) {
+      propertyChecks++;
+      const r = ascendantHorizonResidualDeg(
+        asc.tropicalLongitudeDeg, asc.localSiderealTimeDegrees,
+        scenario.latitudeDeg, reading.meta.observer.obliquityOfEclipticDeg);
+      if (!Number.isFinite(r.altitudeDeg) || Math.abs(r.altitudeDeg) > PROPERTY_RESIDUAL_TOLERANCE_DEG || r.hourAngleDeg >= 0) {
+        propertyViolations++;
+        findings.push({
+          findingId: `ASCENDANT_HORIZON_PROPERTY_${scenario.scenarioId}`,
+          severity: 'BLOCKING',
+          classification: 'COSMICTANTRA_DEFECT',
+          message: `Ascendant fails its defining property at ${scenario.scenarioId}: altitude ${r.altitudeDeg.toFixed(8)}° (must be ≈0 on the horizon), hour angle ${r.hourAngleDeg.toFixed(6)}° (must be negative/eastern).`,
+          evidence: { scenario, altitudeDeg: r.altitudeDeg, hourAngleDeg: r.hourAngleDeg },
+          remediation: 'Fail closed. The ascendant formula or sidereal time is defective at this geometry.'
+        });
+      }
+    }
+    if (mcR && 'tropicalLongitudeDeg' in mcR && asc && 'localSiderealTimeDegrees' in asc) {
+      propertyChecks++;
+      const rm = mcMeridianResidualDeg(mcR.tropicalLongitudeDeg, asc.localSiderealTimeDegrees, reading.meta.observer.obliquityOfEclipticDeg);
+      if (!Number.isFinite(rm.hourAngleDeg) || Math.abs(rm.hourAngleDeg) > PROPERTY_RESIDUAL_TOLERANCE_DEG) {
+        propertyViolations++;
+        findings.push({
+          findingId: `MC_MERIDIAN_PROPERTY_${scenario.scenarioId}`,
+          severity: 'BLOCKING',
+          classification: 'COSMICTANTRA_DEFECT',
+          message: `MC fails its defining property at ${scenario.scenarioId}: hour angle ${rm.hourAngleDeg.toFixed(8)}° (must be ≈0, upper culmination).`,
+          evidence: { scenario, hourAngleDeg: rm.hourAngleDeg },
+          remediation: 'Fail closed. The MC formula does not satisfy RA(MC) = LST at this geometry.'
+        });
+      }
+    }
+    // Obliquity cross-check vs the independent IAU 2006 series.
+    propertyChecks++;
+    const epsIau = independentObliquityIau2006Deg(reading.meta.julianDayTT);
+    const obliquityDeltaArcsec = Math.abs(reading.meta.observer.obliquityOfEclipticDeg - epsIau) * 3600;
+    if (obliquityDeltaArcsec > OBLIQUITY_CROSSCHECK_TOLERANCE_ARCSEC) {
+      propertyViolations++;
+      findings.push({
+        findingId: `OBLIQUITY_SERIES_DIVERGENCE_${scenario.scenarioId}`,
+        severity: 'BLOCKING',
+        classification: 'REFERENCE_DIVERGENCE',
+        message: `Obliquity diverges from the independent IAU 2006 series at ${scenario.scenarioId}: ${obliquityDeltaArcsec.toFixed(3)}" > ${OBLIQUITY_CROSSCHECK_TOLERANCE_ARCSEC}".`,
+        evidence: { scenario, engineArcsec: reading.meta.observer.obliquityOfEclipticDeg * 3600, iau2006Arcsec: epsIau * 3600 },
+        remediation: 'Fail closed. Reconcile the obliquity series (documented, versioned change).'
+      });
+    }
   }
 
   /* ---------------- 3. External comparison vs golden fixtures --- */
@@ -407,20 +532,20 @@ export function runAstronomyQualificationDetailed(options: RunOptions = {}): Det
     });
   }
 
-  /* ---------------- 4. Declared capability gaps (MC) --- */
+  /* ---------------- 4. MC coverage gate (Sprint C: MC must be computed) --- */
   const mcProbe = provider.getSnapshot({
     utcTimestamp: '2000-01-01T12:00:00.000Z',
     ...PROBE_LOCATION,
     conventions: { ayanamshaSystem: 'LAHIRI_CHITRA_PAKSHA', nodeMode: 'MEAN_NODE' }
   });
-  if (mcProbe.mc.status === 'NOT_CALCULATED') {
+  if (mcProbe.mc && 'status' in mcProbe.mc && mcProbe.mc.status === 'NOT_CALCULATED') {
     findings.push({
       findingId: 'MC_NOT_CALCULATED',
       severity: 'BLOCKING',
       classification: 'GAP_NOT_CALCULATED',
       message: 'Midheaven (MC) is declared NOT_CALCULATED by the production provider; Mission §5 requires MC coverage for astronomy certification.',
       evidence: { reason: mcProbe.mc.reason },
-      remediation: 'Sprint C: implement and certify MC (and Ascendant cross-checks) in the wrapped engine.'
+      remediation: 'Restore the Sprint C Midheaven implementation in the wrapped engine.'
     });
   }
 
@@ -433,6 +558,8 @@ export function runAstronomyQualificationDetailed(options: RunOptions = {}): Det
     determinismFpNoiseSamples,
     determinismMaxFpDeviationDeg: Number(determinismMaxFpDeviation.toExponential(3)),
     invariantViolations,
+    independentPropertyChecks: propertyChecks,
+    propertyViolations,
     fixtureComparisons: divergenceRecords.length,
     match: divergenceRecords.filter(r => r.classification === 'MATCH').length,
     withinTolerance: divergenceRecords.filter(r => r.classification === 'WITHIN_TOLERANCE').length,
@@ -566,7 +693,11 @@ export function renderCertificationMarkdown(
   const lines: string[] = [];
   lines.push('# Astronomy Qualification Certification');
   lines.push('');
-  lines.push(`> **STATUS: ${report.verdict === 'PASS' ? 'QUALIFIED (pending Sprint C full-scale run)' : report.verdict === 'FAIL_WITH_ONLY_KNOWN_FINDINGS' ? 'SCAFFOLD GATE — KNOWN BLOCKING FINDINGS OPEN' : 'QUALIFICATION BLOCKED'}**`);
+  lines.push(`> **STATUS: ${report.verdict === 'PASS'
+      ? report.scenarioCount >= 100000
+        ? 'QUALIFIED — Sprint C full-scale run PASSED (scaffold gate)'
+        : 'QUALIFIED (full-scale 100k run pending)'
+      : report.verdict === 'FAIL_WITH_ONLY_KNOWN_FINDINGS' ? 'SCAFFOLD GATE — KNOWN BLOCKING FINDINGS OPEN' : 'QUALIFICATION BLOCKED'}**`);
   lines.push('> This file is GENERATED by `qualification/astronomy-qualification-runner.ts`. Never edit numbers by hand.');
   lines.push('> Only the numbers actually produced by the qualification pipeline may appear here (Mission §35).');
   lines.push('');
@@ -589,6 +720,12 @@ export function renderCertificationMarkdown(
   lines.push(`- **FP-equivalence violations (hard defect)**: ${report.counts.determinismMismatches}`);
   lines.push(`- **Non-byte-identical but FP-equivalent samples**: ${report.counts.determinismFpNoiseSamples}`);
   lines.push(`- **Max observed deviation**: ${report.counts.determinismMaxFpDeviationDeg} degrees (enforced floor: 1e-9° ≈ 0.0036 microarcsec)`);
+  lines.push('');
+  lines.push('## Independent property verification (Mission §21, every scenario)');
+  lines.push('');
+  lines.push(`- **Property checks executed**: ${report.counts.independentPropertyChecks}`);
+  lines.push(`- **Property violations**: ${report.counts.propertyViolations}`);
+  lines.push('- Checks: Ascendant horizon/rising identity, MC upper-culmination identity, obliquity vs independent IAU 2006 series.');
   lines.push('');
   lines.push('## External comparison (JPL Horizons golden seed)');
   lines.push('');
@@ -660,6 +797,7 @@ async function main(): Promise<void> {
   console.log(`Verdict: ${report.verdict} (gate=${report.gate})`);
   console.log(`Scenarios: ${report.counts.scenariosExecuted}/${report.scenarioCount} executed, ${report.counts.scenariosAborted} aborted`);
   console.log(`Determinism: ${report.counts.determinismSamplesChecked} samples, ${report.counts.determinismMismatches} hard mismatches, ${report.counts.determinismFpNoiseSamples} last-ULP FP-noise (max ${report.counts.determinismMaxFpDeviationDeg}°)`);
+  console.log(`Independent property checks: ${report.counts.independentPropertyChecks}, violations: ${report.counts.propertyViolations}`);
   console.log(`Fixture comparisons: ${report.counts.fixtureComparisons} (match ${report.counts.match}, explained ${report.counts.explainedDivergence}, divergence ${report.counts.referenceDivergence})`);
   console.log(`Findings: ${report.findings.length} (${report.findings.filter(f => f.severity === 'BLOCKING').length} blocking)`);
   for (const f of report.findings.filter(f => f.severity === 'BLOCKING')) {

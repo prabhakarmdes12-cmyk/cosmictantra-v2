@@ -372,7 +372,7 @@ export function getCanonicalJyotishSnapshot(context: NormalizedBirthContext): Ca
   return {
     meta: {
       calculatedAt: new Date().toISOString(),
-      engineVersion: 'CosmicTantra Professional Kernel V36.0 (Deterministic)',
+      engineVersion: 'CosmicTantra Professional Kernel V37.0 (Deterministic, ayanamsha-registry-aligned-2.0.0)',
       ayanamshaName: 'Chitra Paksha (Lahiri Standard)',
       ayanamshaValue: kundli.ayanamsha,
       julianDay: kundli.julianDay,

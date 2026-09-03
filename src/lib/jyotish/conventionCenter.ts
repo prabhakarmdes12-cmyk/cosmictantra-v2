@@ -128,9 +128,10 @@ export const DECLARED_CONVENTIONS: Record<DeclaredConventionId, DeclaredConventi
       { valueId: 'YUKTESHWAR', label: 'Yukteshwar', usagePolicy: 'RESERVED_FUTURE', note: 'Reserved by registry; not yet configurable.' },
       { valueId: 'FAGAN_BRADLEY', label: 'Fagan-Bradley', usagePolicy: 'RESERVED_FUTURE', note: 'Reserved by registry; not yet configurable.' }
     ],
-    status: 'ADOPTED_WITH_OPEN_ITEM',
+    status: 'ADOPTED',
     notes: [
-      'OPEN ITEM (RSK_009): the working engine constant at J2000 is 23°51\'25.5" (23.857092°), ~14.5" above the registry-declared 23°51\'11". Surfaced by the qualification harness (AYANAMSHA_EPOCH_DECLARED_VS_IMPLEMENTED); reconciliation is a Sprint C scholar-reviewed change, not a silent edit.'
+      'RSK_009 RESOLVED (Sprint C, versioned change lahiri-registry-aligned-2.0.0): the working constant was reconciled from 23°51\'25.5" (23.857092°) at J2000 to the registry-declared 23°51\'11" via getLahiriAyanamsha(jd) = 23.85305556° + 1.39697128°/century · T. ' +
+      'The reconciliation is versioned (CT_INV_008), conformant within 0.5" at J2000 and <2" at 1950, and verified against the JPL DE441 golden corpus (185 match / 4 explained / 0 divergence, see astronomy-certification.md). No silent convention swap (CT_INV_004).'
     ]
   },
   LUNAR_NODE_MODEL: {

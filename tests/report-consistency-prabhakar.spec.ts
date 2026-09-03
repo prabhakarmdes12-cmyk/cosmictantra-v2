@@ -53,7 +53,8 @@ test.describe('GATE 3: Multi-Surface Zero-Contradiction Verification for Prabhak
     const timeline = generatePersonalTimeline('Prabhakar', snapshot, 'LIFE');
     const juMD = timeline.events.find(e => e.id.includes('DASHA_MD_Jupiter'));
     expect(juMD).toBeDefined();
-    expect(juMD!.startDate).toBe('2023-02-02');
+    // 2023-02-02 -> 2023-02-01 with the Sprint C ayanamsha reconciliation (~0.65 day balance shift).
+    expect(juMD!.startDate).toBe('2023-02-01');
   });
 
   test('3. Invariant: Absolute Zero Discrepancies Across Surfaces', () => {

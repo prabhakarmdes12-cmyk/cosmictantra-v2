@@ -4,6 +4,10 @@
  * Shubh Muhurats, Rahu Kaal, Festivals/Vrats, and Personal Power/Caution Days.
  */
 
+// Ayanamsha unified onto the canonical reconciled implementation (Sprint C, RSK_009):
+// single source of truth in src/lib/jyotish/ayanamsha.ts (lahiri-registry-aligned-2.0.0).
+import { getLahiriAyanamsha } from '../lib/jyotish/ayanamsha';
+
 export interface PanchangDayData {
   dayNumber: number;
   dateString: string; // YYYY-MM-DD
@@ -361,11 +365,6 @@ function degToRad(d: number): number {
 
 function toJulianDay(d: Date): number {
   return d.getTime() / 86400000 + 2440587.5;
-}
-
-function getLahiriAyanamsha(jd: number): number {
-  const t = (jd - 2451545.0) / 36525;
-  return 23.856 + 1.396 * t;
 }
 
 function getSunLon(t: number): number {

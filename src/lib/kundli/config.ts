@@ -17,7 +17,7 @@ export const KUNDLI_PIPELINE_CONFIG = {
     houseSystem: 'EQUAL_SIGN',        // whole-sign houses from the ascendant
     nodeMode: 'MEAN_NODE',
     ephemerisProvider: 'ASTRONOMY_ENGINE_VSOP87_ELP2000',
-    engineVersion: 'V36.0',           // canonicalSnapshot meta.engineVersion
+    engineVersion: 'V37.0',           // canonicalSnapshot meta.engineVersion (Sprint C ayanamsha reconciliation)
     calculationVersion: 'kundli-calc-v1',
     reportVersion: 'kundli-report-v1',
   } as CalculationConfig,

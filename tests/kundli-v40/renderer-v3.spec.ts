@@ -36,7 +36,8 @@ test('the model is unchanged — renderer v3 consumes the same kundli-report-v2'
   const { result } = await goldenV3Artifact();
   // The whole point of a renderer swap is that the MODEL does not move.
   expect(result.sourceReport!.reportModelVersion).toBe('kundli-report-v2');
-  expect(result.sourceReport!.reportId).toBe('CT-KUNDLI-31346AC701E0CFD5');
+  // reportId is content-addressed; it changed with the Sprint C ayanamsha reconciliation.
+  expect(result.sourceReport!.reportId).toBe('CT-KUNDLI-F03981A49AFCE30F');
 
   // The strongest available statement of that: pipeline v2 and pipeline v3
   // build byte-identical models. Pinning a literal hash would only record
@@ -139,8 +140,10 @@ test.describe('SEMANTIC QA — the numbers on the page are the golden numbers', 
     const text = inspection.allText;
     expect(text).toContain('Rahu');
     expect(text).toContain('Mercury');
-    expect(text).toMatch(/5y\s*0m\s*4d/);
-    expect(text).toContain('2035-06-19');
+    // Balance shifted 4d -> 3d and Rahu end 2035-06-19 -> 2035-06-18 with the
+    // Sprint C ayanamsha reconciliation (Moon sidereal +14.13" at this epoch).
+    expect(text).toMatch(/5y\s*0m\s*3d/);
+    expect(text).toContain('2035-06-18');
   });
 
   test('yoga verdicts keep their three-way status, including NOT_CALCULATED', async () => {

@@ -106,7 +106,9 @@ test.describe('COSMICTANTRA MASTER KUNDLI V1 QUALIFICATION & ACCEPTANCE SUITE', 
     expect(book.volumes[16].sections[0].evidenceIds?.length).toBeGreaterThan(0);
 
     // Part XVII: Technical Appendix
-    expect(snap.meta.engineVersion).toContain('V36.0');
+    // Sprint C: engine version bumped V36.0 -> V37.0 for the versioned ayanamsha
+    // reconciliation (RSK_009, lahiri-registry-aligned-2.0.0) per CT_INV_008.
+    expect(snap.meta.engineVersion).toContain('V37.0');
 
     console.log('\\n===============================================================');
     console.log('COSMICTANTRA MASTER KUNDLI V1 ACCEPTANCE SCORECARD');

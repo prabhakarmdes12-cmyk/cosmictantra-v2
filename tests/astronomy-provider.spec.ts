@@ -53,8 +53,30 @@ test.describe('SPRINT-B: AstronomyProvider abstraction', () => {
     // Registry §2.2: Ketu is exactly Rahu + 180.
     const wrap = ((reading.bodies.Ketu.tropicalLongitudeDeg - reading.bodies.Rahu.tropicalLongitudeDeg - 180) % 360 + 360) % 360;
     expect(Math.min(wrap, 360 - wrap)).toBeLessThan(1e-9);
-    // CT_INV_006: MC must be declared NOT_CALCULATED, never fabricated.
-    expect(reading.mc.status).toBe('NOT_CALCULATED');
+    // Sprint C: MC is computed (Sprint B gap resolved) with finite, ranged values.
+    expect('tropicalLongitudeDeg' in reading.mc).toBe(true);
+    if ('tropicalLongitudeDeg' in reading.mc) {
+      expect(Number.isFinite(reading.mc.tropicalLongitudeDeg)).toBe(true);
+      expect(reading.mc.tropicalLongitudeDeg).toBeGreaterThanOrEqual(0);
+      expect(reading.mc.tropicalLongitudeDeg).toBeLessThan(360);
+      // Defining property: RA(MC) == LST (upper culmination) — independent round trip.
+      const toRad = Math.PI / 180;
+      const lam = reading.mc.tropicalLongitudeDeg * toRad;
+      const eps = reading.meta.observer.obliquityOfEclipticDeg * toRad;
+      const ra = Math.atan2(Math.sin(lam) * Math.cos(eps), Math.cos(lam)) / toRad;
+      const H = ((reading.ascendant as { localSiderealTimeDegrees: number }).localSiderealTimeDegrees - ra + 540) % 360 - 180;
+      expect(Math.abs(H)).toBeLessThan(1e-5);
+    }
+  });
+
+  test('CT_INV_004: ayanamsha implementation conforms to the declared registry standard (RSK_009 reconciled)', () => {
+    const provider = resolveAstronomyProvider();
+    const reading = provider.getSnapshot(request()); // J2000.0
+    const declared = 23 + 51 / 60 + 11 / 3600; // 23°51'11" (registry §2.1)
+    expect(Math.abs(reading.meta.ayanamsha.degrees - declared) * 3600).toBeLessThan(0.5);
+    // PAC epoch anchor: 1950.0 = 23°09'16"
+    const reading1950 = provider.getSnapshot(request({ utcTimestamp: '1950-01-01T12:00:00.000Z' }));
+    expect(Math.abs(reading1950.meta.ayanamsha.degrees - (23 + 9 / 60 + 16 / 3600)) * 3600).toBeLessThan(2);
   });
 
   test('CT_INV_007: identical requests produce byte-identical readings', () => {
@@ -132,8 +154,9 @@ test.describe('SPRINT-B: AstronomyProvider abstraction', () => {
 
   test('FixtureProvider serves genuine JPL seed values with full integrity checks', () => {
     const fixtureSet = loadAstronomyFixtureSet(fixturesJson);
-    expect(fixtureSet.fixtures.length).toBe(36);
-    expect(fixtureSet.fixtureSetId).toBe('ASTRO_SEED_JPL_DE441_001');
+    // Sprint C corpus: 147 JPL rows (SOURCE_VERIFIED, 7 bodies x 21 epochs) + 42 analytic node rows.
+    expect(fixtureSet.fixtures.length).toBe(189);
+    expect(fixtureSet.fixtureSetId).toBe('ASTRO_SEED_JPL_DE441_002');
 
     const provider = new FixtureProvider(fixturesJson as unknown as AstronomyFixtureSet);
     const reading = provider.getSnapshot(request()); // 2000-01-01T12:00:00Z is in the seed set
@@ -145,10 +168,10 @@ test.describe('SPRINT-B: AstronomyProvider abstraction', () => {
     expect(sunRow.sourceStatus).toBe('SOURCE_VERIFIED');
     expect(sunRow.sourceLocator).toContain('horizons.api');
 
-    // Fail closed: unknown instant, and MC/ascendant are declared NOT_CALCULATED.
+    // Fail closed: unknown instant; fixture MC/ascendant remain declared NOT_CALCULATED.
     expect(() => provider.getSnapshot(request({ utcTimestamp: '2001-01-01T00:00:00.000Z' })))
       .toThrow(/FIXTURE_NOT_FOUND|No golden fixtures/);
-    expect(reading.mc.status).toBe('NOT_CALCULATED');
+    expect('status' in reading.mc && reading.mc.status === 'NOT_CALCULATED').toBe(true);
   });
 
   test('fail closed: a single altered fixture byte trips the checksum (FIXTURE_TAMPERED)', () => {
