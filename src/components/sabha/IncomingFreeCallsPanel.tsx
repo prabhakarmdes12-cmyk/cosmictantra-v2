@@ -39,23 +39,37 @@ const timeAgo = (ts: number) => {
   return `${Math.floor(secs / 60)}m`;
 };
 
-export default function IncomingFreeCallsPanel({ scholarId }: { scholarId?: string }) {
+export default function IncomingFreeCallsPanel({ scholarId = 'ALL' }: { scholarId?: string }) {
   const router = useRouter();
   const [calls, setCalls] = useState<IncomingCall[]>([]);
   const [live, setLive] = useState<IncomingCall | null>(null);
   const [loading, setLoading] = useState(true);
   const [joined, setJoined] = useState<string | null>(null);
+  const prevSessionIdsRef = React.useRef<Set<string>>(new Set());
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch(`/api/sabha/sessions?view=pandit&scholarId=${encodeURIComponent(scholarId || 'SCH-KASHI-01')}`, {
+      const res = await fetch(`/api/sabha/sessions?view=pandit&scholarId=${encodeURIComponent(scholarId || 'ALL')}`, {
         cache: 'no-store'
       });
       const data = await res.json();
       if (data?.ok) {
-        setCalls(data.incoming || []);
-        const active = (data.incoming || []).find((c: IncomingCall) => c.state === 'ACTIVE' || c.state === 'CONNECTING');
+        const incomingCalls: IncomingCall[] = data.incoming || [];
+        setCalls(incomingCalls);
+        const active = incomingCalls.find((c: IncomingCall) => c.state === 'ACTIVE' || c.state === 'CONNECTING');
         setLive(active || null);
+
+        // Audible temple ringtone alert on newly discovered incoming call
+        const currentIds = new Set(incomingCalls.map(c => c.sessionId));
+        const hasNewCall = incomingCalls.some(c => !prevSessionIdsRef.current.has(c.sessionId));
+        if (hasNewCall && incomingCalls.length > 0) {
+          try {
+            chitiSensory.playBell();
+          } catch {
+            /* ignore audio policy */
+          }
+        }
+        prevSessionIdsRef.current = currentIds;
       }
     } catch {
       /* keep last snapshot */

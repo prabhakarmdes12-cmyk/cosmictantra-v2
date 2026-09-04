@@ -453,7 +453,7 @@ export default function PanditWorkspace() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         
         {/* INCOMING FREE CALLS (Secure Call Engine P1 — ring & accept, 1:1 WebRTC) */}
-        <IncomingFreeCallsPanel scholarId="SCH-KASHI-01" />
+        <IncomingFreeCallsPanel scholarId="ALL" />
 
         {/* TOP COCKPIT HEADER */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-3xl bg-[#0F1222] border border-[#8E6F1D]/40 text-white shadow-xl">

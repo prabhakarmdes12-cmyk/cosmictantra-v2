@@ -562,19 +562,25 @@ export function listSessionsForOps(): Array<ConsultationSession & { queueStatus:
 export function listIncomingForScholar(scholarId: string): Array<
   ConsultationSession & { queueStatus: CareQueueStatus; consultantToken: string }
 > {
+  const isAll = !scholarId || scholarId === 'ALL';
   return SabhaSessionStore.list()
     .filter(
       s =>
         !s.endedAt &&
-        s.scholar.scholarId === scholarId &&
+        (isAll || s.scholar.scholarId === scholarId || s.scholar.scholarId === 'SCH-PENDING') &&
         ['READY', 'CONNECTING', 'ACTIVE'].includes(s.state) &&
         s.initiationMode !== undefined
     )
-    .map(s => ({
-      ...s,
-      queueStatus: queueStatusFor(s),
-      consultantToken: SabhaAuthTokenEngine.generateToken(s.sessionId, scholarId, 'SCHOLAR', FREE_CALL_TOKEN_TTL_MINUTES)
-    }))
+    .map(s => {
+      const assignedId = s.scholar.scholarId && s.scholar.scholarId !== 'SCH-PENDING'
+        ? s.scholar.scholarId
+        : (isAll ? 'SCH-KASHI-01' : scholarId);
+      return {
+        ...s,
+        queueStatus: queueStatusFor(s),
+        consultantToken: SabhaAuthTokenEngine.generateToken(s.sessionId, assignedId, 'SCHOLAR', FREE_CALL_TOKEN_TTL_MINUTES)
+      };
+    })
     .sort((a, b) => b.createdAt - a.createdAt);
 }
 
