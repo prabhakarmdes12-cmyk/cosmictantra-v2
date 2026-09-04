@@ -533,3 +533,279 @@ model PjosConsentRecord {
   @@index([personId, status])
   @@index([accountId])
 }
+
+// ============================================================================
+// CHITIGRAM v0.2 — Operational Pilot Domain (Canonical, Organisation-scoped)
+// ============================================================================
+
+enum ChitigramConversationState {
+  CREATED
+  WAITING
+  ASSIGNED
+  RINGING
+  ACCEPTED
+  LIVE
+  ENDED
+  FOLLOW_UP
+  CLOSED
+  DECLINED
+  NO_ANSWER
+  CANCELLED
+  FAILED
+  REASSIGNED
+}
+
+enum ChitigramMessageType {
+  TEXT
+  SYSTEM
+  CONTEXT
+  ACTION
+  PAYMENT
+  CALL
+  VOICE
+  FILE
+}
+
+enum ChitigramMessageStatus {
+  SENT
+  DELIVERED
+  READ
+}
+
+enum ChitigramVisibility {
+  VISIBLE
+  INTERNAL
+}
+
+enum ChitigramConnectionState {
+  ONLINE
+  AWAY
+  OFFLINE
+}
+
+enum ChitigramAvailability {
+  AVAILABLE
+  BUSY
+  DND
+  OFF_DUTY
+}
+
+model ChitigramConversation {
+  id               String                      @id // stable conversationId, also sessionId alias stored in sessionId field
+  organizationId   String                      @default("cosmic-tantra")
+  domain           String                      @default("cosmic-tantra") // cosmic-tantra | hms | bazaarsetu
+  sessionId        String?                     @unique // backward compat: consultation sessionId alias
+  // Seeker context
+  seekerName       String?
+  seekerPhoneMasked String?
+  seekerUserId     String?
+  language         String                      @default("Hindi")
+  category         String                      @default("General Guidance")
+  originalQuestion String?
+  // Kundli/report reference
+  kundliRef        String?
+  kundliSummary    Json?
+  // Payment truth — only backend verification may set PAID/VERIFIED
+  paymentStatus    String                      @default("PENDING") // PENDING | VERIFIED | PAID | FAILED
+  paymentAmountInr Int                         @default(0)
+  paymentTransactionId String?
+  paymentReferenceId String?
+  paymentVerifiedAt DateTime?
+  paymentVerifiedBy String?
+  // Lifecycle state — server-authoritative, transitions validated
+  state            ChitigramConversationState  @default(CREATED)
+  // Assignment — operator manually assigns Pandit
+  assignedPractitionerId String?
+  assignedPractitionerName String?
+  assignedBy       String?
+  assignedAt       DateTime?
+  assignmentAcceptance String?                 // PENDING | ACCEPTED | DECLINED
+  // Waiting / queue tracking
+  waitingSince     DateTime?                   @default(now())
+  lastActivityAt   DateTime                    @updatedAt
+  closedAt         DateTime?
+  // Waiting time computed via waitingSince -> now if WAITING
+  createdAt        DateTime                    @default(now())
+  updatedAt        DateTime                    @updatedAt
+
+  participants     ChitigramParticipant[]
+  messages         ChitigramMessage[]
+  calls            ChitigramCall[]
+  assignments      ChitigramAssignment[]
+  auditEvents      ChitigramAuditEvent[]
+
+  @@index([organizationId, domain])
+  @@index([state])
+  @@index([assignedPractitionerId])
+  @@index([paymentStatus])
+  @@index([waitingSince])
+  @@index([sessionId])
+}
+
+model ChitigramParticipant {
+  id               String   @id @default(uuid())
+  organizationId   String   @default("cosmic-tantra")
+  domain           String   @default("cosmic-tantra")
+  conversationId   String
+  userId           String
+  role             String   // devotee | pandit | operator | system
+  displayName      String?
+  // Membership capabilities — denormalized for quick checks, authoritative via ChitigramCapabilities
+  capabilities     String[] @default([])
+  joinedAt         DateTime @default(now())
+  lastReadMessageId String?
+  lastSeenAt       DateTime @default(now())
+  isActive         Boolean  @default(true)
+
+  conversation     ChitigramConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@index([conversationId])
+  @@index([role])
+}
+
+model ChitigramMessage {
+  id               String                @id // stable messageId (server-assigned)
+  organizationId   String                @default("cosmic-tantra")
+  domain           String                @default("cosmic-tantra")
+  conversationId   String
+  clientMessageId  String?               @unique // idempotent POST — client-provided
+  sequence         Int                   // per-conversation strictly increasing
+  senderId         String?
+  senderRole       String                // devotee | pandit | operator | system
+  senderName       String?
+  type             ChitigramMessageType  @default(TEXT)
+  subType          String?               // ASTROLOGY.KUNDLI_INSIGHT | ASTROLOGY.DAKSHINA | legacy KUNDLI_INSIGHT etc
+  text             String?
+  // Legacy compat fields — mapped from new protocol
+  cardType         String?
+  cardPayload      Json?
+  payload          Json?                 // generic extensible payload (voice metadata, file refs, context, etc.)
+  visibility       ChitigramVisibility   @default(VISIBLE) // VISIBLE vs INTERNAL — CHITI TEAM ONLY
+  status           ChitigramMessageStatus @default(SENT)
+  // Server timestamps — authoritative
+  createdAt        DateTime              @default(now()) // server timestamp
+  updatedAt        DateTime              @updatedAt
+  // Delivery/read tracking
+  deliveredAt      DateTime?
+  readAt           DateTime?
+
+  conversation     ChitigramConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, sequence])
+  @@index([clientMessageId])
+  @@index([senderId])
+  @@index([visibility])
+  @@index([createdAt])
+}
+
+model ChitigramCall {
+  id               String   @id @default(uuid())
+  organizationId   String   @default("cosmic-tantra")
+  domain           String   @default("cosmic-tantra")
+  conversationId   String
+  roomId           String?
+  callerId         String
+  callerRole       String
+  recipientIds     String[] // all intended recipients (devotee, pandit, operator)
+  // Timestamps — server authoritative
+  createdAt        DateTime @default(now())
+  ringingAt        DateTime?
+  acceptedAt       DateTime?
+  startedAt        DateTime?
+  endedAt          DateTime?
+  durationSeconds  Int?
+  outcome          String?  // COMPLETED | NO_ANSWER | DECLINED | FAILED | CANCELLED | MISSED
+  failureReason    String?
+  // Warm transfer support — multi-participant
+  isWarmTransfer   Boolean  @default(false)
+  transferredBy    String?
+  transferredAt    DateTime?
+  holdState        String?  // NONE | HOLD | RESUMED
+
+  conversation     ChitigramConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([callerId])
+  @@index([outcome])
+  @@index([startedAt])
+}
+
+model ChitigramAssignment {
+  id               String   @id @default(uuid())
+  organizationId   String   @default("cosmic-tantra")
+  domain           String   @default("cosmic-tantra")
+  conversationId   String
+  practitionerId   String
+  practitionerName String?
+  assignedBy       String
+  assignedAt       DateTime @default(now())
+  acceptanceState  String   @default("PENDING") // PENDING | ACCEPTED | DECLINED
+  acceptedAt       DateTime?
+  declinedReason   String?
+  isActive         Boolean  @default(true)
+
+  conversation     ChitigramConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([practitionerId])
+  @@index([assignedBy])
+  @@index([acceptanceState])
+}
+
+model ChitigramPresence {
+  id               String                    @id @default(uuid())
+  organizationId   String                    @default("cosmic-tantra")
+  domain           String                    @default("cosmic-tantra")
+  userId           String                    @unique
+  userRole         String                    @default("operator") // devotee | pandit | operator
+  displayName      String?
+  connectionState  ChitigramConnectionState  @default(OFFLINE) // ONLINE | AWAY | OFFLINE — backed by server heartbeat
+  availability     ChitigramAvailability     @default(OFF_DUTY) // AVAILABLE | BUSY | DND | OFF_DUTY — for practitioners
+  lastSeenAt       DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+
+  @@index([connectionState])
+  @@index([availability])
+  @@index([userRole])
+}
+
+model ChitigramAuditEvent {
+  id               String   @id @default(uuid())
+  organizationId   String   @default("cosmic-tantra")
+  domain           String   @default("cosmic-tantra")
+  conversationId   String
+  actorId          String?
+  actorRole        String?
+  eventType        String   // CONVERSATION_CREATED | PAYMENT_VERIFIED | ASSIGNED | ACCEPTED | CALL_STARTED | CALL_ENDED | NOTE_ADDED | FOLLOW_UP | CLOSED | REASSIGNED | TRANSFER | HOLD etc
+  fromState        String?
+  toState          String?
+  details          Json?
+  createdAt        DateTime @default(now())
+
+  conversation     ChitigramConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([eventType])
+  @@index([actorId])
+  @@index([createdAt])
+}
+
+model ChitigramNotification {
+  id               String   @id @default(uuid())
+  organizationId   String   @default("cosmic-tantra")
+  domain           String   @default("cosmic-tantra")
+  userId           String
+  conversationId   String
+  type             String   // MESSAGE | CALL | ASSIGNMENT | TRANSFER | FOLLOW_UP
+  title            String
+  body             String?  // minimal safe info only
+  link             String?  // e.g. /consultation/room/[id] or /chitigram/inbox?conversationId=...
+  read             Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  @@index([userId, read])
+  @@index([conversationId])
+  @@index([type])
+}

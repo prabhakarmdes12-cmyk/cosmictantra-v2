@@ -52,6 +52,7 @@ import { chitiSensory } from '@/lib/chitiAudio';
 import { useWebRTC, WebRTCChatEntry } from '@/hooks/useWebRTC';
 import ChitiConnectVisualizer from '@/components/connect/ChitiConnectVisualizer';
 import ChitiConnectDock from '@/components/connect/ChitiConnectDock';
+import ChitigramChatDrawer from '@/components/chitigram/ChitigramChatDrawer';
 
 interface RoomView {
   sessionId: string;
@@ -506,67 +507,28 @@ export default function EncryptedConsultationRoom() {
               />
             </div>
 
-            {/* Optional Devotee Ephemeral Chat Slide-over / Modal */}
+            {/* Chitigram — Actionable Messaging Thread (Devotee) — replaces ephemeral chat */}
             {showDevoteeChat && (
-              <div className="fixed inset-y-0 right-0 z-50 w-full max-w-sm bg-[#0D101C] border-l border-[#D4AF37]/30 shadow-2xl flex flex-col p-4">
-                <div className="flex items-center justify-between pb-3 border-b border-white/10">
-                  <span className="font-bold text-xs text-[#FAF7F2] flex items-center gap-2">
-                    <MessageSquare className="w-4 h-4 text-[#D4AF37]" />
-                    <span>गोपनीय संदेश (Live Chat)</span>
-                  </span>
-                  <button
-                    onClick={() => setShowDevoteeChat(false)}
-                    className="p-1 rounded-lg bg-white/5 hover:bg-white/10 text-white cursor-pointer"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto py-3 space-y-2.5 text-xs">
-                  {chatMessages.length === 0 ? (
-                    <div className="text-center py-8 text-[11px] text-white/50">
-                      पंडित जी को कोई विवरण या जन्म समय यहाँ लिख कर भेज सकते हैं।
-                    </div>
-                  ) : (
-                    chatMessages.map(m => (
-                      <div
-                        key={m.id}
-                        className={`flex flex-col ${m.sender === 'SELF' ? 'items-end' : 'items-start'}`}
-                      >
-                        <div
-                          className={`p-3 rounded-2xl max-w-[85%] leading-relaxed ${
-                            m.sender === 'SELF'
-                              ? 'bg-[#D4AF37] text-black font-medium'
-                              : 'bg-white/10 text-white border border-white/10'
-                          }`}
-                        >
-                          <div className="font-bold text-[9px] opacity-75 mb-0.5">
-                            {m.sender === 'SELF' ? 'आप' : sessionView?.consultant.name || 'पंडित जी'}
-                          </div>
-                          <p>{m.text}</p>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                  <div ref={chatScrollRef} />
-                </div>
-
-                <form onSubmit={handleSendMessage} className="pt-2 border-t border-white/10 flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={inputMsg}
-                    onChange={e => setInputMsg(e.target.value)}
-                    placeholder="संदेश लिखें..."
-                    className="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+              <div className="fixed inset-0 z-50 flex justify-end">
+                <div
+                  className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                  onClick={() => setShowDevoteeChat(false)}
+                />
+                <div className="relative w-full max-w-md h-full p-2 sm:p-4 flex flex-col">
+                  <ChitigramChatDrawer
+                    conversationId={sessionId}
+                    role="devotee"
+                    consultantName={sessionView?.consultant.name || 'पंडित जी'}
+                    seekerName={cleanDevoteeName(sessionView?.customerDisplayName)}
+                    prashna={sessionView?.question || ''}
+                    onTriggerCall={() => {
+                      chitiSensory.playTick();
+                      if (connectionState !== 'CONNECTED' && connectionState !== 'CONNECTING') void join();
+                    }}
+                    onClose={() => setShowDevoteeChat(false)}
+                    className="h-full shadow-2xl"
                   />
-                  <button
-                    type="submit"
-                    disabled={!inputMsg.trim() || connectionState === 'ENDED'}
-                    className="p-2.5 rounded-xl bg-[#D4AF37] text-black disabled:opacity-40 cursor-pointer shadow-md"
-                  >
-                    <Send className="w-4 h-4" />
-                  </button>
-                </form>
+                </div>
               </div>
             )}
           </div>
@@ -894,59 +856,21 @@ export default function EncryptedConsultationRoom() {
                   </div>
                 )}
 
-                {/* Tab 3: CHAT */}
+                {/* Tab 3: CHAT — Chitigram Actionable Thread (replaces ephemeral WebRTC chat) */}
                 {scholarTab === 'CHAT' && (
-                  <div className="flex-1 flex flex-col min-h-0">
-                    <div className="flex-1 overflow-y-auto p-2 space-y-2.5 text-xs">
-                      {chatMessages.length === 0 ? (
-                        <div className="text-center py-10 text-[11px] text-white/50">
-                          भक्त के साथ कोई संदेश अभी दर्ज नहीं हुआ।
-                        </div>
-                      ) : (
-                        chatMessages.map(m => (
-                          <div
-                            key={m.id}
-                            className={`flex flex-col ${m.sender === 'SELF' ? 'items-end' : 'items-start'}`}
-                          >
-                            <div
-                              className={`p-3 rounded-2xl max-w-[85%] leading-relaxed ${
-                                m.sender === 'SELF'
-                                  ? 'bg-[#D4AF37] text-black font-medium rounded-br-xs'
-                                  : 'bg-white/10 border border-white/10 text-white rounded-bl-xs'
-                              }`}
-                            >
-                              <div className="font-bold text-[9px] opacity-75 mb-0.5">
-                                {m.sender === 'SELF' ? 'आप (पंडित जी)' : cleanDevoteeName(sessionView?.customerDisplayName)}
-                              </div>
-                              <p>{m.text}</p>
-                            </div>
-                            {m.timestamp > 0 && (
-                              <span className="text-[9px] text-[#A69F94] mt-0.5 px-2">
-                                {new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </span>
-                            )}
-                          </div>
-                        ))
-                      )}
-                      <div ref={chatScrollRef} />
-                    </div>
-
-                    <form onSubmit={handleSendMessage} className="pt-2 border-t border-white/10 flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={inputMsg}
-                        onChange={e => setInputMsg(e.target.value)}
-                        placeholder="भक्त को संदेश भेजें..."
-                        className="flex-1 px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
-                      />
-                      <button
-                        type="submit"
-                        disabled={!inputMsg.trim() || connectionState === 'ENDED'}
-                        className="p-2 rounded-xl bg-[#D4AF37] text-black disabled:opacity-40 cursor-pointer shadow-xs"
-                      >
-                        <Send className="w-3.5 h-3.5" />
-                      </button>
-                    </form>
+                  <div className="flex-1 flex flex-col min-h-0 -m-1">
+                    <ChitigramChatDrawer
+                      conversationId={sessionId}
+                      role="pandit"
+                      consultantName={sessionView?.consultant.name || 'आप (पंडित जी)'}
+                      seekerName={cleanDevoteeName(sessionView?.customerDisplayName)}
+                      prashna={sessionView?.question || ''}
+                      onTriggerCall={() => {
+                        chitiSensory.playTick();
+                        if (connectionState !== 'CONNECTED' && connectionState !== 'CONNECTING') void join();
+                      }}
+                      className="flex-1 min-h-[420px] border-0 shadow-none"
+                    />
                   </div>
                 )}
               </div>
