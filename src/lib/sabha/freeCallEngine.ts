@@ -602,6 +602,9 @@ export function getSessionRoomView(sessionId: string): {
     gracePeriodSeconds: number;
     durationSeconds?: number;
     customerDisplayName: string;
+    customerCity?: string;
+    category?: string;
+    language?: string;
     consultant: { scholarId: string; name: string; title: string; tradition: string };
     question: string;
   };
@@ -627,6 +630,9 @@ export function getSessionRoomView(sessionId: string): {
       gracePeriodSeconds: session.gracePeriodSeconds,
       durationSeconds,
       customerDisplayName: session.beneficiary.name,
+      customerCity: session.beneficiary.location,
+      category: session.category,
+      language: session.language,
       consultant: {
         scholarId: session.scholar.scholarId,
         name: session.scholar.name,
