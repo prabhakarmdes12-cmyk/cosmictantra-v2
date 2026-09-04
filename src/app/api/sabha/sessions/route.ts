@@ -23,6 +23,17 @@ import { initSeedSessions } from '@/lib/sabha/orchestrator';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key',
+  'Cache-Control': 'no-store'
+};
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
@@ -43,7 +54,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (!result.ok || !result.handle) {
-      return NextResponse.json({ ok: false, error: result.error || 'SESSION_CREATION_FAILED' }, { status: 400 });
+      return NextResponse.json({ ok: false, error: result.error || 'SESSION_CREATION_FAILED' }, { status: 400, headers: CORS_HEADERS });
     }
 
     const { session, customerToken } = result.handle;
@@ -65,11 +76,11 @@ export async function POST(req: NextRequest) {
           title: session.scholar.title
         }
       },
-      { status: 201, headers: { 'Cache-Control': 'no-store' } }
+      { status: 201, headers: CORS_HEADERS }
     );
   } catch (error: any) {
     console.error('Free-call session creation failed:', error);
-    return NextResponse.json({ ok: false, error: 'SESSION_CREATION_FAILED' }, { status: 500 });
+    return NextResponse.json({ ok: false, error: 'SESSION_CREATION_FAILED' }, { status: 500, headers: CORS_HEADERS });
   }
 }
 
@@ -111,7 +122,7 @@ export async function GET(req: NextRequest) {
         costLedger: s.costLedger,
         payment: { isVerified: s.payment.isVerified, amountInr: s.payment.amountInr }
       }));
-      return NextResponse.json({ ok: true, sessions }, { headers: { 'Cache-Control': 'no-store' } });
+      return NextResponse.json({ ok: true, sessions }, { headers: CORS_HEADERS });
     }
 
     // Pandit console view: incoming free-call requests for this scholar.
@@ -134,12 +145,12 @@ export async function GET(req: NextRequest) {
         consultantToken: s.consultantToken,
         consultantRoomUrl: `/consultation/room/${s.sessionId}?role=pandit&token=${encodeURIComponent(s.consultantToken)}`
       }));
-      return NextResponse.json({ ok: true, incoming }, { headers: { 'Cache-Control': 'no-store' } });
+      return NextResponse.json({ ok: true, incoming }, { headers: CORS_HEADERS });
     }
 
-    return NextResponse.json({ ok: false, error: 'Unknown view.' }, { status: 400 });
+    return NextResponse.json({ ok: false, error: 'Unknown view.' }, { status: 400, headers: CORS_HEADERS });
   } catch (error: any) {
     console.error('Session listing failed:', error);
-    return NextResponse.json({ ok: false, error: 'SESSION_LISTING_FAILED' }, { status: 500 });
+    return NextResponse.json({ ok: false, error: 'SESSION_LISTING_FAILED' }, { status: 500, headers: CORS_HEADERS });
   }
 }

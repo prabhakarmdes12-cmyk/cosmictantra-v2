@@ -5,6 +5,17 @@ import { getAllScholars, registerScholar } from '@/lib/sabha/directory';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key',
+  'Cache-Control': 'no-store'
+};
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+}
+
 /**
  * GET /api/sabha/practitioners
  * Lists all practitioners with active status, handover permalink, and profile info.
@@ -19,10 +30,10 @@ export async function GET() {
         handoverUrl: `/pandit/workspace?scholarId=${encodeURIComponent(s.scholarId)}`
       })),
       count: scholars.length
-    });
+    }, { headers: CORS_HEADERS });
   } catch (error: any) {
     console.error('Error fetching practitioners:', error);
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500, headers: CORS_HEADERS });
   }
 }
 
@@ -55,7 +66,7 @@ export async function POST(req: NextRequest) {
     if (!nameToUse) {
       return NextResponse.json(
         { ok: false, error: 'Full name or display name is required' },
-        { status: 400 }
+        { status: 400, headers: CORS_HEADERS }
       );
     }
 
@@ -142,9 +153,9 @@ export async function POST(req: NextRequest) {
         onboardingStatus: consultant.onboardingStatus,
         handoverUrl
       }
-    });
+    }, { headers: CORS_HEADERS });
   } catch (error: any) {
     console.error('Error in practitioner onboarding API:', error);
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500, headers: CORS_HEADERS });
   }
 }
