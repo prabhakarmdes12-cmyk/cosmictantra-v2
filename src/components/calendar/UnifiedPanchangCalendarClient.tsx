@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { 
   Sun, Moon, Calendar, Clock, Sparkles, Compass, MapPin, 
   ChevronRight, ShieldCheck, ArrowRight, Share2, AlertTriangle, 
@@ -33,7 +33,6 @@ interface UnifiedPanchangCalendarClientProps {
 }
 
 function UnifiedPanchangCalendarClientInner({ defaultView = 'month' }: UnifiedPanchangCalendarClientProps) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   
   // Resolve view from query param (?view=today or ?view=month) with fallback to defaultView
