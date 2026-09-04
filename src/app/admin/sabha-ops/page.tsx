@@ -16,9 +16,11 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   ShieldCheck,
   Phone,
+  PhoneCall,
   Clock,
   CheckCircle2,
   RefreshCw,
@@ -89,6 +91,7 @@ const queueStatusBadge: Record<string, { label: string; cls: string }> = {
 };
 
 export default function SabhaOperationsConsole() {
+  const router = useRouter();
   const [sessions, setSessions] = useState<OpsSession[]>([]);
   const [scholars, setScholars] = useState<DirectoryScholar[]>([]);
   const [selectedSession, setSelectedSession] = useState<OpsSession | null>(null);
@@ -98,6 +101,7 @@ export default function SabhaOperationsConsole() {
   const [busy, setBusy] = useState<string | null>(null);
   const [copiedFor, setCopiedFor] = useState<string | null>(null);
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevUnassignedIdsRef = useRef<Set<string>>(new Set());
 
   const loadSessions = useCallback(async () => {
     try {
@@ -109,6 +113,19 @@ export default function SabhaOperationsConsole() {
         setSelectedSession(prev =>
           prev ? list.find(s => s.sessionId === prev.sessionId) || list[0] || null : list[0] || null
         );
+
+        // Ring audible bell when a new unassigned call lands in queue
+        const unassigned = list.filter(s => s.queueStatus === 'UNASSIGNED' && s.state === 'READY');
+        const currentUnassignedIds = new Set(unassigned.map(s => s.sessionId));
+        const hasNew = unassigned.some(s => !prevUnassignedIdsRef.current.has(s.sessionId));
+        if (hasNew && unassigned.length > 0) {
+          try {
+            chitiSensory.playBell();
+          } catch {
+            /* ignore audio autoplay policy */
+          }
+        }
+        prevUnassignedIdsRef.current = currentUnassignedIds;
       }
     } catch {
       /* console keeps last snapshot on transient errors */
@@ -185,6 +202,34 @@ export default function SabhaOperationsConsole() {
         }
       } else {
         setActionNotice(data?.error || 'डिस्पैच विफल।');
+      }
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const handlePickUp = async (s: OpsSession) => {
+    chitiSensory.playTick();
+    setBusy(`pickup-${s.sessionId}`);
+    try {
+      const scholarToAssign = assignPick || (scholars[0]?.scholarId || 'SCH-KASHI-01');
+      if (s.queueStatus === 'UNASSIGNED') {
+        await fetch(`/api/sabha/sessions/${s.sessionId}/assign`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ scholarId: scholarToAssign, operatorId: 'CARE-OPS-01' })
+        });
+      }
+      const res = await fetch(`/api/sabha/sessions/${s.sessionId}/dispatch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ operatorId: 'CARE-OPS-01' })
+      });
+      const data = await res.json();
+      if (data?.ok && data.consultantRoomUrl) {
+        router.push(`${data.consultantRoomUrl}&autoAccept=1`);
+      } else {
+        setActionNotice(data?.error || 'कॉल प्रारंभ नहीं हो सकी।');
       }
     } finally {
       setBusy(null);
@@ -303,6 +348,15 @@ export default function SabhaOperationsConsole() {
 
                   {s.queueStatus === 'UNASSIGNED' && (
                     <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        onClick={() => handlePickUp(s)}
+                        disabled={busy === `pickup-${s.sessionId}`}
+                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm disabled:opacity-60 cursor-pointer"
+                      >
+                        {busy === `pickup-${s.sessionId}` ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <PhoneCall className="w-3.5 h-3.5" />}
+                        <span>सीधे कॉल उठाएँ (Pick Up Call)</span>
+                      </button>
+                      <span className="text-[11px] text-[#857E74]">या</span>
                       <select
                         value={assignPick}
                         onChange={e => setAssignPick(e.target.value)}
@@ -338,6 +392,14 @@ export default function SabhaOperationsConsole() {
                       >
                         {busy === `dispatch-${s.sessionId}` ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
                         <span>कॉल डिस्पैच करें (दोनों ओर रिंग)</span>
+                      </button>
+                      <button
+                        onClick={() => handlePickUp(s)}
+                        disabled={busy === `pickup-${s.sessionId}`}
+                        className="px-3.5 py-2 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 border border-black/10 dark:border-white/10 font-bold text-xs flex items-center gap-1.5 disabled:opacity-60 cursor-pointer text-[#1C1917] dark:text-white"
+                      >
+                        <PhoneCall className="w-3.5 h-3.5" />
+                        <span>स्वयं जुड़ें (Join Call)</span>
                       </button>
                     </div>
                   )}

@@ -390,6 +390,24 @@ export function useWebRTC(options: UseWebRTCOptions): UseWebRTCApi {
           // payload.event === 'PEER_JOINED'
           setPeerPresent(true);
           if (stateRef.current === 'RINGING') setState('CONNECTING');
+
+          // If we are CUSTOMER, peer has entered the room — initiate SDP offer now
+          if (roleRef.current === 'CUSTOMER' && !makingOfferRef.current) {
+            makingOfferRef.current = true;
+            try {
+              await pc.setLocalDescription();
+              if (pc.localDescription) {
+                await postSignal(sessionId, token, 'SDP_OFFER', {
+                  type: 'offer',
+                  sdp: pc.localDescription.sdp
+                });
+              }
+            } catch (err) {
+              console.error('Failed to create offer on PEER_JOINED', err);
+            } finally {
+              makingOfferRef.current = false;
+            }
+          }
           break;
         }
 

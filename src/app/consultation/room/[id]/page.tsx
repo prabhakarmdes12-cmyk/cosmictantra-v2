@@ -94,8 +94,9 @@ export default function EncryptedConsultationRoom() {
   const roleParam = (searchParams?.get('role') as 'devotee' | 'pandit') || 'devotee';
   const isPandit = roleParam === 'pandit';
 
+  const autoAccept = searchParams?.get('autoAccept') === '1';
   const [activeMode, setActiveMode] = useState<'voice' | 'video'>(initialMode === 'video' ? 'video' : 'voice');
-  const [accepted, setAccepted] = useState(!isPandit); // Pandit explicitly accepts the ring.
+  const [accepted, setAccepted] = useState(!isPandit || autoAccept); // Pandit auto-accepts if coming from workspace accept button
   const [isSpeakerOn, setIsSpeakerOn] = useState(true);
   const [showKundaliDrawer, setShowKundaliDrawer] = useState(true);
   const [sessionView, setSessionView] = useState<RoomView | null>(null);
@@ -116,7 +117,7 @@ export default function EncryptedConsultationRoom() {
     token: urlToken,
     role: isPandit ? 'CONSULTANT' : 'CUSTOMER',
     mode: activeMode,
-    autoJoin: accepted && !isPandit && !!urlToken,
+    autoJoin: (accepted || autoAccept || !isPandit) && !!urlToken,
     ringTimeoutMs: 45_000
   });
 

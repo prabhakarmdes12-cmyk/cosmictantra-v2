@@ -87,7 +87,7 @@ export default function IncomingFreeCallsPanel({ scholarId = 'ALL' }: { scholarI
   const answer = (call: IncomingCall) => {
     chitiSensory.playTick();
     setJoined(call.sessionId);
-    router.push(call.consultantRoomUrl);
+    router.push(`${call.consultantRoomUrl}&autoAccept=1`);
   };
 
   const decline = (call: IncomingCall) => {
