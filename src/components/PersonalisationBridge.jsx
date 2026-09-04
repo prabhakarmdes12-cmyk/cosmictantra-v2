@@ -88,7 +88,7 @@ export default function PersonalisationBridge({
       {/* 2. Fact-first Vedic day strip — no prediction-market language */}
       {factLine && (
         <Link
-          href="/daily"
+          href="/panchang"
           data-testid="vedic-day-strip"
           onClick={() => chitiSensory.playTick()}
           className="group block w-full bg-[#FAF7F2] dark:bg-[#0B0D12] border-b border-[#8E6F1D]/20 dark:border-[#D4AF37]/20 py-1.5 px-3 sm:px-6 hover:bg-[#F6EFE0] dark:hover:bg-[#10131D] transition-all overflow-hidden shadow-xs select-none"
@@ -102,7 +102,7 @@ export default function PersonalisationBridge({
               {factLine}
             </span>
             <span className="flex items-center gap-1 text-[10px] sm:text-xs font-bold text-[#8E6F1D] dark:text-[#F0C968] group-hover:translate-x-0.5 transition-transform shrink-0">
-              <span className="hidden md:inline">{isHi ? 'आज का पञ्चाङ्ग खोलें' : 'Open Today’s Panchang'}</span>
+              <span className="hidden md:inline">{isHi ? 'वैदिक पञ्चाङ्ग देखें' : 'Open Panchang'}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </span>
           </div>

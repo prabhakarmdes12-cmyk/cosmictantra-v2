@@ -31,16 +31,16 @@ import {
   Video,
   CheckCircle2,
   AlertTriangle,
-  RotateCcw
+  RotateCcw,
+  Bell,
+  BellOff
 } from 'lucide-react';
 import { getActiveProfile, upsertProfile, setActiveProfileId } from '@/lib/profileStore';
 import { parseBirthTime, parseBirthDate, resolveBirthCity, CityChoice } from '@/lib/ai/intakeParsing';
 import { CITIES } from '@/lib/cities';
 import { calculateKundali } from '@/lib/astrologyEngine';
 import { getCanonicalPanchangBundle, DEFAULT_LOCATION } from '@/lib/panchangFactBundle';
-import type { ConversationPanchangContext } from '@/lib/ai/dateIntelligence';
-import { chitiSensory } from '@/lib/chitiAudio';
-import { ScriptureInsight, findScriptureInsight, SCRIPTURE_WISDOM_REGISTRY } from '@/lib/ai/scriptureMap';
+import { chitiSensory, playBell, playConch, playDiya, playFlowerDrop, playTick } from '@/lib/chitiAudio';
 import { MOOD_OPTIONS, MOOD_QUESTION_HI, getMoodById } from '@/lib/ai/moodOptions';
 import { resolveDeterministicKashiIntent } from '@/lib/ai/kashiIntentEngine';
 import { buildScholarHandoverPacket, type ScholarHandoverPacket } from '@/lib/kashi/scholarHandover';
@@ -62,6 +62,8 @@ import {
 import { KashiVerseCard } from '@/components/kashi/KashiVerseCard';
 import { KashiClarification, KashiQuickActions } from '@/components/kashi/KashiClarification';
 import type { EmotionId } from '@/lib/kashi/emotionalSupport';
+import { ScriptureInsight, SCRIPTURE_WISDOM_REGISTRY, findScriptureInsight } from '@/lib/ai/scriptureMap';
+import type { ConversationPanchangContext } from '@/lib/ai/dateIntelligence';
 
 /** Existing mood chips -> Kashi emotional-support paths. */
 const MOOD_TO_EMOTION: Record<string, EmotionId> = {
@@ -333,6 +335,8 @@ export default function FloatingAIGuruAvatar() {
   const [isPlayingOm, setIsPlayingOm] = useState(false);
   const [offeredDiyaMsgIds, setOfferedDiyaMsgIds] = useState<Record<string, boolean>>({});
   const [offeredFlowersMsgIds, setOfferedFlowersMsgIds] = useState<Record<string, boolean>>({});
+  const [chatFlowers, setChatFlowers] = useState<Record<string, Array<{ id: number; x: number; icon: string; size: number; duration: string; delay: string; rot: number }>>>({});
+  const [darshanVideoMuted, setDarshanVideoMuted] = useState<Record<string, boolean>>({});
   const [activeDarshanVideoMsgIds, setActiveDarshanVideoMsgIds] = useState<Record<string, boolean>>({});
 
   // In-Chat Intake Step Machine
@@ -429,7 +433,7 @@ export default function FloatingAIGuruAvatar() {
     const handleLoc = (e: any) => {
       if (e.detail?.city) {
         activeCityRef.current = e.detail.city;
-        setPanchangContext(prev => prev ? {
+        setPanchangContext((prev: ConversationPanchangContext | null) => prev ? {
           ...prev,
           location: {
             name: e.detail.city.name,
@@ -675,13 +679,31 @@ export default function FloatingAIGuruAvatar() {
   };
 
   const handleOfferDiya = (msgId: string) => {
-    handlePlayDiyaBell();
-    setOfferedDiyaMsgIds(prev => ({ ...prev, [msgId]: true }));
+    playDiya();
+    setOfferedDiyaMsgIds(prev => ({ ...prev, [msgId]: !prev[msgId] }));
   };
 
   const handleOfferFlowers = (msgId: string) => {
-    if (soundEnabled) chitiSensory.playTick();
+    playFlowerDrop();
     setOfferedFlowersMsgIds(prev => ({ ...prev, [msgId]: true }));
+    const icons = ['🌸', '🌺', '🌼', '🍃', '🏵️', '🌹', '🪷', '🌷', '🌿', '✨'];
+    const newBatch = Array.from({ length: 36 }).map((_, i) => ({
+      id: Date.now() + i + Math.random(),
+      x: Math.floor(Math.random() * 92) + 4,
+      icon: icons[Math.floor(Math.random() * icons.length)],
+      size: Math.floor(Math.random() * 12) + 16,
+      duration: (2.2 + Math.random() * 1.5).toFixed(2),
+      delay: (Math.random() * 0.7).toFixed(2),
+      rot: Math.floor(Math.random() * 720) - 360,
+    }));
+    setChatFlowers(prev => ({ ...prev, [msgId]: [...(prev[msgId] || []), ...newBatch] }));
+    setTimeout(() => {
+      setChatFlowers(prev => ({
+        ...prev,
+        [msgId]: (prev[msgId] || []).filter(f => !newBatch.some(nb => nb.id === f.id))
+      }));
+      setOfferedFlowersMsgIds(prev => ({ ...prev, [msgId]: false }));
+    }, 4200);
   };
 
   // -------------------------------------------------------------
@@ -2493,21 +2515,13 @@ export default function FloatingAIGuruAvatar() {
                 <span>ॐ</span>
               </button>
 
+              {/* Chimes & Sound FX Toggle (Bell) */}
               <button
                 onClick={() => { playClick(); setSoundEnabled(!soundEnabled); }}
                 className="p-1.5 rounded-xl bg-black/5 dark:bg-white/5 text-[#696256] dark:text-[#9E988D] hover:text-[#1C1917] dark:hover:text-white cursor-pointer"
-                title={soundEnabled ? 'Mute Chimes' : 'Unmute Chimes'}
+                title={soundEnabled ? 'ध्वनि प्रभाव बन्द करें (Mute Chimes)' : 'ध्वनि प्रभाव चालू करें (Unmute Chimes)'}
               >
-                {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5 text-rose-400" />}
-              </button>
-
-              {/* Fresh session (clears remembered chat & seeker intake) */}
-              <button
-                onClick={handleResetSession}
-                className="p-1.5 rounded-xl bg-black/5 dark:bg-white/5 text-[#696256] dark:text-[#9E988D] hover:text-[#1C1917] dark:hover:text-white cursor-pointer"
-                title="नया सत्र आरम्भ करें (Start Fresh — clears this chat's memory)"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
+                {soundEnabled ? <Bell className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" /> : <BellOff className="w-3.5 h-3.5 text-rose-400" />}
               </button>
 
               {/* Kashi Sahayak Voice (TTS) Toggle */}
@@ -2523,6 +2537,15 @@ export default function FloatingAIGuruAvatar() {
                 {voice.voiceEnabled
                   ? <Volume2 className="w-3.5 h-3.5" />
                   : <VolumeX className="w-3.5 h-3.5 text-rose-400" />}
+              </button>
+
+              {/* Fresh session (clears remembered chat & seeker intake) */}
+              <button
+                onClick={handleResetSession}
+                className="p-1.5 rounded-xl bg-black/5 dark:bg-white/5 text-[#696256] dark:text-[#9E988D] hover:text-[#1C1917] dark:hover:text-white cursor-pointer"
+                title="नया सत्र आरम्भ करें (Start Fresh — clears this chat's memory)"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
               </button>
 
               <button
@@ -2785,17 +2808,19 @@ export default function FloatingAIGuruAvatar() {
                           {/* Image / Video Mode Switcher */}
                           <div className="flex items-center gap-1 bg-black/60 p-0.5 rounded-lg border border-white/10 text-[10px] font-mono-data">
                             <button
+                              type="button"
                               onClick={() => { playClick(); setActiveDarshanVideoMsgIds(prev => ({ ...prev, [msg.id]: false })); }}
-                              className={`px-1.5 py-0.5 rounded-md font-bold transition-all cursor-pointer ${
-                                !activeDarshanVideoMsgIds[msg.id] ? 'bg-[#8E6F1D] text-white' : 'text-white/60 hover:text-white'
+                              className={`px-2 py-0.5 rounded-md font-bold transition-all cursor-pointer ${
+                                !activeDarshanVideoMsgIds[msg.id] ? 'bg-[#8E6F1D] text-white shadow-xs' : 'text-white/60 hover:text-white'
                               }`}
                             >
-                              छवि
+                              🕉️ गर्भगृह
                             </button>
                             <button
+                              type="button"
                               onClick={() => { handlePlayDiyaBell(); setActiveDarshanVideoMsgIds(prev => ({ ...prev, [msg.id]: true })); }}
-                              className={`px-1.5 py-0.5 rounded-md font-bold transition-all cursor-pointer ${
-                                activeDarshanVideoMsgIds[msg.id] ? 'bg-[#8E6F1D] text-white' : 'text-white/60 hover:text-white'
+                              className={`px-2 py-0.5 rounded-md font-bold transition-all cursor-pointer ${
+                                activeDarshanVideoMsgIds[msg.id] ? 'bg-[#8E6F1D] text-white shadow-xs' : 'text-white/60 hover:text-white'
                               }`}
                             >
                               ▶ वीडियो
@@ -2804,104 +2829,217 @@ export default function FloatingAIGuruAvatar() {
                         </div>
 
                         {/* Live Stream Screen OR HD Sanctum Window */}
-                        {activeDarshanVideoMsgIds[msg.id] ? (
-                          <div className="relative w-full h-48 rounded-xl overflow-hidden bg-black border border-white/10 shadow-inner">
-                            <iframe
-                              src={msg.inChatDarshan.embedUrl}
-                              className="w-full h-full border-0 absolute inset-0"
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                              allowFullScreen
-                              title={msg.inChatDarshan.templeName}
-                            />
-                            <div className="absolute top-2 left-2 pointer-events-none z-20">
-                              <span className="px-2 py-0.5 rounded-full bg-red-600/90 text-white text-[9px] font-mono-data font-bold flex items-center gap-1 shadow-md">
-                                <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-                                24x7 LIVE STREAM
-                              </span>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="relative w-full h-48 rounded-xl overflow-hidden bg-black border border-white/10 group shadow-inner">
-                            <Image
-                              src={msg.inChatDarshan.image}
-                              alt={msg.inChatDarshan.templeName}
-                              fill
-                              className="object-cover transition-transform duration-700 group-hover:scale-105"
-                            />
-                            
-                            {/* Sacred Ambient Vignette & Gradient */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/30 pointer-events-none" />
+                        <div className={`relative w-full h-52 rounded-xl overflow-hidden bg-black border transition-all duration-500 group shadow-inner ${
+                          offeredDiyaMsgIds[msg.id]
+                            ? 'border-amber-400/90 ring-2 ring-amber-400/80 shadow-[inset_0_0_35px_rgba(245,158,11,0.5),0_0_25px_rgba(251,191,36,0.6)]'
+                            : 'border-white/10'
+                        }`}>
+                          {activeDarshanVideoMsgIds[msg.id] ? (
+                            <div className="relative w-full h-full bg-black">
+                              <video
+                                key={`darshan-video-${msg.id}`}
+                                src="/kashi-hero-video.mp4"
+                                autoPlay
+                                loop
+                                muted={darshanVideoMuted[msg.id] !== false}
+                                playsInline
+                                className="w-full h-full object-cover"
+                              />
+                              <div className="absolute top-2 left-2 pointer-events-none z-20">
+                                <span className="px-2 py-0.5 rounded-full bg-red-600/90 text-white text-[9px] font-mono-data font-bold flex items-center gap-1 shadow-md">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                                  साक्षात् परिसर व आरती (HD Ambient)
+                                </span>
+                              </div>
 
-                            {/* Center Play Button Overlay */}
-                            <div className="absolute inset-0 flex items-center justify-center">
+                              {/* Video Sound Toggle Button */}
                               <button
-                                onClick={() => { handlePlayDiyaBell(); setActiveDarshanVideoMsgIds(prev => ({ ...prev, [msg.id]: true })); }}
-                                className="px-4 py-2 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 shadow-xl transition-transform hover:scale-105 cursor-pointer font-mono-data font-bold text-xs"
-                                title="Play Live Stream"
+                                type="button"
+                                onClick={() => {
+                                  playTick();
+                                  setDarshanVideoMuted(prev => ({
+                                    ...prev,
+                                    [msg.id]: prev[msg.id] === false ? true : false
+                                  }));
+                                }}
+                                className="absolute top-2 right-2 z-30 px-2 py-0.5 rounded-full bg-black/75 hover:bg-black/90 text-white text-[9px] font-mono-data font-bold border border-white/20 flex items-center gap-1 cursor-pointer transition-transform active:scale-95 shadow-md backdrop-blur-xs"
+                                title={darshanVideoMuted[msg.id] === false ? "ध्वनि म्यूट करें" : "ध्वनि चालू करें"}
                               >
-                                <Play className="w-4 h-4 fill-white" />
-                                <span>साक्षात् लाइव दर्शन चलाएं</span>
+                                {darshanVideoMuted[msg.id] === false ? (
+                                  <>
+                                    <Volume2 className="w-3 h-3 text-emerald-400" />
+                                    <span>ध्वनि चालू</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <VolumeX className="w-3 h-3 text-rose-400" />
+                                    <span>ध्वनि म्यूट</span>
+                                  </>
+                                )}
                               </button>
                             </div>
+                          ) : (
+                            <>
+                              <Image
+                                src={msg.inChatDarshan.image || '/images/darshan/kashi-vishwanath.jpg'}
+                                alt={msg.inChatDarshan.templeName}
+                                fill
+                                sizes="(max-width: 768px) 100vw, 400px"
+                                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                              />
+                              
+                              {/* Sacred Ambient Vignette & Gradient */}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/25 pointer-events-none" />
 
-                            {/* Floating Flowers Overlay when offered */}
-                            {offeredFlowersMsgIds[msg.id] && (
-                              <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center animate-fade-in z-20">
-                                <div className="flex flex-wrap gap-2 justify-center max-w-[220px] text-2xl animate-bounce drop-shadow-lg">
-                                  🌸 🌺 🪷 🌼 🌹 🏵️ 🍃 🌸 🌺 🪷 🌼 🌹
-                                </div>
+                              <div className="absolute top-2 left-2 pointer-events-none z-20">
+                                <span className="px-2 py-0.5 rounded-full bg-emerald-600/90 text-white text-[9px] font-mono-data font-bold flex items-center gap-1 shadow-md">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                                  साक्षात् गर्भगृह दर्शन • कपाट खुले हैं
+                                </span>
                               </div>
-                            )}
 
-                            {/* Glowing Diya Flame when offered */}
-                            {offeredDiyaMsgIds[msg.id] ? (
-                              <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none animate-fade-in">
-                                <div className="text-2xl animate-pulse drop-shadow-[0_0_15px_#F59E0B]">🪔</div>
-                                <span className="text-[10px] font-mono-data font-bold text-amber-300 bg-black/70 px-2 py-0.5 rounded-full mt-0.5 border border-amber-400/40">
+                              {/* Subtle non-obstructive bottom-right video switch button */}
+                              <div className="absolute bottom-2 right-2 z-20">
+                                <button
+                                  type="button"
+                                  onClick={() => { playTick(); setActiveDarshanVideoMsgIds(prev => ({ ...prev, [msg.id]: true })); }}
+                                  className="px-2 py-0.5 rounded-full bg-black/75 hover:bg-black/90 border border-white/20 text-white text-[9px] font-mono-data font-bold flex items-center gap-1 shadow-md backdrop-blur-xs transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+                                  title="परिसर वीडियो दर्शन चलाएं"
+                                >
+                                  <Play className="w-2.5 h-2.5 fill-white text-white" />
+                                  <span>परिसर वीडियो</span>
+                                </button>
+                              </div>
+                            </>
+                          )}
+
+                          {/* Keyframe animation for falling flower cascade */}
+                          <style>{`
+                            @keyframes flowerCascadeChat {
+                              0% {
+                                transform: translateY(0px) rotate(0deg) scale(0.7);
+                                opacity: 0;
+                              }
+                              10% {
+                                opacity: 1;
+                                transform: translateY(18px) rotate(30deg) scale(1.05);
+                              }
+                              85% {
+                                opacity: 0.95;
+                              }
+                              100% {
+                                transform: translateY(220px) rotate(360deg) scale(0.85);
+                                opacity: 0;
+                              }
+                            }
+                          `}</style>
+
+                          {/* Falling Sacred Flower Petals Shower (Matches /darshan page) */}
+                          {chatFlowers[msg.id]?.length > 0 && (
+                            <div className="absolute inset-0 pointer-events-none z-40 overflow-hidden">
+                              {chatFlowers[msg.id].map((f) => (
+                                <div
+                                  key={f.id}
+                                  className="absolute select-none pointer-events-none"
+                                  style={{
+                                    left: `${f.x}%`,
+                                    top: `-20px`,
+                                    fontSize: `${f.size}px`,
+                                    animation: `flowerCascadeChat ${f.duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards`,
+                                    animationDelay: `${f.delay}s`,
+                                    filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.5))',
+                                  }}
+                                >
+                                  {f.icon}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Sacred Deep Daan Border Illumination & Corner Mahadeeps (Matches /darshan page) */}
+                          {offeredDiyaMsgIds[msg.id] && (
+                            <div className="absolute inset-0 pointer-events-none z-30 select-none">
+                              {/* 4 Auspicious Corner Mahadeeps */}
+                              <div className="absolute top-1.5 left-2 text-base filter drop-shadow-[0_0_12px_rgba(251,191,36,1)] animate-bounce">🪔</div>
+                              <div className="absolute top-1.5 right-2 text-base filter drop-shadow-[0_0_12px_rgba(251,191,36,1)] animate-bounce">🪔</div>
+                              <div className="absolute bottom-6 left-2 text-base filter drop-shadow-[0_0_12px_rgba(251,191,36,1)] animate-bounce">🪔</div>
+                              <div className="absolute bottom-6 right-2 text-base filter drop-shadow-[0_0_12px_rgba(251,191,36,1)] animate-bounce">🪔</div>
+
+                              {/* Top Perimeter Diya Garland */}
+                              <div className="absolute top-1 inset-x-10 flex justify-around items-center">
+                                {['🪔', '🪔', '🪔', '🪔'].map((d, i) => (
+                                  <span key={i} className="text-xs filter drop-shadow-[0_0_8px_rgba(251,191,36,1)] animate-pulse" style={{ animationDuration: `${1.1 + i * 0.25}s` }}>
+                                    {d}
+                                  </span>
+                                ))}
+                              </div>
+
+                              {/* Center Sacred Diya Badge */}
+                              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-black/85 px-2.5 py-0.5 rounded-full border border-amber-400/60 shadow-lg animate-fade-in">
+                                <span className="text-xs animate-pulse">🪔</span>
+                                <span className="text-[10px] font-mono-data font-bold text-amber-300">
                                   दीप प्रज्वलित • हर हर महादेव!
                                 </span>
                               </div>
-                            ) : (
-                              <div className="absolute top-2 right-2">
-                                <span className="text-[9px] font-mono-data text-amber-200/90 bg-black/60 px-2 py-0.5 rounded-md backdrop-blur-xs border border-white/10">
-                                  {msg.inChatDarshan.timings}
-                                </span>
-                              </div>
-                            )}
-
-                            {/* Location Badge */}
-                            <div className="absolute bottom-2 left-2 flex items-center pointer-events-none">
-                              <span className="text-[11px] text-white/95 font-semibold drop-shadow-md">
-                                {msg.inChatDarshan.location}
-                              </span>
                             </div>
-                          </div>
-                        )}
+                          )}
 
-                        {/* Sacred Interactive Ritual Control Actions */}
-                        <div className="grid grid-cols-2 gap-1.5 pt-1">
+                          {/* Location & Timings Badge */}
+                          <div className="absolute bottom-2 left-2 flex items-center text-[10px] text-white/95 font-semibold drop-shadow-md pointer-events-none z-20">
+                            <span>{msg.inChatDarshan.location}</span>
+                          </div>
+                        </div>
+
+                        {/* Sacred Interactive Ritual Control Actions (4 buttons) */}
+                        <div className="grid grid-cols-4 gap-1 pt-1">
                           <button
-                            onClick={() => handleOfferDiya(msg.id)}
-                            className={`py-1.5 px-2 rounded-xl text-xs font-mono-data font-bold border transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95 ${
+                            type="button"
+                            onClick={() => {
+                              handleOfferDiya(msg.id);
+                            }}
+                            className={`py-1.5 px-1 rounded-xl text-[11px] font-mono-data font-bold border transition-all flex items-center justify-center gap-1 cursor-pointer shadow-xs active:scale-95 ${
                               offeredDiyaMsgIds[msg.id]
-                                ? 'bg-amber-500 text-black border-amber-400'
+                                ? 'bg-amber-500 text-black border-amber-400 font-black shadow-[0_0_12px_rgba(245,158,11,0.6)]'
                                 : 'bg-white/10 hover:bg-amber-500/20 text-amber-200 border-amber-500/30'
                             }`}
                           >
                             <span>🪔</span>
-                            <span>{offeredDiyaMsgIds[msg.id] ? 'दीप अर्पित ✓' : 'दीप दान करें'}</span>
+                            <span>{offeredDiyaMsgIds[msg.id] ? 'दीप अर्पित' : 'दीप दान'}</span>
                           </button>
 
                           <button
-                            onClick={() => handleOfferFlowers(msg.id)}
-                            className={`py-1.5 px-2 rounded-xl text-xs font-mono-data font-bold border transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95 ${
+                            type="button"
+                            onClick={() => {
+                              handleOfferFlowers(msg.id);
+                            }}
+                            className={`py-1.5 px-1 rounded-xl text-[11px] font-mono-data font-bold border transition-all flex items-center justify-center gap-1 cursor-pointer shadow-xs active:scale-95 ${
                               offeredFlowersMsgIds[msg.id]
-                                ? 'bg-rose-500 text-white border-rose-400'
+                                ? 'bg-rose-500 text-white border-rose-400 font-black shadow-[0_0_12px_rgba(244,63,94,0.6)]'
                                 : 'bg-white/10 hover:bg-rose-500/20 text-rose-200 border-rose-500/30'
                             }`}
                           >
                             <span>🌸</span>
-                            <span>{offeredFlowersMsgIds[msg.id] ? 'पुष्प अर्पित ✓' : 'पुष्प अर्पण'}</span>
+                            <span>{offeredFlowersMsgIds[msg.id] ? 'पुष्प अर्पित' : 'पुष्प अर्पण'}</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => { playBell(); }}
+                            className="py-1.5 px-1 rounded-xl text-[11px] font-mono-data font-bold border border-white/10 bg-white/10 hover:bg-amber-500/20 text-amber-200 transition-all flex items-center justify-center gap-1 cursor-pointer shadow-xs active:scale-95"
+                            title="घंटी बजाएं"
+                          >
+                            <span>🔔</span>
+                            <span>घंटी</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => { playConch(); }}
+                            className="py-1.5 px-1 rounded-xl text-[11px] font-mono-data font-bold border border-white/10 bg-white/10 hover:bg-amber-500/20 text-amber-200 transition-all flex items-center justify-center gap-1 cursor-pointer shadow-xs active:scale-95"
+                            title="शंखनाद करें"
+                          >
+                            <span>🐚</span>
+                            <span>शंख</span>
                           </button>
                         </div>
 
@@ -2915,7 +3053,7 @@ export default function FloatingAIGuruAvatar() {
                             className="w-full py-2 bg-gradient-to-r from-red-600/30 via-red-500/20 to-red-600/30 hover:from-red-600/50 hover:to-red-600/50 text-red-200 text-xs font-mono-data font-bold rounded-xl border border-red-500/40 text-center flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95"
                           >
                             <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
-                            <span>साक्षात् महाआरती लाइव देखें (YouTube)</span>
+                            <span>साक्षात् महाआरती लाइव देखें (आधिकारिक यूट्यूब)</span>
                             <ExternalLink className="w-3.5 h-3.5" />
                           </a>
                         )}
@@ -3310,37 +3448,28 @@ export default function FloatingAIGuruAvatar() {
             </div>
           )}
 
-          <form onSubmit={handleSendMessage} className="p-3 bg-[#FAF7F2] dark:bg-[#121526] border-t border-black/10 dark:border-white/10 flex items-center gap-2 shrink-0">
-            <div className="flex-1">
-              <KashiComposer
-                language="hi"
-                voiceState={kashi.voiceState}
-                transcript={kashi.transcript}
-                canAutoSend={kashi.canAutoSend}
-                muted={kashi.session.muted}
-                speaking={false}
-                value={inputVal}
-                onValueChange={(v) => { setInputVal(v); kashi.editTranscript(v); }}
-                onSend={() => {
-                  const typed = (kashi.transcript || inputVal).trim();
-                  if (typed) kashi.sendText(typed);
-                  setInputVal('');
-                  void handleSendMessage();
-                }}
-                onMicPress={() => (kashi.voiceState === 'listening' ? kashi.stopListening() : kashi.startListening())}
-                onCancelListening={kashi.cancelListening}
-                onToggleMute={() => kashi.control(kashi.session.muted ? 'unmute' : 'mute')}
-                onStopSpeaking={() => kashi.control('stop')}
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={!inputVal.trim()}
-              className="p-2.5 rounded-xl bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#080A10] disabled:opacity-40 cursor-pointer shadow-xs active:scale-95 transition-transform"
-            >
-              <Send className="w-4 h-4" />
-            </button>
-          </form>
+          <div className="p-2.5 sm:p-3 bg-[#FAF7F2] dark:bg-[#121526] border-t border-black/10 dark:border-white/10 shrink-0">
+            <KashiComposer
+              language="hi"
+              voiceState={kashi.voiceState}
+              transcript={kashi.transcript}
+              canAutoSend={kashi.canAutoSend}
+              muted={kashi.session.muted}
+              speaking={false}
+              value={inputVal}
+              onValueChange={(v) => { setInputVal(v); kashi.editTranscript(v); }}
+              onSend={() => {
+                const typed = (kashi.transcript || inputVal).trim();
+                if (typed) kashi.sendText(typed);
+                setInputVal('');
+                void handleSendMessage();
+              }}
+              onMicPress={() => (kashi.voiceState === 'listening' ? kashi.stopListening() : kashi.startListening())}
+              onCancelListening={kashi.cancelListening}
+              onToggleMute={() => kashi.control(kashi.session.muted ? 'unmute' : 'mute')}
+              onStopSpeaking={() => kashi.control('stop')}
+            />
+          </div>
 
         </div>
       )}

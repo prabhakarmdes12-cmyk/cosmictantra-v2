@@ -187,7 +187,7 @@ test.describe('Pages at runtime (no dead links / duplicate headers)', () => {
   for (const [route, label, shellNav] of [
     ['/', 'landing', false],
     ['/daily', 'today', true],
-    ['/dashboard', 'dashboard', true],
+    ['/dashboard', 'dashboard', false],
     ['/kundli/gandhi-1869', 'master-kundli', false],
     ['/report', 'report', false],
   ] as const) {
@@ -220,20 +220,24 @@ test.describe('Pages at runtime (no dead links / duplicate headers)', () => {
 
 test.describe('Screen captures (evidence)', () => {
   test.use({ viewport: { width: 1440, height: 900 } });
-  test('desktop 1440+ — landing, Master Kundli, Today', async ({ page }) => {
+  test('desktop 1440+ — landing, Master Kundli, Today, Dashboard', async ({ page }) => {
     await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
     await page.screenshot({ path: shot('desktop-landing.png'), fullPage: false });
     await page.goto(`${BASE}/kundli/gandhi-1869`, { waitUntil: 'networkidle' });
     await page.screenshot({ path: shot('desktop-master-kundli.png'), fullPage: false });
+    await page.goto(`${BASE}/report`, { waitUntil: 'networkidle' });
+    await page.screenshot({ path: shot('desktop-report-dashboard.png'), fullPage: false });
     await page.goto(`${BASE}/daily`, { waitUntil: 'networkidle' });
     await page.screenshot({ path: shot('desktop-today.png'), fullPage: false });
   });
 
-  test('tablet and 390px mobile — Today + landing', async ({ page }) => {
+  test('tablet and 390px mobile — Today + landing + dashboard', async ({ page }) => {
     await page.setViewportSize({ width: 768, height: 1024 });
     await page.goto(`${BASE}/daily`, { waitUntil: 'networkidle' });
     await page.screenshot({ path: shot('tablet-today.png'), fullPage: false });
     await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`${BASE}/report`, { waitUntil: 'networkidle' });
+    await page.screenshot({ path: shot('mobile-390-report-dashboard.png'), fullPage: false });
     await page.goto(`${BASE}/daily`, { waitUntil: 'networkidle' });
     await page.screenshot({ path: shot('mobile-390-today.png'), fullPage: false });
     await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });

@@ -101,7 +101,7 @@ export const PRIMARY_DESTINATIONS: PrimaryDestination[] = [
     labelHiKey: 'todayHi',
     descriptionKey: 'todayDescription',
     descriptionHiKey: 'todayDescriptionHi',
-    href: '/daily',
+    href: '/panchang',
     icon: 'sun',
     isMenu: false,
     children: [
@@ -168,7 +168,7 @@ export const PRIMARY_DESTINATIONS: PrimaryDestination[] = [
     labelHiKey: 'consultHi',
     descriptionKey: 'consultDescription',
     descriptionHiKey: 'consultDescriptionHi',
-    href: '/astrology/practitioners',
+    href: '/ask',
     icon: 'user',
     isMenu: false,
     children: [
@@ -290,7 +290,7 @@ export const MOBILE_BOTTOM_NAV_ITEMS: MobileNavItem[] = [
     id: 'CONSULT',
     labelKey: 'consultMobile',
     labelHiKey: 'consultMobileHi',
-    href: '/astrology/practitioners',
+    href: '/ask',
     icon: 'user',
     isAsk: false,
   },

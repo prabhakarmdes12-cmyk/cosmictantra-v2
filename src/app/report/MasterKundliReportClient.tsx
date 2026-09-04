@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { 
   Download, 
@@ -30,19 +31,25 @@ import {
   LayoutDashboard,
   ChevronDown,
   Telescope,
-  Printer
+  Printer,
+  Heart,
+  PhoneCall,
+  ChevronUp,
+  UserPlus
 } from 'lucide-react';
 import { getCanonicalJyotishSnapshot } from '@/lib/jyotish/canonicalSnapshot';
 import { generateKundliBookModel, BookVolume } from '@/lib/jyotish/kundliBookModel';
 import NorthIndianChart from '@/components/NorthIndianChart';
 import NoviceCosmicOverview from '@/components/kundli/NoviceCosmicOverview';
+import DailyCosmicCard from '@/components/visual/DailyCosmicCard';
+import { getDaily3DayInterpretation, DailyDetail } from '@/lib/interpretationEngine';
 import GlobalHeader from '@/components/layout/GlobalHeader';
 import LanguageSelectorModal from '@/components/layout/LanguageSelectorModal';
 import DownloadChoiceModal from '@/components/kundli/DownloadChoiceModal';
+import ConsultationRequestModal from '@/components/consultation/ConsultationRequestModal';
 import { CosmicTantraEmblem } from '@/components/visual/CosmicTantraLogo';
 import { chitiSensory } from '@/lib/chitiAudio';
-import { generateKundliV40Pdf } from '@/lib/kundli/v40/pipelineV2';
-import { getActiveProfile, upsertProfile, setActiveProfileId } from '@/lib/profileStore';
+import { getActiveProfile, getProfiles, upsertProfile, setActiveProfileId } from '@/lib/profileStore';
 import {
   PDF_EDITION,
   pdfLocaleForLang,
@@ -53,6 +60,7 @@ import {
   type RequiredDownloadField,
 } from '@/lib/kundli/downloadPolicy';
 import { KUNDLI_SAFE_MESSAGES } from '@/lib/kundli/errors';
+import { validateBirthInput } from '@/lib/kundli/validation';
 import { searchCities } from '@/lib/cities';
 import type { PipelineState, RawBirthInput } from '@/lib/kundli/types';
 import ExecutiveLifeGaugeDashboard from '@/components/kundli/ExecutiveLifeGaugeDashboard';
@@ -137,6 +145,18 @@ const KUNDLI_UI: Record<string, { en: string; hi: string }> = {
   utcOffset: { en: 'UTC Offset', hi: 'यूटीसी अंतर' },
   editBirthDetails: { en: 'Edit Birth Details', hi: 'जन्म विवरण संपादित करें' },
   enterBoth: { en: 'Enter both latitude and longitude — they are required together.', hi: 'अक्षांश और देशांतर दोनों दर्ज करें — दोनों आवश्यक हैं।' },
+};
+
+const PLANET_META: Record<string, { hi: string; symbol: string; karakaEn: string; karakaHi: string }> = {
+  Sun: { hi: 'सूर्य', symbol: '☉', karakaEn: 'Soul, Father, Vitality, Authority', karakaHi: 'आत्मा, पिता, तेज, नेतृत्व' },
+  Moon: { hi: 'चन्द्र', symbol: '☽', karakaEn: 'Mind, Mother, Emotions, Memory', karakaHi: 'मन, माता, भावना, शांति' },
+  Mars: { hi: 'मंगल', symbol: '♂', karakaEn: 'Energy, Courage, Property, Siblings', karakaHi: 'ऊर्जा, साहस, पराक्रम, भूमि' },
+  Mercury: { hi: 'बुध', symbol: '☿', karakaEn: 'Intellect, Speech, Commerce, Logic', karakaHi: 'बुद्धि, वाणी, व्यापार, तार्किक क्षमता' },
+  Jupiter: { hi: 'गुरु', symbol: '♃', karakaEn: 'Wisdom, Dharma, Children, Wealth', karakaHi: 'ज्ञान, धर्म, संतान, समृद्धि' },
+  Venus: { hi: 'शुक्र', symbol: '♀', karakaEn: 'Beauty, Relationships, Arts, Vehicles', karakaHi: 'सौन्दर्य, संबंध, कला, भौतिक सुख' },
+  Saturn: { hi: 'शनि', symbol: '♄', karakaEn: 'Discipline, Karma, Longevity, Service', karakaHi: 'अनुशासन, कर्म, आयु, धैर्य' },
+  Rahu: { hi: 'राहु', symbol: '☊', karakaEn: 'Ambition, Worldly Maya, Innovation', karakaHi: 'आकांक्षा, माया, अन्वेषण, शोध' },
+  Ketu: { hi: 'केतु', symbol: '☋', karakaEn: 'Detachment, Spirituality, Liberation', karakaHi: 'वैराग्य, आध्यात्म, मोक्ष, सूक्ष्म दृष्टि' },
 };
 
 /**
@@ -253,16 +273,75 @@ function resolveCoherentCoordinates(locName: string, curLat: number, curLng: num
   return { lat: curLat, lng: curLng, tz: curTz, resolvedLoc: locName };
 }
 
+// Verified historical benchmarks for reference exploration (never testing artifacts)
+const HISTORICAL_BENCHMARKS = [
+  {
+    id: 'gandhi-1869',
+    name: 'Mahatma Gandhi',
+    hindiName: 'महात्मा गाँधी (1869)',
+    birthDate: '1869-10-02',
+    birthTime: '07:11:00',
+    latitude: 21.6417,
+    longitude: 69.6293,
+    timezone: 5.5,
+    locationName: 'Porbandar, Gujarat, India',
+    tag: 'HISTORICAL BENCHMARK',
+    highlightEn: 'Libra Lagna · Mars-Venus in 1st house · World leader of Ahimsa',
+    highlightHi: 'तुला लग्न · प्रथम भाव में मंगल-शुक्र · अहिंसा के महानायक'
+  },
+  {
+    id: 'vivekananda-1863',
+    name: 'Swami Vivekananda',
+    hindiName: 'स्वामी विवेकानन्द (1863)',
+    birthDate: '1863-01-12',
+    birthTime: '06:33:00',
+    latitude: 22.5726,
+    longitude: 88.3639,
+    timezone: 5.5,
+    locationName: 'Kolkata, West Bengal, India',
+    tag: 'SPIRITUAL LUMINARY',
+    highlightEn: 'Sagittarius Lagna · Sun in 1st, Saturn in 10th · Spiritual renaissance',
+    highlightHi: 'धनु लग्न · प्रथम में सूर्य, दशम में शनि · वेदान्त के अग्रदूत'
+  },
+  {
+    id: 'einstein-1879',
+    name: 'Albert Einstein',
+    hindiName: 'अल्बर्ट आइंस्टीन (1879)',
+    birthDate: '1879-03-14',
+    birthTime: '11:30:00',
+    latitude: 48.4011,
+    longitude: 9.9876,
+    timezone: 0.6658,
+    locationName: 'Ulm, Germany',
+    tag: 'SCIENTIFIC LUMINARY',
+    highlightEn: 'Gemini Lagna · Mercury-Venus-Saturn in 10th · Nobel Laureate',
+    highlightHi: 'मिथुन लग्न · दशम में बुध-शुक्र-शनि · नोबेल विजेता'
+  }
+];
+const DEMO_PROFILE = HISTORICAL_BENCHMARKS[0];
+
 export default function MasterKundliReportClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
+  const isExplicitSample = searchParams?.get('sample') === '1' || searchParams?.get('sample') === 'true';
+  const paramName = searchParams?.get('name');
+  const paramDob = searchParams?.get('dob');
+  const paramTob = searchParams?.get('tob');
+  const paramCity = searchParams?.get('city');
+  const paramLat = searchParams?.get('lat');
+  const paramLng = searchParams?.get('lng') || searchParams?.get('lon');
+  const paramTz = searchParams?.get('tz');
+
   // Active view mode: Overview (default, progressive disclosure) vs
-  // 17-Volume Encyclopedic Folio vs Interactive Visual Workbench
+  // 17-Volume Encyclopedic Folio vs Interactive Visual Workbench vs Dasha
   const [hydrated, setHydrated] = useState(false);
   // Hydration gate before interacting with the tab bar (Sprint C.1 §20).
   useEffect(() => setHydrated(true), []);
-  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'FOLIO' | 'WORKBENCH'>('OVERVIEW');
+  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'FOLIO' | 'WORKBENCH' | 'DASHA' | 'PANCHANG'>('OVERVIEW');
+  const [allUserProfiles, setAllUserProfiles] = useState<any[]>([]);
+  const [showHistoricalBenchmarks, setShowHistoricalBenchmarks] = useState(false);
+  const [consultModalOpen, setConsultModalOpen] = useState(false);
   const [selectedMdIndex, setSelectedMdIndex] = useState<number>(-1); // -1 => current mahadasha
   const [chartPlanet, setChartPlanet] = useState<{ name: string; house: number } | null>(null);
   const [readingDepth, setReadingDepth] = useState<'SIMPLE' | 'DETAILED' | 'PANDIT'>('DETAILED');
@@ -274,20 +353,12 @@ export default function MasterKundliReportClient() {
   const [lang, setLang] = useState('en');
   /**
    * PDF locale and edition are no longer toolbar state.
-   *
-   * The language follows the sitewide language the Global Header already owns
-   * (`pdfLocaleForLang`), and the edition is always the complete qualified
-   * folio (`PDF_EDITION`). Two pills that changed one request payload are gone
-   * — see src/lib/kundli/downloadPolicy.ts for the whole policy.
    */
   const pdfLocale = pdfLocaleForLang(lang);
   const [isLangModalOpen, setIsLangModalOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
-  // Theme hydration: mirror the site-wide contract — read the persisted
-  // theme once on mount and mirror it onto <html> so Tailwind dark: variants
-  // (and the GlobalHeader Sun/Moon toggle) behave exactly like every other
-  // page. Persisting happens ONLY on explicit toggle, never on mount.
+  // Theme hydration: mirror the site-wide contract
   useEffect(() => {
     try {
       const savedTheme = localStorage.getItem('cosmictantra_theme') as 'light' | 'dark' | null;
@@ -307,22 +378,15 @@ export default function MasterKundliReportClient() {
     else document.documentElement.classList.remove('dark');
   };
 
-  // Selected-language surface: mirrors the home page contract — keep <html
-  // lang> in sync and persist the choice. Persisting happens ONLY on explicit
-  // user selection (never on mount) so a saved language is never clobbered
-  // by the initial 'en' state — even under StrictMode's double effect pass.
   const t = (key: keyof typeof KUNDLI_UI) => KUNDLI_UI[key][lang === 'hi' ? 'hi' : 'en'];
   const handleSelectLang = (code: string) => {
     setLang(code);
-    // The qualified PDF locale is derived from this choice (pdfLocaleForLang),
-    // so a sitewide language switch is reflected in the next download without
-    // a second control to keep in sync.
     document.documentElement.lang = code;
     try { localStorage.setItem('cosmictantra_lang', code); } catch {}
   };
 
   // P0 UX: demo chip, city autocomplete, live validation, geolocation
-  const [isDemoProfile, setIsDemoProfile] = useState(true);
+  const [isDemoProfile, setIsDemoProfile] = useState(() => isExplicitSample);
   const [cityQuery, setCityQuery] = useState('');
   const [citySuggestions, setCitySuggestions] = useState<ReturnType<typeof searchCities>>([]);
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
@@ -330,14 +394,30 @@ export default function MasterKundliReportClient() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Dynamic Birth Input State (starts clean for new visitors; populated from URL or saved profile)
-  const [birthState, setBirthState] = useState({
-    name: '',
-    birthDate: '',
-    birthTime: '',
-    latitude: Number.NaN,
-    longitude: Number.NaN,
-    timezone: 5.5,
-    locationName: ''
+  const [birthState, setBirthState] = useState(() => {
+    if (paramDob && paramLat && paramLng) {
+      return {
+        name: paramName || 'Seeker',
+        birthDate: paramDob,
+        birthTime: paramTob || '12:00:00',
+        latitude: Number(paramLat),
+        longitude: Number(paramLng),
+        timezone: Number(paramTz) || 5.5,
+        locationName: paramCity || 'India'
+      };
+    }
+    if (isExplicitSample) {
+      return DEMO_PROFILE;
+    }
+    return {
+      name: '',
+      birthDate: '',
+      birthTime: '',
+      latitude: Number.NaN,
+      longitude: Number.NaN,
+      timezone: 5.5,
+      locationName: ''
+    };
   });
 
   // Pipeline state (KUNDLI_INV_015 / fail-safe UX)
@@ -347,72 +427,16 @@ export default function MasterKundliReportClient() {
   const [failSafe, setFailSafe] = useState<{ message: string; code: string } | null>(null);
   const [lastPdfMeta, setLastPdfMeta] = useState<{ pageCount: number; fileSizeKB: number } | null>(null);
   const [pdfNotice, setPdfNotice] = useState<string | null>(null);
-  /**
-   * Transient confirmation strip (Save Profile, held download). Deliberately
-   * separate from `failSafe`: a fail-safe is a statement that no document was
-   * issued and stays until the visitor acts, while a toast is an acknowledgement
-   * that fades on its own.
-   */
   const [toast, setToast] = useState<{ text: string; tone: 'ok' | 'warn' } | null>(null);
 
-  // A confirmation that never fades is a badge nobody reads after the first
-  // time. 4s is long enough to read one sentence in either language.
   useEffect(() => {
     if (!toast) return;
     const id = window.setTimeout(() => setToast(null), 4000);
     return () => window.clearTimeout(id);
   }, [toast]);
 
-  // RAW input that faithfully reflects what the caller actually supplied.
-  // NO silent default substitution happens here — the pipeline validates it.
+  // RAW input ref
   const rawInputRef = useRef<RawBirthInput | null>(null);
-
-  // Verified historical benchmarks for reference exploration (never testing artifacts)
-  const HISTORICAL_BENCHMARKS = [
-    {
-      id: 'gandhi-1869',
-      name: 'Mahatma Gandhi',
-      hindiName: 'महात्मा गाँधी (1869)',
-      birthDate: '1869-10-02',
-      birthTime: '07:11:00',
-      latitude: 21.6417,
-      longitude: 69.6293,
-      timezone: 5.5,
-      locationName: 'Porbandar, Gujarat, India',
-      tag: 'HISTORICAL BENCHMARK',
-      highlightEn: 'Libra Lagna · Mars-Venus in 1st house · World leader of Ahimsa',
-      highlightHi: 'तुला लग्न · प्रथम भाव में मंगल-शुक्र · अहिंसा के महानायक'
-    },
-    {
-      id: 'vivekananda-1863',
-      name: 'Swami Vivekananda',
-      hindiName: 'स्वामी विवेकानन्द (1863)',
-      birthDate: '1863-01-12',
-      birthTime: '06:33:00',
-      latitude: 22.5726,
-      longitude: 88.3639,
-      timezone: 5.5,
-      locationName: 'Kolkata, West Bengal, India',
-      tag: 'SPIRITUAL LUMINARY',
-      highlightEn: 'Sagittarius Lagna · Sun in 1st, Saturn in 10th · Spiritual renaissance',
-      highlightHi: 'धनु लग्न · प्रथम में सूर्य, दशम में शनि · वेदान्त के अग्रदूत'
-    },
-    {
-      id: 'einstein-1879',
-      name: 'Albert Einstein',
-      hindiName: 'अल्बर्ट आइंस्टीन (1879)',
-      birthDate: '1879-03-14',
-      birthTime: '11:30:00',
-      latitude: 48.4011,
-      longitude: 9.9876,
-      timezone: 0.6658,
-      locationName: 'Ulm, Germany',
-      tag: 'SCIENTIFIC LUMINARY',
-      highlightEn: 'Gemini Lagna · Mercury-Venus-Saturn in 10th · Nobel Laureate',
-      highlightHi: 'मिथुन लग्न · दशम में बुध-शुक्र-शनि · नोबेल विजेता'
-    }
-  ];
-  const DEMO_PROFILE = HISTORICAL_BENCHMARKS[0];
 
   useEffect(() => {
     const savedLanguage = localStorage.getItem('cosmictantra_lang');
@@ -520,9 +544,7 @@ export default function MasterKundliReportClient() {
     // 2b. Check Unified Profile Store (getActiveProfile)
     try {
       const active = getActiveProfile();
-      if (active?.name && /prabhakar|priya sharma|kashi golden/i.test(active.name)) {
-        // ignore legacy test profile
-      } else if (active && active.birthDate && active.birthTime && (active.lat !== undefined || active.latitude !== undefined) && (active.lng !== undefined || active.longitude !== undefined)) {
+      if (active && active.birthDate && active.birthTime && (active.lat !== undefined || active.latitude !== undefined) && (active.lng !== undefined || active.longitude !== undefined)) {
         let lat = Number(active.lat ?? active.latitude);
         let lng = Number(active.lng ?? active.longitude);
         let tz = Number(active.tz ?? active.timezone) || 5.5;
@@ -556,6 +578,13 @@ export default function MasterKundliReportClient() {
           return;
         }
       }
+    } catch {}
+
+    // Refresh all user profiles from persistent profileStore
+    try {
+      const stored = getProfiles();
+      const valid = (stored || []).filter((p: any) => p?.name);
+      setAllUserProfiles(valid);
     } catch {}
 
     // 3. First-time visitor without URL params or saved profile:
@@ -692,6 +721,18 @@ export default function MasterKundliReportClient() {
     rawInputRef.current = rawFromDisplay(birthState, 'MANUAL');
     try {
       localStorage.setItem('cosmictantra_active_kundli', JSON.stringify(birthState));
+      const saved = upsertProfile({
+        name: birthState.name.trim(),
+        relation: 'Self',
+        birthDate: birthState.birthDate,
+        birthTime: birthState.birthTime,
+        birthCity: birthState.locationName,
+        lat: birthState.latitude,
+        lng: birthState.longitude,
+        tz: Number.isFinite(birthState.timezone) ? birthState.timezone : 5.5,
+      } as never);
+      setActiveProfileId(saved.id);
+      setAllUserProfiles(getProfiles() || []);
     } catch {}
     setToast({
       tone: 'ok',
@@ -719,6 +760,21 @@ export default function MasterKundliReportClient() {
   const book = useMemo(() => {
     return generateKundliBookModel(birthState.name, snapshot, 'COMPLETE_VEDIC_KUNDLI');
   }, [birthState.name, snapshot]);
+
+  const dailyForecastData = useMemo(() => {
+    try {
+      const city = {
+        name: displayProfile.locationName || 'India',
+        lat: Number.isFinite(displayProfile.latitude) ? displayProfile.latitude : 25.3176,
+        lng: Number.isFinite(displayProfile.longitude) ? displayProfile.longitude : 82.9739,
+        tz: Number.isFinite(displayProfile.timezone) ? displayProfile.timezone : 5.5
+      };
+      return getDaily3DayInterpretation(displayProfile, new Date(), city);
+    } catch (err) {
+      console.warn('Daily interpretation computation fallback', err);
+      return [];
+    }
+  }, [displayProfile]);
 
   const chartD1Obj = useMemo(() => ({
     lagna: snapshot.lagna,
@@ -1029,26 +1085,91 @@ export default function MasterKundliReportClient() {
   return (
     <div data-report-hydrated={hydrated ? 'true' : 'false'} className="min-h-screen kundli-paper bg-[#FDFBF7] dark:bg-[#07080C] text-[#1C1917] dark:text-[#EFECE6] font-sans antialiased pb-24 selection:bg-[#E5D7BC] dark:selection:bg-[#D4AF37]/40">
 
-      {/* 0. Unified Contextual Header (reclaims 64px, eliminates double header) */}
+      {/* 0. Primary Site Header (Standard Homepage GlobalHeader) */}
       <GlobalHeader
-        mode="report"
+        mode="public"
         lang={lang}
         theme={theme}
         onThemeToggle={handleThemeToggle}
         onLangToggle={() => setIsLangModalOpen(true)}
-        reportData={{
-          subjectName: birthState.name,
-          birthDate: birthState.birthDate,
-          birthTime: birthState.birthTime,
-          locationName: birthState.locationName,
-          isDemoProfile,
-          activeTab,
-          onTabChange: (tab) => setActiveTab(tab as any),
-          onEditDetails: () => setIsEditModalOpen(true),
-          onDownloadPdf: () => setIsDownloadChoiceOpen(true),
-          onPrint: () => window.print(),
-        }}
+        onOpenCitySelector={() => setIsEditModalOpen(true)}
+        onOpenConsultation={() => setConsultModalOpen(true)}
       />
+
+      {/* 1. Secondary Workspace Segmented Rail (Immediately below Header) */}
+      <nav data-testid="secondary-workspace-rail" aria-label="Kundli sections" className="sticky top-16 sm:top-20 z-30 bg-[#FDFBF7]/95 dark:bg-[#07080C]/95 backdrop-blur-md border-b border-[#E5D7BC] dark:border-white/10 py-2.5 px-4 lg:px-8 print:hidden">
+        <div className="max-w-7xl mx-auto flex items-center gap-2 overflow-x-auto no-scrollbar">
+          {[
+            { id: 'OVERVIEW', labelEn: 'Overview', labelHi: 'सारांश', icon: LayoutDashboard },
+            { id: 'FOLIO', labelEn: '17-Volume Book', labelHi: '१७-खण्ड ग्रन्थ', icon: BookOpen },
+            { id: 'WORKBENCH', labelEn: 'Charts & Vargas', labelHi: 'षोडशवर्ग चक्र', icon: Grid },
+            { id: 'DASHA', labelEn: 'Vimshottari Dasha', labelHi: 'विंशोत्तरी दशा', icon: Clock },
+            { id: 'PANCHANG', labelEn: 'My Day Panchang', labelHi: 'दैनिक पंचांग', icon: Calendar },
+            { id: 'MILAN', labelEn: 'Kundali Milan', labelHi: 'कुण्डली मिलान', icon: Heart },
+            { id: 'CONSULT', labelEn: 'Talk to Pandit', labelHi: 'पण्डित परामर्श', icon: PhoneCall },
+          ].map((tabItem) => {
+            const Icon = tabItem.icon;
+            const isTabActive = activeTab === tabItem.id;
+            return (
+              <button
+                key={tabItem.id}
+                type="button"
+                id={`rail-tab-${tabItem.id.toLowerCase()}`}
+                data-testid={`rail-tab-${tabItem.id.toLowerCase()}`}
+                onClick={() => {
+                  chitiSensory.playTick();
+                  if (tabItem.id === 'CONSULT') {
+                    setConsultModalOpen(true);
+                  } else if (tabItem.id === 'MILAN') {
+                    router.push('/kundali-milan');
+                  } else {
+                    setActiveTab(tabItem.id as any);
+                  }
+                }}
+                className={`min-h-10 px-4 py-2 rounded-2xl text-xs font-mono-data font-bold transition-all flex items-center gap-2 shrink-0 cursor-pointer border ${
+                  isTabActive
+                    ? 'bg-gradient-to-r from-[#8E6F1D] to-[#A88424] dark:from-[#D4AF37] dark:to-[#F0C968] text-white dark:text-black border-[#8E6F1D] dark:border-[#D4AF37] shadow-md'
+                    : 'bg-white/80 dark:bg-[#121422] text-[#57524A] dark:text-[#A8A29E] border-[#E5D7BC] dark:border-white/10 hover:border-[#8E6F1D]/50 hover:text-[#1C1917] dark:hover:text-white'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{lang === 'hi' ? tabItem.labelHi : tabItem.labelEn}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+
+      {/* 2. Page Breadcrumbs (Immediately below Workspace Rail) */}
+      <nav data-testid="report-breadcrumbs" aria-label="Breadcrumb" className="max-w-7xl mx-auto px-4 lg:px-8 pt-3.5 pb-1 flex items-center gap-2 text-xs font-mono-data text-[#78716C] dark:text-[#A8A29E] print:hidden">
+        <Link href="/" className="hover:text-[#8E6F1D] dark:hover:text-[#F0C968] flex items-center gap-1 transition-colors">
+          <span>⌂</span>
+          <span>{lang === 'hi' ? 'गृह' : 'Home'}</span>
+        </Link>
+        <span>›</span>
+        <Link href="/report" className="hover:text-[#8E6F1D] dark:hover:text-[#F0C968] transition-colors">
+          <span>{lang === 'hi' ? 'मेरी कुण्डली' : 'My Kundli'}</span>
+        </Link>
+        <span>›</span>
+        <span className="font-bold text-[#1C1917] dark:text-[#EFECE6] truncate max-w-[200px]">
+          {!inputComplete
+            ? (lang === 'hi' ? 'विवरण भरें' : 'Enter Details')
+            : (birthState.name || displayProfile.name || (lang === 'hi' ? 'दैनिक सारांश' : 'Master Report'))}
+        </span>
+        {activeTab && (
+          <>
+            <span>›</span>
+            <span className="text-[#8E6F1D] dark:text-[#F0C968] font-semibold">
+              {activeTab === 'OVERVIEW' ? (lang === 'hi' ? 'सारांश' : 'Overview')
+                : activeTab === 'FOLIO' ? (lang === 'hi' ? '१७-खण्ड ग्रन्थ' : '17-Volume Book')
+                : activeTab === 'WORKBENCH' ? (lang === 'hi' ? 'षोडशवर्ग चक्र' : 'Charts & Vargas')
+                : activeTab === 'DASHA' ? (lang === 'hi' ? 'विंशोत्तरी दशा' : 'Vimshottari Dasha')
+                : activeTab === 'PANCHANG' ? (lang === 'hi' ? 'दैनिक पंचांग' : 'My Day Panchang')
+                : activeTab}
+            </span>
+          </>
+        )}
+      </nav>
       <LanguageSelectorModal
         isOpen={isLangModalOpen}
         currentLang={lang}
@@ -1205,33 +1326,6 @@ export default function MasterKundliReportClient() {
         </div>
       </div>
 
-      {/* 2. Graha Matrix Quick Bar */}
-      <div className="bg-[#FAF6EF] dark:bg-[#161828] border-b border-[#E5D7BC] dark:border-white/10 px-4 lg:px-8 py-2 overflow-x-auto scrollbar-thin print:hidden">
-        <div className="flex items-center gap-2 min-w-max">
-          <span className="text-[11px] font-bold text-[#8E6F1D] dark:text-[#F0C968] uppercase tracking-wider flex items-center gap-1 mr-1">
-            <Activity className="w-3.5 h-3.5" /> {t('graha')}
-          </span>
-          {grahas.map((g) => {
-            const isSelected = activeGraha === g.name;
-            return (
-              <button
-                key={g.name}
-                onClick={() => {
-                  chitiSensory.playTick();
-                  setActiveGraha(g.name);
-                }}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 border ${isSelected ? 'bg-[#8E6F1D] text-white border-[#8E6F1D] shadow-xs' : 'bg-white dark:bg-[#121422] text-[#44403C] dark:text-[#D1C9BF] border-[#E5D7BC] dark:border-white/10 hover:border-[#8E6F1D]/50'}`}
-              >
-                <span>{g.name}</span>
-                <span className={`text-[10px] font-mono-data ${isSelected ? 'text-amber-200' : 'text-[#78716C] dark:text-[#A8A29E]'}`}>
-                  {String(g.rashiName || g.rashiEn || '').slice(0, 3)} {Math.floor(g.degrees % 30)}°{Math.floor((g.degrees * 60) % 60)}'
-                </span>
-                {g.isRetrograde && <span className={`text-[10px] font-bold ${isSelected ? 'text-amber-100' : 'text-rose-500 dark:text-rose-300'}`}>(R)</span>}
-              </button>
-            );
-          })}
-        </div>
-      </div>
 
       {!inputComplete && (
         <div className="max-w-4xl mx-auto px-4 lg:px-8 py-8 space-y-8 print:hidden">
@@ -1369,7 +1463,7 @@ export default function MasterKundliReportClient() {
                   type="button"
                   onClick={() => {
                     chitiSensory.playTick();
-                    setBirthState({
+                    const bPayload = {
                       name: h.name,
                       birthDate: h.birthDate,
                       birthTime: h.birthTime,
@@ -1377,18 +1471,29 @@ export default function MasterKundliReportClient() {
                       longitude: h.longitude,
                       timezone: h.timezone,
                       locationName: h.locationName
-                    });
+                    };
+                    setBirthState(bPayload);
                     setIsDemoProfile(true);
                     rawInputRef.current = {
-                      name: h.name,
-                      birthDate: h.birthDate,
-                      birthTime: h.birthTime,
-                      latitude: h.latitude,
-                      longitude: h.longitude,
+                      ...bPayload,
                       utcOffsetHours: h.timezone,
-                      locationName: h.locationName,
                       coordinateProvenance: 'PROFILE'
                     };
+                    try {
+                      localStorage.setItem('cosmictantra_active_kundli', JSON.stringify(bPayload));
+                      const saved = upsertProfile({
+                        name: h.name,
+                        relation: 'Benchmark',
+                        birthDate: h.birthDate,
+                        birthTime: h.birthTime,
+                        birthCity: h.locationName,
+                        lat: h.latitude,
+                        lng: h.longitude,
+                        tz: h.timezone,
+                      } as never);
+                      setActiveProfileId(saved.id);
+                      setAllUserProfiles(getProfiles() || []);
+                    } catch {}
                   }}
                   className="p-4 rounded-2xl border border-[#E5D7BC] dark:border-white/10 bg-white/70 dark:bg-[#121422]/70 hover:border-[#8E6F1D] dark:hover:border-[#D4AF37] transition-all text-left space-y-1.5 cursor-pointer shadow-xs group"
                 >
@@ -1413,52 +1518,231 @@ export default function MasterKundliReportClient() {
         </div>
       )}
 
-      {/* 2b. Kundli at a Glance — the Era-2/3 convention: summary before depth */}
-      <section className="max-w-7xl mx-auto px-4 lg:px-8 pt-6 print:hidden">
-        <div className="rounded-2xl border border-[#E5D7BC] dark:border-white/10 bg-white dark:bg-[#121422] shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#F0E6D2] dark:border-white/5 bg-[#FAF6EF] dark:bg-[#161828]">
-            <h2 className="text-[11px] font-bold uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968] flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5" /> {t('glance')}
-            </h2>
-            <span className="text-[10px] font-mono-data text-[#78716C] dark:text-[#A8A29E]">{snapshot.meta.engineVersion}</span>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 divide-x divide-y lg:divide-y-0 divide-[#F0E6D2] dark:divide-white/5">
-            <div className="px-4 py-3">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E]">{t('lagna')}</div>
-              <div className="text-sm font-bold text-[#1C1917] dark:text-[#EFECE6] mt-0.5">{snapshot.lagna.rashiName}</div>
-              <div className="text-[10px] text-[#78716C] dark:text-[#A8A29E]">{snapshot.lagna.rashiEn} · {snapshot.lagna.degreeStr}</div>
-            </div>
-            <div className="px-4 py-3">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E]">{t('moonRashi')}</div>
-              <div className="text-sm font-bold text-[#1C1917] dark:text-[#EFECE6] mt-0.5">{(snapshot.planets as any)?.Moon?.rashiName ?? '—'}</div>
-              <div className="text-[10px] text-[#78716C] dark:text-[#A8A29E]">{(snapshot.planets as any)?.Moon?.rashiEn ?? ''}</div>
-            </div>
-            <div className="px-4 py-3">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E]">{t('janmaNakshatra')}</div>
-              <div className="text-sm font-bold text-[#1C1917] dark:text-[#EFECE6] mt-0.5">{snapshot.birthPanchang.nakshatra?.name ?? '—'}</div>
-              <div className="text-[10px] text-[#78716C] dark:text-[#A8A29E]"> {t('pada')} {(snapshot.birthPanchang.nakshatra as any)?.pada ?? '—'}</div>
-            </div>
-            <div className="px-4 py-3">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E]">{t('tithi')}</div>
-              <div className="text-sm font-bold text-[#1C1917] dark:text-[#EFECE6] mt-0.5">{snapshot.birthPanchang.udayaTithi?.fullName ?? '—'}</div>
-              <div className="text-[10px] text-[#78716C] dark:text-[#A8A29E]">{t('udayaTithi')}</div>
-            </div>
-            <div className="px-4 py-3">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E]">{t('manglik')}</div>
-              <div className="text-sm font-bold mt-0.5">
-                {snapshot.yogasAndDoshas.manglik.isManglik
-                  ? <span className="text-[#B45309] dark:text-amber-300">{snapshot.yogasAndDoshas.manglik.isCancelled ? t('cancelled') : `Yes · ${snapshot.yogasAndDoshas.manglik.severity}`}</span>
-                  : <span className="text-[#15803D] dark:text-emerald-400">{t('notPresent')}</span>}
+      {/* ================================================================= */}
+      {/* 2. SACRED PERSONA HERO & DASHBOARD COCKPIT (User Personal Space)   */}
+      {/* ================================================================= */}
+      <section data-testid="persona-hero" className="max-w-7xl mx-auto px-4 lg:px-8 pt-4 pb-2 print:hidden">
+        <div className="rounded-3xl border border-[#E5D7BC] dark:border-white/10 bg-gradient-to-b from-white via-white/95 to-amber-50/20 dark:from-[#121422] dark:via-[#121422]/95 dark:to-[#161828] p-5 sm:p-7 shadow-sm space-y-5">
+          
+          {/* Top Row: Active Persona Identity & Actions */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-black/5 dark:border-white/5 pb-4">
+            <div className="flex items-start sm:items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#8E6F1D] to-[#D4AF37] flex items-center justify-center text-white font-serif text-xl font-bold shadow-md shadow-[#8E6F1D]/20 shrink-0">
+                ॐ
               </div>
-              <div className="text-[10px] text-[#78716C] dark:text-[#A8A29E]">as per engine rules</div>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="font-editorial text-2xl sm:text-3xl font-bold text-[#1C1917] dark:text-[#EFECE6] tracking-tight truncate">
+                    {birthState.name || displayProfile.name || (lang === 'hi' ? 'साधक' : 'Cosmic Seeker')}
+                  </h1>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-mono-data font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20 uppercase tracking-wide">
+                    <Shield className="w-3 h-3 text-blue-500" />
+                    <span>{lang === 'hi' ? 'सत्यापित समय' : 'Exact Time Verified'}</span>
+                  </span>
+                  {isDemoProfile && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-mono-data font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 uppercase tracking-wide">
+                      <Sparkles className="w-3 h-3 text-amber-500" />
+                      <span>{lang === 'hi' ? 'ऐतिहासिक संदर्भ' : 'Historical Specimen'}</span>
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-[#78716C] dark:text-[#A8A29E] font-mono-data mt-0.5 flex flex-wrap items-center gap-1.5">
+                  <span>{birthState.birthDate || displayProfile.birthDate}</span>
+                  <span>•</span>
+                  <span>{birthState.birthTime || displayProfile.birthTime}</span>
+                  <span>•</span>
+                  <span className="truncate">{birthState.locationName || displayProfile.locationName}</span>
+                </p>
+              </div>
             </div>
-            <div className="px-4 py-3">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E]">Current Dasha</div>
-              <div className="text-sm font-bold text-[#1C1917] dark:text-[#EFECE6] mt-0.5">{snapshot.dasha.currentMahadasha}</div>
-              <div className="text-[10px] text-[#78716C] dark:text-[#A8A29E]">{snapshot.dasha.currentAntardasha} AD · {snapshot.dasha.currentDateRange}</div>
-              <div className="text-[9px] font-mono-data text-[#78716C] dark:text-[#A8A29E] mt-0.5">Dasha balance at birth: {snapshot.dasha.startingBalance}</div>
+
+            {/* Quick Action Buttons */}
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsEditModalOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#E5D7BC] dark:border-white/10 bg-white dark:bg-[#1C1E27] hover:bg-[#F5EFE6] dark:hover:bg-[#252836] text-xs font-mono-data font-semibold text-[#1C1917] dark:text-[#EFECE6] transition-all cursor-pointer shadow-2xs"
+              >
+                <Edit3 className="w-3.5 h-3.5 text-[#8E6F1D] dark:text-[#F0C968]" />
+                <span className="hidden sm:inline">{lang === 'hi' ? 'विवरण बदलें' : 'Edit Details'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                data-testid="hero-print-kundli"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#E5D7BC] dark:border-white/10 bg-white dark:bg-[#1C1E27] hover:bg-[#F5EFE6] dark:hover:bg-[#252836] text-xs font-mono-data font-semibold text-[#1C1917] dark:text-[#EFECE6] transition-all cursor-pointer shadow-2xs"
+              >
+                <Printer className="w-3.5 h-3.5 text-[#8E6F1D] dark:text-[#F0C968]" />
+                <span className="hidden sm:inline">{lang === 'hi' ? 'प्रिंट' : 'Print'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsDownloadChoiceOpen(true)}
+                data-testid="hero-download-pdf"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-[#8E6F1D] via-[#A88424] to-[#8E6F1D] dark:from-[#D4AF37] dark:via-[#F0C968] dark:to-[#D4AF37] text-white dark:text-black text-xs font-mono-data font-bold transition-all shadow-md hover:shadow-lg cursor-pointer active:scale-95"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>{lang === 'hi' ? 'पूर्ण कुण्डली लें (₹21)' : 'Download Full PDF (₹21)'}</span>
+              </button>
             </div>
           </div>
+
+          {/* Row 2: Profiles / Parivaar Pill Strip (Clean Separation from Historical Benchmarks) */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs font-mono-data">
+              <span className="font-bold text-[#8E6F1D] dark:text-[#F0C968] uppercase tracking-wider flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5" />
+                <span>{lang === 'hi' ? 'मेरी प्रोफाइल / परिवार' : 'My Profiles / Parivaar'}</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowHistoricalBenchmarks(!showHistoricalBenchmarks)}
+                className="text-[11px] text-[#78716C] dark:text-[#A8A29E] hover:text-[#8E6F1D] dark:hover:text-[#F0C968] flex items-center gap-1 cursor-pointer transition-colors"
+              >
+                <span>{lang === 'hi' ? 'ऐतिहासिक संदर्भ कुण्डली' : 'Historical Benchmarks'}</span>
+                {showHistoricalBenchmarks ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+              </button>
+            </div>
+
+            {/* Horizontal Scrollable Real Profiles Strip */}
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+              {allUserProfiles.map((p) => {
+                const isSelected = !isDemoProfile && (p.name === birthState.name);
+                return (
+                  <button
+                    key={p.id || p.name}
+                    type="button"
+                    onClick={() => {
+                      chitiSensory.playTick();
+                      if (p.id) {
+                        try { setActiveProfileId(p.id); } catch {}
+                      }
+                      setBirthState({
+                        name: p.name,
+                        birthDate: p.birthDate,
+                        birthTime: p.birthTime || '12:00',
+                        latitude: Number(p.latitude ?? p.lat),
+                        longitude: Number(p.longitude ?? p.lng),
+                        timezone: Number(p.timezone ?? p.tz) || 5.5,
+                        locationName: p.birthCity || p.city || p.locationName || 'India'
+                      });
+                      setIsDemoProfile(false);
+                    }}
+                    className={`px-3.5 py-1.5 rounded-xl border text-xs font-mono-data transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                      isSelected
+                        ? 'border-[#8E6F1D] dark:border-[#D4AF37] bg-[#8E6F1D]/15 dark:bg-[#D4AF37]/20 font-bold text-[#8E6F1D] dark:text-[#F0C968] shadow-xs'
+                        : 'border-black/10 dark:border-white/10 bg-white/60 dark:bg-white/5 text-[#57524A] dark:text-[#A8A29E] hover:border-[#8E6F1D]/40'
+                    }`}
+                  >
+                    <User className="w-3 h-3 text-[#8E6F1D] dark:text-[#D4AF37]" />
+                    <span>{p.name}</span>
+                    {isSelected && <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />}
+                  </button>
+                );
+              })}
+
+              <button
+                type="button"
+                onClick={() => setIsEditModalOpen(true)}
+                className="px-3 py-1.5 rounded-xl border border-dashed border-[#8E6F1D]/40 text-xs font-mono-data text-[#8E6F1D] dark:text-[#F0C968] hover:bg-[#8E6F1D]/10 flex items-center gap-1 shrink-0 cursor-pointer transition-all"
+              >
+                <UserPlus className="w-3 h-3" />
+                <span>{lang === 'hi' ? '+ नया प्रोफाइल जोड़ें' : '+ Add Profile'}</span>
+              </button>
+            </div>
+
+            {/* Discrete Collapsible Historical Benchmarks Shelf */}
+            {showHistoricalBenchmarks && (
+              <div className="pt-2 border-t border-black/5 dark:border-white/5 grid grid-cols-1 sm:grid-cols-3 gap-2 animate-fadeIn">
+                {HISTORICAL_BENCHMARKS.map((h) => (
+                  <button
+                    key={h.id}
+                    type="button"
+                    onClick={() => {
+                      chitiSensory.playTick();
+                      setBirthState({
+                        name: h.name,
+                        birthDate: h.birthDate,
+                        birthTime: h.birthTime,
+                        latitude: h.latitude,
+                        longitude: h.longitude,
+                        timezone: h.timezone,
+                        locationName: h.locationName
+                      });
+                      setIsDemoProfile(true);
+                    }}
+                    className="p-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-white/40 dark:bg-white/5 hover:border-amber-500 text-left text-xs font-mono-data transition-all cursor-pointer space-y-0.5"
+                  >
+                    <div className="flex items-center justify-between text-[10px] text-amber-700 dark:text-amber-400 font-bold">
+                      <span>{h.tag}</span>
+                      <span>{h.birthDate.slice(0, 4)}</span>
+                    </div>
+                    <div className="font-bold text-[#1C1917] dark:text-white">
+                      {lang === 'hi' ? h.hindiName : h.name}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Row 3: Four Key Life Metric Cards (Lagna, Moon, Nakshatra, Dasha) */}
+          <div data-testid="life-glance-metrics" className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+            
+            {/* 1. Lagna */}
+            <div className="p-3.5 rounded-2xl border border-[#E5D7BC] dark:border-white/10 bg-white/80 dark:bg-[#161828] space-y-1">
+              <div className="text-[10px] font-mono-data uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E] font-bold">
+                {lang === 'hi' ? 'लग्न (D1)' : 'Ascendant (Lagna)'}
+              </div>
+              <div className="font-editorial text-lg sm:text-xl font-bold text-[#1C1917] dark:text-white">
+                {snapshot.lagna.rashiName}
+              </div>
+              <div className="text-[11px] font-mono-data text-[#8E6F1D] dark:text-[#F0C968]">
+                {snapshot.lagna.rashiEn} • {snapshot.lagna.degreeStr}
+              </div>
+            </div>
+
+            {/* 2. Moon Sign */}
+            <div className="p-3.5 rounded-2xl border border-[#E5D7BC] dark:border-white/10 bg-white/80 dark:bg-[#161828] space-y-1">
+              <div className="text-[10px] font-mono-data uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E] font-bold">
+                {lang === 'hi' ? 'चन्द्र राशि' : 'Moon Sign (Rashi)'}
+              </div>
+              <div className="font-editorial text-lg sm:text-xl font-bold text-[#1C1917] dark:text-white">
+                {(snapshot.planets as any)?.Moon?.rashiName ?? '—'}
+              </div>
+              <div className="text-[11px] font-mono-data text-[#8E6F1D] dark:text-[#F0C968]">
+                {(snapshot.planets as any)?.Moon?.rashiEn ?? 'Moon Lord'}
+              </div>
+            </div>
+
+            {/* 3. Birth Nakshatra */}
+            <div className="p-3.5 rounded-2xl border border-[#E5D7BC] dark:border-white/10 bg-white/80 dark:bg-[#161828] space-y-1">
+              <div className="text-[10px] font-mono-data uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E] font-bold">
+                {lang === 'hi' ? 'जन्म नक्षत्र' : 'Birth Star (Nakshatra)'}
+              </div>
+              <div className="font-editorial text-lg sm:text-xl font-bold text-[#1C1917] dark:text-white">
+                {snapshot.birthPanchang.nakshatra?.name ?? '—'}
+              </div>
+              <div className="text-[11px] font-mono-data text-[#8E6F1D] dark:text-[#F0C968]">
+                {t('pada')} {(snapshot.birthPanchang.nakshatra as any)?.pada ?? '1'}
+              </div>
+            </div>
+
+            {/* 4. Active Dasha */}
+            <div className="p-3.5 rounded-2xl border border-[#E5D7BC] dark:border-white/10 bg-white/80 dark:bg-[#161828] space-y-1">
+              <div className="text-[10px] font-mono-data uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E] font-bold">
+                {lang === 'hi' ? 'सक्रिय महादशा' : 'Active Dasha'}
+              </div>
+              <div className="font-editorial text-lg sm:text-xl font-bold text-[#1C1917] dark:text-white truncate">
+                {snapshot.dasha.currentMahadasha}
+              </div>
+              <div className="text-[11px] font-mono-data text-[#8E6F1D] dark:text-[#F0C968] truncate">
+                {snapshot.dasha.currentAntardasha} AD · {snapshot.dasha.currentDateRange}
+              </div>
+            </div>
+
+          </div>
+
         </div>
       </section>
 
@@ -1474,6 +1758,139 @@ export default function MasterKundliReportClient() {
           className="max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-8">
           {/* Market-Leading Novice-Friendly Overview (Core Essence & Life Archetypes) */}
           <NoviceCosmicOverview snapshot={snapshot} lang={lang} personName={displayProfile.name} />
+
+          {/* B. Properly Aligned Vedic Graha Cabinet & Telemetry Table */}
+          <section data-testid="vedic-graha-cabinet" className="bg-white dark:bg-[#121422] rounded-3xl p-5 sm:p-7 border border-[#E5D7BC] dark:border-white/10 shadow-sm space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-black/5 dark:border-white/5 pb-4">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#8E6F1D]/10 text-[#8E6F1D] dark:text-[#F0C968] text-[10px] font-mono-data font-bold uppercase tracking-widest mb-1">
+                  <Activity className="w-3.5 h-3.5" />
+                  <span>{lang === 'hi' ? 'ग्रह स्थिति एवं स्पष्ट मान' : 'Planetary Positions & Coordinates'}</span>
+                </div>
+                <h3 className="font-editorial text-2xl font-bold text-[#1C1917] dark:text-[#EFECE6]">
+                  {lang === 'hi' ? 'नवग्रह स्थिति चक्र (Vedic Planetary Cabinet)' : 'Vedic Graha Cabinet (Navagraha Telemetry)'}
+                </h3>
+                <p className="text-xs text-[#78716C] dark:text-[#A8A29E] font-mono-data mt-0.5">
+                  {lang === 'hi'
+                    ? 'चित्रपक्ष (लाहिरी अयनांश) आधारित सूक्ष्म ग्रह स्पष्ट, नक्षत्र, चरण एवं वक्री-मार्गी गति विवरण।'
+                    : 'Exact celestial longitudes, sign degrees, nakshatras, padas, and retrogrades under Lahiri Chitra Paksha.'}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+                <span className="px-3 py-1.5 rounded-xl bg-[#FAF6EF] dark:bg-[#1C1E27] border border-[#E5D7BC] dark:border-white/10 text-[11px] font-mono-data font-bold text-[#8E6F1D] dark:text-[#F0C968]">
+                  {snapshot.meta?.ayanamshaName || 'Chitra Paksha (Lahiri)'}
+                </span>
+              </div>
+            </div>
+
+            {/* Table View */}
+            <div className="overflow-x-auto no-scrollbar">
+              <table className="w-full text-left border-collapse min-w-[680px]">
+                <thead>
+                  <tr className="border-b border-[#E5D7BC] dark:border-white/10 text-[11px] font-mono-data font-bold uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E]">
+                    <th className="pb-3 pl-3">{lang === 'hi' ? 'ग्रह' : 'Planet'}</th>
+                    <th className="pb-3">{lang === 'hi' ? 'राशि एवं अंश' : 'Rashi & Degrees'}</th>
+                    <th className="pb-3">{lang === 'hi' ? 'नक्षत्र व चरण' : 'Nakshatra & Pada'}</th>
+                    <th className="pb-3">{lang === 'hi' ? 'भाव' : 'House / Bhava'}</th>
+                    <th className="pb-3">{lang === 'hi' ? 'गति' : 'Motion'}</th>
+                    <th className="pb-3 pr-3">{lang === 'hi' ? 'कारकत्व / स्वरूप' : 'Significance'}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-black/5 dark:divide-white/5 font-mono-data text-xs">
+                  {grahas.map((g) => {
+                    const isSelected = activeGraha === g.name || chartPlanet?.name === g.name;
+                    const meta = PLANET_META[g.name] || { hi: g.sanskrit || g.name, symbol: '✦', karakaEn: g.karaka || 'Graha', karakaHi: 'ग्रह' };
+                    const degInSign = Math.floor(g.degrees % 30);
+                    const minInSign = Math.floor((g.degrees * 60) % 60);
+                    const secInSign = Math.floor((g.degrees * 3600) % 60);
+                    const rashiDisplay = lang === 'hi' ? (g.rashiName || g.rashiEn) : (g.rashiEn || g.rashiName);
+                    const nakName = g.nakshatra?.name || g.nakshatra || '—';
+                    const padaNum = g.pada ?? g.nakshatra?.pada ?? '—';
+                    const houseNum = g.house || 1;
+
+                    return (
+                      <tr
+                        key={g.name}
+                        data-testid={`graha-row-${g.name.toLowerCase()}`}
+                        onClick={() => {
+                          chitiSensory.playTick();
+                          setActiveGraha(g.name);
+                          setChartPlanet({ name: g.name, house: houseNum });
+                        }}
+                        className={`transition-colors cursor-pointer group hover:bg-[#FAF6EF]/80 dark:hover:bg-[#181A2A] ${
+                          isSelected ? 'bg-amber-500/10 dark:bg-amber-500/15 font-semibold' : ''
+                        }`}
+                      >
+                        {/* Planet */}
+                        <td className="py-3 pl-3">
+                          <div className="flex items-center gap-2.5">
+                            <span className="w-7 h-7 rounded-lg bg-amber-500/10 dark:bg-amber-500/20 text-[#8E6F1D] dark:text-[#F0C968] flex items-center justify-center text-sm font-bold shrink-0">
+                              {meta.symbol}
+                            </span>
+                            <div>
+                              <div className="font-bold text-[#1C1917] dark:text-[#EFECE6] group-hover:text-[#8E6F1D] dark:group-hover:text-[#D4AF37] transition-colors">
+                                {lang === 'hi' ? meta.hi : g.name}
+                              </div>
+                              <div className="text-[10px] text-[#78716C] dark:text-[#A8A29E]">
+                                {lang === 'hi' ? g.name : meta.hi}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Sign & Degrees */}
+                        <td className="py-3">
+                          <div className="font-semibold text-[#1C1917] dark:text-[#EFECE6]">
+                            {rashiDisplay}
+                          </div>
+                          <div className="text-[11px] text-[#8E6F1D] dark:text-[#F0C968]">
+                            {degInSign}° {String(minInSign).padStart(2, '0')}' {String(secInSign).padStart(2, '0')}"
+                          </div>
+                        </td>
+
+                        {/* Nakshatra & Pada */}
+                        <td className="py-3">
+                          <div className="text-[#1C1917] dark:text-[#EFECE6]">
+                            {nakName}
+                          </div>
+                          <div className="text-[10px] text-[#78716C] dark:text-[#A8A29E]">
+                            {lang === 'hi' ? `चरण ${padaNum}` : `Pada ${padaNum}`}
+                          </div>
+                        </td>
+
+                        {/* House */}
+                        <td className="py-3">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 text-[11px] font-bold">
+                            {lang === 'hi' ? `${houseNum} भाव` : `House ${houseNum}`}
+                          </span>
+                        </td>
+
+                        {/* Motion */}
+                        <td className="py-3">
+                          {g.isRetrograde ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20 text-[10px] font-bold">
+                              <span>●</span>
+                              <span>{lang === 'hi' ? 'वक्री (R)' : 'Retrograde (R)'}</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-bold">
+                              <span>✓</span>
+                              <span>{lang === 'hi' ? 'मार्गी' : 'Direct'}</span>
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Significance */}
+                        <td className="py-3 pr-3 text-[#57524A] dark:text-[#C5BFB5] text-[11px] max-w-xs truncate">
+                          {lang === 'hi' ? meta.karakaHi : meta.karakaEn}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
 
           {/* Row 1: D1 chart + current period */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1851,7 +2268,7 @@ export default function MasterKundliReportClient() {
             );
           })}
         </main>
-      ) : (
+      ) : activeTab === 'WORKBENCH' ? (
         /* ================================================================ */
         /* MODE B: INTERACTIVE VISUAL WORKBENCH                             */
         /* ================================================================ */
@@ -2048,7 +2465,241 @@ export default function MasterKundliReportClient() {
           </div>
 
         </main>
-      )}
+      ) : activeTab === 'DASHA' ? (
+        /* ================================================================ */
+        /* MODE D: VIMSHOTTARI DASHA — 120-Year Interactive Timeline        */
+        /* ================================================================ */
+        <main
+          id="report-panel-dasha"
+          role="tabpanel"
+          aria-labelledby="report-tab-dasha"
+          className="max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-6">
+          <div className="bg-white dark:bg-[#121422] rounded-3xl p-6 sm:p-8 border border-[#E5D7BC] dark:border-white/10 shadow-sm space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-black/5 dark:border-white/5 pb-4">
+              <div>
+                <h2 className="font-editorial text-2xl sm:text-3xl font-bold text-[#1C1917] dark:text-white flex items-center gap-2">
+                  <Clock className="w-6 h-6 text-[#8E6F1D] dark:text-[#D4AF37]" />
+                  <span>{lang === 'hi' ? '१२० वर्षीय विंशोत्तरी महादशा चक्र' : '120-Year Vimshottari Mahadasha Timeline'}</span>
+                </h2>
+                <p className="text-xs text-[#78716C] dark:text-[#A8A29E] font-mono-data mt-1">
+                  {lang === 'hi'
+                    ? `जन्म के समय नक्षत्र शेष: ${snapshot.dasha.startingBalance} · वर्तमान महादशा: ${snapshot.dasha.currentMahadasha} (${snapshot.dasha.currentAntardasha} अन्तर्दशा)`
+                    : `Dasha balance at birth: ${snapshot.dasha.startingBalance} · Active: ${snapshot.dasha.currentMahadasha} (${snapshot.dasha.currentAntardasha} Antardasha)`}
+                </p>
+              </div>
+              <div className="px-3.5 py-1.5 rounded-xl bg-amber-500/10 text-[#8E6F1D] dark:text-[#F0C968] border border-amber-500/20 text-xs font-mono-data font-bold">
+                {snapshot.dasha.currentDateRange}
+              </div>
+            </div>
+
+            <DashaTimeline
+              mahadashas={snapshot.dasha.mahadashas}
+              currentAD={snapshot.dasha.currentAntardasha}
+              selectedIndex={selectedMdIndex}
+              onSelect={setSelectedMdIndex}
+            />
+          </div>
+        </main>
+      ) : activeTab === 'PANCHANG' ? (
+        /* ================================================================ */
+        /* MODE E: PERSONAL PANCHANG & 3 VEDIC DAYS (आज • कल • परसों)        */
+        /* ================================================================ */
+        <main
+          id="report-panel-panchang"
+          role="tabpanel"
+          aria-labelledby="report-tab-panchang"
+          data-testid="report-panel-panchang"
+          className="max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-8 animate-fadeIn"
+        >
+          {/* Header Banner */}
+          <div className="bg-white dark:bg-[#121422] rounded-3xl p-6 sm:p-8 border border-[#E5D7BC] dark:border-white/10 shadow-sm space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-black/5 dark:border-white/5 pb-5">
+              <div>
+                <div className="text-xs font-mono-data uppercase tracking-[2px] text-[#8E6F1D] dark:text-[#F0C968] font-bold flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>{lang === 'hi' ? 'वैदिक काल-चक्र • व्यक्तिगत पञ्चाङ्ग' : 'Vedic Kaal Chakra • Personalised Panchang'}</span>
+                </div>
+                <h2 className="font-editorial text-2xl sm:text-3xl font-bold text-[#1C1917] dark:text-white mt-1">
+                  {lang === 'hi'
+                    ? `${displayProfile.name} के अगले तीन वैदिक दिवस (आज • कल • परसों)`
+                    : `${displayProfile.name}'s Next Three Vedic Days (Aaj • Kal • Parson)`}
+                </h2>
+                <p className="text-xs text-[#78716C] dark:text-[#A8A29E] font-mono-data mt-1.5">
+                  {lang === 'hi'
+                    ? `स्थान: ${displayProfile.locationName || 'भारत'} · जन्म लग्न: ${snapshot.lagna?.rashiName || 'लग्न'} · जन्म चन्द्र: ${snapshot.planets?.Moon?.rashiName || 'चन्द्र'} · महादशा: ${snapshot.dasha?.currentMahadasha || '—'}`
+                    : `Observing at: ${displayProfile.locationName || 'India'} · Natal Lagna: ${snapshot.lagna?.rashiName || 'Lagna'} · Natal Moon: ${snapshot.planets?.Moon?.rashiName || 'Chandra'} · Active Dasha: ${snapshot.dasha?.currentMahadasha || '—'}`}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="px-3.5 py-1.5 rounded-xl bg-amber-500/10 text-[#8E6F1D] dark:text-[#F0C968] border border-amber-500/25 text-xs font-mono-data font-bold">
+                  {snapshot.birthPanchang?.samvat?.vikram ? `विक्रम ${snapshot.birthPanchang.samvat.vikram}` : 'Vikram Samvat 2083'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setConsultModalOpen(true)}
+                  className="px-4 py-2 rounded-xl bg-[#8E6F1D] hover:bg-[#785E18] text-white text-xs font-mono-data font-bold shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  <span>{lang === 'hi' ? 'आज का मार्गदर्शन पूछें' : 'Ask About Today'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 3-Day Forecast Cards */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {dailyForecastData.map((detail, idx) => (
+                <div key={idx} data-testid={`daily-cosmic-card-${idx}`}>
+                  <DailyCosmicCard
+                    prediction={detail}
+                    isToday={idx === 0}
+                    onShareCard={() => {
+                      const text = `${displayProfile.name}'s Vedic Guidance for ${detail.dateStr} (${detail.dayLabel}): ${detail.theme}. Score: ${detail.score}/100. Calculate your Vedic day on CosmicTantra!`;
+                      if (typeof navigator !== 'undefined' && navigator.share) {
+                        navigator.share({ title: 'My Vedic Day', text, url: window.location.href }).catch(() => {});
+                      } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                        navigator.clipboard.writeText(text);
+                        setToast({ tone: 'ok', text: lang === 'hi' ? 'दैनिक मार्गदर्शन कॉपी किया गया!' : 'Day guidance copied to clipboard!' });
+                      }
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Today's Sacred Astronomical Panchang Telemetry */}
+          <div className="bg-white dark:bg-[#121422] rounded-3xl p-6 sm:p-8 border border-[#E5D7BC] dark:border-white/10 shadow-sm space-y-6">
+            <div className="flex items-center justify-between border-b border-black/5 dark:border-white/5 pb-4">
+              <div>
+                <h3 className="font-editorial text-xl sm:text-2xl font-bold text-[#1C1917] dark:text-white flex items-center gap-2">
+                  <span>☀️</span>
+                  <span>{lang === 'hi' ? 'आज का प्रामाणिक पञ्चाङ्ग विवरण' : "Today's Sacred Panchang Details"}</span>
+                </h3>
+                <p className="text-xs text-[#78716C] dark:text-[#A8A29E] font-mono-data mt-1">
+                  {lang === 'hi'
+                    ? 'पाँच मुख्य अङ्ग: तिथि, वार, नक्षत्र, योग, एवं करण — शुद्ध सिद्धान्त गणना।'
+                    : 'The Five Core Limbs: Tithi, Vaar, Nakshatra, Yoga, and Karana — Siddhanta precision.'}
+                </p>
+              </div>
+              <span className="px-3 py-1 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25 text-xs font-mono-data font-bold">
+                {lang === 'hi' ? 'प्रत्यक्ष पञ्चाङ्ग' : 'Real-time Ephemeris'}
+              </span>
+            </div>
+
+            {/* Panchang 5 Limbs Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              <div className="p-4 rounded-2xl bg-[#FAF6EF]/60 dark:bg-[#161828] border border-[#E5D7BC] dark:border-white/5 space-y-1">
+                <div className="text-[10px] font-mono-data text-[#8E6F1D] dark:text-[#D4AF37] font-bold uppercase tracking-wider">
+                  {lang === 'hi' ? '१. तिथि' : '1. Tithi'}
+                </div>
+                <div className="text-sm font-bold text-[#1C1917] dark:text-white truncate">
+                  {snapshot.birthPanchang?.udayaTithi?.fullName || snapshot.birthPanchang?.udayaTithi?.name || 'Navami'}
+                </div>
+                <div className="text-[11px] text-[#78716C] dark:text-[#A8A29E] font-mono-data">
+                  {snapshot.birthPanchang?.udayaTithi?.paksha || 'Shukla'} Paksha
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-[#FAF6EF]/60 dark:bg-[#161828] border border-[#E5D7BC] dark:border-white/5 space-y-1">
+                <div className="text-[10px] font-mono-data text-[#8E6F1D] dark:text-[#D4AF37] font-bold uppercase tracking-wider">
+                  {lang === 'hi' ? '२. नक्षत्र' : '2. Nakshatra'}
+                </div>
+                <div className="text-sm font-bold text-[#1C1917] dark:text-white truncate">
+                  {snapshot.birthPanchang?.nakshatra?.name || 'Hasta'}
+                </div>
+                <div className="text-[11px] text-[#78716C] dark:text-[#A8A29E] font-mono-data">
+                  {lang === 'hi' ? `चरण ${snapshot.birthPanchang?.nakshatra?.pada || 1}` : `Pada ${snapshot.birthPanchang?.nakshatra?.pada || 1}`}
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-[#FAF6EF]/60 dark:bg-[#161828] border border-[#E5D7BC] dark:border-white/5 space-y-1">
+                <div className="text-[10px] font-mono-data text-[#8E6F1D] dark:text-[#D4AF37] font-bold uppercase tracking-wider">
+                  {lang === 'hi' ? '३. योग' : '3. Yoga'}
+                </div>
+                <div className="text-sm font-bold text-[#1C1917] dark:text-white truncate">
+                  {typeof snapshot.birthPanchang?.yoga === 'object' ? (snapshot.birthPanchang?.yoga as any)?.name : (snapshot.birthPanchang?.yoga || 'Siddhi')}
+                </div>
+                <div className="text-[11px] text-[#78716C] dark:text-[#A8A29E] font-mono-data">
+                  {lang === 'hi' ? 'शुद्ध योग' : 'Sidereal Yoga'}
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-[#FAF6EF]/60 dark:bg-[#161828] border border-[#E5D7BC] dark:border-white/5 space-y-1">
+                <div className="text-[10px] font-mono-data text-[#8E6F1D] dark:text-[#D4AF37] font-bold uppercase tracking-wider">
+                  {lang === 'hi' ? '४. करण' : '4. Karana'}
+                </div>
+                <div className="text-sm font-bold text-[#1C1917] dark:text-white truncate">
+                  {typeof snapshot.birthPanchang?.karana === 'object' ? (snapshot.birthPanchang?.karana as any)?.name : (snapshot.birthPanchang?.karana || 'Bava')}
+                </div>
+                <div className="text-[11px] text-[#78716C] dark:text-[#A8A29E] font-mono-data">
+                  {lang === 'hi' ? 'करण चरण' : 'Half-Tithi Limb'}
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-[#FAF6EF]/60 dark:bg-[#161828] border border-[#E5D7BC] dark:border-white/5 space-y-1 col-span-2 sm:col-span-1">
+                <div className="text-[10px] font-mono-data text-[#8E6F1D] dark:text-[#D4AF37] font-bold uppercase tracking-wider">
+                  {lang === 'hi' ? '५. वार' : '5. Vaar'}
+                </div>
+                <div className="text-sm font-bold text-[#1C1917] dark:text-white truncate">
+                  {new Date().toLocaleDateString(lang === 'hi' ? 'hi-IN' : 'en-IN', { weekday: 'long' })}
+                </div>
+                <div className="text-[11px] text-[#78716C] dark:text-[#A8A29E] font-mono-data">
+                  {lang === 'hi' ? 'सूर्योदय से गणना' : 'From Sunrise'}
+                </div>
+              </div>
+            </div>
+
+            {/* Timings: Shubh Muhurat vs Inauspicious Periods */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              {/* Auspicious Windows */}
+              <div className="p-5 rounded-2xl bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/20 space-y-3">
+                <div className="text-xs font-mono-data font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5 uppercase tracking-wider">
+                  <span>🟢</span>
+                  <span>{lang === 'hi' ? 'शुभ मुहूर्त एवं प्रशस्त काल' : 'Auspicious Windows (Shubh Muhurat)'}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-xs font-mono-data">
+                  <div className="p-3 rounded-xl bg-white/80 dark:bg-black/20 border border-emerald-500/20">
+                    <div className="text-[10px] text-[#78716C] dark:text-[#A8A29E]">{lang === 'hi' ? 'अभिजीत मुहूर्त' : 'Abhijit Muhurat'}</div>
+                    <div className="font-bold text-[#1C1917] dark:text-white mt-0.5">{snapshot.birthPanchang?.timings?.abhijitMuhurat || '11:45 – 12:35'}</div>
+                  </div>
+                  <div className="p-3 rounded-xl bg-white/80 dark:bg-black/20 border border-emerald-500/20">
+                    <div className="text-[10px] text-[#78716C] dark:text-[#A8A29E]">{lang === 'hi' ? 'ब्रह्म मुहूर्त' : 'Brahma Muhurta'}</div>
+                    <div className="font-bold text-[#1C1917] dark:text-white mt-0.5">{snapshot.birthPanchang?.timings?.brahmaMuhurta || '04:24 – 05:12'}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Inauspicious Windows */}
+              <div className="p-5 rounded-2xl bg-rose-500/5 dark:bg-rose-500/10 border border-rose-500/20 space-y-3">
+                <div className="text-xs font-mono-data font-bold text-rose-800 dark:text-rose-300 flex items-center gap-1.5 uppercase tracking-wider">
+                  <span>🔴</span>
+                  <span>{lang === 'hi' ? 'वर्ज्य एवं अशुभ काल (सावधानी)' : 'Inauspicious Windows (Caution)'}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-xs font-mono-data">
+                  <div className="p-3 rounded-xl bg-white/80 dark:bg-black/20 border border-rose-500/20">
+                    <div className="text-[10px] text-[#78716C] dark:text-[#A8A29E]">{lang === 'hi' ? 'राहु काल' : 'Rahu Kaal'}</div>
+                    <div className="font-bold text-[#1C1917] dark:text-white mt-0.5">{snapshot.birthPanchang?.timings?.rahuKalam || '10:30 – 12:00'}</div>
+                  </div>
+                  <div className="p-3 rounded-xl bg-white/80 dark:bg-black/20 border border-rose-500/20">
+                    <div className="text-[10px] text-[#78716C] dark:text-[#A8A29E]">{lang === 'hi' ? 'यमगण्ड' : 'Yamaganda'}</div>
+                    <div className="font-bold text-[#1C1917] dark:text-white mt-0.5">{snapshot.birthPanchang?.timings?.yamaganda || '15:00 – 16:30'}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      ) : null}
+
+      {/* Consultation Request Modal */}
+      <ConsultationRequestModal
+        isOpen={consultModalOpen}
+        onClose={() => setConsultModalOpen(false)}
+        lang={lang}
+        activeProfile={birthState.name ? birthState : displayProfile}
+        onOpenIntakeIfNoProfile={() => setIsEditModalOpen(true)}
+      />
 
       {/* 4. Quick Edit Modal — city autocomplete, use-my-location, live validation */}
       {isEditModalOpen && (
@@ -2288,25 +2939,15 @@ export default function MasterKundliReportClient() {
                   setIsEditModalOpen(false);
                   setFailSafe(null);
                   setLastPdfMeta(null);
-                  void (async () => {
-                    setIsGeneratingPdf(true);
-                    setPipelineState(null);
-                    try {
-                      const result = await generateKundliV40Pdf(editedRaw, {
-                        locale: lang === 'hi' ? 'hi' : 'en',
-                        skipPdf: true
-                      });
-                      if (!result.ok) {
-                        const code = result.errorCode ?? 'KUNDLI_INPUT_INVALID';
-                        setFailSafe({
-                          message: KUNDLI_SAFE_MESSAGES[code as keyof typeof KUNDLI_SAFE_MESSAGES] ?? KUNDLI_SAFE_MESSAGES.KUNDLI_INPUT_INVALID,
-                          code
-                        });
-                      }
-                    } finally {
-                      setIsGeneratingPdf(false);
-                    }
-                  })();
+                  try {
+                    validateBirthInput(editedRaw);
+                  } catch (valErr: any) {
+                    const code = valErr?.code ?? 'KUNDLI_INPUT_INVALID';
+                    setFailSafe({
+                      message: KUNDLI_SAFE_MESSAGES[code as keyof typeof KUNDLI_SAFE_MESSAGES] ?? KUNDLI_SAFE_MESSAGES.KUNDLI_INPUT_INVALID,
+                      code
+                    });
+                  }
                 }}
                 className="px-4 py-2 rounded-xl text-xs font-bold bg-[#8E6F1D] text-white hover:bg-[#785E18] shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
               >

@@ -62,6 +62,7 @@ export default function ConsultationRequestModal({
         <div className="relative w-full max-w-md rounded-3xl bg-[#FAF7F2] dark:bg-[#0A0C14] border border-[#8E6F1D]/30 dark:border-[#D4AF37]/40 shadow-2xl p-6 sm:p-8 space-y-5 text-[#1C1917] dark:text-[#EFECE6] text-center">
           <button
             onClick={onClose}
+            aria-label="Close consultation modal"
             className="absolute top-5 right-5 w-8 h-8 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 flex items-center justify-center text-[#57524A] dark:text-[#C5BFB5] transition-all cursor-pointer"
           >
             <X className="w-4 h-4" />
@@ -132,6 +133,7 @@ Please initiate the call with Customer Care and bridge Shastri Ji on conference.
         {/* Close Button */}
         <button
           onClick={onClose}
+          aria-label="Close consultation modal"
           className="absolute top-5 right-5 w-8 h-8 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 flex items-center justify-center text-[#57524A] dark:text-[#C5BFB5] transition-all cursor-pointer"
         >
           <X className="w-4 h-4" />

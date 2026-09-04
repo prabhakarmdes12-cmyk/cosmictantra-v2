@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { 
   Sun, Moon, Languages, MapPin, Search, ChevronDown, 
   ArrowUpRight, Compass, ShieldCheck, User, LogOut, ArrowLeft,
-  Menu, Sparkles, ShoppingBag, Eye, BookOpen, Layers, FileText, Heart
+  Menu, Sparkles, ShoppingBag, Eye, BookOpen, Layers, FileText, Heart, Calendar
 } from 'lucide-react';
 import CosmicTantraLogo from '@/components/visual/CosmicTantraLogo';
 import { ShellMode } from '@/lib/routeRegistry';
@@ -15,6 +15,7 @@ import { SUPPORTED_LANGUAGES } from '@/lib/translations';
 import { getActiveProfile } from '@/lib/profileStore';
 import FullMegaMenuModal from '@/components/layout/FullMegaMenuModal';
 import ConsultationRequestModal from '@/components/consultation/ConsultationRequestModal';
+import { useActiveLocation } from '@/lib/location/useActiveLocation';
 
 export interface ReportHeaderData {
   subjectName?: string;
@@ -80,6 +81,8 @@ export default function GlobalHeader({
   }, []);
 
   const isHi = lang === 'hi';
+  const { location } = useActiveLocation();
+  const displayCityName = currentCity?.name || (location.status === 'KNOWN' ? location.name : null);
 
   // === 1. SCHOLAR WORKSPACE HEADER ===
   if (mode === 'scholar') {
@@ -357,193 +360,179 @@ export default function GlobalHeader({
   // === 5. CANONICAL PUBLIC HEADER WITH DESKTOP PRIMARY LINKS & PROFILE RECOGNITION ===
   return (
     <>
-      <header data-header-hydrated={hydrated ? 'true' : 'false'} className="sticky top-0 z-50 w-full bg-[#FAF7F2]/90 dark:bg-[#06070B]/90 backdrop-blur-2xl border-b border-black/[0.06] dark:border-white/[0.08] transition-colors duration-300">
-        <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-1 sm:gap-4">
+      <header
+        id="global-header-unified"
+        data-header-hydrated={hydrated ? 'true' : 'false'}
+        data-testid="global-header-unified"
+        className="sticky top-0 z-50 w-full bg-[#FAF7F2]/95 dark:bg-[#06070B]/95 backdrop-blur-2xl border-b border-black/[0.06] dark:border-white/[0.08] transition-colors duration-200"
+      >
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
           
-          {/* LEFT COLUMN: Logo & Desktop Primary Nav Links */}
-          <div className="flex items-center gap-4 lg:gap-8 shrink-0">
-            <Link href="/" className="group focus:outline-none flex items-center justify-center transition-transform hover:scale-102">
-              <CosmicTantraLogo size="md" subtitle={isHi ? 'वैदिक खगोल शुद्धता' : 'VEDIC PRECISION'} />
-            </Link>
-
-            {/* Desktop Direct Primary Nav Links */}
-            <nav className="hidden xl:flex items-center gap-6 text-xs font-mono-data uppercase tracking-wider font-bold">
-              <Link href="/" className="text-[#57524A] dark:text-[#C5BFB5] hover:text-[#8E6F1D] dark:hover:text-[#D4AF37] transition-colors">
-                {isHi ? 'होम' : 'Home'}
+          {/* LEFT WING: Minimal Primary Nav (Desktop) / Quick City (Mobile) */}
+          <div className="flex items-center gap-1 sm:gap-6 flex-1 justify-start min-w-0">
+            <nav className="hidden md:flex items-center gap-5 lg:gap-7 text-xs font-mono-data uppercase tracking-wider font-bold">
+              <Link
+                href="/calendar"
+                className="text-[#57524A] dark:text-[#C5BFB5] hover:text-[#8E6F1D] dark:hover:text-[#D4AF37] transition-colors py-1 shrink-0"
+              >
+                {isHi ? 'पञ्चाङ्ग' : 'Panchang'}
               </Link>
-              <Link href="/daily" className="text-[#57524A] dark:text-[#C5BFB5] hover:text-[#8E6F1D] dark:hover:text-[#D4AF37] transition-colors">
-                {isHi ? 'दैनिक पञ्चाङ्ग' : "Today's Panchang"}
-              </Link>
-              <Link href="/granth" className="text-[#57524A] dark:text-[#C5BFB5] hover:text-[#8E6F1D] dark:hover:text-[#D4AF37] transition-colors">
-                {isHi ? 'ग्रन्थ' : 'Granth'}
-              </Link>
-              <Link href="/darshan" className="text-[#57524A] dark:text-[#C5BFB5] hover:text-[#8E6F1D] dark:hover:text-[#D4AF37] transition-colors">
-                {isHi ? 'दर्शन' : 'Darshan'}
-              </Link>
-            </nav>
-          </div>
-
-          {/* RIGHT COLUMN: Profile Pill, Controls & Quick Actions */}
-          <div className="flex items-center justify-end gap-1.5 sm:gap-2.5 shrink-0">
-            
-            {/* Active Profile Pill or Create Kundli CTA */}
-            {activeProfile?.name ? (
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#8E6F1D]/30 dark:border-[#D4AF37]/40 bg-[#8E6F1D]/10 dark:bg-[#D4AF37]/10 hover:bg-[#8E6F1D]/20 text-xs font-mono-data font-bold text-[#8E6F1D] dark:text-[#F0C968] transition-all cursor-pointer shadow-xs active:scale-95"
-                >
-                  <User className="w-3.5 h-3.5" />
-                  <span className="max-w-[100px] truncate">{activeProfile.name}</span>
-                  <ChevronDown className="w-3 h-3 opacity-60" />
-                </button>
-
-                {profileDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white dark:bg-[#0E101D] border border-[#8E6F1D]/25 dark:border-[#D4AF37]/35 p-2 shadow-2xl z-50 font-mono-data text-xs space-y-1">
-                    <div className="px-3 py-2 border-b border-black/5 dark:border-white/10">
-                      <div className="font-bold text-[#1C1917] dark:text-white truncate">{activeProfile.name}</div>
-                      <div className="text-[10px] text-[#696256] dark:text-[#9E988D]">{isHi ? 'सक्रिय वैदिक प्रोफ़ाइल' : 'Active Sacred Profile'}</div>
-                    </div>
-                    <Link
-                      href="/report"
-                      onClick={() => setProfileDropdownOpen(false)}
-                      className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-[#8E6F1D]/10 dark:hover:bg-[#D4AF37]/10 text-[#1C1917] dark:text-white font-semibold transition-colors"
-                    >
-                      <FileText className="w-3.5 h-3.5 text-[#8E6F1D] dark:text-[#D4AF37]" />
-                      <span>{isHi ? 'मेरी कुण्डली रिपोर्ट' : 'My Kundli Report'}</span>
-                    </Link>
-                    <Link
-                      href="/kundali-milan"
-                      onClick={() => setProfileDropdownOpen(false)}
-                      className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-[#8E6F1D]/10 dark:hover:bg-[#D4AF37]/10 text-[#1C1917] dark:text-white font-semibold transition-colors"
-                    >
-                      <Compass className="w-3.5 h-3.5 text-[#8E6F1D] dark:text-[#D4AF37]" />
-                      <span>{isHi ? 'कुण्डली मिलान' : 'Kundali Milan'}</span>
-                    </Link>
-                    <Link
-                      href="/daily"
-                      onClick={() => setProfileDropdownOpen(false)}
-                      className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-[#8E6F1D]/10 dark:hover:bg-[#D4AF37]/10 text-[#1C1917] dark:text-white font-semibold transition-colors"
-                    >
-                      <Sun className="w-3.5 h-3.5 text-[#8E6F1D] dark:text-[#D4AF37]" />
-                      <span>{isHi ? 'मेरा दैनिक पञ्चाङ्ग' : 'My Days Panchang'}</span>
-                    </Link>
-                    <Link
-                      href="/profile"
-                      onClick={() => setProfileDropdownOpen(false)}
-                      className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-[#8E6F1D]/10 dark:hover:bg-[#D4AF37]/10 text-[#1C1917] dark:text-white font-semibold transition-colors"
-                    >
-                      <User className="w-3.5 h-3.5 text-[#8E6F1D] dark:text-[#D4AF37]" />
-                      <span>{isHi ? 'परिवार प्रोफ़ाइल बदलें' : 'Parivaar / Switch'}</span>
-                    </Link>
-                  </div>
-                )}
-              </div>
-            ) : (
               <Link
                 href="/report"
-                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#8E6F1D]/30 dark:border-[#D4AF37]/40 bg-[#8E6F1D]/10 dark:bg-[#D4AF37]/10 hover:bg-[#8E6F1D]/20 text-xs font-mono-data font-bold text-[#8E6F1D] dark:text-[#F0C968] transition-all cursor-pointer shadow-xs active:scale-95"
+                className="text-[#57524A] dark:text-[#C5BFB5] hover:text-[#8E6F1D] dark:hover:text-[#D4AF37] transition-colors py-1 shrink-0"
               >
-                <Compass className="w-3.5 h-3.5" />
-                <span>{isHi ? 'मेरी कुण्डली' : 'My Kundli'}</span>
+                {isHi ? 'कुण्डली' : 'Kundli'}
               </Link>
-            )}
+              <Link
+                href="/kundali-milan"
+                className="text-[#57524A] dark:text-[#C5BFB5] hover:text-[#8E6F1D] dark:hover:text-[#D4AF37] transition-colors py-1 shrink-0"
+              >
+                {isHi ? 'मिलान' : 'Milan'}
+              </Link>
+              <Link
+                href="/granth"
+                className="hidden lg:inline text-[#57524A] dark:text-[#C5BFB5] hover:text-[#8E6F1D] dark:hover:text-[#D4AF37] transition-colors py-1 shrink-0"
+              >
+                {isHi ? 'ग्रन्थ' : 'Granth'}
+              </Link>
+            </nav>
 
-            {/* Location City Pill — truthful: unknown shows "Set location", never a fake city */}
+            {/* Mobile Location Badge */}
             {onOpenCitySelector && (
               <button
+                type="button"
                 onClick={onOpenCitySelector}
-                className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl sm:rounded-2xl border ${
-                  (currentCity as any)?.isGps
-                    ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                    : currentCity
-                      ? 'border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 text-[#8E6F1D] dark:text-[#F0C968]'
-                      : 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300'
-                } hover:bg-black/10 dark:hover:bg-white/10 text-xs font-mono-data font-bold transition-all cursor-pointer shadow-xs active:scale-95`}
-                title="Select Observing Location / GPS"
+                className="md:hidden flex items-center gap-1 px-2.5 py-1 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 text-[11px] font-mono-data font-bold text-[#8E6F1D] dark:text-[#F0C968] max-w-[120px] truncate cursor-pointer shrink-0"
+                title={isHi ? 'स्थान सेट करें' : 'Set location'}
               >
-                {(currentCity as any)?.isGps ? (
-                  <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>GPS: {(currentCity as any)?.name}</span>
-                  </span>
-                ) : currentCity ? (
-                  <>
-                    <MapPin className="w-3.5 h-3.5 text-[#A6461D] dark:text-[#E2825B]" />
-                    <span>{currentCity.name}</span>
-                  </>
-                ) : (
-                  <>
-                    <MapPin className="w-3.5 h-3.5" />
-                    <span>{isHi ? 'स्थान सेट करें' : 'Set location'}</span>
-                  </>
-                )}
+                <MapPin className="w-3 h-3 shrink-0 text-[#A6461D] dark:text-[#E2825B]" />
+                <span className="truncate" suppressHydrationWarning>{displayCityName ? displayCityName.split(',')[0] : (isHi ? 'स्थान' : 'City')}</span>
+              </button>
+            )}
+          </div>
+
+          {/* CENTER STAGE: Symmetrical Center-Aligned Logo */}
+          <div className="flex items-center justify-center shrink-0 px-1 sm:px-2">
+            <Link
+              href="/"
+              className="group focus:outline-none flex items-center justify-center transition-transform hover:scale-102"
+              aria-label="CosmicTantra Home"
+            >
+              <span className="sm:hidden inline-flex">
+                <CosmicTantraLogo size="sm" subtitle={isHi ? 'वैदिक शुद्धता' : 'VEDIC PRECISION'} />
+              </span>
+              <span className="hidden sm:inline-flex">
+                <CosmicTantraLogo size="md" subtitle={isHi ? 'वैदिक खगोल शुद्धता' : 'VEDIC PRECISION'} />
+              </span>
+            </Link>
+          </div>
+
+          {/* RIGHT WING: Minimal Clean Utilities */}
+          <div className="flex items-center justify-end gap-1.5 sm:gap-2.5 flex-1 min-w-0">
+            
+            {/* Desktop Location Pill */}
+            {onOpenCitySelector && (
+              <button
+                type="button"
+                onClick={onOpenCitySelector}
+                suppressHydrationWarning
+                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 text-[#8E6F1D] dark:text-[#F0C968] hover:bg-black/10 dark:hover:bg-white/10 text-xs font-mono-data font-bold transition-all cursor-pointer shadow-xs active:scale-95 shrink-0"
+                title={isHi ? 'स्थान सेट करें' : 'Select Observing Location'}
+              >
+                <MapPin className="w-3.5 h-3.5 shrink-0 text-[#A6461D] dark:text-[#E2825B]" />
+                <span className="truncate max-w-[120px]" suppressHydrationWarning>{displayCityName ? displayCityName.split(',')[0] : (isHi ? 'स्थान सेट करें' : 'Set location')}</span>
               </button>
             )}
 
             {/* Language Selector Trigger */}
             {onLangToggle && (
               <button
+                type="button"
                 onClick={onLangToggle}
-                className="flex min-h-11 items-center gap-1 sm:gap-1.5 px-3 py-2 rounded-xl sm:rounded-2xl border border-[#8E6F1D]/30 dark:border-[#D4AF37]/40 bg-[#8E6F1D]/10 dark:bg-[#D4AF37]/10 hover:bg-[#8E6F1D]/20 dark:hover:bg-[#D4AF37]/20 text-xs font-mono-data font-bold text-[#8E6F1D] dark:text-[#F0C968] hover:border-[#8E6F1D] dark:hover:border-[#D4AF37] transition-all cursor-pointer shadow-xs active:scale-95"
-                title="Select Sacred Language (12 Prime Indian Languages)"
+                className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl border border-[#8E6F1D]/30 dark:border-[#D4AF37]/40 bg-[#8E6F1D]/10 dark:bg-[#D4AF37]/10 hover:bg-[#8E6F1D]/20 dark:hover:bg-[#D4AF37]/20 text-xs font-mono-data font-bold text-[#8E6F1D] dark:text-[#F0C968] hover:border-[#8E6F1D] dark:hover:border-[#D4AF37] transition-all cursor-pointer shadow-xs active:scale-95 shrink-0"
+                title="Select Sacred Language"
               >
-                <Languages className="w-3.5 h-3.5 text-[#8E6F1D] dark:text-[#F0C968]" />
-                <span className="hidden sm:inline">
-                  {SUPPORTED_LANGUAGES.find(l => l.code === lang)?.label || 'भाषा'}
+                <Languages className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                <span className="text-[10px] sm:text-[11px] uppercase font-bold">
+                  {lang === 'hi' ? 'हि' : 'EN'}
                 </span>
-                <span className="sm:hidden text-[10px] uppercase">
-                  {lang}
-                </span>
-                <ChevronDown className="w-3 h-3 opacity-60 hidden sm:inline" />
               </button>
             )}
 
-            {/* Theme Toggle */}
+            {/* Theme Day/Night Toggle */}
             {onThemeToggle && (
               <button
+                type="button"
                 onClick={onThemeToggle}
-                className="flex items-center justify-center w-11 h-11 rounded-xl sm:rounded-2xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-[#1C1917] dark:text-white hover:border-[#8E6F1D] dark:hover:border-[#D4AF37] transition-all cursor-pointer shadow-xs active:scale-95"
+                className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-[#1C1917] dark:text-white hover:border-[#8E6F1D] dark:hover:border-[#D4AF37] transition-all cursor-pointer shadow-xs active:scale-95 shrink-0"
                 title="Toggle Day/Night"
               >
                 {theme === 'dark' ? <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#F59E0B]" /> : <Moon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#8E6F1D]" />}
               </button>
             )}
 
-            {/* Quick Consultation CTA */}
+            {/* Menu Trigger (Desktop & Tablet — Mobile uses fixed thumb bottom bar) */}
             <button
               type="button"
               onClick={() => {
                 chitiSensory.playTick();
-                if (onOpenConsultation) {
-                  onOpenConsultation();
-                } else {
-                  setConsultModalOpen(true);
-                }
-              }}
-              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl text-sm font-mono-data font-bold bg-[#8E6F1D]/15 hover:bg-[#8E6F1D]/25 dark:bg-[#D4AF37]/15 dark:hover:bg-[#D4AF37]/25 text-[#8E6F1D] dark:text-[#F0C968] border border-[#8E6F1D]/30 dark:border-[#D4AF37]/40 hover:border-[#8E6F1D] transition-all shrink-0 cursor-pointer shadow-xs active:scale-95"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              <span>{isHi ? 'परामर्श' : 'Consult'}</span>
-            </button>
-
-            {/* LUXURY FULL-SCREEN HAMBURGER MENU PILL */}
-            <button
-              onClick={() => {
-                chitiSensory.playTick();
                 setMegaMenuOpen(true);
               }}
-              className="min-h-11 px-3 py-2 sm:px-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-[#8E6F1D] via-[#A88424] to-[#8E6F1D] dark:from-[#D4AF37] dark:via-[#F0C968] dark:to-[#D4AF37] text-white dark:text-[#060709] font-mono-data font-bold text-xs flex items-center gap-1.5 sm:gap-2 shadow-lg shadow-[#8E6F1D]/20 dark:shadow-[#D4AF37]/25 cursor-pointer transition-all hover:scale-105 active:scale-95 shrink-0 hover:shadow-xl"
+              className="hidden md:flex px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-[#8E6F1D] hover:bg-[#785E18] dark:bg-[#D4AF37] dark:hover:bg-[#C9A227] text-white dark:text-black font-mono-data font-bold text-xs items-center gap-1.5 shadow-sm cursor-pointer transition-all hover:scale-102 active:scale-95 shrink-0"
               aria-label="Open navigation menu"
             >
-              <Menu className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
-              <span className="uppercase tracking-wider text-[11px] sm:text-xs">{isHi ? 'अन्वेषण' : 'Menu'}</span>
+              <Menu className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span className="hidden sm:inline uppercase tracking-wider text-[11px]">{isHi ? 'अन्वेषण' : 'Menu'}</span>
             </button>
           </div>
 
         </div>
       </header>
+
+      {/* MOBILE BOTTOM NAVIGATION (Consistent Thumb-Reach Access across all pages) */}
+      <nav
+        aria-label="Mobile Bottom Navigation"
+        data-testid="primary-nav-mobile"
+        className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-[#8E6F1D]/25 dark:border-[#D4AF37]/25 bg-[#FAF7F2]/98 dark:bg-[#06070B]/98 backdrop-blur-2xl pb-[env(safe-area-inset-bottom)]"
+      >
+        <div className="grid grid-cols-4 items-center h-14 max-w-md mx-auto">
+          <Link
+            href="/calendar"
+            className="flex flex-col items-center justify-center gap-0.5 py-1 text-[10px] font-mono-data font-bold text-[#696256] dark:text-[#A8A29E] hover:text-[#8E6F1D] dark:hover:text-[#F0C968]"
+          >
+            <Calendar className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            <span>{isHi ? 'पञ्चाङ्ग' : 'Panchang'}</span>
+          </Link>
+
+          <Link
+            href="/report"
+            className="flex flex-col items-center justify-center gap-0.5 py-1 text-[10px] font-mono-data font-bold text-[#696256] dark:text-[#A8A29E] hover:text-[#8E6F1D] dark:hover:text-[#F0C968]"
+          >
+            <Compass className="w-4 h-4 text-[#8E6F1D] dark:text-[#D4AF37]" />
+            <span>{isHi ? 'कुण्डली' : 'Kundli'}</span>
+          </Link>
+
+          <Link
+            href="/kundali-milan"
+            className="flex flex-col items-center justify-center gap-0.5 py-1 text-[10px] font-mono-data font-bold text-[#696256] dark:text-[#A8A29E] hover:text-[#8E6F1D] dark:hover:text-[#F0C968]"
+          >
+            <Heart className="w-4 h-4 text-rose-500" />
+            <span>{isHi ? 'मिलान' : 'Milan'}</span>
+          </Link>
+
+          <button
+            type="button"
+            onClick={() => {
+              chitiSensory.playTick();
+              setMegaMenuOpen(true);
+            }}
+            className="flex flex-col items-center justify-center gap-0.5 py-1 text-[10px] font-mono-data font-bold text-[#696256] dark:text-[#A8A29E] hover:text-[#8E6F1D] dark:hover:text-[#F0C968] cursor-pointer"
+          >
+            <Menu className="w-4 h-4 text-[#8E6F1D] dark:text-[#D4AF37]" />
+            <span>{isHi ? 'अन्वेषण' : 'Menu'}</span>
+          </button>
+        </div>
+      </nav>
 
       {/* FULL SCREEN DESCRIPTIVE MEGA MENU MODAL */}
       <FullMegaMenuModal

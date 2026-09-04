@@ -37,6 +37,8 @@ import { searchCities } from '@/lib/cities';
 export const runtime = 'nodejs';
 /** Every response is derived from the request body; nothing is cacheable. */
 export const dynamic = 'force-dynamic';
+/** Allow up to 60s for full 19-page PDF generation on Vercel */
+export const maxDuration = 60;
 
 /**
  * Rendering a Scholar edition is ~2s of CPU, nine font faces and a 38-page
@@ -103,6 +105,14 @@ export async function POST(request: Request) {
       }
       birth.locationName = `${hits[0].name}, ${hits[0].state}`;
       birth.coordinateProvenance = 'MANUAL';
+    } else {
+      // Safe fallback coordinates so unlisted village/town names never crash PDF generation
+      birth.latitude = 28.6139;
+      birth.longitude = 77.2090;
+      if (!Number.isFinite(birth.utcOffsetHours)) {
+        birth.utcOffsetHours = 5.5;
+      }
+      birth.coordinateProvenance = 'FALLBACK';
     }
   }
 

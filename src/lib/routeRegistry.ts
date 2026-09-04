@@ -52,6 +52,22 @@ export const ROUTE_REGISTRY: Record<string, RouteConfig> = {
     status: 'LIVE',
     roomCharacter: 'observatory'
   },
+  '/panchang': {
+    path: '/panchang',
+    title: 'Daily Vedic Panchang & Siddhanta Ephemeris | CosmicTantra',
+    description: 'Universal Vedic Panchang with live 5 limbs (Tithi, Vaar, Nakshatra, Yoga, Karana), Sunrise/Sunset, and Muhurat windows.',
+    category: 'Observatory',
+    breadcrumbs: [
+      { label: 'Home', href: '/' },
+      { label: 'Panchang', href: '/panchang' }
+    ],
+    shellMode: 'public',
+    footerMode: 'full',
+    indexable: true,
+    authRequired: false,
+    status: 'LIVE',
+    roomCharacter: 'observatory'
+  },
   '/granth': {
     path: '/granth',
     title: 'Vedic Granth & Classical Treatises | CosmicTantra',

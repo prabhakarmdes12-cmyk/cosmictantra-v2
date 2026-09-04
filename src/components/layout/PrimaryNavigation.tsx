@@ -201,12 +201,13 @@ export default function PrimaryNavigation({
                 <button
                   type="button"
                   data-testid="primary-nav-location"
-                  data-location-status={location.status}
+                  data-location-status={hydrated ? location.status : 'UNKNOWN'}
                   onClick={() => { chitiSensory.playTick(); onOpenCitySelector(); }}
-                  aria-label={location.status === 'KNOWN' ? t.changeLocation : t.setLocation}
-                  title={location.status === 'KNOWN' ? t.changeLocation : t.setLocation}
+                  aria-label={hydrated && location.status === 'KNOWN' ? t.changeLocation : t.setLocation}
+                  title={hydrated && location.status === 'KNOWN' ? t.changeLocation : t.setLocation}
+                  suppressHydrationWarning
                   className={`inline-flex items-center gap-1.5 min-h-11 px-2 sm:px-3 rounded-xl border text-xs font-mono-data font-bold transition-all cursor-pointer ${
-                    location.status === 'KNOWN'
+                    hydrated && location.status === 'KNOWN'
                       ? isDark
                         ? 'border-[#D4AF37]/30 text-[#F0C968] hover:bg-white/5'
                         : 'border-[#8E6F1D]/30 text-[#8E6F1D] hover:bg-black/5'
@@ -216,11 +217,11 @@ export default function PrimaryNavigation({
                   }`}
                 >
                   <MapPin className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-                  <span className="hidden sm:inline truncate max-w-[9rem]">
-                    {location.status === 'KNOWN' ? location.name : t.setLocation}
+                  <span className="hidden sm:inline truncate max-w-[9rem]" suppressHydrationWarning>
+                    {hydrated && location.status === 'KNOWN' ? location.name : t.setLocation}
                   </span>
-                  <span className="sm:hidden sr-only">
-                    {location.status === 'KNOWN' ? location.name : t.setLocation}
+                  <span className="sm:hidden sr-only" suppressHydrationWarning>
+                    {hydrated && location.status === 'KNOWN' ? location.name : t.setLocation}
                   </span>
                 </button>
               )}

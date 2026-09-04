@@ -25,6 +25,16 @@ export default function DownloadChoiceModal({
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const isHi = lang === 'hi';
 
+  // Close on Escape key
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handlePayAndDownload = () => {
@@ -32,7 +42,6 @@ export default function DownloadChoiceModal({
     setIsProcessingPayment(true);
 
     // Razorpay Integration Hook
-    // If window.Razorpay is available and key is configured:
     if (typeof window !== 'undefined' && (window as any).Razorpay && process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
@@ -74,12 +83,20 @@ export default function DownloadChoiceModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fadeIn">
-      <div className="relative w-full max-w-2xl rounded-3xl bg-[#FAF7F2] dark:bg-[#0A0C14] border border-[#8E6F1D]/30 dark:border-[#D4AF37]/40 shadow-2xl p-6 sm:p-8 space-y-6 text-[#1C1917] dark:text-[#EFECE6]">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fadeIn"
+      onClick={onClose}
+    >
+      <div 
+        className="relative w-full max-w-2xl rounded-3xl bg-[#FAF7F2] dark:bg-[#0A0C14] border border-[#8E6F1D]/30 dark:border-[#D4AF37]/40 shadow-2xl p-6 sm:p-8 space-y-6 text-[#1C1917] dark:text-[#EFECE6]"
+        onClick={(e) => e.stopPropagation()}
+      >
         
         {/* Close Button */}
         <button
           onClick={onClose}
+          aria-label="Close"
+          data-testid="close-download-choice-modal"
           className="absolute top-5 right-5 w-8 h-8 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 flex items-center justify-center text-[#57524A] dark:text-[#C5BFB5] transition-all cursor-pointer"
         >
           <X className="w-4 h-4" />

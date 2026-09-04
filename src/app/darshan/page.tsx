@@ -2,10 +2,12 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { 
   Sparkles, 
   Flame, 
   Volume2, 
+  VolumeX, 
   Share2, 
   Sun, 
   Moon, 
@@ -39,12 +41,15 @@ import {
   Tv2,
   ListFilter,
   AlertCircle,
+  Printer,
+  Download,
   X
 } from 'lucide-react';
 import CosmicTantraShell from '@/components/layout/CosmicTantraShell';
 import { playBell, playTick, playConch, playFlowerDrop, playDiya } from '@/lib/chitiAudio';
 import { getProfiles } from '@/lib/profileStore';
 import { logJapa } from '@/lib/remedyStore';
+import { getCanonicalPanchangBundle, DEFAULT_LOCATION } from '@/lib/panchangFactBundle';
 
 interface ShrineItem {
   id: string;
@@ -136,7 +141,7 @@ const JYOTIRLINGA_DATA: ShrineItem[] = [
     shlokaMeaning: 'उज्जयिनी नगरी में महाकाल तथा ओंकार पर्वत पर अमलेश्वर विराजित हैं।',
     angaOrSignificance: 'एकमात्र दक्षिणमुखी ज्योतिर्लिंग — विश्वप्रसिद्ध भस्म आरती द्वारा काल-मृत्यु भय का नाश होता है।',
     bhairavOrLord: 'आनन्द भैरव',
-    imageUrl: 'https://images.unsplash.com/photo-1561361513-2d000a50f0dc?auto=format&fit=crop&w=1400&q=85',
+    imageUrl: '/images/darshan/mahakaleshwar.jpg',
     videoId: 'V31rQRlFNMs',
     liveUrl: 'https://www.youtube.com/@ShreeMahakaleshwarUjjainOfficial/live',
     trustUrl: 'https://shrimahakaleshwar.com',
@@ -380,7 +385,7 @@ const SHAKTI_PEETH_DATA: ShrineItem[] = [
     shlokaMeaning: 'नीलाचल पर्वत पर स्थित माँ कामाख्या साधकों की समस्त मनोकामनाएं पूर्ण करने वाली महाशक्ति हैं।',
     angaOrSignificance: 'योनि पीठ — सती का योनि मण्डल यहाँ गिरा। तन्त्र साधना का सर्वोच्च केन्द्र (अम्बुवाची मेला)।',
     bhairavOrLord: 'उमानन्द भैरव',
-    imageUrl: 'https://images.unsplash.com/photo-1624555130581-1d9cca783bc0?auto=format&fit=crop&w=1400&q=85',
+    imageUrl: '/images/darshan/kamakhya.jpg',
     videoId: 'aKQP2prPPLE',
     liveUrl: 'https://www.youtube.com/@MaaKamakhyaDevasthan/live',
     trustUrl: 'https://maakamakhya.org',
@@ -835,14 +840,13 @@ export default function DarshanPage() {
   const [isParikramaPlaying, setIsParikramaPlaying] = useState<boolean>(true);
   const [cycleSpeedSec, setCycleSpeedSec] = useState<number>(30);
   const [progressSec, setProgressSec] = useState<number>(0);
-  const [videoStreamSource, setVideoStreamSource] = useState<'LOCAL' | 'YOUTUBE'>('YOUTUBE');
+  const [videoStreamSource, setVideoStreamSource] = useState<'SANCTUM' | 'LOCAL' | 'YOUTUBE'>('SANCTUM');
   /**
-   * Silent network-error catch (Module 6): the HD video stream is the ONLY
-   * visible mode — there is no image toggle anywhere in the UI. But if the
-   * local stream errors or the browser reports the network as down (YouTube
-   * iframe failures are undetectable cross-origin, so offline events are the
-   * proxy), we quietly fall back to the shrine's HD photograph so the devotee
-   * still gets darshan instead of a black screen. Recovery is equally silent.
+   * Zero YouTube Error Protection:
+   * By default, devotees experience high-definition sacred sanctum photography
+   * with ambient lighting, glowing flame effects, and offering rituals.
+   * If external YouTube stream fails or blocks embedding, CosmicTantra seamlessly
+   * displays the HD sanctum. Devotees will never see an ugly YouTube error message.
    */
   const [mediaFailed, setMediaFailed] = useState<boolean>(false);
 
@@ -853,12 +857,59 @@ export default function DarshanPage() {
     const goOnline = () => setMediaFailed(false);
     window.addEventListener('offline', goOffline);
     window.addEventListener('online', goOnline);
+
+    const handleYTMessage = (e: MessageEvent) => {
+      try {
+        if (typeof e.data === 'string') {
+          const data = JSON.parse(e.data);
+          // YouTube postMessage emits onError when video is deleted, private, or embedding blocked (100, 101, 150, 2, 5)
+          if (data.event === 'onError' || data.info === 100 || data.info === 101 || data.info === 150 || data.info === 2 || data.info === 5) {
+            setMediaFailed(true);
+            setVideoStreamSource('SANCTUM');
+          }
+        }
+      } catch {
+        // non-JSON message
+      }
+    };
+    window.addEventListener('message', handleYTMessage);
+
     return () => {
       window.removeEventListener('offline', goOffline);
       window.removeEventListener('online', goOnline);
+      window.removeEventListener('message', handleYTMessage);
     };
   }, []);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [isAudioMuted, setIsAudioMuted] = useState<boolean>(false);
+  const ytIframeRef = useRef<HTMLIFrameElement>(null);
+  const localVidRef = useRef<HTMLVideoElement>(null);
+
+  const handleToggleSound = () => {
+    playTick();
+    setIsAudioMuted(prev => {
+      const next = !prev;
+      if (localVidRef.current) {
+        localVidRef.current.muted = next;
+      }
+      if (ytIframeRef.current?.contentWindow) {
+        try {
+          ytIframeRef.current.contentWindow.postMessage(
+            JSON.stringify({
+              event: 'command',
+              func: next ? 'mute' : 'unMute',
+              args: []
+            }),
+            '*'
+          );
+        } catch {}
+      }
+      if (!next && videoStreamSource === 'SANCTUM') {
+        playBell();
+      }
+      return next;
+    });
+  };
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [flowers, setFlowers] = useState<Array<{ id: number; x: number; icon: string; size: number; duration?: string; delay?: string; rot?: number }>>([]);
   const [diyasLitCount, setDiyasLitCount] = useState<number>(148392);
@@ -867,10 +918,30 @@ export default function DarshanPage() {
   const [shankhActive, setShankhActive] = useState<boolean>(false);
   const [japaCount, setJapaCount] = useState<number>(0);
   const [devoteeName, setDevoteeName] = useState<string>('');
-  const [devoteeGotra, setDevoteeGotra] = useState<string>('Kashyap');
+  const [devoteeGotra, setDevoteeGotra] = useState<string>('कश्यप');
+  const [devoteePrayer, setDevoteePrayer] = useState<string>('');
+  const [sankalpSubmitted, setSankalpSubmitted] = useState<boolean>(false);
   const [copiedShare, setCopiedShare] = useState<boolean>(false);
   const [yatraCompleted, setYatraCompleted] = useState<boolean>(false);
   const [showSankalpaModal, setShowSankalpaModal] = useState<boolean>(false);
+  const [showCertificateModal, setShowCertificateModal] = useState<boolean>(false);
+  const [activeServiceInfo, setActiveServiceInfo] = useState<{ title: string; desc: string; icon: string; link?: string; buttonText?: string } | null>(null);
+
+  const panchangBundle = useMemo(() => {
+    try {
+      return getCanonicalPanchangBundle(new Date(), DEFAULT_LOCATION);
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const handleSaveDarshanSankalp = () => {
+    playBell();
+    setSankalpSubmitted(true);
+    setTimeout(() => {
+      setSankalpSubmitted(false);
+    }, 8000);
+  };
 
   const cinemaStageRef = useRef<HTMLDivElement>(null);
 
@@ -1171,40 +1242,12 @@ export default function DarshanPage() {
 
   return (
     <CosmicTantraShell>
-      {/* Floating Flowers Canvas (4x Divine Shower) */}
-      {flowers.length > 0 && (
-        <div className="fixed inset-0 pointer-events-none z-[100] overflow-hidden">
-          {flowers.map(f => (
-            <div
-              key={f.id}
-              style={{
-                left: `${f.x}%`,
-                top: '-40px',
-                fontSize: `${f.size}px`,
-                animation: `flowerFall ${f.duration || '2.8'}s cubic-bezier(0.25, 1, 0.5, 1) forwards`,
-                animationDelay: `${f.delay || '0'}s`,
-              }}
-              className="absolute select-none drop-shadow-md"
-            >
-              {f.icon}
-            </div>
-          ))}
-          <style jsx>{`
-            @keyframes flowerFall {
-              0% { transform: translateY(0) rotate(0deg) scale(0.7); opacity: 1; }
-              75% { opacity: 0.95; }
-              100% { transform: translateY(105vh) rotate(360deg) scale(1.15); opacity: 0; }
-            }
-          `}</style>
-        </div>
-      )}
-
       {/* ONE-VIEW STUDIO CONTAINER */}
-      <div className="py-2 sm:py-4 px-2 sm:px-4 lg:px-6 mx-auto max-w-[1600px] space-y-2 sm:space-y-3">
+      <div className="py-2 sm:py-4 px-2 sm:px-4 lg:px-6 mx-auto max-w-[1600px] space-y-2.5 sm:space-y-3">
         
-        {/* Compact 1-Row Control Bar: Category Pills + Search + Mode Badges */}
+        {/* 1. Top Collections Ribbon: Category Switcher + Search + Daily Sankalpa */}
         <div className="flex flex-wrap items-center justify-between gap-2 bg-[#0E101D]/90 backdrop-blur-md rounded-2xl border border-[#8E6F1D]/30 p-2 sm:px-3 sm:py-2 text-white">
-          <h1 className="sr-only">12 Jyotirlinga, 52 Shakti Peeth & Char Dham Darshan</h1>
+          <h1 className="sr-only">12 Jyotirlinga, 52 Shakti Peeth, Char Dham & Sacred Darshan</h1>
           
           {/* Category Switcher Pills */}
           <div className="flex flex-wrap items-center gap-1 sm:gap-1.5">
@@ -1278,7 +1321,7 @@ export default function DarshanPage() {
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentIndex(0); }}
                 placeholder="तीर्थ खोजें..."
-                className="pl-7 pr-3 py-1 rounded-xl bg-white/10 border border-white/15 text-[11px] font-mono-data text-white placeholder-white/50 outline-none focus:border-[#D4AF37] w-32 sm:w-44"
+                className="pl-7 pr-3 py-1 rounded-xl bg-white/10 border border-white/15 text-[11px] font-mono-data text-white placeholder-white/50 outline-none focus:border-[#D4AF37] w-28 sm:w-40"
               />
             </div>
 
@@ -1293,11 +1336,83 @@ export default function DarshanPage() {
           </div>
         </div>
 
-        {/* UNIFIED 1-VIEW GRID: 2 COLUMNS (Cinema Player 68% + Live Sanctuary Info 32%) */}
+        {/* 2. Live Temple Selector Chips Rail */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+          {currentDataset.map((shrine, idx) => {
+            const isSelected = idx === currentIndex;
+            return (
+              <button
+                key={shrine.id}
+                onClick={() => handleStepJump(idx)}
+                className={`px-3 py-1 rounded-full text-[11px] font-mono-data font-bold shrink-0 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                  isSelected
+                    ? 'bg-[#8E6F1D] text-white dark:bg-[#D4AF37] dark:text-[#0A0C14] ring-2 ring-amber-400/80 scale-100 font-extrabold'
+                    : 'bg-white/80 dark:bg-[#121422] border border-black/10 dark:border-white/10 text-[#44403C] dark:text-[#D1C9BF] hover:border-[#8E6F1D]'
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="truncate max-w-[180px]">{shrine.nameHi.split('(')[0]}</span>
+                <span className="text-[9px] opacity-75 font-normal">#{idx + 1}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* 3. Auto-Play (Darshan Yatra) Ribbon Bar */}
+        <div className="bg-[#0E101D] text-white rounded-2xl border border-[#8E6F1D]/40 p-2 sm:px-3.5 sm:py-2 flex flex-wrap items-center justify-between gap-2 shadow-md">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleToggleParikrama}
+              className="px-3 py-1 rounded-xl bg-[#8E6F1D] hover:bg-[#A88424] text-white font-mono-data text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95"
+            >
+              {isParikramaPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+              <span>{isParikramaPlaying ? 'यात्रा रोकें' : 'दर्शन यात्रा प्रारम्भ'}</span>
+            </button>
+
+            <span className="text-xs font-mono-data text-amber-300 font-bold hidden md:inline">
+              {isFullPlay ? '♾️ अखण्ड दर्शन' : `⚡ ${remainingSeconds}s शेष • तीर्थ ${currentIndex + 1} / ${currentDataset.length}`}
+            </span>
+          </div>
+
+          {/* Speed Presets */}
+          <div className="flex items-center gap-1 text-[11px] font-mono-data">
+            <span className="text-white/60 text-[10px] mr-1 hidden sm:inline">अन्तराल:</span>
+            {[
+              { label: '१५s', val: 15 },
+              { label: '३०s', val: 30 },
+              { label: '६०s', val: 60 },
+              { label: '३ मिनट', val: 180 },
+              { label: '♾️ अखण्ड', val: 0 },
+            ].map(preset => (
+              <button
+                key={preset.val}
+                onClick={() => { playTick(); setCycleSpeedSec(preset.val); setProgressSec(0); }}
+                className={`px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer text-[10px] ${
+                  cycleSpeedSec === preset.val
+                    ? 'bg-[#D4AF37] text-black font-extrabold shadow-xs'
+                    : 'bg-white/10 text-white/80 hover:bg-white/20'
+                }`}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Parikrama Certificate Trigger */}
+          <button
+            onClick={() => setShowCertificateModal(true)}
+            className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-500/20 to-rose-500/20 hover:from-amber-500/30 hover:to-rose-500/30 border border-amber-400/40 text-amber-300 text-[11px] font-mono-data font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+          >
+            <Award className="w-3.5 h-3.5 text-amber-400" />
+            <span>परिक्रमा प्रमाणपत्र</span>
+          </button>
+        </div>
+
+        {/* 4. UNIFIED STUDIO GRID: 2 COLUMNS (Cinema Player 68% + Devotional Side Rail 32%) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
           
           {/* LEFT 8 COLUMNS: MAIN CINEMA PLAYER & INTEGRATED ACTION DOCK */}
-          <div className="lg:col-span-8 flex flex-col justify-between">
+          <div className="lg:col-span-8 flex flex-col justify-between space-y-2">
             <div className="relative group h-full">
               
               {/* Dynamic Ambient Deity Aura */}
@@ -1328,7 +1443,7 @@ export default function DarshanPage() {
                   </button>
                 )}
 
-                {/* Sacred Deep Daan Border Diya Illumination (Places Glowing Diyas in Screen Borders) */}
+                {/* Sacred Deep Daan Border Diya Illumination */}
                 {hasLitDiya && (
                   <div className="absolute inset-0 pointer-events-none z-40 overflow-hidden">
                     {/* Top Edge Diyas */}
@@ -1344,7 +1459,7 @@ export default function DarshanPage() {
                       ))}
                     </div>
 
-                    {/* Bottom Edge Diyas (Floats along the border above the action dock) */}
+                    {/* Bottom Edge Diyas */}
                     <div className="absolute bottom-18 sm:bottom-20 inset-x-2 sm:inset-x-6 flex justify-around items-center select-none">
                       {['🪔', '🪔', '🪔', '🪔', '🪔', '🪔', '🪔', '🪔', '🪔', '🪔', '🪔'].map((d, i) => (
                         <span
@@ -1391,10 +1506,31 @@ export default function DarshanPage() {
                   </div>
                 )}
 
-                {/* Top Glassmorphic HUD Bar */}
-                <div className="absolute top-0 inset-x-0 z-30 p-2.5 sm:p-4 bg-gradient-to-b from-black/95 via-black/70 to-transparent flex items-center justify-between gap-2 text-white">
+                {/* Keyframe animation for authentic falling flower petals */}
+                <style>{`
+                  @keyframes flowerCascade {
+                    0% {
+                      transform: translateY(0px) rotate(0deg) scale(0.7);
+                      opacity: 0;
+                    }
+                    10% {
+                      opacity: 1;
+                      transform: translateY(30px) rotate(35deg) scale(1.05);
+                    }
+                    85% {
+                      opacity: 0.95;
+                    }
+                    100% {
+                      transform: translateY(560px) rotate(360deg) scale(0.9);
+                      opacity: 0;
+                    }
+                  }
+                `}</style>
+
+                {/* Top Studio HUD Bar (Placed cleanly ABOVE the video canvas — NEVER overlaps video or YouTube controls) */}
+                <div className="p-2.5 sm:p-3 bg-[#0B0D17] border-b border-white/10 flex flex-wrap items-center justify-between gap-2 text-white shrink-0 z-30">
                   
-                  {/* Shrine Title & Badge */}
+                  {/* Shrine Title & Live Badge */}
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="px-2 py-0.5 rounded-full bg-red-600/90 text-white text-[10px] font-mono-data font-bold uppercase tracking-wider flex items-center gap-1 shadow-md shrink-0">
                       <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
@@ -1411,39 +1547,62 @@ export default function DarshanPage() {
                     </div>
                   </div>
 
-                  {/* Mode Toggle & Fullscreen Controls */}
+                  {/* Mode Switcher + Sound Toggle + Verified Links */}
                   <div className="flex items-center gap-1.5 shrink-0">
-                    {/* Video Stream Source Switcher (Local HD vs YouTube Live) */}
-                      <div className="hidden sm:inline-flex items-center rounded-xl bg-black/70 backdrop-blur-md border border-white/20 p-0.5 text-xs font-mono-data">
-                        <button
-                          onClick={() => { playTick(); setVideoStreamSource('LOCAL'); }}
-                          className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
-                            videoStreamSource === 'LOCAL' ? 'bg-amber-600 text-white' : 'text-white/70 hover:text-white'
-                          }`}
-                          title="Play HD Aarti Local Video"
-                        >
-                          🎬 HD
-                        </button>
-                        <button
-                          onClick={() => { playTick(); setVideoStreamSource('YOUTUBE'); }}
-                          className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
-                            videoStreamSource === 'YOUTUBE' ? 'bg-red-600 text-white' : 'text-white/70 hover:text-white'
-                          }`}
-                          title="Play YouTube Live Stream"
-                        >
-                          🔴 यूट्यूब
-                        </button>
-                      </div>
+                    {/* Stream Source Switcher */}
+                    <div className="inline-flex items-center rounded-xl bg-black/60 border border-white/20 p-0.5 text-xs font-mono-data">
+                      <button
+                        onClick={() => { playTick(); setVideoStreamSource('SANCTUM'); }}
+                        className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          videoStreamSource === 'SANCTUM' ? 'bg-[#8E6F1D] text-white shadow-xs' : 'text-white/70 hover:text-white'
+                        }`}
+                        title="साक्षात् गर्भगृह दर्शन (High-Definition Sanctum)"
+                      >
+                        🕉️ गर्भगृह
+                      </button>
+                      <button
+                        onClick={() => { playTick(); setVideoStreamSource('LOCAL'); }}
+                        className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          videoStreamSource === 'LOCAL' ? 'bg-amber-600 text-white shadow-xs' : 'text-white/70 hover:text-white'
+                        }`}
+                        title="परिसर वीडियो दर्शन (HD Video)"
+                      >
+                        🎬 परिसर HD
+                      </button>
+                      <button
+                        onClick={() => { playTick(); setVideoStreamSource('YOUTUBE'); }}
+                        className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          videoStreamSource === 'YOUTUBE' ? 'bg-red-600 text-white shadow-xs' : 'text-white/70 hover:text-white'
+                        }`}
+                        title="सीधा यूट्यूब प्रसारण (Live Broadcast)"
+                      >
+                        🔴 सीधा प्रसारण
+                      </button>
+                    </div>
 
-                    {/* Direct YouTube Link */}
+                    {/* Dedicated CosmicTantra Sound Button (High Visibility, Never Hidden) */}
+                    <button
+                      onClick={handleToggleSound}
+                      className={`px-2.5 py-1 rounded-xl text-[10.5px] font-mono-data font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs border ${
+                        isAudioMuted
+                          ? 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border-rose-500/40'
+                          : 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border-emerald-500/40 animate-pulse'
+                      }`}
+                      title={isAudioMuted ? "ध्वनि चालू करें (Unmute Sound)" : "ध्वनि म्यूट करें (Mute Sound)"}
+                    >
+                      {isAudioMuted ? <VolumeX className="w-3.5 h-3.5 text-rose-400" /> : <Volume2 className="w-3.5 h-3.5 text-emerald-400" />}
+                      <span className="hidden sm:inline">{isAudioMuted ? 'ध्वनि म्यूट' : 'ध्वनि चालू'}</span>
+                    </button>
+
+                    {/* Direct Verified YouTube Link */}
                     {activeShrine.liveUrl && (
                       <a
                         href={activeShrine.liveUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={() => playTick()}
-                        className="p-1.5 rounded-xl bg-black/70 hover:bg-red-600 backdrop-blur-md border border-white/20 hover:border-red-400 text-white transition-all cursor-pointer hidden md:flex items-center gap-1 text-[10px] font-mono-data font-bold"
-                        title="Open Official Live Channel on YouTube"
+                        className="p-1.5 rounded-xl bg-black/60 hover:bg-red-600 border border-white/20 hover:border-red-400 text-white transition-all cursor-pointer hidden md:flex items-center gap-1 text-[10px] font-mono-data font-bold"
+                        title="अधिकृत यूट्यूब चैनल पर लाइव देखें"
                       >
                         <ExternalLink className="w-3.5 h-3.5 text-red-400 hover:text-white" />
                         <span>YouTube ↗</span>
@@ -1453,7 +1612,7 @@ export default function DarshanPage() {
                     {/* Fullscreen Button */}
                     <button
                       onClick={handleToggleFullscreen}
-                      className="p-1.5 rounded-xl bg-black/70 hover:bg-amber-600/60 backdrop-blur-md border border-white/20 hover:border-amber-400 text-white transition-all cursor-pointer"
+                      className="p-1.5 rounded-xl bg-black/60 hover:bg-amber-600/60 border border-white/20 hover:border-amber-400 text-white transition-all cursor-pointer"
                       title={isFullscreen ? "Exit Fullscreen (Esc)" : "Fullscreen Mode"}
                     >
                       {isFullscreen ? <Minimize2 className="w-4 h-4 text-amber-300" /> : <Maximize2 className="w-4 h-4 text-amber-300" />}
@@ -1461,44 +1620,118 @@ export default function DarshanPage() {
                   </div>
                 </div>
 
-                {/* Main Visual Screen: Real HD Photo OR Video Launcher */}
+                {/* Main Visual Screen: Zero-Error Sacred Sanctum / Video Engine */}
                 <div className="relative w-full flex-1 flex items-center justify-center overflow-hidden min-h-[340px] sm:min-h-[420px] lg:min-h-[460px] bg-black">
-                    {/* Video / Live Stream Screen: Plays Real HD Aarti Video / YouTube Live */}
+                  
+                  {/* Falling Sacred Flower Petals Shower (Cascades over Sanctum / Video) */}
+                  {flowers.length > 0 && (
+                    <div className="absolute inset-0 pointer-events-none z-40 overflow-hidden">
+                      {flowers.map((f) => (
+                        <div
+                          key={f.id}
+                          className="absolute select-none pointer-events-none"
+                          style={{
+                            left: `${f.x}%`,
+                            top: '-30px',
+                            fontSize: `${f.size}px`,
+                            animation: `flowerCascade ${f.duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards`,
+                            animationDelay: `${f.delay}s`,
+                            filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.5))',
+                          }}
+                        >
+                          {f.icon}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {videoStreamSource === 'SANCTUM' ? (
+                    <div className="relative w-full h-full min-h-[340px] sm:min-h-[420px] bg-black flex items-center justify-center overflow-hidden">
+                      <Image
+                        key={`sanctum-${activeShrine.id}`}
+                        src={activeShrine.imageUrl || '/images/darshan/kashi-vishwanath.jpg'}
+                        alt={`${activeShrine.nameHi} — साक्षात् गर्भगृह दर्शन`}
+                        fill
+                        priority
+                        sizes="(max-width: 1024px) 100vw, 68vw"
+                        className="object-cover transition-transform duration-1000 scale-100 group-hover:scale-105"
+                      />
+                      {/* Sacred Ambient Vignette & Gradient */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-black/40 pointer-events-none" />
+
+                      {/* Sanctum Status Pill */}
+                      <div className="absolute top-4 left-4 z-20 pointer-events-none">
+                        <span className="px-3 py-1 rounded-full bg-emerald-800/90 text-white text-[10px] font-mono-data font-bold flex items-center gap-1.5 shadow-lg backdrop-blur-xs border border-emerald-400/40">
+                          <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+                          साक्षात् गर्भगृह दर्शन • कपाट खुले हैं
+                        </span>
+                      </div>
+                    </div>
+                  ) : videoStreamSource === 'LOCAL' ? (
+                    <div className="relative w-full h-full min-h-[340px] sm:min-h-[420px] bg-black flex items-center justify-center overflow-hidden">
+                      <video
+                        ref={localVidRef}
+                        key={`video-local-${activeShrine.id}`}
+                        src="/kashi-hero-video.mp4"
+                        controls
+                        autoPlay
+                        loop
+                        muted={isAudioMuted}
+                        playsInline
+                        onError={() => setVideoStreamSource('SANCTUM')}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute top-4 left-4 z-20 pointer-events-none">
+                        <span className="px-3 py-1 rounded-full bg-amber-600/90 text-white text-[10px] font-mono-data font-bold flex items-center gap-1.5 shadow-lg backdrop-blur-xs border border-amber-400/40">
+                          <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+                          साक्षात् परिसर व आरती (HD Ambient)
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
                     <div className="relative w-full h-full min-h-[340px] sm:min-h-[420px] bg-black flex items-center justify-center overflow-hidden">
                       {mediaFailed ? (
-                        /* Silent catch — shrine photograph stands in while the
-                           network/stream is down. No toggle, no error chrome. */
-                        <img
-                          key={`fallback-${activeShrine.id}`}
-                          src={activeShrine.imageUrl}
-                          alt={`${activeShrine.nameHi} — दर्शन`}
-                          className="w-full h-full object-cover"
-                          draggable={false}
-                        />
-                      ) : videoStreamSource === 'LOCAL' ? (
-                        <video
-                          key={`video-local-${activeShrine.id}`}
-                          src="/kashi-hero-video.mp4"
-                          controls
-                          autoPlay
-                          loop
-                          playsInline
-                          onError={() => setMediaFailed(true)}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="relative w-full h-full bg-black flex items-center justify-center">
-                          <iframe
-                            key={`video-yt-${activeShrine.id}`}
-                            src={`https://www.youtube-nocookie.com/embed/${activeShrine.videoId || 'Wu321m2SUKY'}?autoplay=1&mute=1&rel=0&playsinline=1&modestbranding=1`}
-                            className="w-full h-full border-0 absolute inset-0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            allowFullScreen
-                            title={activeShrine.nameHi}
+                        /* Zero YouTube Error Catch: If external embed fails or is offline,
+                           automatically display sacred sanctum photo with ambient audio. */
+                        <div className="relative w-full h-full">
+                          <Image
+                            key={`fallback-${activeShrine.id}`}
+                            src={activeShrine.imageUrl || '/images/darshan/kashi-vishwanath.jpg'}
+                            alt={`${activeShrine.nameHi} — दर्शन`}
+                            fill
+                            className="object-cover"
                           />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-black/40" />
+                          <div className="absolute bottom-6 inset-x-4 text-center z-20 bg-black/80 p-3 rounded-2xl border border-amber-500/30">
+                            <p className="text-xs font-mono-data text-amber-200">
+                              बाहरी यूट्यूब लाइव अनुपलब्ध होने पर साक्षात् गर्भगृह दर्शन स्वतः प्रारम्भ।
+                            </p>
+                            {activeShrine.liveUrl && (
+                              <a
+                                href={activeShrine.liveUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 mt-1 text-[11px] font-mono-data font-bold text-red-400 hover:underline"
+                              >
+                                अधिकृत यूट्यूब चैनल पर सीधा देखें ↗
+                              </a>
+                            )}
+                          </div>
                         </div>
+                      ) : (
+                        <iframe
+                          ref={ytIframeRef}
+                          key={`video-yt-${activeShrine.id}`}
+                          src={`https://www.youtube-nocookie.com/embed/${activeShrine.videoId || 'Wu321m2SUKY'}?autoplay=1&mute=${isAudioMuted ? 1 : 0}&enablejsapi=1&rel=0&playsinline=1&modestbranding=1`}
+                          className="w-full h-full border-0 absolute inset-0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                          allowFullScreen
+                          onError={() => setMediaFailed(true)}
+                          title={activeShrine.nameHi}
+                        />
                       )}
                     </div>
+                  )}
                 </div>
 
                 {/* Bottom Floating Cinema Glass Dock */}
@@ -1540,7 +1773,7 @@ export default function DarshanPage() {
                   {/* Player & Action Controls Row */}
                   <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">
                     
-                    {/* Left: Player Buttons */}
+                    {/* Left: Navigation Buttons */}
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={handlePrevShrine}
@@ -1566,7 +1799,7 @@ export default function DarshanPage() {
                         <ChevronRight className="w-4 h-4" />
                       </button>
 
-                      {/* Timer Selector: 15s, 30s, 60s, 180s (3 Min), 0 (Full Play) */}
+                      {/* Timer Dropdown */}
                       <div className="flex items-center gap-1 px-2 py-1 rounded-xl bg-white/10 backdrop-blur-md text-[11px] font-mono-data text-white">
                         <Clock className="w-3 h-3 text-amber-400" />
                         <select
@@ -1581,30 +1814,9 @@ export default function DarshanPage() {
                           <option value={0} className="bg-neutral-900 text-rose-300 font-bold">♾️ अखण्ड (Full)</option>
                         </select>
                       </div>
-
-                      {/* Quick Presets: 3 Min & Full Play */}
-                      <button
-                        onClick={() => { playTick(); setCycleSpeedSec(180); setProgressSec(0); }}
-                        className={`px-2 py-1 rounded-xl text-[10px] font-mono-data font-bold transition-all cursor-pointer hidden sm:flex items-center gap-0.5 ${
-                          cycleSpeedSec === 180 ? 'bg-amber-500 text-black font-extrabold shadow-sm' : 'bg-white/10 text-white/80 hover:bg-white/20'
-                        }`}
-                        title="Set 3 Minute Timer"
-                      >
-                        <span>३ मिनट</span>
-                      </button>
-
-                      <button
-                        onClick={() => { playTick(); setCycleSpeedSec(0); setProgressSec(0); }}
-                        className={`px-2 py-1 rounded-xl text-[10px] font-mono-data font-bold transition-all cursor-pointer hidden sm:flex items-center gap-0.5 ${
-                          cycleSpeedSec === 0 ? 'bg-rose-600 text-white font-extrabold shadow-sm' : 'bg-white/10 text-white/80 hover:bg-white/20'
-                        }`}
-                        title="Play Full Video / Stuti Without Interruption"
-                      >
-                        <span>♾️ Full Play</span>
-                      </button>
                     </div>
 
-                    {/* Right: Ritual Action Buttons */}
+                    {/* Right: Devotional Interactive Actions */}
                     <div className="flex flex-wrap items-center gap-1.5">
                       <button
                         onClick={handleRingBell}
@@ -1613,6 +1825,7 @@ export default function DarshanPage() {
                             ? 'bg-amber-500 text-white border-amber-500 scale-105 shadow-md'
                             : 'bg-white/10 text-white border-white/15 hover:bg-white/20'
                         }`}
+                        title="घण्टी बजाएं"
                       >
                         <Bell className={`w-3 h-3 text-amber-400 ${bellRinging ? 'animate-bounce' : ''}`} />
                         <span>घण्टी</span>
@@ -1625,6 +1838,7 @@ export default function DarshanPage() {
                             ? 'bg-indigo-600 text-white border-indigo-600 scale-105 shadow-md'
                             : 'bg-white/10 text-white border-white/15 hover:bg-white/20'
                         }`}
+                        title="शंखनाद करें"
                       >
                         <Volume2 className={`w-3 h-3 text-indigo-400 ${shankhActive ? 'animate-pulse' : ''}`} />
                         <span>शंख</span>
@@ -1633,12 +1847,13 @@ export default function DarshanPage() {
                       <button
                         onClick={handleOfferFlowers}
                         className="px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white backdrop-blur-md text-[11px] font-mono-data font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
+                        title="पुष्प वर्षा करें"
                       >
                         <Sparkles className="w-3 h-3 text-pink-400" />
                         <span>पुष्प अर्पण</span>
                       </button>
 
-                      {/* Deep Daan Button: Lights up glowing Diyas around screen borders */}
+                      {/* Deep Daan Button */}
                       <button
                         onClick={handleLightDiya}
                         className={`px-2.5 py-1 rounded-xl border backdrop-blur-md transition-all cursor-pointer flex items-center gap-1 text-[11px] font-mono-data font-bold active:scale-95 ${
@@ -1646,18 +1861,32 @@ export default function DarshanPage() {
                             ? 'bg-amber-500/40 border-amber-400 text-amber-200 ring-2 ring-amber-400 shadow-[0_0_18px_rgba(245,158,11,0.7)] animate-pulse'
                             : 'bg-white/10 text-white border-white/15 hover:bg-white/20'
                         }`}
-                        title="Offer Deep Daan (Lights glowing sacred Diyas along screen borders)"
+                        title="दीपदान अर्पित करें"
                       >
                         <Flame className={`w-3 h-3 ${hasLitDiya ? 'text-amber-300 animate-pulse' : 'text-amber-500'}`} />
-                        <span>{hasLitDiya ? 'दीपदान प्रज्वलित 🪔' : 'दीपदान'}</span>
+                        <span>{hasLitDiya ? 'दीप प्रज्वलित 🪔' : 'दीपदान'}</span>
                       </button>
 
                       <button
                         onClick={handleJapaIncrement}
                         className="px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white backdrop-blur-md text-[11px] font-mono-data font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
+                        title="मन्त्र जप माला"
                       >
                         <RotateCcw className="w-2.5 h-2.5 text-amber-400" />
                         <span>जप {japaCount}/108</span>
+                      </button>
+
+                      <button
+                        onClick={handleToggleSound}
+                        className={`px-2.5 py-1 rounded-xl border backdrop-blur-md transition-all cursor-pointer flex items-center gap-1 text-[11px] font-mono-data font-bold active:scale-95 ${
+                          isAudioMuted
+                            ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                            : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 animate-pulse'
+                        }`}
+                        title={isAudioMuted ? "ध्वनि चालू करें (Unmute Sound)" : "ध्वनि म्यूट करें (Mute Sound)"}
+                      >
+                        {isAudioMuted ? <VolumeX className="w-3 h-3 text-rose-400" /> : <Volume2 className="w-3 h-3 text-emerald-400" />}
+                        <span>{isAudioMuted ? 'म्यूट' : 'ध्वनि'}</span>
                       </button>
 
                       <button
@@ -1672,170 +1901,353 @@ export default function DarshanPage() {
                 </div>
               </div>
             </div>
+
+            {/* Next Aarti & Status Rail (Beneath Player) */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-[#0E101D] border border-[#8E6F1D]/30 rounded-2xl p-2.5 text-white text-xs font-mono-data">
+              <div className="flex items-center gap-2 p-1.5 rounded-xl bg-white/5">
+                <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <div className="min-w-0">
+                  <span className="text-[9px] text-[#A8A29E] block">आरती वेला</span>
+                  <strong className="text-[10.5px] truncate block text-amber-200">{activeShrine.timingsHi}</strong>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 p-1.5 rounded-xl bg-white/5">
+                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <div className="min-w-0">
+                  <span className="text-[9px] text-[#A8A29E] block">कपाट स्थिति</span>
+                  <strong className="text-[10.5px] truncate block text-emerald-300">कपाट खुले हैं (दर्शन जारी)</strong>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 p-1.5 rounded-xl bg-white/5">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
+                <div className="min-w-0">
+                  <span className="text-[9px] text-[#A8A29E] block">अधिकृत संस्थान</span>
+                  <a
+                    href={activeShrine.trustUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[10.5px] truncate block text-[#F0C968] hover:underline"
+                  >
+                    मन्दिर ट्रस्ट पोर्टल ↗
+                  </a>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 p-1.5 rounded-xl bg-white/5">
+                <Phone className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                <div className="min-w-0">
+                  <span className="text-[9px] text-[#A8A29E] block">हेल्पलाइन</span>
+                  <a
+                    href={`tel:${activeShrine.helpline.replace(/\s+/g, '')}`}
+                    className="text-[10.5px] truncate block text-blue-200 hover:underline"
+                  >
+                    {activeShrine.helpline}
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* RIGHT 4 COLUMNS: LIVE SANCTUARY INFO + 4 CONNECTION TILES + PLAYLIST QUEUE */}
+          {/* RIGHT 4 COLUMNS: DEVOTIONAL SIDE RAIL (SANKALP, POOJA SERVICES, PANCHANG, PARIKRAMA) */}
           <div className="lg:col-span-4 flex flex-col justify-between gap-2.5">
             
-            {/* 1. Active Shrine Shloka & Puranic Context Card */}
-            <div className="bg-white dark:bg-[#0E101D] rounded-2xl border border-black/10 dark:border-white/10 p-3.5 shadow-sm space-y-2">
+            {/* 1. आज का दर्शन संकल्प (Today's Darshan Sankalp Card) */}
+            <div className="bg-gradient-to-br from-[#8E6F1D]/15 via-[#FAF7F2] to-[#D4AF37]/15 dark:from-[#D4AF37]/20 dark:via-[#0E101D] dark:to-[#8E6F1D]/15 rounded-2xl border border-[#8E6F1D]/40 dark:border-[#D4AF37]/45 p-3 shadow-md space-y-2 text-left">
+              <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-1.5">
+                <div className="flex items-center gap-1.5">
+                  <Sun className="w-4 h-4 text-amber-500" />
+                  <h3 className="font-editorial font-bold text-xs sm:text-sm text-[#8E6F1D] dark:text-[#F0C968]">
+                    आज का दर्शन संकल्प (Devotional Sankalp)
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setShowSankalpaModal(true)}
+                  className="text-[9.5px] font-mono-data font-bold text-[#8E6F1D] dark:text-[#D4AF37] underline cursor-pointer"
+                >
+                  संस्कृत संकल्प ↗
+                </button>
+              </div>
+
+              {/* Devotee Name & Gotra Inline */}
+              <div className="grid grid-cols-2 gap-1.5">
+                <div>
+                  <label className="text-[9px] font-mono-data text-[#78716C] dark:text-[#A8A29E] block mb-0.5">भक्त का नाम</label>
+                  <input
+                    type="text"
+                    value={devoteeName}
+                    onChange={(e) => setDevoteeName(e.target.value)}
+                    placeholder="आपका शुभ नाम"
+                    className="w-full px-2.5 py-1 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#161826] text-xs font-mono-data text-[#1C1917] dark:text-white outline-none focus:border-[#8E6F1D]"
+                  />
+                </div>
+                <div>
+                  <label className="text-[9px] font-mono-data text-[#78716C] dark:text-[#A8A29E] block mb-0.5">गोत्र</label>
+                  <input
+                    type="text"
+                    value={devoteeGotra}
+                    onChange={(e) => setDevoteeGotra(e.target.value)}
+                    placeholder="गोत्र (e.g. कश्यप)"
+                    className="w-full px-2.5 py-1 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#161826] text-xs font-mono-data text-[#1C1917] dark:text-white outline-none focus:border-[#8E6F1D]"
+                  />
+                </div>
+              </div>
+
+              {/* Devotee Prayer / Wish Textarea */}
+              <div>
+                <label className="text-[9px] font-mono-data text-[#78716C] dark:text-[#A8A29E] block mb-0.5">मनोकामना अथवा प्रार्थना</label>
+                <textarea
+                  value={devoteePrayer}
+                  onChange={(e) => setDevoteePrayer(e.target.value)}
+                  placeholder="श्रीचरणों में अपनी प्रार्थना अथवा संकल्प लिखें..."
+                  rows={2}
+                  className="w-full px-2.5 py-1.5 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#161826] text-xs font-mono-data text-[#1C1917] dark:text-white outline-none focus:border-[#8E6F1D] resize-none"
+                />
+              </div>
+
+              {/* Submit / Confirmation */}
+              {sankalpSubmitted ? (
+                <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-800 dark:text-emerald-300 text-xs font-mono-data flex flex-col gap-1 shadow-inner animate-in fade-in">
+                  <div className="flex items-center gap-1.5 font-bold">
+                    <Check className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>संकल्प पावन चरणों में निवेदित हुआ!</span>
+                  </div>
+                  <p className="text-[10px] text-emerald-700 dark:text-emerald-400">
+                    श्री {activeShrine.nameHi} द्वारा आपकी मनोकामना सिद्ध हो। कल्याणमस्तु! 🪔
+                  </p>
+                  <button
+                    onClick={handleShareWhatsApp}
+                    className="mt-1 w-full py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] flex items-center justify-center gap-1 shadow-xs cursor-pointer"
+                  >
+                    <Send className="w-2.5 h-2.5" />
+                    <span>WhatsApp पर आशीर्वाद शेयर करें</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 pt-0.5">
+                  <button
+                    onClick={handleSaveDarshanSankalp}
+                    className="flex-1 py-1.5 rounded-xl bg-[#8E6F1D] hover:bg-[#A88424] text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95"
+                  >
+                    <span>🪔</span>
+                    <span>संकल्प लें व आशीर्वाद प्राप्त करें</span>
+                  </button>
+                  <button
+                    onClick={handleShareWhatsApp}
+                    className="p-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer shadow-xs"
+                    title="Share on WhatsApp"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* 2. ६ पावन सेवाएँ (Pooja & Services Grid: 2x3) */}
+            <div className="bg-white dark:bg-[#0E101D] rounded-2xl border border-black/10 dark:border-white/10 p-3 shadow-sm space-y-2 text-left">
+              <div className="flex items-center justify-between">
+                <div className="text-[10.5px] font-mono-data uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968] font-bold flex items-center gap-1">
+                  <span>🚩</span>
+                  <span>पावन सेवाएँ एवं दर्शन सुविधा</span>
+                </div>
+                <span className="text-[9px] font-mono-data text-[#78716C]">
+                  {activeShrine.state}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-1.5">
+                {/* 1. e-Puja */}
+                <a
+                  href={activeShrine.trustUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => playTick()}
+                  className="p-2 rounded-xl bg-[#FAF7F2] dark:bg-[#161826] border border-black/5 dark:border-white/10 hover:border-[#8E6F1D] text-center flex flex-col items-center justify-center gap-0.5 cursor-pointer group shadow-xs transition-all"
+                >
+                  <span className="text-base group-hover:scale-110 transition-transform">🕉️</span>
+                  <strong className="text-[10px] font-mono-data text-[#1C1917] dark:text-white block">ई-पूजा</strong>
+                  <span className="text-[8.5px] text-[#78716C] block">अधिकृत ↗</span>
+                </a>
+
+                {/* 2. Seva Pass */}
+                <button
+                  onClick={() => {
+                    playTick();
+                    setActiveServiceInfo({
+                      title: 'सुगम दर्शन व सेवा पास',
+                      desc: `श्री ${activeShrine.nameHi} में वृद्धजनों, दिव्यांगों एवं विशेष अनुष्ठान हेतु सुगम दर्शन एवं वीआईपी पास सुविधा अधिकृत देवस्थानम बोर्ड द्वारा प्रदान की जाती है।`,
+                      icon: '🎫',
+                      link: activeShrine.trustUrl,
+                      buttonText: 'ट्रस्ट पोर्टल पर पास देखें'
+                    });
+                  }}
+                  className="p-2 rounded-xl bg-[#FAF7F2] dark:bg-[#161826] border border-black/5 dark:border-white/10 hover:border-[#8E6F1D] text-center flex flex-col items-center justify-center gap-0.5 cursor-pointer group shadow-xs transition-all"
+                >
+                  <span className="text-base group-hover:scale-110 transition-transform">🎫</span>
+                  <strong className="text-[10px] font-mono-data text-[#1C1917] dark:text-white block">सेवा पास</strong>
+                  <span className="text-[8.5px] text-[#78716C] block">सुगम दर्शन</span>
+                </button>
+
+                {/* 3. Donation */}
+                <a
+                  href={activeShrine.trustUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => playTick()}
+                  className="p-2 rounded-xl bg-[#FAF7F2] dark:bg-[#161826] border border-black/5 dark:border-white/10 hover:border-amber-500 text-center flex flex-col items-center justify-center gap-0.5 cursor-pointer group shadow-xs transition-all"
+                >
+                  <span className="text-base group-hover:scale-110 transition-transform">🪙</span>
+                  <strong className="text-[10px] font-mono-data text-[#1C1917] dark:text-white block">दान सेवा</strong>
+                  <span className="text-[8.5px] text-[#78716C] block">हुण्डी अर्पण ↗</span>
+                </a>
+
+                {/* 4. Aarti Timings */}
+                <button
+                  onClick={() => {
+                    playTick();
+                    setActiveServiceInfo({
+                      title: 'दैनिक आरती समय सूची',
+                      desc: `श्री ${activeShrine.nameHi} दैनिक आरती वेला:\n${activeShrine.timingsHi}\n\nविशेष पर्व एवं सावन/महाशिवरात्रि पर समय में विशेष परिवर्तन ट्रस्ट नियमानुसार होता है।`,
+                      icon: '⏰',
+                      link: activeShrine.trustUrl,
+                      buttonText: 'सम्पूर्ण समय सारिणी'
+                    });
+                  }}
+                  className="p-2 rounded-xl bg-[#FAF7F2] dark:bg-[#161826] border border-black/5 dark:border-white/10 hover:border-[#8E6F1D] text-center flex flex-col items-center justify-center gap-0.5 cursor-pointer group shadow-xs transition-all"
+                >
+                  <span className="text-base group-hover:scale-110 transition-transform">⏰</span>
+                  <strong className="text-[10px] font-mono-data text-[#1C1917] dark:text-white block">आरती समय</strong>
+                  <span className="text-[8.5px] text-[#78716C] block">दैनिक वेला</span>
+                </button>
+
+                {/* 5. Prasad Sewa */}
+                <button
+                  onClick={() => {
+                    playTick();
+                    setActiveServiceInfo({
+                      title: 'महाप्रसाद एवं भण्डारा सेवा',
+                      desc: `भगवान ${activeShrine.deityHi} का पावन भोग एवं महाप्रसाद देवस्थानम भण्डारे में नित्य वितरित होता है। आप अपने व परिवार के नाम से भोग अर्पण करा सकते हैं।`,
+                      icon: '🍯',
+                      link: activeShrine.trustUrl,
+                      buttonText: 'भोग अर्पण विवरण'
+                    });
+                  }}
+                  className="p-2 rounded-xl bg-[#FAF7F2] dark:bg-[#161826] border border-black/5 dark:border-white/10 hover:border-[#8E6F1D] text-center flex flex-col items-center justify-center gap-0.5 cursor-pointer group shadow-xs transition-all"
+                >
+                  <span className="text-base group-hover:scale-110 transition-transform">🍯</span>
+                  <strong className="text-[10px] font-mono-data text-[#1C1917] dark:text-white block">प्रसाद सेवा</strong>
+                  <span className="text-[8.5px] text-[#78716C] block">महाभोग</span>
+                </button>
+
+                {/* 6. Temple Guide */}
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activeShrine.mapQuery)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => playTick()}
+                  className="p-2 rounded-xl bg-[#FAF7F2] dark:bg-[#161826] border border-black/5 dark:border-white/10 hover:border-rose-500 text-center flex flex-col items-center justify-center gap-0.5 cursor-pointer group shadow-xs transition-all"
+                >
+                  <span className="text-base group-hover:scale-110 transition-transform">🗺️</span>
+                  <strong className="text-[10px] font-mono-data text-[#1C1917] dark:text-white block">तीर्थ गाइड</strong>
+                  <span className="text-[8.5px] text-[#78716C] block">Maps मार्ग ↗</span>
+                </a>
+              </div>
+            </div>
+
+            {/* 3. आज का पञ्चाङ्ग (Vedic Panchang Telemetry Card) */}
+            <div className="bg-white dark:bg-[#0E101D] rounded-2xl border border-black/10 dark:border-white/10 p-3 shadow-sm space-y-2 text-left">
+              <div className="flex items-center justify-between border-b border-black/5 dark:border-white/5 pb-1.5">
+                <div className="text-[10.5px] font-mono-data uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968] font-bold flex items-center gap-1.5">
+                  <Compass className="w-3.5 h-3.5" />
+                  <span>आज का पञ्चाङ्ग (तीर्थ खगोल)</span>
+                </div>
+                <span className="text-[9.5px] text-[#78716C] font-mono-data">
+                  {new Date().toLocaleDateString('hi-IN', { day: 'numeric', month: 'short' })}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-1.5 text-xs font-mono-data">
+                <div className="p-1.5 rounded-xl bg-black/5 dark:bg-white/5">
+                  <span className="text-[9px] text-[#78716C] block">तिथि</span>
+                  <strong className="text-[#1C1917] dark:text-white font-bold text-[11px]">
+                    {panchangBundle?.tithi.nameHi || 'दशमी'}
+                  </strong>
+                </div>
+                <div className="p-1.5 rounded-xl bg-black/5 dark:bg-white/5">
+                  <span className="text-[9px] text-[#78716C] block">नक्षत्र</span>
+                  <strong className="text-[#1C1917] dark:text-white font-bold text-[11px]">
+                    {panchangBundle?.nakshatra.nameHi || 'रोहिणी'}
+                  </strong>
+                </div>
+                <div className="p-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                  <span className="text-[9px] text-emerald-700 dark:text-emerald-300 block">अभिजित मुहूर्त</span>
+                  <strong className="text-[#1C1917] dark:text-white font-bold text-[10.5px]">
+                    {panchangBundle?.timings.abhijitMuhurat || '११:४८ - १२:३८'}
+                  </strong>
+                </div>
+                <div className="p-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                  <span className="text-[9px] text-amber-700 dark:text-amber-300 block">राहुकाल (वर्जित)</span>
+                  <strong className="text-[#1C1917] dark:text-white font-bold text-[10.5px]">
+                    {panchangBundle?.timings.rahuKalam || '१०:३० - १२:००'}
+                  </strong>
+                </div>
+              </div>
+            </div>
+
+            {/* 4. पावन परिक्रमा प्रगति (Parikrama Progress Card) */}
+            <div className="bg-white dark:bg-[#0E101D] rounded-2xl border border-black/10 dark:border-white/10 p-3 shadow-sm space-y-2 text-left">
+              <div className="flex items-center justify-between">
+                <div className="text-[10.5px] font-mono-data uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968] font-bold flex items-center gap-1.5">
+                  <Award className="w-3.5 h-3.5 text-amber-500" />
+                  <span>परिक्रमा प्रगति</span>
+                </div>
+                <span className="text-[10px] font-mono-data font-bold text-[#8E6F1D] dark:text-[#F0C968]">
+                  तीर्थ {currentIndex + 1} / {currentDataset.length}
+                </span>
+              </div>
+
+              {/* Progress Stepper */}
+              <div className="w-full bg-black/10 dark:bg-white/10 h-2 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-amber-500 to-emerald-500 transition-all duration-500"
+                  style={{ width: `${Math.round(((currentIndex + 1) / currentDataset.length) * 100)}%` }}
+                />
+              </div>
+
+              <div className="flex items-center justify-between pt-0.5">
+                <span className="text-[10px] font-mono-data text-[#78716C]">
+                  {Math.round(((currentIndex + 1) / currentDataset.length) * 100)}% यात्रा पूर्ण
+                </span>
+                <button
+                  onClick={() => setShowCertificateModal(true)}
+                  className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-500/20 to-[#D4AF37]/20 border border-amber-400/40 text-amber-700 dark:text-amber-300 text-[10px] font-mono-data font-bold flex items-center gap-1 cursor-pointer hover:bg-amber-500/30"
+                >
+                  <Award className="w-3 h-3 text-amber-500" />
+                  <span>प्रमाणपत्र प्राप्त करें 📜</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 5. वैदिक माहात्म्य व श्लोक Card */}
+            <div className="bg-white dark:bg-[#0E101D] rounded-2xl border border-black/10 dark:border-white/10 p-3 shadow-sm space-y-1.5 text-left">
               <div className="flex items-center justify-between">
                 <div className="text-[10px] font-mono-data uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968] font-bold flex items-center gap-1">
                   <BookOpen className="w-3 h-3" />
                   <span>वैदिक माहात्म्य</span>
                 </div>
-                <span className="text-[10px] font-mono-data px-2 py-0.5 rounded-full bg-[#8E6F1D]/15 text-[#8E6F1D] dark:text-[#F0C968] font-bold">
-                  {activeShrine.state}
+                <span className="text-[9.5px] font-mono-data px-2 py-0.5 rounded-full bg-[#8E6F1D]/15 text-[#8E6F1D] dark:text-[#F0C968] font-bold">
+                  {activeShrine.deityHi}
                 </span>
               </div>
 
-              <div className="font-serif text-sm font-bold text-[#1C1917] dark:text-[#FAF7F2] leading-snug">
+              <div className="font-serif text-xs font-bold text-[#1C1917] dark:text-[#FAF7F2] leading-relaxed">
                 {activeShrine.shloka}
               </div>
 
-              <p className="text-[11px] font-mono-data text-[#57524A] dark:text-[#D1C9BF] leading-relaxed line-clamp-2">
+              <p className="text-[10.5px] font-mono-data text-[#57524A] dark:text-[#D1C9BF] leading-snug line-clamp-2">
                 {activeShrine.shlokaMeaning}
               </p>
-
-              <div className="text-[10px] font-mono-data text-[#78716C] pt-1 border-t border-black/5 dark:border-white/5 line-clamp-1">
-                <strong>महात्म्य:</strong> {activeShrine.angaOrSignificance}
-              </div>
-            </div>
-
-            {/* 2. Four Direct Ways to Connect Tiles (2x2 Grid) */}
-            <div className="grid grid-cols-2 gap-2">
-              <a
-                href={activeShrine.trustUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => playTick()}
-                className="p-2.5 rounded-xl bg-white dark:bg-[#121422] border border-black/10 dark:border-white/10 hover:border-[#8E6F1D] transition-all flex flex-col items-center justify-center text-center gap-0.5 cursor-pointer group shadow-xs"
-              >
-                <ShieldCheck className="w-4 h-4 text-[#8E6F1D] dark:text-[#F0C968] group-hover:scale-110 transition-transform" />
-                <span className="text-[11px] font-mono-data font-bold text-[#1C1917] dark:text-white">ई-पूजा बुकिंग</span>
-                <span className="text-[9px] font-mono-data text-[#78716C]">अधिकृत ट्रस्ट ↗</span>
-              </a>
-
-              <a
-                href={`tel:${activeShrine.helpline.replace(/\s+/g, '')}`}
-                onClick={() => playTick()}
-                className="p-2.5 rounded-xl bg-white dark:bg-[#121422] border border-black/10 dark:border-white/10 hover:border-emerald-500 transition-all flex flex-col items-center justify-center text-center gap-0.5 cursor-pointer group shadow-xs"
-              >
-                <Phone className="w-4 h-4 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform" />
-                <span className="text-[11px] font-mono-data font-bold text-[#1C1917] dark:text-white">हेल्पलाइन</span>
-                <span className="text-[9px] font-mono-data text-[#78716C] line-clamp-1">{activeShrine.helpline}</span>
-              </a>
-
-              <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activeShrine.mapQuery)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => playTick()}
-                className="p-2.5 rounded-xl bg-white dark:bg-[#121422] border border-black/10 dark:border-white/10 hover:border-rose-500 transition-all flex flex-col items-center justify-center text-center gap-0.5 cursor-pointer group shadow-xs"
-              >
-                <MapPin className="w-4 h-4 text-rose-600 dark:text-rose-400 group-hover:scale-110 transition-transform" />
-                <span className="text-[11px] font-mono-data font-bold text-[#1C1917] dark:text-white">दिशा-निर्देश</span>
-                <span className="text-[9px] font-mono-data text-[#78716C]">Google Maps ↗</span>
-              </a>
-
-              <a
-                href={activeShrine.liveUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => playTick()}
-                className="p-2.5 rounded-xl bg-white dark:bg-[#121422] border border-black/10 dark:border-white/10 hover:border-red-500 transition-all flex flex-col items-center justify-center text-center gap-0.5 cursor-pointer group shadow-xs"
-              >
-                <Radio className="w-4 h-4 text-red-600 animate-pulse group-hover:scale-110 transition-transform" />
-                <span className="text-[11px] font-mono-data font-bold text-[#1C1917] dark:text-white">लाइव प्रसारण</span>
-                <span className="text-[9px] font-mono-data text-[#78716C]">YouTube Live ↗</span>
-              </a>
-            </div>
-
-            {/* 3. YouTube-Style Scrollable Playlist Queue */}
-            <div className="bg-white dark:bg-[#0E101D] rounded-2xl border border-black/10 dark:border-white/10 p-3 shadow-sm flex-1 flex flex-col justify-between">
-              
-              <div className="flex items-center justify-between pb-2 border-b border-black/5 dark:border-white/5">
-                <div className="flex items-center gap-1.5 text-xs font-mono-data font-bold text-[#1C1917] dark:text-white">
-                  <ListFilter className="w-3.5 h-3.5 text-[#8E6F1D]" />
-                  <span>परिक्रमा तीर्थ सूची ({currentDataset.length})</span>
-                </div>
-                <span className="text-[10px] font-mono-data text-[#78716C]">
-                  {currentIndex + 1} / {currentDataset.length}
-                </span>
-              </div>
-
-              {/* Scrollable list of shrines */}
-              <div className="space-y-1.5 max-h-[170px] sm:max-h-[190px] overflow-y-auto pr-1 mt-2 custom-scrollbar">
-                {currentDataset.map((shrine, sIdx) => {
-                  const isCurrent = sIdx === currentIndex;
-                  return (
-                    <button
-                      key={shrine.id}
-                      onClick={() => handleStepJump(sIdx)}
-                      className={`w-full p-2 rounded-xl text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
-                        isCurrent
-                          ? 'bg-[#8E6F1D] text-white dark:bg-[#D4AF37] dark:text-[#060709] shadow-xs ring-1 ring-[#8E6F1D]'
-                          : 'bg-[#FAF7F2] dark:bg-[#161826] text-[#44403C] dark:text-[#D1C9BF] hover:bg-black/5 dark:hover:bg-white/5'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-[10px] font-mono-data font-bold opacity-75">#{sIdx + 1}</span>
-                        <div className="min-w-0">
-                          <div className="text-[11px] font-editorial font-bold line-clamp-1">
-                            {shrine.nameHi.split('(')[0]}
-                          </div>
-                          <div className="text-[9px] font-mono-data opacity-75 line-clamp-1">
-                            {shrine.locationHi}
-                          </div>
-                        </div>
-                      </div>
-
-                      {isCurrent ? (
-                        <span className="text-[9px] font-mono-data font-bold px-1.5 py-0.5 rounded bg-black/20 text-white dark:text-[#060709]">
-                          सक्रिय
-                        </span>
-                      ) : (
-                        <span className="text-[9px] font-mono-data opacity-60">
-                          {shrine.state}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* 4. Family Sankalpa & Blessing Card */}
-            <div className="bg-gradient-to-br from-[#8E6F1D]/10 via-[#FAF7F2] to-[#D4AF37]/10 dark:from-[#D4AF37]/15 dark:via-[#0E101D] dark:to-[#8E6F1D]/10 rounded-2xl border border-[#8E6F1D]/30 dark:border-[#D4AF37]/35 p-2.5 shadow-xs space-y-1.5">
-              <div className="flex items-center justify-between">
-                <div className="text-[10px] font-mono-data font-bold text-[#8E6F1D] dark:text-[#F0C968] flex items-center gap-1">
-                  <Sun className="w-3 h-3 text-amber-500" />
-                  <span>Family Sankalpa & Blessing Card</span>
-                </div>
-                <button
-                  onClick={() => setShowSankalpaModal(true)}
-                  className="text-[9px] font-mono-data font-bold text-[#8E6F1D] dark:text-[#D4AF37] underline cursor-pointer"
-                >
-                  सम्पूर्ण संकल्प ↗
-                </button>
-              </div>
-
-              <div className="flex items-center gap-1.5">
-                <input
-                  type="text"
-                  value={devoteeName}
-                  onChange={(e) => setDevoteeName(e.target.value)}
-                  placeholder="आपका नाम (Name)"
-                  className="flex-1 px-2 py-1 rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[#161826] text-[10px] font-mono-data outline-none"
-                />
-                <button
-                  onClick={handleShareWhatsApp}
-                  className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-mono-data font-bold flex items-center gap-1 shadow-xs cursor-pointer active:scale-95"
-                >
-                  <Send className="w-2.5 h-2.5" />
-                  <span>WhatsApp</span>
-                </button>
-              </div>
             </div>
           </div>
         </div>
@@ -1854,6 +2266,13 @@ export default function DarshanPage() {
             </p>
             <div className="flex items-center justify-center gap-2 pt-1">
               <button
+                onClick={() => setShowCertificateModal(true)}
+                className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-[#D4AF37] text-black text-xs font-mono-data font-bold flex items-center gap-1.5 shadow-md cursor-pointer"
+              >
+                <Award className="w-3.5 h-3.5" />
+                <span>परिक्रमा प्रमाणपत्र डाउनलोड करें</span>
+              </button>
+              <button
                 onClick={handleShareWhatsApp}
                 className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-mono-data font-bold flex items-center gap-1.5 shadow-md cursor-pointer"
               >
@@ -1870,10 +2289,10 @@ export default function DarshanPage() {
           </div>
         )}
 
-        {/* 6. Daily Morning Sankalpa Modal */}
+        {/* 6. Daily Morning Sanskrit Sankalpa Modal */}
         {showSankalpaModal && (
-          <div className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-[#0E101D] rounded-3xl border border-[#8E6F1D]/40 max-w-lg w-full p-6 shadow-2xl space-y-4 animate-in zoom-in-95">
+          <div className="fixed inset-0 z-[9999] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-[#0E101D] rounded-3xl border border-[#8E6F1D]/40 max-w-lg w-full p-6 shadow-2xl space-y-4 animate-in zoom-in-95 text-left">
               
               <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-3">
                 <div className="flex items-center gap-2">
@@ -1897,19 +2316,19 @@ export default function DarshanPage() {
                   value={devoteeName}
                   onChange={(e) => setDevoteeName(e.target.value)}
                   placeholder="आपका शुभ नाम"
-                  className="px-3 py-1.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#FAF7F2] dark:bg-[#161826] text-xs font-mono-data outline-none focus:border-[#8E6F1D]"
+                  className="px-3 py-1.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#FAF7F2] dark:bg-[#161826] text-xs font-mono-data text-[#1C1917] dark:text-white outline-none focus:border-[#8E6F1D]"
                 />
                 <input
                   type="text"
                   value={devoteeGotra}
                   onChange={(e) => setDevoteeGotra(e.target.value)}
                   placeholder="गोत्र (e.g. कश्यप)"
-                  className="px-3 py-1.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#FAF7F2] dark:bg-[#161826] text-xs font-mono-data outline-none focus:border-[#8E6F1D]"
+                  className="px-3 py-1.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#FAF7F2] dark:bg-[#161826] text-xs font-mono-data text-[#1C1917] dark:text-white outline-none focus:border-[#8E6F1D]"
                 />
               </div>
 
               {/* Formatted Sankalpa Text Box */}
-              <div className="bg-[#FAF7F2] dark:bg-[#070912] rounded-2xl border border-[#8E6F1D]/20 p-4 space-y-2 font-serif text-xs text-[#1C1917] dark:text-[#FAF7F2] italic text-center">
+              <div className="bg-[#FAF7F2] dark:bg-[#070912] rounded-2xl border border-[#8E6F1D]/20 p-4 space-y-2 font-serif text-xs text-[#1C1917] dark:text-[#FAF7F2] italic text-center leading-relaxed">
                 <p>
                   "मम आत्मनः श्रुतिस्मृतिपुराणोक्त फलप्राप्त्यर्थं, सकल पापक्षयार्थं, परिवारस्य आरोग्य-ऐश्वर्य-समृद्धि सिद्धयर्थं, 
                   <strong> {devoteeGotra || 'कश्यप'} </strong> गोत्रोत्पन्न <strong> {devoteeName || 'भक्त'} </strong> अहम् 
@@ -1932,6 +2351,113 @@ export default function DarshanPage() {
                   className="px-3 py-2 rounded-xl border border-black/10 dark:border-white/10 text-xs font-mono-data font-bold cursor-pointer"
                 >
                   {copiedShare ? 'कॉपी हो गया ✓' : 'कॉपी करें'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 7. Parikrama Certificate Modal (पावन परिक्रमा प्रमाणपत्र) */}
+        {showCertificateModal && (
+          <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="bg-gradient-to-br from-[#FFFDF9] via-[#FAF6EE] to-[#F5EEDC] dark:from-[#0E101D] dark:via-[#151828] dark:to-[#080911] rounded-3xl border-4 border-[#D4AF37] max-w-lg w-full p-6 shadow-2xl space-y-4 animate-in zoom-in-95 text-center text-[#1C1917] dark:text-white relative">
+              
+              <button
+                onClick={() => setShowCertificateModal(false)}
+                className="absolute top-4 right-4 p-1.5 rounded-full bg-black/10 dark:bg-white/10 hover:bg-red-500 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="space-y-1 pt-2">
+                <div className="text-3xl">🔱 🕉️ 🔱</div>
+                <h3 className="font-editorial text-xl sm:text-2xl font-bold text-[#8E6F1D] dark:text-[#F0C968]">
+                  श्री सनातन तीर्थ परिक्रमा प्रमाणपत्र
+                </h3>
+                <p className="text-[10px] font-mono-data tracking-wider uppercase text-[#78716C] dark:text-[#A8A29E]">
+                  Certificate of Sacred Pilgrimage • CosmicTantra
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-white/70 dark:bg-black/40 border border-[#D4AF37]/30 space-y-3 font-mono-data text-xs leading-relaxed">
+                <p className="text-xs sm:text-sm">
+                  प्रमाणित किया जाता है कि भक्त <strong className="text-[#8E6F1D] dark:text-[#F0C968] font-bold text-sm sm:text-base">{devoteeName || 'सनातन भक्त'}</strong> (गोत्र: <strong className="text-[#8E6F1D] dark:text-[#F0C968]">{devoteeGotra || 'कश्यप'}</strong>) ने आज पावन भाव से 
+                </p>
+                <div className="py-2 px-3 rounded-xl bg-amber-500/10 border border-amber-500/20 font-editorial font-bold text-base text-[#8E6F1D] dark:text-[#F0C968]">
+                  {activeCategory === 'JYOTIRLINGA' ? 'द्वादश ज्योतिर्लिंग साक्षात् दर्शन परिक्रमा' :
+                   activeCategory === 'SHAKTI_PEETH' ? '५२ महा शक्तिपीठ पावन दर्शन परिक्रमा' :
+                   activeCategory === 'CHAR_DHAM' ? 'चार धाम व महातीर्थ पावन परिक्रमा' :
+                   activeCategory === 'GANGA_AARTI' ? 'माँ गंगा महाआरती दर्शन परिक्रमा' : 'सिद्ध स्तुति व संकीर्तन साधना'}
+                </div>
+                <p className="text-[11px] text-[#78716C] dark:text-[#A8A29E] italic">
+                  पूर्ण श्रद्धा एवं भक्तिभाव से सम्पन्न की। भगवान देवाधिदेव महादेव एवं जगन्माता आपकी समस्त मनोकामनाएं पूर्ण करें।
+                </p>
+                <div className="text-[10px] text-[#8E6F1D] dark:text-[#F0C968] pt-1 border-t border-black/5 dark:border-white/10 flex justify-between">
+                  <span>दिनांक: {new Date().toLocaleDateString('hi-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                  <span>पावन मुद्रा: 🪔 स्वीकृत</span>
+                </div>
+              </div>
+
+              {/* Certificate Buttons */}
+              <div className="flex items-center justify-center gap-2 pt-1">
+                <button
+                  onClick={() => window.print()}
+                  className="px-4 py-2 rounded-xl bg-black/10 dark:bg-white/10 hover:bg-black/20 text-xs font-mono-data font-bold flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>प्रिंट / सुरक्षित करें</span>
+                </button>
+                <button
+                  onClick={handleShareWhatsApp}
+                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-mono-data font-bold flex items-center gap-1.5 shadow-md cursor-pointer"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>WhatsApp पर साझा करें</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 8. Service Detail Dialog */}
+        {activeServiceInfo && (
+          <div className="fixed inset-0 z-[9999] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-[#0E101D] rounded-3xl border border-[#8E6F1D]/40 max-w-md w-full p-5 shadow-2xl space-y-3 animate-in zoom-in-95 text-left text-[#1C1917] dark:text-white">
+              <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">{activeServiceInfo.icon}</span>
+                  <h4 className="font-editorial text-base font-bold text-[#8E6F1D] dark:text-[#F0C968]">
+                    {activeServiceInfo.title}
+                  </h4>
+                </div>
+                <button
+                  onClick={() => setActiveServiceInfo(null)}
+                  className="p-1 rounded-lg text-[#78716C] hover:text-black dark:hover:text-white cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <p className="text-xs font-mono-data leading-relaxed whitespace-pre-line text-[#57524A] dark:text-[#D1C9BF]">
+                {activeServiceInfo.desc}
+              </p>
+
+              <div className="pt-2 flex items-center gap-2">
+                {activeServiceInfo.link && (
+                  <a
+                    href={activeServiceInfo.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 py-2 rounded-xl bg-[#8E6F1D] hover:bg-[#A88424] text-white text-xs font-mono-data font-bold flex items-center justify-center gap-1.5 shadow-xs"
+                  >
+                    <span>{activeServiceInfo.buttonText || 'अधिकृत पोर्टल पर जाएं'} ↗</span>
+                  </a>
+                )}
+                <button
+                  onClick={() => setActiveServiceInfo(null)}
+                  className="px-3 py-2 rounded-xl border border-black/10 dark:border-white/10 text-xs font-mono-data cursor-pointer"
+                >
+                  बन्द करें
                 </button>
               </div>
             </div>

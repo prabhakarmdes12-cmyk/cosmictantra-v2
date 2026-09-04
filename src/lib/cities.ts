@@ -615,7 +615,8 @@ export const CITIES_BY_STATE: Record<string, CityCoordinate[]> = CITIES.reduce((
 export function searchCities(query: string): CityCoordinate[] {
   if (!query || !query.trim()) return CITIES.slice(0, 30);
   const q = query.toLowerCase().trim();
-  const tokens = q.split(/[\s,]+/).filter((t) => t.length > 0);
+  const cleanQ = q.replace(/[^a-z0-9\u0900-\u097F\s]/g, ' ').trim();
+  const tokens = cleanQ.split(/\s+/).filter((t) => t.length > 0);
   return CITIES.filter((c) => {
     const nameLower = c.name.toLowerCase();
     const stateLower = c.state.toLowerCase();

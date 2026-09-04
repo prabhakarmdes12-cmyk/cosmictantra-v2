@@ -29,6 +29,8 @@ import {
 import { getProfiles } from '@/lib/profileStore';
 import { CITIES } from '@/lib/cities';
 import { playTick } from '@/lib/chitiAudio';
+import { useActiveLocation } from '@/lib/location/useActiveLocation';
+import { persistActiveLocation } from '@/lib/location/activeLocation';
 
 const HINDI_DIGITS = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९'];
 function toHindiDigits(str: string | number): string {
@@ -58,9 +60,10 @@ export const ALL_MONTHS = [
 
 interface AuraMonthlyCalendarProps {
   initialLang?: string;
+  onSwitchToToday?: () => void;
 }
 
-export default function AuraMonthlyCalendar({ initialLang }: AuraMonthlyCalendarProps) {
+export default function AuraMonthlyCalendar({ initialLang, onSwitchToToday }: AuraMonthlyCalendarProps) {
   const now = new Date();
   const [currentYear, setCurrentYear] = useState<number>(now.getFullYear());
   const [currentMonth, setCurrentMonth] = useState<number>(now.getMonth()); // 0-indexed
@@ -76,6 +79,7 @@ export default function AuraMonthlyCalendar({ initialLang }: AuraMonthlyCalendar
   const [inspectedDay, setInspectedDay] = useState<PanchangDayData | null>(null);
 
   const isHi = lang === 'hi';
+  const { location } = useActiveLocation();
 
   // Initialize Profiles — CT_UX_INV_003 no fabricated demo family.
   useEffect(() => {
@@ -88,11 +92,20 @@ export default function AuraMonthlyCalendar({ initialLang }: AuraMonthlyCalendar
     return profiles.find(p => p.id === activeProfId) || profiles[0] || null;
   }, [profiles, activeProfId]);
 
-  // City Object
+  // City Object: Resolve from active location when known, otherwise selectedCityId fallback
   const currentCityObj = useMemo(() => {
-    const found = CITIES.find(c => c.id === selectedCityId);
-    return found ? { name: found.name, nameHi: (found as any).nameHi || found.name, lat: found.lat, lng: found.lng, tz: found.tz || 5.5 } : null;
-  }, [selectedCityId]);
+    if (location.status === 'KNOWN' && location.lat !== null && location.lng !== null) {
+      return {
+        name: location.name,
+        nameHi: location.nameHi || location.name,
+        lat: location.lat,
+        lng: location.lng,
+        tz: location.tz ?? 5.5,
+      };
+    }
+    const found = CITIES.find(c => c.id === selectedCityId) || CITIES[0];
+    return { name: found.name, nameHi: (found as any).nameHi || found.name, lat: found.lat, lng: found.lng, tz: found.tz || 5.5 };
+  }, [location, selectedCityId]);
 
   // Compute Full Month Data via calculateMonthPanchang
   const monthData: MonthPanchangOverview | null = useMemo(() => {
@@ -321,8 +334,28 @@ export default function AuraMonthlyCalendar({ initialLang }: AuraMonthlyCalendar
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#FAF7F2] dark:bg-[#161826] text-xs font-mono-data">
               <Compass className="w-3.5 h-3.5 text-[#8E6F1D] dark:text-[#D4AF37]" />
               <select
-                value={selectedCityId}
-                onChange={(e) => { playTick(); setSelectedCityId(e.target.value); }}
+                value={
+                  location.status === 'KNOWN' && location.name
+                    ? (CITIES.find(c => c.name.toLowerCase() === location.name.toLowerCase())?.id || selectedCityId)
+                    : selectedCityId
+                }
+                onChange={(e) => { 
+                  playTick(); 
+                  const cid = e.target.value;
+                  setSelectedCityId(cid);
+                  const found = CITIES.find(c => c.id === cid);
+                  if (found) {
+                    persistActiveLocation({
+                      id: found.id,
+                      name: found.name,
+                      nameHi: (found as any).nameHi || found.name,
+                      lat: found.lat,
+                      lng: found.lng,
+                      tz: found.tz || 5.5,
+                      isGps: false,
+                    });
+                  }
+                }}
                 className="bg-transparent font-bold text-[#1C1917] dark:text-white outline-none cursor-pointer"
               >
                 {CITIES.map(c => (
@@ -333,12 +366,19 @@ export default function AuraMonthlyCalendar({ initialLang }: AuraMonthlyCalendar
               </select>
             </div>
 
-            {/* Jump to Today Button */}
+            {/* Jump to Today / Today's Panchang Button */}
             <button
-              onClick={handleJumpToToday}
-              className="px-3 py-1.5 rounded-xl border border-[#8E6F1D]/30 dark:border-[#D4AF37]/30 bg-white dark:bg-[#161826] text-xs font-mono-data font-bold text-[#8E6F1D] dark:text-[#F0C968] hover:bg-[#8E6F1D] hover:text-white dark:hover:bg-[#D4AF37] dark:hover:text-[#060709] transition-all cursor-pointer shadow-sm"
+              onClick={() => {
+                handleJumpToToday();
+                if (onSwitchToToday) {
+                  onSwitchToToday();
+                }
+              }}
+              className="px-3 py-1.5 rounded-xl border border-[#8E6F1D]/30 dark:border-[#D4AF37]/30 bg-white dark:bg-[#161826] text-xs font-mono-data font-bold text-[#8E6F1D] dark:text-[#F0C968] hover:bg-[#8E6F1D] hover:text-white dark:hover:bg-[#D4AF37] dark:hover:text-[#060709] transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
+              title={isHi ? 'आज का पञ्चाङ्ग देखें' : "View Today's Panchang"}
             >
-              {isHi ? 'आज का दिन' : 'Today'}
+              <Sun className="w-3.5 h-3.5" />
+              <span>{isHi ? 'आज का पञ्चाङ्ग' : "Today's Panchang"}</span>
             </button>
 
             {/* Prev / Next Month Buttons */}
@@ -531,9 +571,31 @@ export default function AuraMonthlyCalendar({ initialLang }: AuraMonthlyCalendar
                   onClick={() => handleOpenDayInspector(day)}
                   className={`min-h-[115px] sm:min-h-[135px] p-2 sm:p-2.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between relative group ${borderClass} ${bgClass} hover:scale-[1.02] hover:shadow-lg`}
                 >
-                  
                   {/* Cell Top Bar: Dual Date Header (English Date + Hindi Date & Moon Phase) */}
                   <div>
+                    {/* Today Glowing Indicator Banner */}
+                    {isToday && (
+                      <div className="flex items-center justify-between gap-1 mb-1.5 px-2 py-0.5 rounded-lg bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#060709] text-[9px] font-mono-data font-black uppercase tracking-wider shadow-xs">
+                        <span className="flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white dark:bg-black animate-ping" />
+                          <span>आज • TODAY</span>
+                        </span>
+                        {onSwitchToToday && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onSwitchToToday();
+                            }}
+                            className="hover:underline opacity-90 cursor-pointer font-bold"
+                            title="आज का पञ्चाङ्ग देखें"
+                          >
+                            पञ्चाङ्ग →
+                          </button>
+                        )}
+                      </div>
+                    )}
+
                     <div className="flex items-center justify-between gap-1 border-b border-black/5 dark:border-white/5 pb-1 mb-1">
                       {/* Left: English Date Number & Month Abbreviation */}
                       <div className="flex items-baseline gap-1">

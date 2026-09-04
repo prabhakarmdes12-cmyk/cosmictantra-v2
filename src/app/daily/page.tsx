@@ -71,7 +71,29 @@ export default function DailyForecastPage() {
   // When the user has no saved chart, Today shows an intentional empty state
   // instead of pretending a fabricated chart exists.
   useEffect(() => {
-    const list = getProfiles() || [];
+    let list = getProfiles() || [];
+    if (list.length === 0 && typeof window !== 'undefined') {
+      try {
+        const savedRaw = localStorage.getItem('cosmictantra_active_kundli');
+        if (savedRaw) {
+          const parsed = JSON.parse(savedRaw);
+          if (parsed?.name && parsed?.birthDate && Number.isFinite(parsed?.latitude) && Number.isFinite(parsed?.longitude)) {
+            const newProf = upsertProfile({
+              name: parsed.name,
+              relation: 'Self',
+              birthDate: parsed.birthDate,
+              birthTime: parsed.birthTime || '12:00',
+              birthCity: parsed.locationName || 'India',
+              lat: parsed.latitude,
+              lng: parsed.longitude,
+              tz: Number.isFinite(parsed.timezone) ? parsed.timezone : 5.5
+            } as never);
+            setActiveProfileId(newProf.id);
+            list = [newProf];
+          }
+        }
+      } catch {}
+    }
     setProfiles(list);
     const curr = getActiveProfile() || list[0] || null;
     setActiveProfile(curr);

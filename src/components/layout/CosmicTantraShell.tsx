@@ -101,27 +101,17 @@ export default function CosmicTantraShell({
     <div className={`min-h-screen flex flex-col transition-colors duration-200 ${
       theme === 'dark' ? 'bg-[#06070B] text-[#FFFFFF]' : 'bg-[#FAF7F2] text-[#1C1917]'
     }`}>
-      {/* Five-destination consumer navigation, or scholar/presentation header */}
-      {activeShellMode === 'public' ? (
-        <PrimaryNavigation
-          mode="public"
-          theme={theme}
-          lang={lang}
-          onThemeToggle={handleThemeToggle}
-          onLangToggle={handleLangToggle}
-          onOpenCitySelector={() => setCityModalOpen(true)}
-        />
-      ) : (
-        <GlobalHeader
-          mode={activeShellMode}
-          theme={theme}
-          lang={lang}
-          onThemeToggle={handleThemeToggle}
-          onLangToggle={handleLangToggle}
-          presentationSlide={presentationSlide}
-          totalSlides={totalSlides}
-        />
-      )}
+      {/* Canonical unified header with center-aligned logo and minimal navigation */}
+      <GlobalHeader
+        mode={activeShellMode}
+        theme={theme}
+        lang={lang}
+        onThemeToggle={handleThemeToggle}
+        onLangToggle={handleLangToggle}
+        onOpenCitySelector={() => setCityModalOpen(true)}
+        presentationSlide={presentationSlide}
+        totalSlides={totalSlides}
+      />
 
       {/* Semantic Clickable Breadcrumbs (Public routes only) */}
       {activeShellMode === 'public' && activeBreadcrumbs && activeBreadcrumbs.length > 0 && (

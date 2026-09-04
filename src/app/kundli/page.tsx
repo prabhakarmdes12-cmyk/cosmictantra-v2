@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation';
 
-export default function ScholarDashboard() {
+export default function KundliIndexPage() {
   redirect('/report');
 }
-

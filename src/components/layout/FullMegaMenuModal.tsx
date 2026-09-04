@@ -149,7 +149,7 @@ export default function FullMegaMenuModal({ isOpen, onClose, lang = 'en' }: Full
             const desc = t[l.descriptionKey] ?? '';
             return (
               <Link
-                key={`${destId}-${l.href}`}
+                key={`${destId}-${l.labelKey}-${l.href}`}
                 href={l.href}
                 data-testid={`mega-link-${l.href.replace(/\//g, '-')}`}
                 onClick={() => { chitiSensory.playTick(); onClose(); }}

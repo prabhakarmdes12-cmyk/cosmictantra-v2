@@ -78,4 +78,14 @@ test.describe('Kundli First Insight & Report Browser Acceptance', () => {
     await expect(page.getByRole('button', { name: /Swami Vivekananda/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /Albert Einstein/i })).toBeVisible();
   });
+
+  test('/report dashboard cockpit renders persona hero, segmented rail and metric cards', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto('http://localhost:3000/report?sample=1', { waitUntil: 'networkidle' });
+    await page.screenshot({ path: 'artifacts/screenshots/dashboard-cockpit-desktop.png', fullPage: false });
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('http://localhost:3000/report?sample=1', { waitUntil: 'networkidle' });
+    await page.screenshot({ path: 'artifacts/screenshots/dashboard-cockpit-mobile.png', fullPage: false });
+  });
 });
