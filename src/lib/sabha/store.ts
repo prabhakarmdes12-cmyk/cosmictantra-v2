@@ -1,9 +1,28 @@
 import { ConsultationSession, SessionAuditLog } from './types';
 
 // In-Memory Durable Session & Audit Vault (backed by transactional persistence)
-const SESSION_VAULT: Map<string, ConsultationSession> = new Map();
-const AUDIT_VAULT: Map<string, SessionAuditLog[]> = new Map();
-const IDEMPOTENCY_VAULT: Set<string> = new Set();
+//
+// The vaults attach to globalThis (same convention as the lazy Prisma client in
+// src/lib/db.ts) so Next.js dev-server HMR re-compiles of route handlers never
+// orphan live consultation state mid-session. In production (single long-lived
+// Node process) behaviour is identical: exactly one vault per process.
+const globalForSabha = globalThis as unknown as {
+  __sabhaSessionVault?: Map<string, ConsultationSession>;
+  __sabhaAuditVault?: Map<string, SessionAuditLog[]>;
+  __sabhaIdempotencyVault?: Set<string>;
+};
+
+const SESSION_VAULT: Map<string, ConsultationSession> =
+  globalForSabha.__sabhaSessionVault ?? new Map();
+globalForSabha.__sabhaSessionVault = SESSION_VAULT;
+
+const AUDIT_VAULT: Map<string, SessionAuditLog[]> =
+  globalForSabha.__sabhaAuditVault ?? new Map();
+globalForSabha.__sabhaAuditVault = AUDIT_VAULT;
+
+const IDEMPOTENCY_VAULT: Set<string> =
+  globalForSabha.__sabhaIdempotencyVault ?? new Set();
+globalForSabha.__sabhaIdempotencyVault = IDEMPOTENCY_VAULT;
 
 export class SabhaSessionStore {
   static get(sessionId: string): ConsultationSession | null {
