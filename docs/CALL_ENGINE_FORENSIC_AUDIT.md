@@ -109,3 +109,35 @@ Across the entire repository:
 | **Media & Signaling** | Non-existent (mocked) | **Implement Native Clean WebRTC Stack** |
 
 **Recommendation**: Proceed with **PATH B (Repair & Wire Existing Framework)**. Do NOT throw away the Sabha state machine, types, or ops console. Replace the mock consultation room with genuine WebRTC media pipelines and implement a lightweight, zero-dependency signaling engine.
+
+---
+
+## 5. Architectural Invariant: Customer Care is an Optional Routing Layer
+
+### 5.1 Single Underlying Calling Primitive (`ConsultationSession`)
+**Critical Architectural Rule**: DO NOT build separate `CustomerCareCall` and `DirectPanditCall` systems. There must be exactly ONE call primitive: `ConsultationSession` with an `initiationMode`:
+```typescript
+export type ConsultationInitiationMode = 'CARE_ASSISTED' | 'DIRECT' | 'SCHEDULED';
+```
+The RTC media engine does NOT care how participants were matched. It receives only:
+- `sessionId` & `roomId`
+- Authorized customer ID & authorized consultant ID
+- Transport & media type (`AUDIO` | `VIDEO`)
+- Ephemeral session credentials (`auth.ts` / TURN)
+Customer Care belongs strictly to the **routing/operations layer**, never the media transport layer.
+
+### 5.2 Four Initiation Modes
+1. **Mode 1: CARE_ASSISTED (Assisted Quality Control)**:
+   - Customer requests consultation $\rightarrow$ Care queue $\rightarrow$ Care assigns verified Pandit $\rightarrow$ Both ring/join $\rightarrow$ Care drops out $\rightarrow$ 1:1 private call.
+2. **Mode 2: DIRECT (Instant Free Call from Profile)**:
+   - Customer clicks "Call Now / Free Call" on Consultant profile $\rightarrow$ `ConsultationSession` created directly $\rightarrow$ Consultant rings $\rightarrow$ Consultant accepts $\rightarrow$ 1:1 private call. Zero Care intervention.
+3. **Mode 3: SCHEDULED (Future Appointment)**:
+   - Book date/time $\rightarrow$ Session queued $\rightarrow$ Both join at scheduled timestamp.
+4. **Mode 4: CARE_CONFERENCE (Care Joins Call)**:
+   - Multi-party extension; deferred for post-V1 SFU evolution.
+
+### 5.3 Mandatory Dual Qualification Gate
+The call engine passes qualification ONLY when BOTH tests pass across different real internet networks:
+- **TEST A (Care-Assisted)**: Customer A $\rightarrow$ Care queue $\rightarrow$ Care assigns Pandit B $\rightarrow$ Pandit B accepts $\rightarrow$ A ↔ B two-way audio (Care NOT in media) $\rightarrow$ End $\rightarrow$ Duration logged.
+- **TEST B (Completely Direct)**: Customer C $\rightarrow$ Pandit D profile $\rightarrow$ "Free Call" $\rightarrow$ D rings and accepts $\rightarrow$ C ↔ D two-way audio (Zero Care action) $\rightarrow$ End $\rightarrow$ Duration logged.
+

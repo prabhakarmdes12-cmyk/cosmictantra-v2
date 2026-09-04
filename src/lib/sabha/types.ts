@@ -211,8 +211,12 @@ export interface SessionAuditLog {
   details?: Record<string, any>;
 }
 
+export type ConsultationInitiationMode = 'CARE_ASSISTED' | 'DIRECT' | 'SCHEDULED';
+
 export interface ConsultationSession {
   sessionId: string; // Format: CT-SABHA-YYYY-XXXXXXXX
+  roomId?: string;   // Cryptographic WebRTC Room Identifier
+  initiationMode?: ConsultationInitiationMode; // Default: 'CARE_ASSISTED'
   state: SessionState;
   serviceMode: SabhaServiceMode;
   transportChannel: TransportChannel;
