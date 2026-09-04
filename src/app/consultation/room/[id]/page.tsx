@@ -344,21 +344,20 @@ export default function EncryptedConsultationRoom() {
           {/* Session Timer & FREE Extender */}
           <div className="flex items-center gap-2 sm:gap-3">
             <div
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold ${
-                callStatus === 'ENDED'
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold ${callStatus === 'ENDED'
                   ? 'bg-slate-500/10 border-slate-500/30 text-slate-600 dark:text-slate-300'
                   : remainingSec !== null && remainingSec < 120
-                  ? 'bg-rose-500/15 border-rose-500/40 text-rose-700 dark:text-rose-300 animate-pulse'
-                  : 'bg-amber-500/10 border-amber-500/30 text-amber-800 dark:text-amber-300'
-              }`}
+                    ? 'bg-rose-500/15 border-rose-500/40 text-rose-700 dark:text-rose-300 animate-pulse'
+                    : 'bg-amber-500/10 border-amber-500/30 text-amber-800 dark:text-amber-300'
+                }`}
             >
               <Clock className="w-3.5 h-3.5" />
               <span>
                 {callStatus === 'CONNECTED'
                   ? displayTimer || '--:--'
                   : callStatus === 'ENDED'
-                  ? `अवधि: ${formatClock(sessionView?.durationSeconds ?? endedInfo?.durationSeconds ?? 0)}`
-                  : statusLabel[connectionState]}
+                    ? `अवधि: ${formatClock(sessionView?.durationSeconds ?? endedInfo?.durationSeconds ?? 0)}`
+                    : statusLabel[connectionState]}
               </span>
             </div>
 
@@ -390,9 +389,8 @@ export default function EncryptedConsultationRoom() {
                     setActiveMode('voice');
                     if (hasVideoTrack && isCameraOn) void toggleCamera();
                   }}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                    activeMode === 'voice' ? 'bg-[#8E6F1D] text-white shadow-md' : 'text-white/70 hover:text-white'
-                  }`}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${activeMode === 'voice' ? 'bg-[#8E6F1D] text-white shadow-md' : 'text-white/70 hover:text-white'
+                    }`}
                 >
                   <Phone className="w-3.5 h-3.5" />
                   <span>Voice Call</span>
@@ -404,9 +402,8 @@ export default function EncryptedConsultationRoom() {
                     setActiveMode('video');
                     if (!hasVideoTrack || !isCameraOn) void toggleCamera();
                   }}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                    activeMode === 'video' ? 'bg-indigo-600 text-white shadow-md' : 'text-white/70 hover:text-white'
-                  }`}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${activeMode === 'video' ? 'bg-indigo-600 text-white shadow-md' : 'text-white/70 hover:text-white'
+                    }`}
                 >
                   <Video className="w-3.5 h-3.5" />
                   <span>Video Darshan</span>
@@ -471,9 +468,8 @@ export default function EncryptedConsultationRoom() {
                 <div className="text-center space-y-6 animate-in zoom-in-95">
                   <div className="relative mx-auto">
                     <div
-                      className={`w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-gradient-to-tr from-[#8E6F1D] to-[#D4AF37] flex items-center justify-center text-white text-3xl sm:text-4xl shadow-2xl ${
-                        connectionState === 'CONNECTED' ? '' : 'animate-pulse'
-                      }`}
+                      className={`w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-gradient-to-tr from-[#8E6F1D] to-[#D4AF37] flex items-center justify-center text-white text-3xl sm:text-4xl shadow-2xl ${connectionState === 'CONNECTED' ? '' : 'animate-pulse'
+                        }`}
                     >
                       {connectionState === 'ENDED' ? <PhoneOff className="w-10 h-10" /> : '🕉️'}
                     </div>
@@ -499,9 +495,8 @@ export default function EncryptedConsultationRoom() {
                       <div
                         key={i}
                         style={{ height: `${connectionState === 'CONNECTED' ? h : 15}%` }}
-                        className={`w-1.5 bg-gradient-to-t from-amber-500 to-amber-200 rounded-full transition-all duration-150 ${
-                          connectionState === 'CONNECTED' ? 'opacity-100' : 'opacity-40'
-                        }`}
+                        className={`w-1.5 bg-gradient-to-t from-amber-500 to-amber-200 rounded-full transition-all duration-150 ${connectionState === 'CONNECTED' ? 'opacity-100' : 'opacity-40'
+                          }`}
                       />
                     ))}
                   </div>
@@ -514,9 +509,8 @@ export default function EncryptedConsultationRoom() {
                     ref={remoteVideoRef}
                     autoPlay
                     playsInline
-                    className={`absolute inset-0 w-full h-full object-cover ${
-                      remoteStream && connectionState === 'CONNECTED' ? 'opacity-100' : 'opacity-0'
-                    }`}
+                    className={`absolute inset-0 w-full h-full object-cover ${remoteStream && connectionState === 'CONNECTED' ? 'opacity-100' : 'opacity-0'
+                      }`}
                   />
                   {/* Connecting veil */}
                   {(!remoteStream || connectionState !== 'CONNECTED') && (
@@ -568,9 +562,8 @@ export default function EncryptedConsultationRoom() {
                   toggleMute();
                 }}
                 disabled={connectionState !== 'CONNECTED' && connectionState !== 'CONNECTING' && connectionState !== 'RECONNECTING'}
-                className={`p-3.5 rounded-2xl border transition-all cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${
-                  isMuted ? 'bg-rose-500/20 border-rose-500 text-rose-400' : 'bg-white/10 border-white/15 text-white hover:bg-white/20'
-                }`}
+                className={`p-3.5 rounded-2xl border transition-all cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${isMuted ? 'bg-rose-500/20 border-rose-500 text-rose-400' : 'bg-white/10 border-white/15 text-white hover:bg-white/20'
+                  }`}
                 title={isMuted ? 'Unmute' : 'Mute'}
               >
                 {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
@@ -583,9 +576,8 @@ export default function EncryptedConsultationRoom() {
                   void toggleCamera();
                 }}
                 disabled={!localStream}
-                className={`p-3.5 rounded-2xl border transition-all cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${
-                  !isCameraOn ? 'bg-rose-500/20 border-rose-500 text-rose-400' : 'bg-white/10 border-white/15 text-white hover:bg-white/20'
-                }`}
+                className={`p-3.5 rounded-2xl border transition-all cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${!isCameraOn ? 'bg-rose-500/20 border-rose-500 text-rose-400' : 'bg-white/10 border-white/15 text-white hover:bg-white/20'
+                  }`}
                 title={isCameraOn ? 'Turn Camera Off' : 'Turn Camera On'}
               >
                 {isCameraOn ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
@@ -682,11 +674,10 @@ export default function EncryptedConsultationRoom() {
                       </div>
                     ) : (
                       <div
-                        className={`p-3 rounded-2xl max-w-[85%] leading-relaxed ${
-                          m.sender === 'SELF'
+                        className={`p-3 rounded-2xl max-w-[85%] leading-relaxed ${m.sender === 'SELF'
                             ? 'bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#080A10] rounded-br-xs'
                             : 'bg-[#FAF7F2] dark:bg-[#151828] border border-black/10 dark:border-white/10 text-[#1C1917] dark:text-white rounded-bl-xs'
-                        }`}
+                          }`}
                       >
                         <div className="font-bold text-[10px] opacity-75 mb-0.5">
                           {m.sender === 'SELF' ? 'आप' : sessionView?.consultant.name || 'पीयर'}

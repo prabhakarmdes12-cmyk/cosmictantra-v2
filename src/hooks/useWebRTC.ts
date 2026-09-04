@@ -525,19 +525,16 @@ export function useWebRTC(options: UseWebRTCOptions): UseWebRTCApi {
       sseOpenRef.current = false;
     }
 
-    // Heartbeat + poll-drain: 1.2s cadence when SSE is down, 15s keepalive when up.
+    // Active poll-drain: runs every 1000ms so signaling messages (offers, answers, ICE candidates)
+    // are never buffered or delayed behind SSE keepalive intervals.
     const drainTimer = setInterval(() => {
       if (!joinedRef.current) return;
-      const now = Date.now();
-      if (!sseOpenRef.current || now - lastHeartbeatSentRef.current >= 15_000) {
-        lastHeartbeatSentRef.current = now;
-        void postSignal(sessionId, token, 'HEARTBEAT').then(res => {
-          if (res?.ok && Array.isArray(res.inbox)) {
-            res.inbox.forEach(m => void processSignal(m));
-          }
-        });
-      }
-    }, 1_200);
+      void postSignal(sessionId, token, 'HEARTBEAT').then(res => {
+        if (res?.ok && Array.isArray(res.inbox) && res.inbox.length > 0) {
+          res.inbox.forEach(m => void processSignal(m));
+        }
+      });
+    }, 1_000);
 
     // Ringing patience: surface "no answer" guidance without aborting the room.
     const ringTimer = ringTimeoutMs
@@ -657,6 +654,13 @@ export function useWebRTC(options: UseWebRTCOptions): UseWebRTCApi {
       joiningRef.current = false;
     }
   }, [sessionId, token, mode, ensurePeerConnection, processSignal, setState]);
+
+  // Auto-join effect: when autoJoin is enabled, join the media room automatically
+  useEffect(() => {
+    if (autoJoin && sessionId && token && !joinedRef.current && !joiningRef.current) {
+      void join();
+    }
+  }, [autoJoin, sessionId, token, join]);
 
   const leave = useCallback(
     async (reason: string = 'CALL_ENDED') => {
