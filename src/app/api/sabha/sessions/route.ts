@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     const initiationMode = body?.initiationMode === 'DIRECT' ? 'DIRECT' : 'CARE_ASSISTED';
     const mediaType = body?.mediaType === 'VIDEO' ? 'VIDEO' : 'AUDIO';
 
-    const result = createFreeCallSession({
+    const result = await createFreeCallSession({
       initiationMode,
       consultantId: body?.consultantId ? String(body.consultantId).slice(0, 40) : undefined,
       mediaType,

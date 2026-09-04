@@ -56,6 +56,61 @@ export const VERIFIED_SCHOLARS: VerifiedScholar[] = [
   }
 ];
 
+// Dynamic registry for practitioners onboarded via DB or admin console
+const DYNAMIC_SCHOLARS = new Map<string, VerifiedScholar>();
+
+export function registerScholar(scholar: VerifiedScholar): void {
+  DYNAMIC_SCHOLARS.set(scholar.scholarId, scholar);
+}
+
 export function getScholarById(scholarId: string): VerifiedScholar | undefined {
-  return VERIFIED_SCHOLARS.find(s => s.scholarId === scholarId);
+  return VERIFIED_SCHOLARS.find(s => s.scholarId === scholarId) || DYNAMIC_SCHOLARS.get(scholarId);
+}
+
+/**
+ * Returns all verified scholars combining static foundational scholars and
+ * approved, active practitioners from the database.
+ */
+export async function getAllScholars(): Promise<VerifiedScholar[]> {
+  const scholarsMap = new Map<string, VerifiedScholar>();
+
+  // Add static foundational scholars first
+  for (const s of VERIFIED_SCHOLARS) {
+    scholarsMap.set(s.scholarId, s);
+  }
+
+  // Query database for active, onboarded consultants
+  try {
+    const { db } = await import('@/lib/db');
+    const isProduction = process.env.NODE_ENV === 'production';
+    const dbConsultants = await db.astrologyConsultant.findMany({
+      where: {
+        isActive: true,
+        onboardingStatus: 'COMPLETED',
+        ...(isProduction ? { isTestFixture: false } : {})
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50
+    });
+
+    for (const c of dbConsultants) {
+      const scholar: VerifiedScholar = {
+        scholarId: c.id,
+        name: c.displayName || c.fullName || 'पं. ज्योतिषी',
+        title: c.qualifications || `${c.tradition || 'वैदिक'} ज्योतिर्विद`,
+        tradition: c.tradition || 'सनातन वैदिक परम्परा',
+        city: c.city ? `${c.city}${c.state ? `, ${c.state}` : ''}` : 'वाराणसी',
+        languages: c.languages && c.languages.length ? c.languages : ['Hindi', 'English'],
+        specialities: c.expertise && c.expertise.length ? c.expertise : [c.specialty],
+        experienceYears: c.yearsExperience || 10,
+        glyph: c.profilePhoto && !c.profilePhoto.startsWith('http') ? c.profilePhoto : '🕉️'
+      };
+      registerScholar(scholar);
+      scholarsMap.set(scholar.scholarId, scholar);
+    }
+  } catch (error) {
+    console.warn('[getAllScholars] Falling back to static scholars list:', error);
+  }
+
+  return Array.from(scholarsMap.values());
 }

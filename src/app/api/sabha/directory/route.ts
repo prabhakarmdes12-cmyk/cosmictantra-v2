@@ -5,16 +5,17 @@
  */
 
 import { NextResponse } from 'next/server';
-import { VERIFIED_SCHOLARS } from '@/lib/sabha/directory';
+import { getAllScholars } from '@/lib/sabha/directory';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export async function GET() {
+  const scholars = await getAllScholars();
   return NextResponse.json(
     {
       ok: true,
-      scholars: VERIFIED_SCHOLARS.map(s => ({
+      scholars: scholars.map(s => ({
         scholarId: s.scholarId,
         name: s.name,
         title: s.title,

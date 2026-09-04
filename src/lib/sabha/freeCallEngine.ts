@@ -89,24 +89,55 @@ function recordAudit(sessionId: string, log: Omit<SessionAuditLog, 'auditId' | '
  * Creates a FREE 1:1 consultation session (the single call primitive) and issues
  * ephemeral HMAC-SHA256 access tokens for exactly the two authorized parties.
  */
-export function createFreeCallSession(input: CreateFreeCallInput): {
+export async function createFreeCallSession(input: CreateFreeCallInput): Promise<{
   ok: boolean;
   error?: string;
   handle?: FreeCallSessionHandle;
-} {
+}> {
   if (input.initiationMode === 'DIRECT' && !input.consultantId) {
     return { ok: false, error: 'DIRECT call sessions require a consultantId (Pandit profile).' };
   }
-  if (input.initiationMode === 'DIRECT') {
-    // DIRECT mode permits only the registered verified directory ids for V1.
-    if (!getScholarById(input.consultantId!)) {
-      return { ok: false, error: 'Unknown or unverified consultant for DIRECT free call.' };
+
+  let scholar = input.consultantId
+    ? getScholarById(input.consultantId)
+    : undefined;
+
+  // Fallback: lookup in database if not yet in memory registry
+  if (!scholar && input.consultantId) {
+    try {
+      const { db } = await import('@/lib/db');
+      const c = await db.astrologyConsultant.findFirst({
+        where: {
+          OR: [
+            { id: input.consultantId },
+            { publicId: input.consultantId }
+          ],
+          isActive: true
+        }
+      });
+      if (c) {
+        const { registerScholar } = await import('@/lib/sabha/directory');
+        scholar = {
+          scholarId: c.id,
+          name: c.displayName || c.fullName || 'पं. ज्योतिषी',
+          title: c.qualifications || `${c.tradition || 'वैदिक'} ज्योतिर्विद`,
+          tradition: c.tradition || 'सनातन वैदिक परम्परा',
+          city: c.city ? `${c.city}${c.state ? `, ${c.state}` : ''}` : 'वाराणसी',
+          languages: c.languages && c.languages.length ? c.languages : ['Hindi', 'English'],
+          specialities: c.expertise && c.expertise.length ? c.expertise : [c.specialty],
+          experienceYears: c.yearsExperience || 10,
+          glyph: c.profilePhoto && !c.profilePhoto.startsWith('http') ? c.profilePhoto : '🕉️'
+        };
+        registerScholar(scholar);
+      }
+    } catch (err) {
+      console.warn('[createFreeCallSession] DB scholar lookup fallback error:', err);
     }
   }
 
-  const scholar = input.consultantId
-    ? getScholarById(input.consultantId)
-    : undefined;
+  if (input.initiationMode === 'DIRECT' && !scholar) {
+    return { ok: false, error: 'Unknown or unverified consultant for DIRECT free call.' };
+  }
 
   const now = Date.now();
   const sessionId = newSessionId();

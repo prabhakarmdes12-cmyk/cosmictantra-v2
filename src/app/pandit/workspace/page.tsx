@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { 
   Clock, 
   Users, 
@@ -73,13 +74,35 @@ export interface HelpDeskCase {
   };
 }
 
-export default function PanditWorkspace() {
-  const [activeTab, setActiveTab] = useState<'HELP_DESK' | 'SCHOLAR_DESK'>('HELP_DESK');
+function PanditWorkspaceInner() {
+  const searchParams = useSearchParams();
+  const scholarIdParam = searchParams?.get('scholarId') || '';
+  const isDedicatedPandit = Boolean(scholarIdParam);
+
+  const [activeTab, setActiveTab] = useState<'HELP_DESK' | 'SCHOLAR_DESK'>(
+    isDedicatedPandit ? 'SCHOLAR_DESK' : 'HELP_DESK'
+  );
+  const [scholarDetails, setScholarDetails] = useState<{ name: string; city: string; title: string } | null>(null);
+  const [isOnline, setIsOnline] = useState<boolean>(true);
   const [cases, setCases] = useState<HelpDeskCase[]>([]);
   const [selectedCase, setSelectedCase] = useState<HelpDeskCase | null>(null);
   const [scholars, setScholars] = useState<Array<{ id: string; name: string; specialty: string }>>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [operatorAccess, setOperatorAccess] = useState(false);
+
+  useEffect(() => {
+    if (scholarIdParam) {
+      fetch('/api/sabha/directory', { cache: 'no-store' })
+        .then(r => r.json())
+        .then(d => {
+          const found = (d?.scholars || []).find((s: any) => s.scholarId === scholarIdParam);
+          if (found) {
+            setScholarDetails({ name: found.name, city: found.city, title: found.title });
+          }
+        })
+        .catch(() => {});
+    }
+  }, [scholarIdParam]);
 
   // Intake Form State (Junior Pandit)
   const [phoneInput, setPhoneInput] = useState('');
@@ -453,52 +476,98 @@ export default function PanditWorkspace() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         
         {/* INCOMING FREE CALLS (Secure Call Engine P1 — ring & accept, 1:1 WebRTC) */}
-        <IncomingFreeCallsPanel scholarId="ALL" />
+        {isOnline ? (
+          <IncomingFreeCallsPanel scholarId={scholarIdParam || 'ALL'} />
+        ) : (
+          <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-400/30 text-rose-200 text-xs font-mono-data flex items-center justify-between shadow-lg">
+            <span className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-rose-400" />
+              <span>⏸️ आपकी सेवा अभी अवकाश (Offline) पर है। नए कॉल प्राप्त करने के लिए ऑनलाइन मोड चालू करें।</span>
+            </span>
+            <button
+              onClick={() => { chitiSensory.playTick(); setIsOnline(true); }}
+              className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-mono-data font-bold text-xs cursor-pointer shadow-md"
+            >
+              ऑनलाइन सेवा चालू करें
+            </button>
+          </div>
+        )}
 
-        {/* TOP COCKPIT HEADER */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-3xl bg-[#0F1222] border border-[#8E6F1D]/40 text-white shadow-xl">
-          <div className="space-y-1">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-xs font-mono-data font-bold">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>COCKPIT • CANONICAL HELP DESK: +91 9972934937</span>
+        {/* TOP COCKPIT / PANDIT HEADER */}
+        {isDedicatedPandit ? (
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-3xl bg-[#0F1222] border border-[#8E6F1D]/40 text-white shadow-xl">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-400/30 text-amber-300 text-xs font-mono-data font-bold">
+                <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}`} />
+                <span>पंडित जी का कार्यक्षेत्र • ID: {scholarIdParam}</span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-editorial font-bold text-[#FAF7F2]">
+                {scholarDetails?.name || 'पं. ज्योतिषी'} • {scholarDetails?.city || 'वाराणसी'}
+              </h1>
+              <p className="text-xs font-mono-data text-[#D1C9BF]">
+                {scholarDetails?.title || 'वरिष्ठ वैदिक ज्योतिर्विद'} • प्रत्यक्ष निःशुल्क एवं सशुल्क परामर्श कक्ष
+              </p>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-editorial font-bold text-[#FAF7F2]">
-              {activeTab === 'HELP_DESK' ? 'Junior Pandit Help Desk & Intake Desk' : 'Senior Scholar Paid Consultation Workspace'}
-            </h1>
-            <p className="text-xs font-mono-data text-[#D1C9BF]">
-              {activeTab === 'HELP_DESK' 
-                ? 'Triage inbound WhatsApp calls, collect verbatim concern, generate consultation order & verify server payments.'
-                : 'Receive verified intake case briefs, track 15-minute consultation timer, and record 4-quadrant astrological folios.'}
-            </p>
-          </div>
 
-          {/* Mode Switcher Tabs */}
-          <div className="flex items-center p-1.5 rounded-2xl bg-black/40 border border-white/10 shrink-0">
-            <button
-              onClick={() => { chitiSensory.playTick(); setActiveTab('HELP_DESK'); }}
-              className={`px-4 py-2.5 rounded-xl text-xs font-mono-data font-bold transition-all cursor-pointer flex items-center gap-2 ${
-                activeTab === 'HELP_DESK'
-                  ? 'bg-amber-500 text-black shadow-md'
-                  : 'text-white/70 hover:text-white'
-              }`}
-            >
-              <Phone className="w-3.5 h-3.5" />
-              <span>1. Help Desk Intake</span>
-            </button>
-
-            <button
-              onClick={() => { chitiSensory.playTick(); setActiveTab('SCHOLAR_DESK'); }}
-              className={`px-4 py-2.5 rounded-xl text-xs font-mono-data font-bold transition-all cursor-pointer flex items-center gap-2 ${
-                activeTab === 'SCHOLAR_DESK'
-                  ? 'bg-[#D4AF37] text-black shadow-md'
-                  : 'text-white/70 hover:text-white'
-              }`}
-            >
-              <Award className="w-3.5 h-3.5" />
-              <span>2. Scholar Paid Desk</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => { chitiSensory.playTick(); setIsOnline(!isOnline); }}
+                className={`px-4 py-2.5 rounded-2xl text-xs font-mono-data font-bold transition-all cursor-pointer flex items-center gap-2 border shadow-md ${
+                  isOnline 
+                    ? 'bg-emerald-500/20 border-emerald-400/40 text-emerald-300 hover:bg-emerald-500/30'
+                    : 'bg-rose-500/20 border-rose-400/40 text-rose-300 hover:bg-rose-500/30'
+                }`}
+              >
+                <span className={`w-2.5 h-2.5 rounded-full ${isOnline ? 'bg-emerald-400 animate-ping' : 'bg-rose-400'}`} />
+                <span>{isOnline ? '🟢 सेवा में उपस्थित (Online)' : '⏸️ अवकाश पर (Offline)'}</span>
+              </button>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-3xl bg-[#0F1222] border border-[#8E6F1D]/40 text-white shadow-xl">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-xs font-mono-data font-bold">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>COCKPIT • CANONICAL HELP DESK: +91 9972934937</span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-editorial font-bold text-[#FAF7F2]">
+                {activeTab === 'HELP_DESK' ? 'Junior Pandit Help Desk & Intake Desk' : 'Senior Scholar Paid Consultation Workspace'}
+              </h1>
+              <p className="text-xs font-mono-data text-[#D1C9BF]">
+                {activeTab === 'HELP_DESK' 
+                  ? 'Triage inbound WhatsApp calls, collect verbatim concern, generate consultation order & verify server payments.'
+                  : 'Receive verified intake case briefs, track 15-minute consultation timer, and record 4-quadrant astrological folios.'}
+              </p>
+            </div>
+
+            {/* Mode Switcher Tabs */}
+            <div className="flex items-center p-1.5 rounded-2xl bg-black/40 border border-white/10 shrink-0">
+              <button
+                onClick={() => { chitiSensory.playTick(); setActiveTab('HELP_DESK'); }}
+                className={`px-4 py-2.5 rounded-xl text-xs font-mono-data font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                  activeTab === 'HELP_DESK'
+                    ? 'bg-amber-500 text-black shadow-md'
+                    : 'text-white/70 hover:text-white'
+                }`}
+              >
+                <Phone className="w-3.5 h-3.5" />
+                <span>1. Help Desk Intake</span>
+              </button>
+
+              <button
+                onClick={() => { chitiSensory.playTick(); setActiveTab('SCHOLAR_DESK'); }}
+                className={`px-4 py-2.5 rounded-xl text-xs font-mono-data font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                  activeTab === 'SCHOLAR_DESK'
+                    ? 'bg-[#D4AF37] text-black shadow-md'
+                    : 'text-white/70 hover:text-white'
+                }`}
+              >
+                <Award className="w-3.5 h-3.5" />
+                <span>2. Scholar Paid Desk</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* ========================================================================= */}
         {/* TAB 1: JUNIOR PANDIT HELP DESK INTAKE & PAYMENT VERIFICATION               */}
@@ -1077,5 +1146,21 @@ export default function PanditWorkspace() {
 
       </div>
     </CosmicTantraShell>
+  );
+}
+
+export default function PanditWorkspace() {
+  return (
+    <Suspense
+      fallback={
+        <CosmicTantraShell>
+          <div className="max-w-7xl mx-auto px-4 py-20 text-center text-amber-300 font-mono-data text-sm">
+            पंडित कार्यक्षेत्र लोड हो रहा है...
+          </div>
+        </CosmicTantraShell>
+      }
+    >
+      <PanditWorkspaceInner />
+    </Suspense>
   );
 }

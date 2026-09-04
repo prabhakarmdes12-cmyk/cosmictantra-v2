@@ -7,6 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
+    "dev:network": "next dev -H 0.0.0.0 -p 3000",
     "build": "prisma generate && next build",
     "start": "next start",
     "test": "playwright test",
