@@ -184,6 +184,8 @@ export default function EncryptedConsultationRoom() {
 
   useEffect(() => {
     void refreshSession();
+    const poll = setInterval(() => void refreshSession(), 4000);
+    return () => clearInterval(poll);
   }, [refreshSession, connectionState]);
 
   // Countdown strictly from server timestamps (entitlement + free extensions).
