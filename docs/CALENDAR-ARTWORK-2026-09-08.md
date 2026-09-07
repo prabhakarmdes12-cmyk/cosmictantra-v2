@@ -19,7 +19,7 @@ the real engine in this checkout).
 | Engine corrections (see below) | ✅ done, tested |
 | Artwork resolver `src/lib/calendar/festivalArtwork.ts` | ✅ done |
 | UI: month-grid art strip + day-detail 16:9 hero (`AuraMonthlyCalendar.tsx`) | ✅ done |
-| Pure regression suite `tests/calendar-festival-artwork.spec.ts` (12 tests) | ✅ green |
+| Pure regression suite `tests/calendar-festival-artwork.spec.ts` (20 tests) | ✅ green |
 | Coverage verifier `scripts/verify-artwork-coverage.ts` | ✅ **100% — 0 missing files** |
 | Assets `public/assets/calendar/events/*.webp` | ✅ **49 of 49 generated — complete** |
 
@@ -33,7 +33,7 @@ Actual final output:
 
 ```
 ✅ 100% coverage — 0 missing files.
-   365/365 days, 34/34 festival types, 30/30 tithi combos.
+   365/365 days, 33/33 festival types, 30/30 tithi combos.
 ```
 
 ## Asset inventory (49 unique 16:9 WebP, under `public/assets/calendar/events/`)
@@ -83,35 +83,61 @@ referenced images**.
 
 ## Engine corrections this program depends on
 
-Both are pure-astronomy/determinism defects found while building the token
+All are pure-astronomy/determinism defects found while building the token
 table; each is covered by tests in `tests/calendar-festival-artwork.spec.ts`.
 
-1. **Festival months were two rasi late.** `monthlyPanchangEngine.ts` fed the
-   festival resolver `lunarMonthIdx = (sunRasi + 11) % 12` (i.e. `sunRasi − 1`)
-   while the same file labels every day and the month chip with
-   `(daySunRasi + 1) % 12`. Result: the visible chip said "भाद्रपद मास" while
-   month-qualified festivals (Raksha Bandhan, Janmashtami, Ganesh Chaturthi,
-   Navaratri, Diwali, Holi…) fired **two lunar months late** (Ganesh Chaturthi
-   landed 13 Nov 2026 instead of 14 Sep 2026). Aligned to `(sunRasi + 1) % 12`.
-2. **Guru Purnima and Makar Sankranti were never emitted.** Guru Purnima =
-   Ashadha Purnima (`lMonth === 3 && purnima`). Makar Sankranti = the civil day
-   the sidereal Sun crosses 270° (detected with a running previous-day noon
-   `sunSid`; verified = 14 January, exactly, in both 2025 and 2026).
+1. **Festival months are now Adhika-correct via a true Amanta lunation
+   tracker.** The historical lineage: festival months were originally fed
+   `(sunRasi + 11) % 12` (two rasi behind the file's own labels → festivals
+   ~2 months late), then aligned to `(sunRasi + 1) % 12` to match the labels —
+   but a *sign-anchored* index still drifts a full lunation whenever an
+   intercalary month intervenes. 2026 is such a year (Adhika-Jyeshtha,
+   17 May – 15 Jun): under `(sunRasi + 1)` Guru Purnima fired 29 Jun (really
+   Jyeshtha Purnima) and Raksha Bandhan / the whole Sharad-Kartika cluster
+   fired ~30 days early. `monthlyPanchangEngine.ts` now derives festival months
+   from actual amavasya instants (`buildAmantaLunations` / `findNextAmavasya`):
+   lunations run new-moon → new-moon and are named by their in-month sidereal
+   saṅkrānti; a lunation with no saṅkrānti is Adhika and suppresses
+   month-qualified festivals (only universal vrats fire); Kṛṣṇa-pakṣa days are
+   named purnimanta-style (the following lunation — so Karwa Chauth stays
+   "Kartika Krishna 4" before Diwali). Day/masa labels keep the old solar-sign
+   convention (byte-stable; the pinned maas suite is untouched).
+2. **Sunrise skip-rescue + cross-month dedupe.** Near the moon's perigee,
+   tithis run shorter than a civil day and can slip entirely between two noon
+   samples (the "dropped observance" class, e.g. Dhanteras 2028 and Hanuman
+   Jayanti 2028). Each day is re-evaluated at local sunrise and a festival whose
+   (lunation, tithi) occurrence no noon sampled is emitted on its sunrise day;
+   month calls seed the seen-set from the previous civil month's last two noons
+   so a boundary-straddling tithi never fires twice. Verified: every yearly
+   festival fires **exactly 3× across 2026–2028** (no double-fires, no drops).
+3. **Guru Purnima and Makar Sankranti were never emitted.** Guru Purnima =
+   Ashadha Purnima (fires 29 Jul 2026 — Shuddha Ashadha; NOT 29 Jun which is
+   Jyeshtha Purnima). Makar Sankranti = the civil day the sidereal Sun crosses
+   270° (verified = 14 January, exactly, in both 2025 and 2026).
+4. **Janmashtami Smarta duplicate removed.** A "Krishna Janmashtami (Smarta)"
+   emission fired a whole lunation early in Shravana under the misaligned
+   months; Janmashtami is Bhadrapada Krishna Ashtami and now fires exactly once
+   per year (2026-09-04, 2027-08-25, 2028-08-13 — matching drik).
 
-Post-correction 2026 anchors verified in tests: Ganesh Chaturthi **14 Sep**,
-Diwali **8 Nov**, Sharad Navaratri **11 Oct**, Holika **2 Mar**, Maha
-Shivaratri **15 Feb**, Makar Sankranti **14 Jan**. (2026 is an Adhika-māsa year;
-a sign-anchored engine can still drift a month on some observances — inherent
-to the engine's design, out of scope here.)
+Web-confirmed 2026 anchors locked in the spec (all exact): Vasant Panchami
+**23 Jan**, Maha Shivaratri **15 Feb**, Chaitra Navaratri **19 Mar**, Ram
+Navami **26 Mar**, Hanuman Jayanti **1 Apr**, Guru Purnima **29 Jul**,
+Janmashtami **4 Sep**, Ganesh Chaturthi **14 Sep**, Navaratri **11 Oct**,
+Durga Ashtami **18 Oct**, Vijayadashami **20 Oct**, Sharad Purnima **25 Oct**,
+Karwa Chauth **29 Oct**, Dhanteras **6 Nov**, Diwali **8 Nov**, Chhath
+**15 Nov**, Dev Deepawali **24 Nov**. ±1-day regional splits kept as engine
+tithi-days: Holika Dahan **2 Mar** (drik observance 3 Mar — Purnima begins
+17:55 on the 2nd), Raksha Bandhan **27 Aug** (tithi day; the *observance* was
+28 Aug 2026 — a nationally debated Bhadra case), Bhai Dooj **10 Nov**.
 
 ## Files
 
 - `src/lib/calendar/festivalArtwork.ts` — resolver + token/category/tithi tables
-- `src/engines/monthlyPanchangEngine.ts` — month-index fix + two astro festivals
+- `src/engines/monthlyPanchangEngine.ts` — Amanta lunation tracker + sunrise skip-rescue + two astro festivals
 - `src/components/calendar/AuraMonthlyCalendar.tsx` — grid art strips + hero
 - `scripts/verify-artwork-coverage.ts`, `scripts/convert-to-webp.py`,
   `scripts/make-art-thumbs.py` — verifier + dev converters
-- `tests/calendar-festival-artwork.spec.ts` — 12 pure regression tests
+- `tests/calendar-festival-artwork.spec.ts` — 20 pure regression tests (incl. the Phase A Amanta tracker suite)
 - `public/assets/calendar/events/*` — 49 artwork WebP + 49 thumbs (complete)
 
 ## Verification run (this sandbox)
@@ -119,7 +145,7 @@ to the engine's design, out of scope here.)
 | Command | Result |
 |---|---|
 | `npm run typecheck` | PASS |
-| artwork + paksha + maas + precision specs | 23 passed |
+| artwork + paksha + maas + precision specs | 31 passed |
 | `npm run artwork:verify` | ✅ 100% coverage — 0 missing files |
 | `npx next build` | PASS |
 | HTTP smoke — `/`, `/calendar`, `/calendar?view=month` + all 98 asset files | all 200 |

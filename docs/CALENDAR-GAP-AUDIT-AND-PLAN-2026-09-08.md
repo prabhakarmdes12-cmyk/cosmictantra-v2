@@ -1,6 +1,14 @@
 # Gap audit vs the other agent's calendar work + implementation plan
 
 **Date**: 8 September 2026 · **Branch audited**: `arena/01a07d75-cosmictantra-v2` (`8e77019` + later festival-page/baidyanath commit)
+
+## Status of the plan
+
+| Phase | Scope | Status |
+|---|---|---|
+| **A — Astronomy correctness** | Amanta month tracker (festival months, Adhika-correct), sunrise skip-rescue + cross-month dedupe, Janmashtami Smarta duplicate removed, real-date anchors, spec fixes, 3-year sweep | ✅ **implemented & verified** — see `CALENDAR-ARTWORK-2026-09-08.md` §"Engine corrections" and the new spec suite. 23/23 web-confirmed 2026 observances within ±1 d (20 exact); every yearly festival fires exactly 3× over 2026–2028; pinned maas tests green (labels untouched); `artwork:verify` 100%; typecheck + build PASS. Caveat ±1 trio documented (Holi 2 vs 3 Mar, Raksha Bandhan tithi-day 27 vs observance 28 Aug — a real 2026 public debate, Bhai Dooj 10 vs 11 Nov). One note vs the other agent's report: their spot-check "Diwali 2028 = 15 Nov" does not match drik panchang (2028 Lakshmi Puja = **17 Oct**, exactly what this engine emits); their Navratri 2027 = 30 Sep and Dussehra 2027 = 9 Oct match exactly. |
+| **B — Framed-Thangka आज hero + `heroMood` + gold-leaf headline + शुभ seal** | — | ⏳ not started |
+| **C — Month-surface features** (mobile Today preview, forward-only festival tab, पूजा विधि button, instant Choghadiya, world-calendar modal, list/90-day planner) | — | ⏳ not started |
 **Source of comparison**: the other session's notes (branch `arena/01a07c9f`, never pushed) covering the full Vedic-calendar programme: Amanta month tracker, Paksha `heroMood` + "Framed Thangka" आज hero, festival gold-leaf headline + शुभ seal, Choghadiya, mobile Today preview, world-calendar modal, list/planner views, 49-asset artwork program.
 
 This audit is evidence-based: every "present/absent" claim below was checked by grep/probe on this branch. It does **not** rebuild their code (unreachable); it plans an equivalent re-implementation where the gap matters.

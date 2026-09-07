@@ -73,8 +73,10 @@ interface TokenEntry {
 
 export const FESTIVAL_TOKENS: Record<string, TokenEntry> = {
   // — Core manifest festivals (15 files) —
+  // (A misdated "Krishna Janmashtami (Smarta)" duplicate that used to fire a
+  // lunation early in Shravana was removed from the engine with the Amanta
+  // month fix — Janmashtami is always Bhadrapada Krishna Ashtami.)
   'Krishna Janmashtami': { art: 'janmashtami', category: 'VISHNU_KRISHNA' },
-  'Krishna Janmashtami (Smarta)': { art: 'janmashtami', category: 'VISHNU_KRISHNA' },
   'Ganesh Chaturthi (Ganeshotsav)': { art: 'ganesh_chaturthi', category: 'GANESHA' },
   'Sharad Navaratri Ghatasthapana': { art: 'navratri', category: 'DEVI' },
   'Chaitra Navaratri / Hindu New Year': { art: 'navavarsh', category: 'DEVI' },

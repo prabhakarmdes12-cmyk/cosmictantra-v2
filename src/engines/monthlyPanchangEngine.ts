@@ -390,6 +390,178 @@ function formatHour(h: number): string {
 }
 
 // -------------------------------------------------------------
+// Amanta (new-moon → new-moon) Lunation Tracker
+// -------------------------------------------------------------
+// Month-qualified festivals (Raksha Bandhan, Janmashtami, Diwali, Holi, Guru
+// Purnima…) must fire in the TRUE Vedic lunar month, not a solar-sign
+// estimate. A sign-anchored index drifts by a full lunation whenever an
+// Adhika (intercalary) māsa intervenes — in 2026, e.g., Guru Purnima,
+// Raksha Bandhan and the whole Sharad/Kartika cluster landed ~30 days early
+// under the previous (sunRasi + 1) formula. This tracker derives the month
+// from actual amavasya instants instead:
+//
+//   1. Lunations run from one amavasya (new-moon) instant to the next.
+//   2. A lunation is named after the sidereal saṅkrānti (Sun's rāśi entry)
+//      that occurs inside it. A lunation containing no saṅkrānti is an
+//      Adhika (intercalary) month — it repeats the name of the following
+//      shuddha month, and month-qualified festivals are observed only in the
+//      shuddha month (2026's Adhika-Jyeshtha pushed Ashadha a lunation later,
+//      so Guru Purnima correctly fires on the 29 Jul Purnima, not 29 Jun).
+//   3. A civil day's festival month is attributed as:
+//        - Shukla-pakṣa tithis → the lunation containing the day
+//        - Kṛṣṇa-pakṣa tithis (incl. amavasya) → the FOLLOWING lunation
+//      i.e. purnimanta naming of the waning half: the Krishna Chaturthi
+//      before Diwali is "Kartika Krishna 4" although it falls inside the
+//      lunation whose own name is Ashwin.
+//
+// Day-level masa *labels* (lunarMonth / lunarMonthHi on each day and the
+// month chip) intentionally keep the existing solar-sign convention — they
+// are pinned by the maas qualification suite — so this tracker is purely an
+// additive festival-layer correction.
+
+export interface AmantaLunation {
+  /** Julian day of the amavasya instant that starts the lunation. */
+  startJd: number;
+  /** Julian day of the next amavasya instant (exclusive end). */
+  endJd: number;
+  /** True when the lunation contains no saṅkrānti (intercalary month). */
+  adhika: boolean;
+  /** LUNAR_MONTHS index of the shuddha name (Adhika repeats the following shuddha month's name). */
+  monthIndex: number;
+}
+
+/** Moon−Sun elongation (tropical difference == sidereal difference). */
+function elongationAt(jd: number): number {
+  const t = (jd - 2451545.0) / 36525;
+  return normalizeAngle(getMoonLon(t) - getSunLon(t));
+}
+
+/** Sidereal Sun longitude (Lahiri) at a Julian day. */
+function sunSidAt(jd: number): number {
+  const t = (jd - 2451545.0) / 36525;
+  return normalizeAngle(getSunLon(t) - getLahiriAyanamsha(jd));
+}
+
+/**
+ * Root-find the next amavasya instant strictly after `startJd` (within 31
+ * days) by bisecting the unwrapped elongation through 360°. The search
+ * starts 0.75 days after `startJd` so a caller that hands back an exact
+ * previously-found root (where elongation normalizes to ~0 or ~359.9999°
+ * from numeric noise) cannot retrigger a false wrap at the same instant.
+ */
+export function findNextAmavasya(startJd: number): number {
+  let cursor = startJd + 0.75;
+  let prev = elongationAt(cursor);
+  for (let d = 1; d <= 31; d++) {
+    const jd = cursor + d;
+    const e = elongationAt(jd);
+    if (e < prev && prev - e > 200) {
+      // Genuine 360° wrap → new moon between jd−1 and jd.
+      let lo = jd - 1;
+      let hi = jd;
+      const rawLo = prev; // ~348°–360°, pre-wrap reference
+      for (let i = 0; i < 50; i++) {
+        const mid = (lo + hi) / 2;
+        let raw = elongationAt(mid);
+        if (raw < rawLo - 180) raw += 360; // post-wrap unwrap
+        if (raw < 360) lo = mid;
+        else hi = mid;
+      }
+      return (lo + hi) / 2;
+    }
+    prev = e;
+  }
+  throw new Error('findNextAmavasya: no new moon within 31 days');
+}
+
+/**
+ * Build the sorted lunations needed to attribute festival months for every
+ * civil day in [startJd, endJd]: each day's own lunation AND, for Kṛṣṇa-pakṣa
+ * days, the FOLLOWING lunation (purnimanta naming) — which can start up to
+ * ~30 days after the day and ~60 days after the window start, so the scan
+ * margin must reach far enough to fully name that follower too.
+ */
+export function buildAmantaLunations(startJd: number, endJd: number): AmantaLunation[] {
+  const begin = startJd - 34;
+  const finish = endJd + 65;
+  const amavasya: number[] = [];
+  let a = findNextAmavasya(begin - 0.5);
+  while (a <= finish) {
+    amavasya.push(a);
+    a = findNextAmavasya(a);
+  }
+  const lunations: AmantaLunation[] = [];
+  for (let i = 0; i + 1 < amavasya.length; i++) {
+    const s0 = amavasya[i];
+    const s1 = amavasya[i + 1];
+    // Keep every lunation that ends after the window begins (a follower may
+    // start beyond the window's end and must still be present + fully named).
+    if (s1 < startJd - 0.5) continue;
+    const sunStart = sunSidAt(s0);
+    const rawEnd = sunSidAt(s1);
+    let delta = rawEnd - sunStart;
+    if (delta < 0) delta += 360; // sun crossed 360° within the lunation
+    const floorStart = Math.floor(sunStart / 30);
+    const floorEnd = Math.floor((sunStart + delta) / 30);
+    const adhika = floorEnd === floorStart; // no 30° boundary crossed
+    let monthIndex = 0;
+    if (!adhika) {
+      monthIndex = floorEnd % 12; // rāśi entered at the crossed boundary
+    }
+    lunations.push({ startJd: s0, endJd: s1, adhika, monthIndex });
+  }
+  // Back-fill adhika names: an Adhika month repeats the FOLLOWING shuddha
+  // month's name (e.g. Adhika-Ashadha sits before Shuddha-Ashadha).
+  for (let i = 0; i < lunations.length; i++) {
+    if (lunations[i].adhika) {
+      let j = i + 1;
+      while (j < lunations.length && lunations[j].adhika) j++; // defensive
+      if (j < lunations.length) lunations[i].monthIndex = lunations[j].monthIndex;
+    }
+  }
+  return lunations;
+}
+
+/**
+ * Festival-month attribution for a civil day whose sample instant is `jd`
+ * with noon/rising tithi index `tithiIdx` (0–29). Returns the LUNAR_MONTHS
+ * index plus an `adhika` flag — when `adhika` is true the day falls in an
+ * intercalary month and only non-month-qualified (universal) vrats fire.
+ */
+/** Julian day of the civil day's local sunrise (tz-aware), given sunrise hour. */
+export function sunriseJdOf(year: number, month: number, d: number, tz: number, sunriseH: number): number {
+  const ms = Date.UTC(year, month, d) - tz * 3600000 + sunriseH * 3600000;
+  return ms / 86400000 + 2440587.5;
+}
+
+/** Index of the lunation owning `jd` (or nearest clamp if outside the list). */
+function owningLunationIndex(jd: number, lunations: AmantaLunation[]): number {
+  for (let k = 0; k < lunations.length; k++) {
+    if (jd >= lunations[k].startJd && jd < lunations[k].endJd) return k;
+  }
+  let best = 0;
+  for (let k = 0; k < lunations.length; k++) {
+    if (lunations[k].startJd <= jd) best = k;
+  }
+  return best;
+}
+
+export function getFestivalLunarMonth(
+  jd: number,
+  tithiIdx: number,
+  lunations: AmantaLunation[]
+): { monthIndex: number; adhika: boolean } {
+  const isShukla = tithiIdx < 15;
+  const i = owningLunationIndex(jd, lunations);
+  const target = Math.min(isShukla ? i : i + 1, lunations.length - 1);
+  const lu = lunations[target];
+  // Adhika attribution: the day falls in an intercalary month (its own shukla
+  // half, or the purnimanta half named by a following adhika lunation).
+  // resolveFestivals receives the flag and skips month-qualified rules.
+  return { monthIndex: lu.monthIndex, adhika: lu.adhika };
+}
+
+// -------------------------------------------------------------
 // Dynamic Festival & Vrat Resolver
 // -------------------------------------------------------------
 export function resolveFestivals(
@@ -397,15 +569,16 @@ export function resolveFestivals(
   tithiIdx: number,
   sunSid: number,
   lunarMonthIndex: number,
-  prevSunSid?: number
+  prevSunSid?: number,
+  adhikaMonth = false
 ): Array<{ name: string; nameHi: string; type: 'Major Festival' | 'Vrat' | 'Jayanti' | 'Panchang Event'; isImportant: boolean }> {
   const list: Array<{ name: string; nameHi: string; type: 'Major Festival' | 'Vrat' | 'Jayanti' | 'Panchang Event'; isImportant: boolean }> = [];
-  
+
   const isShukla = tithiIdx < 15;
   const tithiInPaksha = (tithiIdx % 15) + 1; // 1 to 15
   const isPurnima = tithiIdx === 14;
   const isAmavasya = tithiIdx === 29;
-  
+
   // Universal Vrats
   if (tithiInPaksha === 11) {
     list.push({ name: isShukla ? 'Shukla Ekadashi Vrat' : 'Krishna Ekadashi Vrat', nameHi: 'एकादशी व्रत', type: 'Vrat', isImportant: true });
@@ -426,19 +599,27 @@ export function resolveFestivals(
       list.push({ name: 'Sankashti Chaturthi', nameHi: 'संकष्टी चतुर्थी', type: 'Vrat', isImportant: false });
     }
   }
-  
+
+  // Month-qualified festivals fire only in shuddha months — in an Adhika
+  // (intercalary) māsa only the universal vrats above are observed.
+  if (adhikaMonth) return list;
+
   // Specific Month Festivals (based on Lunar Month + Tithi)
   const lMonth = (lunarMonthIndex + 12) % 12;
-  
+
   // Shravana (Month index 4)
   if (lMonth === 4) {
     if (isShukla && tithiInPaksha === 5) list.push({ name: 'Nag Panchami', nameHi: 'नाग पञ्चमी', type: 'Major Festival', isImportant: true });
     if (isShukla && tithiInPaksha === 15) list.push({ name: 'Raksha Bandhan / Shravani Upakarma', nameHi: 'रक्षा बन्धन', type: 'Major Festival', isImportant: true });
-    if (!isShukla && tithiInPaksha === 8) list.push({ name: 'Krishna Janmashtami (Smarta)', nameHi: 'श्रीकृष्ण जन्माष्टमी', type: 'Major Festival', isImportant: true });
   }
-  
+
   // Bhadrapada (Month index 5)
   if (lMonth === 5) {
+    // Krishna Janmashtami is always Bhadrapada Krishna Ashtami. (A "Smarta"
+    // variant that used to fire a lunation earlier in Shravana was a
+    // misdated duplicate of the old sign-anchored months; the real Smarta /
+    // Vaishnava split is a same-week Rohini-nakshatra nuance of THIS
+    // Ashtami, out of scope for the deterministic engine.)
     if (!isShukla && tithiInPaksha === 8) list.push({ name: 'Krishna Janmashtami', nameHi: 'श्रीकृष्ण जन्माष्टमी', type: 'Major Festival', isImportant: true });
     if (isShukla && tithiInPaksha === 4) list.push({ name: 'Ganesh Chaturthi (Ganeshotsav)', nameHi: 'गणेश चतुर्थी', type: 'Major Festival', isImportant: true });
     if (isShukla && tithiInPaksha === 14) list.push({ name: 'Anant Chaturdashi', nameHi: 'अनन्त चतुर्दशी', type: 'Major Festival', isImportant: true });
@@ -557,6 +738,30 @@ export function calculateMonthPanchang(
     return normalizeAngle(getSunLon(prevT) - getLahiriAyanamsha(prevJd));
   })();
 
+  // True amanta lunations around this civil month — drives month-qualified
+  // festival placement (Adhika-correct). Day masa LABELS below intentionally
+  // keep the existing solar-sign convention (pinned by the maas suite).
+  const monthStartJd = toJulianDay(new Date(year, month, 1, 12, 0, 0));
+  const monthEndJd = toJulianDay(new Date(year, month, daysInMonth, 12, 0, 0));
+  const lunations = buildAmantaLunations(monthStartJd, monthEndJd);
+
+  // (lunation-start : noon-tithi-index) occurrences already sampled — the
+  // sunrise skip-rescue below only fills tithis that no noon ever captured.
+  // Seed with the previous civil month's last two noons so a tithi straddling
+  // the month boundary (sampled by the previous month call, or rescued there)
+  // is never fired twice by this call — mirrors a per-city cross-month dedupe
+  // across the month-based engine API.
+  const noonSeen = new Set<string>();
+  {
+    const prevLast = new Date(year, month, 0).getDate(); // last day of prev civil month
+    for (let dd = prevLast - 1; dd <= prevLast; dd++) {
+      const pjd = toJulianDay(new Date(year, month - 1, dd, 12, 0, 0));
+      const pIdx = Math.floor(elongationAt(pjd) / 12) % 30;
+      const pLun = lunations[owningLunationIndex(pjd, lunations)];
+      noonSeen.add(`${pLun.startJd}:${pIdx}`);
+    }
+  }
+
   for (let d = 1; d <= daysInMonth; d++) {
     // Exact noon reference point for stable day evaluation
     const dateObj = new Date(year, month, d, 12, 0, 0);
@@ -657,20 +862,34 @@ export function calculateMonthPanchang(
       phaseName = 'Waning Crescent';
     }
     
-    // Lunar Month index (approx based on Sun Sidereal sign).
-    // MUST use the same convention as the per-day masa label below
-    // (dayMasaIdx = (daySunRasi + 1) % 12). Previously this was
-    // (sunRasi + 11) % 12 == (sunRasi - 1), i.e. exactly two rasi behind the
-    // file's own day/month labels, which pushed every month-qualified festival
-    // (Raksha Bandhan, Janmashtami, Ganesh Chaturthi, Navaratri, Diwali, Holi,
-    // Guru Purnima, …) roughly two lunar months late while the displayed
-    // "भाद्रपद मास" chip stayed correct. Aligned to +1 so festivals fire on
-    // the month their own day label names.
-    const sunRasi = Math.floor(sunSid / 30);
-    const lunarMonthIdx = (sunRasi + 1) % 12;
-    
-    // Festivals
-    const festivals = resolveFestivals(dateObj, tithiIdx, sunSid, lunarMonthIdx, prevSunSid);
+    // Lunar Month index for month-qualified festivals — derived from the true
+    // amanta lunations above (Adhika-correct: a sign-anchored estimate drifts
+    // a full lunation in intercalary years, e.g. 2026). Day labels keep the
+    // older (sunRasi + 1) solar-sign convention — see the tracker notes.
+    // Attribution uses the same noon sample that drives the day's tithi.
+    const festMonth = getFestivalLunarMonth(jd, tithiIdx, lunations);
+
+    // Festivals (noon sample)
+    const festivals = resolveFestivals(dateObj, tithiIdx, sunSid, festMonth.monthIndex, prevSunSid, festMonth.adhika);
+    noonSeen.add(`${lunations[owningLunationIndex(jd, lunations)].startJd}:${tithiIdx}`);
+
+    // Sunrise skip-rescue: near the moon's perigee tithis run shorter than a
+    // civil day and can slip entirely BETWEEN two noon samples (a "dropped"
+    // observance, e.g. Dhanteras 2028). Re-evaluate at local sunrise and emit
+    // any festival whose (lunation, tithi) occurrence no noon sampled, so an
+    // observance never silently vanishes from the calendar. Noon remains the
+    // primary sample (matches drik on all verified anchors), so already-seen
+    // occurrences are never duplicated.
+    const festJd = sunriseJdOf(year, month, d, tz, sunriseH);
+    const sunriseTithiIdx = Math.floor(elongationAt(festJd) / 12) % 30;
+    const sunriseKey = `${lunations[owningLunationIndex(festJd, lunations)].startJd}:${sunriseTithiIdx}`;
+    if (!noonSeen.has(sunriseKey)) {
+      const sunriseMonth = getFestivalLunarMonth(festJd, sunriseTithiIdx, lunations);
+      const extra = resolveFestivals(dateObj, sunriseTithiIdx, sunSid, sunriseMonth.monthIndex, prevSunSid, sunriseMonth.adhika);
+      for (const f of extra) {
+        if (!festivals.some((x) => x.name === f.name)) festivals.push(f);
+      }
+    }
     if (festivals.length > 0) festivalsCount += festivals.length;
     
     // Advance the running previous-day sidereal Sun for the next civil day.
