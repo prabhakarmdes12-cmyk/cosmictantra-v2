@@ -1,4 +1,4 @@
-# Calendar festival-artwork program — 8 September 2026 (in progress)
+# Calendar festival-artwork program — 8 September 2026 (complete)
 
 **Branch**: `arena/01a07d75-cosmictantra-v2` · follows `main` `35f6a95` and the
 Paksha hero-mood qualification (`docs/RELEASE-REVIEW-2026-09-08.md`).
@@ -12,7 +12,7 @@ program another arena session ran on `arena/01a07c9f` (that branch was never
 pushed to GitHub, so this program is being rebuilt here from scratch against
 the real engine in this checkout).
 
-## Status — code complete, artwork partially generated
+## Status — complete and verified
 
 | Piece | Status |
 |---|---|
@@ -20,8 +20,8 @@ the real engine in this checkout).
 | Artwork resolver `src/lib/calendar/festivalArtwork.ts` | ✅ done |
 | UI: month-grid art strip + day-detail 16:9 hero (`AuraMonthlyCalendar.tsx`) | ✅ done |
 | Pure regression suite `tests/calendar-festival-artwork.spec.ts` (12 tests) | ✅ green |
-| Coverage verifier `scripts/verify-artwork-coverage.ts` | ✅ runs — **red until all 49 assets exist** |
-| Assets `public/assets/calendar/events/*.webp` | 🔶 **40 of 49 generated** (rest blocked by per-turn image-generation cap) |
+| Coverage verifier `scripts/verify-artwork-coverage.ts` | ✅ **100% — 0 missing files** |
+| Assets `public/assets/calendar/events/*.webp` | ✅ **49 of 49 generated — complete** |
 
 The verifier is the acceptance gate requested by the owner:
 
@@ -29,11 +29,11 @@ The verifier is the acceptance gate requested by the owner:
 npm run artwork:verify   # = npx tsx scripts/verify-artwork-coverage.ts
 ```
 
-Expected final output (once all 49 assets exist):
+Actual final output:
 
 ```
 ✅ 100% coverage — 0 missing files.
-   365/365 days, <n>/<n> festival types, 30/30 tithi combos.
+   365/365 days, 34/34 festival types, 30/30 tithi combos.
 ```
 
 ## Asset inventory (49 unique 16:9 WebP, under `public/assets/calendar/events/`)
@@ -50,10 +50,11 @@ Expected final output (once all 49 assets exist):
   devi_shakti_generic, ganesha_generic, surya_sun_generic, ram_hanuman_generic,
   sharad_purnima_moon, diwali_diyas`
 
-Each file also has a `-sm.webp` (384×216) thumb for the month-grid strips —
-regenerate all thumbs with `npm run artwork:thumbs` after adding artwork.
-
-**Generated so far (30):** the 8 category fallbacks; `ganesh_chaturthi`, `janmashtami`; the 10 core-manifest festivals `navratri`, `durga_ashtami`, `vijayadashami`, `diwali`, `mahashivaratri`, `chhath_puja`, `sharad_purnima`, `karwa_chauth`, `raksha_bandhan`, `guru_purnima`, `makar_sankranti`, `pradosh`, `ekadashi`; and the expanded `holi`, `ram_navami`, `hanuman_jayanti`, `navavarsh`, `dhanteras`, `annakut`, `bhai_dooj`. Remaining 9 (last batch): the tithi-series files `tithi_ashtami`, `tithi_navami`, `tithi_dashami`, `tithi_ekadashi`, `tithi_dwadashi`, `tithi_trayodashi`, `tithi_chaturdashi`, `tithi_purnima`, `tithi_amavasya` — queued for the next turn (per-turn image-generation cap), then `npm run artwork:verify` flips green. The UI degrades gracefully (art hidden on 404) until all files exist.
+Every file was generated in the shared style ("premium Indian spiritual
+editorial illustration, warm golden-hour light, ivory + antique gold, soft
+painterly devotional, 16:9, no text/watermark"), converted to 1280×720 WebP
+(`python3 scripts/convert-to-webp.py`) and given a 384×216 `-sm.webp` thumb
+(`npm run artwork:thumbs`).
 
 ## Engine corrections this program depends on
 
@@ -86,17 +87,17 @@ to the engine's design, out of scope here.)
 - `scripts/verify-artwork-coverage.ts`, `scripts/convert-to-webp.py`,
   `scripts/make-art-thumbs.py` — verifier + dev converters
 - `tests/calendar-festival-artwork.spec.ts` — 12 pure regression tests
-- `public/assets/calendar/events/*` — artwork (40/49 so far)
+- `public/assets/calendar/events/*` — 49 artwork WebP + 49 thumbs (complete)
 
 ## Verification run (this sandbox)
 
 | Command | Result |
 |---|---|
 | `npm run typecheck` | PASS |
-| `npx playwright test tests/calendar-festival-artwork.spec.ts tests/calendar-paksha-hero-mood.spec.ts` | 18 passed |
-| `npx playwright test tests/panchang-maas-verification.spec.ts tests/panchang-precision.spec.ts tests/features.spec.ts tests/astrology.spec.ts` | 18 passed |
-| `npx tsx scripts/verify-artwork-coverage.ts` | expected failures = 39 missing asset files (honest gate) |
+| artwork + paksha + maas + precision specs | 23 passed |
+| `npm run artwork:verify` | ✅ 100% coverage — 0 missing files |
 | `npx next build` | PASS |
+| HTTP smoke — `/`, `/calendar`, `/calendar?view=month` + all 98 asset files | all 200 |
 
 Browser rendering of the new cells was not executed here (no Chromium in this
 sandbox) — validate visually in the release-review environment.
