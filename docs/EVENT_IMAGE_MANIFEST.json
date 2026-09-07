@@ -1,0 +1,178 @@
+{
+  "version": "1.0.0",
+  "system": "CosmicTantra Event Image Asset Pipeline",
+  "basePath": "/assets/calendar/events/",
+  "aspectRatio": "16:9",
+  "styleGuide": "Premium Indian spiritual editorial aesthetic, natural golden hour sunlight, warm ivory, antique gold, dignified deity depiction",
+  "categories": {
+    "SHIVA": {
+      "fallbackImage": "shiva_generic_dhyana.webp",
+      "promptPrefix": "Sacred Lord Shiva in serene dhyana meditation, Mount Kailash backdrop, glowing Trishul, natural golden light, spiritual editorial style"
+    },
+    "VISHNU_KRISHNA": {
+      "fallbackImage": "vishnu_krishna_generic.webp",
+      "promptPrefix": "Divine Lord Vishnu Krishna, golden pitambara, divine aura, lotus motifs, sacred Indian oil lamp lighting"
+    },
+    "DEVI": {
+      "fallbackImage": "devi_shakti_generic.webp",
+      "promptPrefix": "Divine Mother Goddess Durga Lakshmi Saraswati, radiant golden aura, marigold floral decorations, temple sanctuary light"
+    },
+    "GANESHA": {
+      "fallbackImage": "ganesha_generic.webp",
+      "promptPrefix": "Lord Ganesha holding modaka, golden mukut, lotus altar, warm diya light, elegant Vedic editorial style"
+    },
+    "SURYA": {
+      "fallbackImage": "surya_sun_generic.webp",
+      "promptPrefix": "Surya Dev Lord Sun rising over sacred river Ganga, golden solar rays, brass kalash, Vedic Arghya ritual"
+    },
+    "RAM_HANUMAN": {
+      "fallbackImage": "ram_hanuman_generic.webp",
+      "promptPrefix": "Lord Rama and Sri Hanuman, saffron flag, Ayodhya temple architecture, dignified epic aesthetic"
+    },
+    "MOON_PURNIMA": {
+      "fallbackImage": "sharad_purnima_moon.webp",
+      "promptPrefix": "Full radiant silver moon shining over calm sacred river, lotus blossoms in water, serene nocturnal atmosphere"
+    },
+    "FESTIVAL_LIGHTS": {
+      "fallbackImage": "diwali_diyas.webp",
+      "promptPrefix": "Rows of traditional brass diyas oil lamps, warm golden glow, rangoli patterns, marigold flowers, festive Indian atmosphere"
+    }
+  },
+  "events": [
+    {
+      "id": "ganesh-chaturthi",
+      "nameHi": "गणेश चतुर्थी",
+      "nameEn": "Ganesh Chaturthi",
+      "category": "GANESHA",
+      "imagePath": "/assets/calendar/events/ganesh_chaturthi.webp",
+      "generationPrompt": "Lord Ganesha seated on a golden lotus throne, marigold garlands, brass diyas with soft flame, Modak offering, warm ivory and saffron lighting, editorial spiritual photography style",
+      "isMajor": true
+    },
+    {
+      "id": "janmashtami",
+      "nameHi": "श्रीकृष्ण जन्माष्टमी",
+      "nameEn": "Krishna Janmashtami",
+      "category": "VISHNU_KRISHNA",
+      "imagePath": "/assets/calendar/events/janmashtami.webp",
+      "generationPrompt": "Little Lord Krishna with peacock feather in golden crown, playing bansuri flute, divine midnight light, lotus blossoms, sacred sanctuary",
+      "isMajor": true
+    },
+    {
+      "id": "navratri-start",
+      "nameHi": "शारदीय नवरात्रि प्रारम्भ",
+      "nameEn": "Sharad Navratri Ghatasthapana",
+      "category": "DEVI",
+      "imagePath": "/assets/calendar/events/navratri.webp",
+      "generationPrompt": "Ghatasthapana sacred kalash with mango leaves and coconut, red chunri, burning diya, marigold flowers, auspicious Devi Puja altar",
+      "isMajor": true
+    },
+    {
+      "id": "durga-ashtami",
+      "nameHi": "महादुर्गा अष्टमी",
+      "nameEn": "Durga Ashtami",
+      "category": "DEVI",
+      "imagePath": "/assets/calendar/events/durga_ashtami.webp",
+      "generationPrompt": "Goddess Durga in majestic form, ten arms with weapons, glowing lion, marigold garlands, dhunuchi incense smoke, traditional Bengali festival aura",
+      "isMajor": true
+    },
+    {
+      "id": "vijayadashami",
+      "nameHi": "विजयादशमी / दशहरा",
+      "nameEn": "Dussehra Vijayadashami",
+      "category": "RAM_HANUMAN",
+      "imagePath": "/assets/calendar/events/vijayadashami.webp",
+      "generationPrompt": "Golden bow and arrow of Lord Rama, saffron flag fluttering in sunset light, triumph of virtue over evil, regal Indian epic style",
+      "isMajor": true
+    },
+    {
+      "id": "diwali",
+      "nameHi": "दीपावली",
+      "nameEn": "Diwali Lakshmi Puja",
+      "category": "FESTIVAL_LIGHTS",
+      "imagePath": "/assets/calendar/events/diwali.webp",
+      "generationPrompt": "Hundreds of lit clay diyas illuminating a traditional Indian courtyard, Goddess Lakshmi lotus motif, marigold garlands, warm golden light",
+      "isMajor": true
+    },
+    {
+      "id": "mahashivaratri",
+      "nameHi": "महाशिवरात्रि",
+      "nameEn": "Mahashivaratri",
+      "category": "SHIVA",
+      "imagePath": "/assets/calendar/events/mahashivaratri.webp",
+      "generationPrompt": "Sacred Shiva Lingam adorned with Belpatra leaves and milk abhishekam, burning camphor, glowing brass lamps, midnight spiritual aura",
+      "isMajor": true
+    },
+    {
+      "id": "chhath-puja",
+      "nameHi": "छठ पूजा (संध्या अर्घ्य)",
+      "nameEn": "Chhath Puja",
+      "category": "SURYA",
+      "imagePath": "/assets/calendar/events/chhath_puja.webp",
+      "generationPrompt": "Devotees offering Arghya to setting Sun in sacred river Ganga, bamboo soop filled with sugarcane and fruits, lit diyas floating on water, Bihar Chhath culture",
+      "isMajor": true
+    },
+    {
+      "id": "sharad-purnima",
+      "nameHi": "शरद पूर्णिमा",
+      "nameEn": "Sharad Purnima",
+      "category": "MOON_PURNIMA",
+      "imagePath": "/assets/calendar/events/sharad_purnima.webp",
+      "generationPrompt": "Luminous full moon in midnight sky over river Ganga, silver light reflecting on water, brass bowl of kheer under moonlight",
+      "isMajor": true
+    },
+    {
+      "id": "ekadashi-generic",
+      "nameHi": "एकादशी व्रत",
+      "nameEn": "Ekadashi Vrat",
+      "category": "VISHNU_KRISHNA",
+      "imagePath": "/assets/calendar/events/ekadashi.webp",
+      "generationPrompt": "Sacred Tulsi basil plant with brass Shankha conch shell and Lotus flowers, golden sunlight, serene Vishnu worship altar",
+      "isMajor": false
+    },
+    {
+      "id": "pradosh-vrat",
+      "nameHi": "प्रदोष व्रत",
+      "nameEn": "Pradosh Vrat",
+      "category": "SHIVA",
+      "imagePath": "/assets/calendar/events/pradosh.webp",
+      "generationPrompt": "Shiva temple at dusk sunset hour, brass ghanta bell, glowing oil lamps, peaceful atmosphere",
+      "isMajor": false
+    },
+    {
+      "id": "karwa-chauth",
+      "nameHi": "करवा चौथ",
+      "nameEn": "Karwa Chauth",
+      "category": "DEVI",
+      "imagePath": "/assets/calendar/events/karwa_chauth.webp",
+      "generationPrompt": "Traditional decorated Karwa clay pot, decorated sieve chhani looking at moon, mehendi hands holding lit diya, auspicious red chunri",
+      "isMajor": true
+    },
+    {
+      "id": "raksha-bandhan",
+      "nameHi": "रक्षाबंधन",
+      "nameEn": "Raksha Bandhan",
+      "category": "FESTIVAL_LIGHTS",
+      "imagePath": "/assets/calendar/events/raksha_bandhan.webp",
+      "generationPrompt": "Traditional silk Rakhi thread with golden beads and rudraksha on silver thali with sweets and kumkum, warm lighting",
+      "isMajor": true
+    },
+    {
+      "id": "guru-purnima",
+      "nameHi": "गुरु पूर्णिमा",
+      "nameEn": "Guru Purnima",
+      "category": "MOON_PURNIMA",
+      "imagePath": "/assets/calendar/events/guru_purnima.webp",
+      "generationPrompt": "Sacred Vedic manuscript scrolls, lotus flowers, illuminated brass lamp, serene traditional gurukul atmosphere",
+      "isMajor": true
+    },
+    {
+      "id": "makar-sankranti",
+      "nameHi": "मकर संक्रांति",
+      "nameEn": "Makar Sankranti",
+      "category": "SURYA",
+      "imagePath": "/assets/calendar/events/makar_sankranti.webp",
+      "generationPrompt": "Colorful kites flying in bright blue sky over river ghats, til laddoos sesame sweets in brass plate, golden morning sun",
+      "isMajor": true
+    }
+  ]
+}
