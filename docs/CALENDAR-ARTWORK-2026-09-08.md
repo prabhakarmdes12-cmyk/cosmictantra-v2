@@ -21,7 +21,7 @@ the real engine in this checkout).
 | UI: month-grid art strip + day-detail 16:9 hero (`AuraMonthlyCalendar.tsx`) | ✅ done |
 | Pure regression suite `tests/calendar-festival-artwork.spec.ts` (12 tests) | ✅ green |
 | Coverage verifier `scripts/verify-artwork-coverage.ts` | ✅ runs — **red until all 49 assets exist** |
-| Assets `public/assets/calendar/events/*.webp` | 🔶 **20 of 49 generated** (rest blocked by per-turn image-generation cap) |
+| Assets `public/assets/calendar/events/*.webp` | 🔶 **30 of 49 generated** (rest blocked by per-turn image-generation cap) |
 
 The verifier is the acceptance gate requested by the owner:
 
@@ -53,7 +53,7 @@ Expected final output (once all 49 assets exist):
 Each file also has a `-sm.webp` (384×216) thumb for the month-grid strips —
 regenerate all thumbs with `npm run artwork:thumbs` after adding artwork.
 
-**Generated so far (20):** the 8 category fallbacks, `ganesh_chaturthi`, `janmashtami`, and the 10 core-manifest festivals `navratri`, `durga_ashtami`, `vijayadashami`, `diwali`, `mahashivaratri`, `chhath_puja`, `sharad_purnima`, `karwa_chauth`, `raksha_bandhan`, `guru_purnima`. Remaining 29 (3 core: `makar_sankranti`, `pradosh`, `ekadashi`; the 10 expanded; the 16 tithi series) are queued for follow-up turns (per-turn image-generation cap), then `npm run artwork:verify` flips green. The UI degrades gracefully (art hidden on 404) until all files exist.
+**Generated so far (20):** the 8 category fallbacks, `ganesh_chaturthi`, `janmashtami`, and the 10 core-manifest festivals `navratri`, `durga_ashtami`, `vijayadashami`, `diwali`, `mahashivaratri`, `chhath_puja`, `sharad_purnima`, `karwa_chauth`, `raksha_bandhan`, `guru_purnima`. Remaining 19: `dev_deepawali`, `vasant_panchami`, `nag_panchami` + the 16-file tithi series are queued for follow-up turns (per-turn image-generation cap), then `npm run artwork:verify` flips green. The UI degrades gracefully (art hidden on 404) until all files exist.
 
 ## Engine corrections this program depends on
 
@@ -86,7 +86,7 @@ to the engine's design, out of scope here.)
 - `scripts/verify-artwork-coverage.ts`, `scripts/convert-to-webp.py`,
   `scripts/make-art-thumbs.py` — verifier + dev converters
 - `tests/calendar-festival-artwork.spec.ts` — 12 pure regression tests
-- `public/assets/calendar/events/*` — artwork (20/49 so far)
+- `public/assets/calendar/events/*` — artwork (30/49 so far)
 
 ## Verification run (this sandbox)
 
