@@ -170,6 +170,21 @@ The Vedic Calendar (`src/components/calendar/UnifiedPanchangCalendarClient.tsx` 
 * **Novice View ("What matters today?"):** Highlights major festivals, Vrat observances, moon phase (Shukla/Krishna Paksha), and simplified good/caution time bands.
 * **Scholar View ("Why is today calculated this way?"):** Displays exact Tithi end time, Nakshatra transition degree, Yoga, Karana, Samvat year, Ritu, and Ayana.
 
+### World Calendar Systems Selector (9 Global Eras)
+To transform CosmicTantra into a global calendar authority, an external online agent prompt & architectural specification (`docs/WORLD_CALENDAR_SYSTEMS.md` & `docs/AGENT_PROMPT_COMPLETE_VEDIC_CALENDAR.md`) was dispatched to support switching between 9 global calendar systems:
+1. **Drik Vedic Panchang (Lahiri Standard)** [Default]
+2. **Surya Siddhanta Astronomical Calendar**
+3. **Bikram Sambat (Nepal / North India - 2083)**
+4. **Saka Samvat (Indian National Calendar - 1948)**
+5. **Tamil Solar Calendar (Chithirai / Aani)**
+6. **Bengali San (Bangabda 1433)**
+7. **Malayalam Kollam Era**
+8. **Hijri Islamic Calendar (1448)**
+9. **Gregorian Civil Standard**
+
+### Festival Image Asset Pipeline (`EVENT_IMAGE_MANIFEST.json`)
+The external agent specification incorporates a comprehensive 16:9 visual artwork manifest (`docs/EVENT_IMAGE_MANIFEST.json`) with AI art generation prompts for 100+ Indian festivals (Ganesh Chaturthi, Navratri, Diwali, Mahashivratri, Chhath Puja, etc.), ensuring every major occasion renders rich cultural artwork inside calendar cells.
+
 ---
 
 ## 7. Festival Rule Engine Architecture
