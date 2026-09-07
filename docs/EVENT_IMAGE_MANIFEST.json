@@ -36,6 +36,14 @@
     "FESTIVAL_LIGHTS": {
       "fallbackImage": "diwali_diyas.webp",
       "promptPrefix": "Rows of traditional brass diyas oil lamps, warm golden glow, rangoli patterns, marigold flowers, festive Indian atmosphere"
+    },
+    "NAAG": {
+      "fallbackImage": "nag_panchami.webp",
+      "promptPrefix": "Naag Devta serpent deity, cobra hood sacred motif, milk and basil offerings, temple sanctum green and gold"
+    },
+    "RANG": {
+      "fallbackImage": "holi.webp",
+      "promptPrefix": "Holi festival of colors, vibrant color powder clouds, joyful celebration, devotional warmth"
     }
   },
   "events": [
@@ -173,6 +181,212 @@
       "imagePath": "/assets/calendar/events/makar_sankranti.webp",
       "generationPrompt": "Colorful kites flying in bright blue sky over river ghats, til laddoos sesame sweets in brass plate, golden morning sun",
       "isMajor": true
+    },
+    {
+      "id": "nag-panchami",
+      "nameHi": "नाग पञ्चमी",
+      "nameEn": "Nag Panchami",
+      "category": "NAAG",
+      "imagePath": "/assets/calendar/events/nag_panchami.webp",
+      "generationPrompt": "Serpent worship sacred altar, cobra hood motif on temple wall, milk abhishekam for Naag Devta, brass vessels with milk and basil, soft emerald and gold lighting Premium Indian spiritual editorial aesthetic, natural golden hour sunlight, warm ivory, antique gold, dignified deity depiction. Wide cinematic 16:9 composition, no text, no watermark.",
+      "isMajor": true
+    },
+    {
+      "id": "dhanteras",
+      "nameHi": "धनतेरस",
+      "nameEn": "Dhanteras",
+      "category": "FESTIVAL_LIGHTS",
+      "imagePath": "/assets/calendar/events/dhanteras.webp",
+      "generationPrompt": "Brass diya and new utensils with Lakshmi motif, kalash with coconut, rudraksha and rudra beads, golden coins in brass bowl, festive home altar at dusk Premium Indian spiritual editorial aesthetic, natural golden hour sunlight, warm ivory, antique gold, dignified deity depiction. Wide cinematic 16:9 composition, no text, no watermark.",
+      "isMajor": true
+    },
+    {
+      "id": "annakut",
+      "nameHi": "गोवर्धन पूजा",
+      "nameEn": "Govardhan Puja / Annakoot",
+      "category": "VISHNU_KRISHNA",
+      "imagePath": "/assets/calendar/events/annakut.webp",
+      "generationPrompt": "Grand mount of traditional Indian food offerings annakut, dozens of brass thalis with sweets and vegetables, Krishna temple backdrop, diya light Premium Indian spiritual editorial aesthetic, natural golden hour sunlight, warm ivory, antique gold, dignified deity depiction. Wide cinematic 16:9 composition, no text, no watermark.",
+      "isMajor": true
+    },
+    {
+      "id": "bhai-dooj",
+      "nameHi": "भाई दूज",
+      "nameEn": "Bhai Dooj",
+      "category": "FESTIVAL_LIGHTS",
+      "imagePath": "/assets/calendar/events/bhai_dooj.webp",
+      "generationPrompt": "Sister applying vermilion tilak on brother forehead with diya and betel leaf, decorated threshold, marigold garlands, warm domestic golden light Premium Indian spiritual editorial aesthetic, natural golden hour sunlight, warm ivory, antique gold, dignified deity depiction. Wide cinematic 16:9 composition, no text, no watermark.",
+      "isMajor": true
+    },
+    {
+      "id": "dev-deepawali",
+      "nameHi": "देव दीपावली",
+      "nameEn": "Kartika Purnima / Dev Deepawali",
+      "category": "FESTIVAL_LIGHTS",
+      "imagePath": "/assets/calendar/events/dev_deepawali.webp",
+      "generationPrompt": "Thousands of small clay diyas lined along a stone river ghat at night, full moonlight, temple silhouettes, reflection of a thousand flames on dark water Premium Indian spiritual editorial aesthetic, natural golden hour sunlight, warm ivory, antique gold, dignified deity depiction. Wide cinematic 16:9 composition, no text, no watermark.",
+      "isMajor": true
+    },
+    {
+      "id": "vasant-panchami",
+      "nameHi": "बसंत पञ्चमी",
+      "nameEn": "Vasant Panchami / Saraswati Puja",
+      "category": "DEVI",
+      "imagePath": "/assets/calendar/events/vasant_panchami.webp",
+      "generationPrompt": "Saraswati Puja altar with white and yellow flowers, veena instrument, open palm-leaf manuscript, saffron and white petals, spring morning light Premium Indian spiritual editorial aesthetic, natural golden hour sunlight, warm ivory, antique gold, dignified deity depiction. Wide cinematic 16:9 composition, no text, no watermark.",
+      "isMajor": true
+    },
+    {
+      "id": "holi",
+      "nameHi": "होली",
+      "nameEn": "Holika Dahan / Holi",
+      "category": "RANG",
+      "imagePath": "/assets/calendar/events/holi.webp",
+      "generationPrompt": "Holi celebration with clouds of pink yellow and orange color powder in the air, joyful devotees, bonfire glow in background, festival of colors Premium Indian spiritual editorial aesthetic, natural golden hour sunlight, warm ivory, antique gold, dignified deity depiction. Wide cinematic 16:9 composition, no text, no watermark.",
+      "isMajor": true
+    },
+    {
+      "id": "navavarsh",
+      "nameHi": "नववर्ष",
+      "nameEn": "Chaitra Navratri / Hindu New Year",
+      "category": "GANESHA",
+      "imagePath": "/assets/calendar/events/navavarsh.webp",
+      "generationPrompt": "Hindu new year kalash puja with Ganesha idol, mango leaves garland, coconut, turmeric and rice, dawn light over temple courtyard, fresh beginnings Premium Indian spiritual editorial aesthetic, natural golden hour sunlight, warm ivory, antique gold, dignified deity depiction. Wide cinematic 16:9 composition, no text, no watermark.",
+      "isMajor": true
+    },
+    {
+      "id": "ram-navami",
+      "nameHi": "श्रीरामनवमी",
+      "nameEn": "Shri Ram Navami",
+      "category": "RAM_HANUMAN",
+      "imagePath": "/assets/calendar/events/ram_navami.webp",
+      "generationPrompt": "Young Lord Rama seated on temple throne with bow, Hanuman at side, saffron cloth and marigold marigold flowers, Ram Katha recitation hall, devotional light Premium Indian spiritual editorial aesthetic, natural golden hour sunlight, warm ivory, antique gold, dignified deity depiction. Wide cinematic 16:9 composition, no text, no watermark.",
+      "isMajor": true
+    },
+    {
+      "id": "hanuman-jayanti",
+      "nameHi": "हनुमान जयन्ती",
+      "nameEn": "Hanuman Jayanti",
+      "category": "RAM_HANUMAN",
+      "imagePath": "/assets/calendar/events/hanuman_jayanti.webp",
+      "generationPrompt": "Lord Hanuman in devotion holding mountain and mace, saffron attire, gungurli offerings of laddu in brass plate, temple sanctum with incense smoke Premium Indian spiritual editorial aesthetic, natural golden hour sunlight, warm ivory, antique gold, dignified deity depiction. Wide cinematic 16:9 composition, no text, no watermark.",
+      "isMajor": true
+    }
+  ],
+  "tithiArtwork": [
+    {
+      "tithi": 1,
+      "nameHi": "प्रतिपदा",
+      "nameEn": "Pratipada",
+      "imagePath": "/assets/calendar/events/tithi_pratipada.webp",
+      "generationPrompt": "Sacred beginning of the lunar cycle, single diya flame lit at dawn over a fresh kalash, sunrise over temple spire, warm ivory and gold Premium Indian spiritual editorial aesthetic, natural golden hour sunlight, warm ivory, antique gold, dignified deity depiction. Wide cinematic 16:9 composition, no text, no watermark."
+    },
+    {
+      "tithi": 2,
+      "nameHi": "द्वितीया",
+      "nameEn": "Dwitiya",
+      "imagePath": "/assets/calendar/events/tithi_dwitiya.webp",
+      "generationPrompt": "Two brass diyas and a young lotus bud on a marble altar, soft morning light, elegant minimal Vedic still life Premium Indian spiritual editorial aesthetic, natural golden hour sunlight, warm ivory, antique gold, dignified deity depiction. Wide cinematic 16:9 composition, no text, no watermark."
+    },
+    {
+      "tithi": 3,
+      "nameHi": "तृतीया",
+      "nameEn": "Tritiya",
+      "imagePath": "/assets/calendar/events/tithi_tritiya.webp",
+      "generationPrompt": "Three lotus petals and a small crescent moon with three stars, sacred trinity motif, ivory background with antique gold accents Premium Indian spiritual editorial aesthetic, natural golden hour sunlight, warm ivory, antique gold, dignified deity depiction. Wide cinematic 16:9 composition, no text, no watermark."
+    },
+    {
+      "tithi": 4,
+      "nameHi": "चतुर्थी",
+      "nameEn": "Chaturthi",
+      "imagePath": "/assets/calendar/events/tithi_chaturthi.webp",
+      "generationPrompt": "Four lotus petals arranged in a diamond, subtle Ganesha shadow in the corner, marigold and gold still life, warm diya glow Premium Indian spiritual editorial aesthetic, natural golden hour sunlight, warm ivory, antique gold, dignified deity depiction. Wide cinematic 16:9 composition, no text, no watermark."
+    },
+    {
+      "tithi": 5,
+      "nameHi": "पञ्चमी",
+      "nameEn": "Panchami",
+      "imagePath": "/assets/calendar/events/tithi_panchami.webp",
+      "generationPrompt": "Five-pointed lotus mandala of gold petals, five small diyas in a circle, dawn light, serene Vedic still life Premium Indian spiritual editorial aesthetic, natural golden hour sunlight, warm ivory, antique gold, dignified deity depiction. Wide cinematic 16:9 composition, no text, no watermark."
+    },
+    {
+      "tithi": 6,
+      "nameHi": "षष्ठी",
+      "nameEn": "Shashthi",
+      "imagePath": "/assets/calendar/events/tithi_shashthi.webp",
+      "generationPrompt": "Six-petal lotus with a small crescent of six stars, brass bell in corner, soft temple evening light, ivory and gold Premium Indian spiritual editorial aesthetic, natural golden hour sunlight, warm ivory, antique gold, dignified deity depiction. Wide cinematic 16:9 composition, no text, no watermark."
+    },
+    {
+      "tithi": 7,
+      "nameHi": "सप्तमी",
+      "nameEn": "Saptami",
+      "imagePath": "/assets/calendar/events/tithi_saptami.webp",
+      "generationPrompt": "Seven small ancestral diyas in a row on dark stone, Pitru tarpana offering of white flowers and water, dusk atmosphere, reverent and calm Premium Indian spiritual editorial aesthetic, natural golden hour sunlight, warm ivory, antique gold, dignified deity depiction. Wide cinematic 16:9 composition, no text, no watermark."
+    },
+    {
+      "tithi": 8,
+      "nameHi": "अष्टमी",
+      "nameEn": "Ashtami",
+      "imagePath": "/assets/calendar/events/tithi_ashtami.webp",
+      "generationPrompt": "Eight-petal lotus with subtle Sri Yantra geometry behind, goddess energy, glowing brass lamps, midnight blue and gold Premium Indian spiritual editorial aesthetic, natural golden hour sunlight, warm ivory, antique gold, dignified deity depiction. Wide cinematic 16:9 composition, no text, no watermark."
+    },
+    {
+      "tithi": 9,
+      "nameHi": "नवमी",
+      "nameEn": "Navami",
+      "imagePath": "/assets/calendar/events/tithi_navami.webp",
+      "generationPrompt": "Nine-petal lotus with nine small gemstone motifs navaratna, auspicious nine diya circle, warm devotional light, ivory and antique gold Premium Indian spiritual editorial aesthetic, natural golden hour sunlight, warm ivory, antique gold, dignified deity depiction. Wide cinematic 16:9 composition, no text, no watermark."
+    },
+    {
+      "tithi": 10,
+      "nameHi": "दशमी",
+      "nameEn": "Dashami",
+      "imagePath": "/assets/calendar/events/tithi_dashami.webp",
+      "generationPrompt": "Ten-petal gold lotus with a radiant chakra wheel, ten small diyas arranged in a ring, triumph and strength, warm epic light Premium Indian spiritual editorial aesthetic, natural golden hour sunlight, warm ivory, antique gold, dignified deity depiction. Wide cinematic 16:9 composition, no text, no watermark."
+    },
+    {
+      "tithi": 11,
+      "nameHi": "एकादशी",
+      "nameEn": "Ekadashi",
+      "imagePath": "/assets/calendar/events/tithi_ekadashi.webp",
+      "generationPrompt": "Sacred Tulsi basil with conch shell and lotus, ekadashi vrat still life, golden sunlight through temple window Premium Indian spiritual editorial aesthetic, natural golden hour sunlight, warm ivory, antique gold, dignified deity depiction. Wide cinematic 16:9 composition, no text, no watermark."
+    },
+    {
+      "tithi": 12,
+      "nameHi": "द्वादशी",
+      "nameEn": "Dwadashi",
+      "imagePath": "/assets/calendar/events/tithi_dwadashi.webp",
+      "generationPrompt": "Twelve zodiac wheel of stars encircling a single diya, rishi constellation motif, deep night sky and gold, serene and meditative Premium Indian spiritual editorial aesthetic, natural golden hour sunlight, warm ivory, antique gold, dignified deity depiction. Wide cinematic 16:9 composition, no text, no watermark."
+    },
+    {
+      "tithi": 13,
+      "nameHi": "त्रयोदशी",
+      "nameEn": "Trayodashi",
+      "imagePath": "/assets/calendar/events/tithi_trayodashi.webp",
+      "generationPrompt": "Thirteen small diyas scattered on dark stone with white flowers, fading waning moon above, contemplative pre-new-moon night, calm reverence Premium Indian spiritual editorial aesthetic, natural golden hour sunlight, warm ivory, antique gold, dignified deity depiction. Wide cinematic 16:9 composition, no text, no watermark."
+    },
+    {
+      "tithi": 14,
+      "nameHi": "चतुर्दशी",
+      "nameEn": "Chaturdashi",
+      "imagePath": "/assets/calendar/events/tithi_chaturdashi.webp",
+      "generationPrompt": "Fourteen small diyas around a nearly dark new moon, last light of the lunar month, deep blue night and gold, anticipatory stillness Premium Indian spiritual editorial aesthetic, natural golden hour sunlight, warm ivory, antique gold, dignified deity depiction. Wide cinematic 16:9 composition, no text, no watermark."
+    },
+    {
+      "tithi": 15,
+      "nameHi": "पूर्णिमा",
+      "nameEn": "Purnima",
+      "imagePath": "/assets/calendar/events/tithi_purnima.webp",
+      "generationPrompt": "Radiant full moon over still water with a single lotus, silver light, brass diya in foreground, fullness and completion, nocturnal serenity Premium Indian spiritual editorial aesthetic, natural golden hour sunlight, warm ivory, antique gold, dignified deity depiction. Wide cinematic 16:9 composition, no text, no watermark.",
+      "paksha": "Shukla"
+    },
+    {
+      "tithi": 15,
+      "nameHi": "अमावस्या",
+      "nameEn": "Amavasya",
+      "imagePath": "/assets/calendar/events/tithi_amavasya.webp",
+      "generationPrompt": "Dark new moon night, single bright diya as the only light over a pitru tarpana kalash with white flowers, profound darkness and one flame, solemn and sacred Premium Indian spiritual editorial aesthetic, natural golden hour sunlight, warm ivory, antique gold, dignified deity depiction. Wide cinematic 16:9 composition, no text, no watermark.",
+      "paksha": "Krishna"
     }
   ]
 }

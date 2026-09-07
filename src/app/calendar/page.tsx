@@ -12,12 +12,12 @@ export default function CalendarPage() {
   return (
     <CosmicTantraShell
       shellMode="public"
-      breadcrumbs={[
-        { label: 'Home', href: '/' },
-        { label: 'Panchang & Calendar', href: '/calendar' },
-      ]}
+      // First-fold redesign (CALENDAR_UI_PLAN.md): no breadcrumbs on this route —
+      // title bar + view tabs + compact controls stay inside the 180px header
+      // budget so the monthly grid starts at Y ≈ 190px.
+      breadcrumbs={[]}
     >
-      <div className="py-8 sm:py-12 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <div className="pt-1 sm:pt-2 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <UnifiedPanchangCalendarClient defaultView="month" />
       </div>
     </CosmicTantraShell>
