@@ -1,0 +1,99 @@
+{
+  "version": "1.0.0",
+  "system": "CosmicTantra Hero Banner Image Asset Pipeline",
+  "basePath": "/assets/hero/banners/",
+  "aspectRatio": "16:9",
+  "styleGuide": "Luxury Indian spiritual editorial aesthetic, high contrast over deep Ganga midnight obsidian (#060709), natural golden hour sunlight, parchment ivory (#FAF7F2), antique gold (#D4AF37), dignified depiction, zero text overlays, zero watermarks",
+  "banners": [
+    {
+      "id": "hero-01-cosmic-now-dial",
+      "titleHi": "कालचक्र • प्रत्यक्ष वैदिक समय",
+      "titleEn": "The Cosmic Now Digital Dial",
+      "imagePath": "/assets/hero/banners/hero_cosmic_now_dial.webp",
+      "smallImagePath": "/assets/hero/banners/hero_cosmic_now_dial-sm.webp",
+      "generationPrompt": "An illuminated 3D antique brass astrolabe dial floating over deep Ganga midnight obsidian background, real-time solar horizon curve glowing with gold Abhijit Muhurta band and terracotta Rahu Kaal arc, star constellation backdrop, luxury editorial photography style, wide 16:9 composition, no text, no watermark",
+      "isPrimary": true
+    },
+    {
+      "id": "hero-02-janma-kundli-blueprint",
+      "titleHi": "प्रमाणित जन्म कुण्डली",
+      "titleEn": "Hand-Inscribed Janma Patrika Blueprint",
+      "imagePath": "/assets/hero/banners/hero_janma_kundli_blueprint.webp",
+      "smallImagePath": "/assets/hero/banners/hero_janma_kundli_blueprint-sm.webp",
+      "generationPrompt": "A glowing golden North Indian diamond birth chart floating above ancient parchment manuscript paper, illuminated house cusps with Devanagari Sanskrit Graha symbols, antique brass divider calipers, warm oil lamp diya glow, high resolution spiritual editorial style, wide 16:9 composition, no text, no watermark",
+      "isPrimary": false
+    },
+    {
+      "id": "hero-03-kashi-sahayak-ai",
+      "titleHi": "AI काशी सहायक",
+      "titleEn": "Kashi Sahayak Conversational AI Surface",
+      "imagePath": "/assets/hero/banners/hero_kashi_sahayak_ai.webp",
+      "smallImagePath": "/assets/hero/banners/hero_kashi_sahayak_ai-sm.webp",
+      "generationPrompt": "A serene Varanasi temple sanctuary window at twilight looking out at river Ganga, floating glowing pink lotus blossoms in water, warm oil lamp ambient glow, clean peaceful atmosphere, editorial spiritual style, wide 16:9 composition, no text, no watermark",
+      "isPrimary": false
+    },
+    {
+      "id": "hero-04-drik-panchang-observatory",
+      "titleHi": "सिद्धान्त गणितीय पञ्चाङ्ग",
+      "titleEn": "Drik Panchang Astronomical Observatory",
+      "imagePath": "/assets/hero/banners/hero_drik_panchang_observatory.webp",
+      "smallImagePath": "/assets/hero/banners/hero_drik_panchang_observatory-sm.webp",
+      "generationPrompt": "Historic Jantar Mantar stone astronomical observatory under a clear starry night sky, illuminated celestial ecliptic grid, glowing planetary orbits of Sun and Moon, deep indigo and gold atmosphere, wide 16:9 composition, no text, no watermark",
+      "isPrimary": false
+    },
+    {
+      "id": "hero-05-kashi-scholars",
+      "titleHi": "विद्वत्-विमर्श • पण्डित परामर्श",
+      "titleEn": "Verified Kashi Vidwat Scholar Counsel",
+      "imagePath": "/assets/hero/banners/hero_kashi_scholars.webp",
+      "smallImagePath": "/assets/hero/banners/hero_kashi_scholars-sm.webp",
+      "generationPrompt": "An authentic traditional Varanasi Vedic scholar in silk robes reading a sacred Sanskrit palm-leaf manuscript by brass oil lamp flame, ancient library background with palm-leaf scrolls, warm golden light, dignified editorial photography, wide 16:9 composition, no text, no watermark",
+      "isPrimary": false
+    },
+    {
+      "id": "hero-06-vimshottari-dasha-river",
+      "titleHi": "विंशोत्तरी दशा प्रवाह",
+      "titleEn": "120-Year Vimshottari Dasha Timeline River",
+      "imagePath": "/assets/hero/banners/hero_vimshottari_dasha_river.webp",
+      "smallImagePath": "/assets/hero/banners/hero_vimshottari_dasha_river-sm.webp",
+      "generationPrompt": "A luminous golden chronological timeline river flowing through planetary spheres, glowing nodes representing Mahadasha and Antardasha periods, dark cosmic backdrop with distant stars, elegant luxury design, wide 16:9 composition, no text, no watermark",
+      "isPrimary": false
+    },
+    {
+      "id": "hero-07-guna-milan-matchmaking",
+      "titleHi": "अष्टकूट गुण मिलान",
+      "titleEn": "Ashtakoota Guna Milan Matchmaking",
+      "imagePath": "/assets/hero/banners/hero_guna_milan_matchmaking.webp",
+      "smallImagePath": "/assets/hero/banners/hero_guna_milan_matchmaking-sm.webp",
+      "generationPrompt": "Two intertwined golden Kundli diamond charts forming a harmonious infinity loop surrounded by fresh marigold petals and sacred kumkum, warm romantic golden lighting, auspicious wedding atmosphere, wide 16:9 composition, no text, no watermark",
+      "isPrimary": false
+    },
+    {
+      "id": "hero-08-kashi-ghats-darshan",
+      "titleHi": "२४x७ काशी घाट व सन्ध्या आरती",
+      "titleEn": "24x7 Live Kashi Ghats & Ganga Aarti Darshan",
+      "imagePath": "/assets/hero/banners/hero_kashi_ghats_darshan.webp",
+      "smallImagePath": "/assets/hero/banners/hero_kashi_ghats_darshan-sm.webp",
+      "generationPrompt": "Panoramic twilight view of Dashashwamedh Ghat Varanasi during Ganga Aarti, thousands of small glowing oil lamps reflected in river water, ancient temple stone architecture, deep indigo and golden flame contrast, wide 16:9 composition, no text, no watermark",
+      "isPrimary": false
+    },
+    {
+      "id": "hero-09-vedic-muhurat-finder",
+      "titleHi": "शुभ मुहूर्त अन्वेषण",
+      "titleEn": "Vedic Auspicious Muhurat Finder",
+      "imagePath": "/assets/hero/banners/hero_vedic_muhurat_finder.webp",
+      "smallImagePath": "/assets/hero/banners/hero_vedic_muhurat_finder-sm.webp",
+      "generationPrompt": "An intricate golden hourglass with floating glowing planetary symbols and auspicious lotus flowers, warm sunlight streaming through carved stone arches, spiritual chronometry aesthetic, wide 16:9 composition, no text, no watermark",
+      "isPrimary": false
+    },
+    {
+      "id": "hero-10-granth-stotra-sanctuary",
+      "titleHi": "आरती, स्तोत्र व ग्रन्थ भण्डार",
+      "titleEn": "Sacred Granth, Aarti & Stotra Library",
+      "imagePath": "/assets/hero/banners/hero_granth_stotra_sanctuary.webp",
+      "smallImagePath": "/assets/hero/banners/hero_granth_stotra_sanctuary-sm.webp",
+      "generationPrompt": "An open antique Sanskrit manuscript scroll resting on dark polished wood, Devanagari text illuminated with subtle gold leaf, brass puja thali with rudraksha beads and red flowers, warm sacred library ambience, wide 16:9 composition, no text, no watermark",
+      "isPrimary": false
+    }
+  ]
+}
