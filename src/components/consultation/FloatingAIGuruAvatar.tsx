@@ -562,7 +562,7 @@ export default function FloatingAIGuruAvatar() {
     setOfferedDiyaMsgIds({});
     setOfferedFlowersMsgIds({});
     setActiveDarshanVideoMsgIds({});
-    setIsOpen(false); // next open greets fresh (profile still prefilled)
+    setIsOpen(true); // reset keeps chat surface open at the beginning onboarding screen
   };
 
   // Scroll to bottom
@@ -2459,106 +2459,220 @@ export default function FloatingAIGuruAvatar() {
         </button>
       </div>
 
-      {/* EXPANDED INTERACTIVE SACRED CONCIERGE CHAT DRAWER */}
+      {/* EXPANDED INTERACTIVE SACRED CONCIERGE CHAT SURFACE */}
       {isOpen && (
-        <div className="ct-kashi-panel fixed inset-x-3 bottom-20 sm:bottom-24 sm:right-6 sm:left-auto sm:w-[460px] max-h-[85vh] sm:max-h-[660px] h-[620px] bg-white/95 dark:bg-[#0C0E1A]/95 backdrop-blur-2xl border-2 border-[#8E6F1D]/40 dark:border-[#D4AF37]/50 rounded-3xl shadow-2xl z-50 flex flex-col overflow-hidden font-mono-data animate-in zoom-in-95 duration-200">
+        <div className="ct-kashi-panel fixed inset-0 z-[1000] w-full h-[100dvh] max-h-[100dvh] bg-[#FAF7F2] dark:bg-[#080A10] flex flex-col overflow-hidden font-mono-data animate-in fade-in duration-200 pt-[env(safe-area-inset-top)]">
           
-          {/* Top Sanctum Header with Banaras Avatar */}
-          <div className="p-3 px-4 bg-gradient-to-r from-[#8E6F1D]/15 via-[#FAF7F2] to-[#D4AF37]/20 dark:from-[#D4AF37]/15 dark:via-[#121526] dark:to-[#8E6F1D]/20 border-b border-black/10 dark:border-white/10 flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-2.5">
-              <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-amber-400 shadow-md">
+          {/* Unified Single Header Bar */}
+          <div className="p-3.5 px-4 bg-gradient-to-r from-[#8E6F1D]/15 via-[#FAF7F2] to-[#D4AF37]/20 dark:from-[#D4AF37]/15 dark:via-[#121526] dark:to-[#8E6F1D]/20 border-b border-black/10 dark:border-white/10 flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={toggleOpen}
+                className="p-1.5 rounded-xl bg-black/5 dark:bg-white/5 text-[#1C1917] dark:text-white hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                title="पीछे जाएं (Close Kashi Sahayak)"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-amber-400 shadow-md">
                 <Image
                   src="/images/avatar/kashi_sahayak_apsara.jpg"
                   alt="Kashi Sahayak"
                   fill
-                  sizes="40px"
+                  sizes="36px"
                   className="object-cover"
                 />
               </div>
+
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h3 className="font-editorial text-sm sm:text-base font-bold text-[#1C1917] dark:text-white">
+                  <h3 className="font-bold text-sm sm:text-base text-[#1C1917] dark:text-white">
                     काशी सहायक
                   </h3>
-                  <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[9px] font-bold">
-                    AI-ASSISTED
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>ऑनलाइन</span>
                   </span>
                 </div>
                 <p className="text-[10px] sm:text-[11px] text-[#696256] dark:text-[#9E988D]">
-                  CosmicTantra Vedic Assistant • विद्वान् समीक्षा उपलब्ध
+                  परंपरा • प्रामाणिक गणना • विशेषज्ञ मार्गदर्शन
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-1">
-              {/* Persistent Main Menu: one tap back to every offering, from
-                  any depth of the conversation. It never scrolls away. */}
-              <button
-                onClick={() => { playClick(); postMainMenu(); }}
-                className="px-2 py-1.5 rounded-xl bg-[#8E6F1D]/15 dark:bg-[#D4AF37]/15 border border-[#8E6F1D]/40 dark:border-[#D4AF37]/40 text-[#8E6F1D] dark:text-[#F0C968] text-[10px] font-bold flex items-center gap-1 cursor-pointer hover:bg-[#8E6F1D]/25 dark:hover:bg-[#D4AF37]/25"
-                title="मुख्य मेन्यू — सभी सेवाएँ एक tap पर"
-              >
-                <Menu className="w-3.5 h-3.5" />
-                <span>मुख्य मेन्यू</span>
-              </button>
-
-              {/* Soothing OM Chant Audio Button */}
-              <button
-                onClick={handlePlayOmChant}
-                className={`p-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
-                  isPlayingOm
-                    ? 'bg-amber-500 text-white border-amber-600 animate-pulse'
-                    : 'bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-[#696256] dark:text-[#9E988D]'
-                }`}
-                title="ॐ शान्ति ध्वनि सुनें"
-              >
-                <span>ॐ</span>
-              </button>
-
-              {/* Chimes & Sound FX Toggle (Bell) */}
-              <button
-                onClick={() => { playClick(); setSoundEnabled(!soundEnabled); }}
-                className="p-1.5 rounded-xl bg-black/5 dark:bg-white/5 text-[#696256] dark:text-[#9E988D] hover:text-[#1C1917] dark:hover:text-white cursor-pointer"
-                title={soundEnabled ? 'ध्वनि प्रभाव बन्द करें (Mute Chimes)' : 'ध्वनि प्रभाव चालू करें (Unmute Chimes)'}
-              >
-                {soundEnabled ? <Bell className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" /> : <BellOff className="w-3.5 h-3.5 text-rose-400" />}
-              </button>
-
-              {/* Kashi Sahayak Voice (TTS) Toggle */}
-              <button
-                onClick={() => { playClick(); voice.toggleVoice(); }}
-                className={`p-1.5 rounded-xl cursor-pointer transition-colors ${
-                  voice.voiceEnabled
-                    ? 'bg-[#8E6F1D]/15 dark:bg-[#D4AF37]/15 text-[#8E6F1D] dark:text-[#F0C968]'
-                    : 'bg-black/5 dark:bg-white/5 text-[#696256] dark:text-[#9E988D] hover:text-[#1C1917] dark:hover:text-white'
-                }`}
-                title={voice.voiceEnabled ? 'काशी सहायक वाणी बंद करें (Mute Voice)' : 'काशी सहायक वाणी चालू करें (Enable Voice)'}
-              >
-                {voice.voiceEnabled
-                  ? <Volume2 className="w-3.5 h-3.5" />
-                  : <VolumeX className="w-3.5 h-3.5 text-rose-400" />}
-              </button>
-
-              {/* Fresh session (clears remembered chat & seeker intake) */}
+            <div className="flex items-center gap-1.5">
+              {/* Reset Session */}
               <button
                 onClick={handleResetSession}
-                className="p-1.5 rounded-xl bg-black/5 dark:bg-white/5 text-[#696256] dark:text-[#9E988D] hover:text-[#1C1917] dark:hover:text-white cursor-pointer"
-                title="नया सत्र आरम्भ करें (Start Fresh — clears this chat's memory)"
+                className="p-2 rounded-xl bg-black/5 dark:bg-white/5 text-[#696256] dark:text-[#9E988D] hover:text-[#1C1917] dark:hover:text-white transition-colors cursor-pointer"
+                title="सत्र पुनः आरम्भ करें (Reset Conversation)"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
+                <RotateCcw className="w-4 h-4" />
               </button>
 
+              {/* Voice Toggle */}
               <button
-                onClick={toggleOpen}
-                className="p-1.5 rounded-xl bg-black/5 dark:bg-white/5 text-[#696256] dark:text-[#9E988D] hover:text-[#1C1917] dark:hover:text-white cursor-pointer"
+                onClick={() => { playClick(); voice.toggleVoice(); }}
+                className={`p-2 rounded-xl cursor-pointer transition-colors ${
+                  voice.voiceEnabled
+                    ? 'bg-[#8E6F1D]/15 dark:bg-[#D4AF37]/15 text-[#8E6F1D] dark:text-[#F0C968]'
+                    : 'bg-black/5 dark:bg-white/5 text-[#696256] dark:text-[#9E988D]'
+                }`}
+                title={voice.voiceEnabled ? 'वाणी बंद करें' : 'वाणी चालू करें'}
               >
-                <X className="w-4 h-4" />
+                {voice.voiceEnabled
+                  ? <Volume2 className="w-4 h-4" />
+                  : <VolumeX className="w-4 h-4 text-rose-400" />}
               </button>
             </div>
           </div>
 
-          {/* Chat Messages Stream */}
+          {/* Chat Messages Stream & Service Cards Grid */}
           <div className="flex-1 overflow-y-auto p-3.5 space-y-3.5 text-xs sm:text-[13px] scrollbar-thin">
+            {/* Show Initial Onboarding (6 Cards + 10 Mood Chips) when conversation is at starting stage */}
+            {chatMessages.length <= 1 && (
+              <div className="space-y-3 animate-in fade-in">
+                <div className="p-3 rounded-2xl bg-white dark:bg-[#121522] border border-[#8E6F1D]/20 dark:border-[#D4AF37]/25 text-xs leading-relaxed text-[#1C1917] dark:text-[#F3EFE6] flex gap-2.5 items-start">
+                  <div className="relative w-8 h-8 rounded-full overflow-hidden shrink-0 border border-amber-400 mt-0.5">
+                    <Image
+                      src="/images/avatar/kashi_sahayak_apsara.jpg"
+                      alt="Kashi Sahayak"
+                      fill
+                      sizes="32px"
+                      className="object-cover"
+                    />
+                  </div>
+                  <div>
+                    <div className="font-bold text-xs">नमस्ते! 🙏</div>
+                    <div className="text-[11px] text-[#57524A] dark:text-[#D1C9BF] mt-0.5">
+                      मैं काशी सहायक हूँ। मैं आपकी कुंडली, पंचांग, मुहूर्त, विवाह मिलान और जीवन के प्रश्नों में सहायता कर सकती हूँ।
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-[11px] font-bold text-[#8E6F1D] dark:text-[#F0C968] px-1">
+                  आज आप क्या जानना चाहते हैं?
+                </div>
+
+                {/* 2x3 Grid of 6 Core Service Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    onClick={() => { playClick(); void handleSendMessage(undefined, 'मेरी कुंडली दिखाएं'); }}
+                    className="p-3 rounded-2xl bg-white dark:bg-[#121522] border border-[#EBE5D8] dark:border-white/10 hover:border-[#8E6F1D] dark:hover:border-[#D4AF37] text-left transition-all cursor-pointer shadow-2xs hover:shadow-xs flex items-center justify-between group"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300 flex items-center justify-center text-sm shrink-0">
+                        🔮
+                      </div>
+                      <div>
+                        <div className="font-bold text-xs text-[#1C1917] dark:text-white">मेरी कुंडली देखें</div>
+                        <div className="text-[9.5px] text-[#696256] dark:text-[#9E988D]">विस्तृत विश्लेषण</div>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5 text-[#8E6F1D] dark:text-[#F0C968]" />
+                  </button>
+
+                  <button
+                    onClick={() => { playClick(); void handleSendMessage(undefined, 'मुझे एक प्रश्न पूछना है'); }}
+                    className="p-3 rounded-2xl bg-white dark:bg-[#121522] border border-[#EBE5D8] dark:border-white/10 hover:border-[#8E6F1D] dark:hover:border-[#D4AF37] text-left transition-all cursor-pointer shadow-2xs hover:shadow-xs flex items-center justify-between group"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-sky-500/10 text-sky-700 dark:text-sky-300 flex items-center justify-center text-sm shrink-0">
+                        💬
+                      </div>
+                      <div>
+                        <div className="font-bold text-xs text-[#1C1917] dark:text-white">कोई प्रश्न पूछें</div>
+                        <div className="text-[9.5px] text-[#696256] dark:text-[#9E988D]">किसी भी विषय पर</div>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
+                  </button>
+
+                  <button
+                    onClick={() => { playClick(); void handleSendMessage(undefined, 'विवाह मिलान देखना है'); }}
+                    className="p-3 rounded-2xl bg-white dark:bg-[#121522] border border-[#EBE5D8] dark:border-white/10 hover:border-[#8E6F1D] dark:hover:border-[#D4AF37] text-left transition-all cursor-pointer shadow-2xs hover:shadow-xs flex items-center justify-between group"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-700 dark:text-rose-300 flex items-center justify-center text-sm shrink-0">
+                        ❤️
+                      </div>
+                      <div>
+                        <div className="font-bold text-xs text-[#1C1917] dark:text-white">विवाह मिलान</div>
+                        <div className="text-[9.5px] text-[#696256] dark:text-[#9E988D]">गुण मिलान</div>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                  </button>
+
+                  <button
+                    onClick={() => { playClick(); void handleSendMessage(undefined, 'आज का पंचांग बताओ'); }}
+                    className="p-3 rounded-2xl bg-white dark:bg-[#121522] border border-[#EBE5D8] dark:border-white/10 hover:border-[#8E6F1D] dark:hover:border-[#D4AF37] text-left transition-all cursor-pointer shadow-2xs hover:shadow-xs flex items-center justify-between group"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-orange-500/10 text-orange-700 dark:text-orange-300 flex items-center justify-center text-sm shrink-0">
+                        📅
+                      </div>
+                      <div>
+                        <div className="font-bold text-xs text-[#1C1917] dark:text-white">आज का पंचांग</div>
+                        <div className="text-[9.5px] text-[#696256] dark:text-[#9E988D]">तिथि, मुहूर्त</div>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
+                  </button>
+
+                  <button
+                    onClick={() => { playClick(); void handleSendMessage(undefined, 'काशी यात्रा योजना'); }}
+                    className="p-3 rounded-2xl bg-white dark:bg-[#121522] border border-[#EBE5D8] dark:border-white/10 hover:border-[#8E6F1D] dark:hover:border-[#D4AF37] text-left transition-all cursor-pointer shadow-2xs hover:shadow-xs flex items-center justify-between group"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-[#8E6F1D]/10 text-[#8E6F1D] dark:text-[#F0C968] flex items-center justify-center text-sm shrink-0">
+                        🏛️
+                      </div>
+                      <div>
+                        <div className="font-bold text-xs text-[#1C1917] dark:text-white">काशी यात्रा योजना</div>
+                        <div className="text-[9.5px] text-[#696256] dark:text-[#9E988D]">दर्शन, पूजा</div>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5 text-[#8E6F1D] dark:text-[#F0C968]" />
+                  </button>
+
+                  <button
+                    onClick={() => { playClick(); void handleSendMessage(undefined, 'पंडित जी से बात करनी है'); }}
+                    className="p-3 rounded-2xl bg-white dark:bg-[#121522] border border-[#EBE5D8] dark:border-white/10 hover:border-[#8E6F1D] dark:hover:border-[#D4AF37] text-left transition-all cursor-pointer shadow-2xs hover:shadow-xs flex items-center justify-between group"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-sm shrink-0">
+                        📞
+                      </div>
+                      <div>
+                        <div className="font-bold text-xs text-[#1C1917] dark:text-white">पंडित जी से बात करें</div>
+                        <div className="text-[9.5px] text-[#696256] dark:text-[#9E988D]">विशेषज्ञ परामर्श</div>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                  </button>
+                </div>
+
+                {/* 10 Mood Chips Section Below 6 Core Service Cards */}
+                <div className="pt-2 space-y-2">
+                  <div className="text-[11px] font-bold text-[#8E6F1D] dark:text-[#F0C968] px-1">
+                    आज आपका मन कैसा है? (भाव-संवेदन)
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {MOOD_OPTIONS.map((m) => (
+                      <button
+                        key={m.id}
+                        onClick={() => { playClick(); void handleSendMessage(undefined, m.chipLabel); }}
+                        className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-[#121522] border border-black/10 dark:border-white/10 hover:border-[#8E6F1D] dark:hover:border-[#D4AF37] text-left text-[11px] font-medium text-[#1C1917] dark:text-white transition-all cursor-pointer shadow-2xs hover:shadow-xs active:scale-95"
+                      >
+                        {m.chipLabel}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {chatMessages.map((msg) => (
               <div
                 key={msg.id}
@@ -2580,8 +2694,8 @@ export default function FloatingAIGuruAvatar() {
                   <div
                     className={`p-3 rounded-2xl leading-relaxed ${
                       msg.sender === 'USER'
-                        ? 'bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#080A10] rounded-br-xs font-medium text-xs sm:text-[13px]'
-                        : 'bg-[#FAF7F2] dark:bg-[#151829] border border-black/10 dark:border-white/10 text-[#1C1917] dark:text-[#F3EFE6] rounded-bl-xs text-xs sm:text-[13px]'
+                        ? 'bg-[#EFE7D5] dark:bg-[#2A2418] text-[#1C1917] dark:text-[#F3EFE6] border border-[#8E6F1D]/30 dark:border-[#D4AF37]/35 font-medium text-xs sm:text-[13px]'
+                        : 'bg-[#FAF7F2] dark:bg-[#151829] border border-black/10 dark:border-white/10 text-[#1C1917] dark:text-[#F3EFE6] text-xs sm:text-[13px]'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -3448,7 +3562,7 @@ export default function FloatingAIGuruAvatar() {
             </div>
           )}
 
-          <div className="p-2.5 sm:p-3 bg-[#FAF7F2] dark:bg-[#121526] border-t border-black/10 dark:border-white/10 shrink-0">
+          <div className="p-2.5 sm:p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-[#FAF7F2] dark:bg-[#121526] border-t border-black/10 dark:border-white/10 shrink-0">
             <KashiComposer
               language="hi"
               voiceState={kashi.voiceState}
