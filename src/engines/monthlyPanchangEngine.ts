@@ -396,7 +396,8 @@ export function resolveFestivals(
   date: Date,
   tithiIdx: number,
   sunSid: number,
-  lunarMonthIndex: number
+  lunarMonthIndex: number,
+  prevSunSid?: number
 ): Array<{ name: string; nameHi: string; type: 'Major Festival' | 'Vrat' | 'Jayanti' | 'Panchang Event'; isImportant: boolean }> {
   const list: Array<{ name: string; nameHi: string; type: 'Major Festival' | 'Vrat' | 'Jayanti' | 'Panchang Event'; isImportant: boolean }> = [];
   
@@ -479,7 +480,29 @@ export function resolveFestivals(
     if (isShukla && tithiInPaksha === 9) list.push({ name: 'Shri Ram Navami', nameHi: 'श्रीरामनवमी', type: 'Major Festival', isImportant: true });
     if (isPurnima) list.push({ name: 'Hanuman Jayanti', nameHi: 'हनुमान जयन्ती', type: 'Major Festival', isImportant: true });
   }
-  
+
+  // Ashadha (Month index 3) — Guru Purnima is the Purnima of Ashadha
+  // (pure astronomy: full moon of the lunar month that begins when the
+  // sidereal Sun enters Cancer). Previously never emitted, leaving the
+  // guru-purnima artwork orphaned.
+  if (lMonth === 3 && isPurnima) {
+    list.push({ name: 'Guru Purnima', nameHi: 'गुरु पूर्णिमा', type: 'Major Festival', isImportant: true });
+  }
+
+  // Makar Sankranti — the civil day on which the sidereal Sun crosses
+  // 270° (enters sidereal Makara/Capricorn). Previously never emitted.
+  // `prevSunSid` is the previous civil day's noon sidereal longitude; the
+  // sidereal Sun advances ~1°/day so exactly one day per year triggers this.
+  // The 0°/360° wrap (~sidereal Meena, mid-March) cannot false-trigger
+  // because the pre-wrap value is near 360°, not below 270°.
+  if (typeof prevSunSid === 'number') {
+    const s = normalizeAngle(sunSid);
+    const p = normalizeAngle(prevSunSid);
+    if (p < 270 && s >= 270) {
+      list.push({ name: 'Makar Sankranti', nameHi: 'मकर संक्रान्ति', type: 'Major Festival', isImportant: true });
+    }
+  }
+
   return list;
 }
 
@@ -523,6 +546,16 @@ export function calculateMonthPanchang(
     { start: 0.625, end: 0.75 },  // Fri
     { start: 0.75, end: 0.875 }   // Sat
   ];
+
+  // Sidereal Sun of the civil day before the 1st of the month — running
+  // previous-day value used to detect the single day on which the Sun crosses
+  // 270° sidereal (Makar Sankranti). Date day 0 = previous month's last day.
+  let prevSunSid: number | undefined = (() => {
+    const prevDateObj = new Date(year, month, 0, 12, 0, 0);
+    const prevJd = toJulianDay(prevDateObj);
+    const prevT = (prevJd - 2451545.0) / 36525;
+    return normalizeAngle(getSunLon(prevT) - getLahiriAyanamsha(prevJd));
+  })();
 
   for (let d = 1; d <= daysInMonth; d++) {
     // Exact noon reference point for stable day evaluation
@@ -624,13 +657,24 @@ export function calculateMonthPanchang(
       phaseName = 'Waning Crescent';
     }
     
-    // Lunar Month index (approx based on Sun Sidereal sign)
+    // Lunar Month index (approx based on Sun Sidereal sign).
+    // MUST use the same convention as the per-day masa label below
+    // (dayMasaIdx = (daySunRasi + 1) % 12). Previously this was
+    // (sunRasi + 11) % 12 == (sunRasi - 1), i.e. exactly two rasi behind the
+    // file's own day/month labels, which pushed every month-qualified festival
+    // (Raksha Bandhan, Janmashtami, Ganesh Chaturthi, Navaratri, Diwali, Holi,
+    // Guru Purnima, …) roughly two lunar months late while the displayed
+    // "भाद्रपद मास" chip stayed correct. Aligned to +1 so festivals fire on
+    // the month their own day label names.
     const sunRasi = Math.floor(sunSid / 30);
-    const lunarMonthIdx = (sunRasi + 11) % 12;
+    const lunarMonthIdx = (sunRasi + 1) % 12;
     
     // Festivals
-    const festivals = resolveFestivals(dateObj, tithiIdx, sunSid, lunarMonthIdx);
+    const festivals = resolveFestivals(dateObj, tithiIdx, sunSid, lunarMonthIdx, prevSunSid);
     if (festivals.length > 0) festivalsCount += festivals.length;
+    
+    // Advance the running previous-day sidereal Sun for the next civil day.
+    prevSunSid = sunSid;
     
     // Personal Energy Calculation (Tara Bala + Chandra Bala)
     let personalEnergy: PanchangDayData['personalEnergy'] = undefined;

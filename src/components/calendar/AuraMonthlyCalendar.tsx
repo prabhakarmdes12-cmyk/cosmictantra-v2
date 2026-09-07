@@ -31,6 +31,7 @@ import { CITIES } from '@/lib/cities';
 import { playTick } from '@/lib/chitiAudio';
 import { useActiveLocation } from '@/lib/location/useActiveLocation';
 import { persistActiveLocation } from '@/lib/location/activeLocation';
+import { resolveDayArtwork } from '@/lib/calendar/festivalArtwork';
 
 const HINDI_DIGITS = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९'];
 function toHindiDigits(str: string | number): string {
@@ -230,6 +231,10 @@ export default function AuraMonthlyCalendar({ initialLang, onSwitchToToday }: Au
     link.click();
     document.body.removeChild(link);
   };
+
+  // Artwork for the open day inspector (festival art on observance days,
+  // symbolic tithi art otherwise). Pure resolution; safe on every render.
+  const inspectedArt = inspectedDay ? resolveDayArtwork(inspectedDay as any) : null;
 
   // Today key for indicator
   const todayKey = now.toISOString().slice(0, 10);
@@ -533,6 +538,9 @@ export default function AuraMonthlyCalendar({ initialLang, onSwitchToToday }: Au
               const isCaution = day.personalEnergy?.status === 'CAUTION';
               const hasFestival = day.festivals.length > 0;
 
+              // Festival / tithi artwork (see src/lib/calendar/festivalArtwork.ts).
+              const dayArt = resolveDayArtwork(day as any);
+
               // Filter match check
               let isMatch = true;
               if (energyFilter === 'POWER') isMatch = isPower;
@@ -571,6 +579,42 @@ export default function AuraMonthlyCalendar({ initialLang, onSwitchToToday }: Au
                   onClick={() => handleOpenDayInspector(day)}
                   className={`min-h-[115px] sm:min-h-[135px] p-2 sm:p-2.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between relative group ${borderClass} ${bgClass} hover:scale-[1.02] hover:shadow-lg`}
                 >
+                  {/* Illustrated Artwork Strip — festival art on observance days,
+                      symbolic tithi art otherwise (never a blank cell). Falls
+                      back thumb → full → hidden if an asset is missing. */}
+                  {dayArt && (
+                    <div
+                      className={`relative mb-1.5 rounded-lg overflow-hidden border ${hasFestival ? 'border-[#8E6F1D]/40 dark:border-[#D4AF37]/50 ring-1 ring-[#D4AF37]/20' : 'border-black/5 dark:border-white/10'}`}
+                      data-testid="day-cell-art"
+                    >
+                      <img
+                        src={dayArt.srcThumb}
+                        data-full={dayArt.src}
+                        data-attempts="0"
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-9 sm:h-11 object-cover"
+                        onError={(e) => {
+                          const img = e.currentTarget;
+                          const full = img.getAttribute('data-full');
+                          const attempts = parseInt(img.getAttribute('data-attempts') || '0', 10) + 1;
+                          img.setAttribute('data-attempts', String(attempts));
+                          if (attempts === 1 && full) {
+                            img.src = full;
+                          } else if (attempts >= 2) {
+                            img.style.display = 'none';
+                          }
+                        }}
+                      />
+                      {hasFestival && (
+                        <span className="absolute top-1 right-1 px-1.5 py-px rounded text-[8px] font-mono-data font-black uppercase tracking-wider text-amber-200 bg-black/50 backdrop-blur-[1px] pointer-events-none">
+                          {isHi ? '🪔 पर्व' : '🪔 FEST'}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
                   {/* Cell Top Bar: Dual Date Header (English Date + Hindi Date & Moon Phase) */}
                   <div>
                     {/* Today Glowing Indicator Banner */}
@@ -730,6 +774,45 @@ export default function AuraMonthlyCalendar({ initialLang, onSwitchToToday }: Au
                 <X className="w-5 h-5" />
               </button>
             </div>
+
+            {/* Day Hero Artwork — 16:9 festival/tithi art with warm scrim and title */}
+            {inspectedArt && (
+              <div
+                data-testid="day-hero-art"
+                className="relative w-full aspect-video rounded-2xl overflow-hidden border border-[#8E6F1D]/30 dark:border-[#D4AF37]/40 shadow-lg bg-[#160C05]"
+              >
+                <img
+                  src={inspectedArt.src}
+                  alt={isHi ? inspectedArt.labelHi : inspectedArt.label}
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#160C05]/95 via-[#160C05]/20 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5 flex items-end justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-[10px] sm:text-[11px] font-mono-data font-black uppercase tracking-widest text-[#F0C968]">
+                      {inspectedArt.isFestivalDay
+                        ? (isHi ? '🪔 आज का पर्व' : '🪔 FESTIVAL DAY')
+                        : (isHi ? '🙏 आज की तिथि' : '🙏 TITHI ART')}
+                    </div>
+                    <div className="font-editorial font-bold text-white text-lg sm:text-2xl leading-tight drop-shadow-md mt-0.5 line-clamp-2">
+                      {isHi ? inspectedArt.labelHi : inspectedArt.label}
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0 text-right">
+                    <div className="px-2.5 py-1 rounded-lg bg-[#8E6F1D] text-white text-[10px] sm:text-xs font-mono-data font-bold shadow-md">
+                      {isHi
+                        ? `${ALL_MONTHS[currentMonth].shortHi} ${toHindiDigits(inspectedDay.dayNumber)}`
+                        : `${ALL_MONTHS[currentMonth].shortEn} ${inspectedDay.dayNumber}`}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Personal Energy Status Banner */}
             {inspectedDay.personalEnergy && (

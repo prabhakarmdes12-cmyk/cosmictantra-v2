@@ -11,6 +11,7 @@ import {
 import { useActiveLocation } from '@/lib/location/useActiveLocation';
 import { persistActiveLocation } from '@/lib/location/activeLocation';
 import { calculatePanchang } from '@/lib/panchang';
+import { resolvePakshaMood, resolveTithiDisplayName } from '@/lib/panchang/pakshaTheme';
 import { CITIES } from '@/lib/cities';
 import { playTick } from '@/lib/chitiAudio';
 import AuraMonthlyCalendar from '@/components/calendar/AuraMonthlyCalendar';
@@ -84,7 +85,16 @@ function UnifiedPanchangCalendarClientInner({ defaultView = 'month' }: UnifiedPa
   }, [now, activeCity]);
 
   // Today's Panchang details extraction
-  const tithiName = typeof panchang.tithi === 'object' ? (panchang.tithi as any)?.name || (panchang.tithi as any)?.fullName : (panchang.tithi || 'Shukla Navami');
+  // NOTE: the engine's tithi object carries paksha on `.paksha`/`.fullName`,
+  // NOT on `.name` ("Dwadashi"). Resolve the display name and the Krishna/
+  // Shukla hero mood through the shared helper so the banner theme and the
+  // "शुभ रात्रि/दिवस" seal reflect the actual lunar fortnight.
+  const tithiName = resolveTithiDisplayName(
+    typeof panchang.tithi === 'object' ? (panchang.tithi as any) : (panchang.tithi as any) || null
+  ) || 'Shukla Paksha Navami';
+  const pakshaMood = resolvePakshaMood(
+    typeof panchang.tithi === 'object' ? (panchang.tithi as any) : (panchang.tithi as any) || null
+  );
   const nakshatraName = typeof panchang.nakshatra === 'object' ? (panchang.nakshatra as any)?.name : (panchang.nakshatra || 'Hasta');
   const nakshatraPada = typeof panchang.nakshatra === 'object' ? (panchang.nakshatra as any)?.pada ?? 1 : 1;
   const yogaName = typeof panchang.yoga === 'object' ? (panchang.yoga as any)?.name : (panchang.yoga || 'Siddhi');
@@ -183,12 +193,12 @@ function UnifiedPanchangCalendarClientInner({ defaultView = 'month' }: UnifiedPa
           
           {/* Sacred City & Vikram Samvat Summary Banner (Paksha Hero Mood & Gold-Leaf Seal) */}
           <div className={`relative rounded-3xl p-6 sm:p-8 border shadow-xl overflow-hidden transition-all duration-500 ${
-            tithiName.toLowerCase().includes('krishna') || tithiName.toLowerCase().includes('कृष्ण')
+            pakshaMood.isKrishna
               ? 'bg-[#0A0E24] dark:bg-[#070A1A] border-indigo-500/30 dark:border-indigo-400/40'
               : 'bg-white dark:bg-[#101221] border-[#8E6F1D]/25 dark:border-[#D4AF37]/30'
           }`}>
             <div className={`absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl rounded-full pointer-events-none blur-2xl ${
-              tithiName.toLowerCase().includes('krishna') || tithiName.toLowerCase().includes('कृष्ण')
+              pakshaMood.isKrishna
                 ? 'from-indigo-600/20 via-purple-600/10 to-transparent'
                 : 'from-amber-500/10 via-rose-500/5 to-transparent'
             }`} />
@@ -200,9 +210,11 @@ function UnifiedPanchangCalendarClientInner({ defaultView = 'month' }: UnifiedPa
                     सिद्धान्त गणितीय पञ्चाङ्ग • Siddhanta Astronomical Math
                   </div>
                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono-data font-bold bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] shadow-xs">
-                    {tithiName.toLowerCase().includes('krishna') || tithiName.toLowerCase().includes('कृष्ण')
+                    {pakshaMood.isKrishna
                       ? '🪔 शुभ रात्रि 🙏 (कृष्ण पक्ष)'
-                      : '☀️ शुभ दिवस 🙏 (शुक्ल पक्ष)'}
+                      : pakshaMood.isShukla
+                        ? '☀️ शुभ दिवस 🙏 (शुक्ल पक्ष)'
+                        : '🙏 शुभ दिन'}
                   </span>
                 </div>
                 {/* Gold-Leaf Gradient Headline */}

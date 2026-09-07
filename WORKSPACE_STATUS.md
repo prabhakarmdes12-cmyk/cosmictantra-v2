@@ -3,6 +3,13 @@
 **Latest Unified Git Commit**: `b5409c6` (on `main`, `arena/01a052e2-cosmictantra-v2`, `arena/01a06074-cosmictantra-v2`)
 **Remote Repository**: `https://github.com/prabhakarmdes12-cmyk/cosmictantra-v2.git`
 
+> **Update — September 8, 2026**: the GitHub `main` history has since been
+> consolidated to a single squashed root commit `35f6a95` (calendar Paksha
+> hero-mood theme integration from arena agent `3abb3fd`). The folder ↔ commit
+> mapping below reflects the September 2 state and is superseded by the live
+> remote refs. See `docs/RELEASE-REVIEW-2026-09-08.md` for the calendar
+> follow-up qualification.
+
 ---
 
 ## Folder Status & Labels in `D:\Projects\`
