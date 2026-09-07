@@ -56,6 +56,31 @@ painterly devotional, 16:9, no text/watermark"), converted to 1280×720 WebP
 (`python3 scripts/convert-to-webp.py`) and given a 384×216 `-sm.webp` thumb
 (`npm run artwork:thumbs`).
 
+### Festival detail pages (`/festivals/[slug]`) now carry hero artwork
+
+The static festival pages (`UPCOMING_EVENTS` in `src/lib/festivals.js`) were
+text-only. They now render a 16:9 artwork hero resolved from the same 49-file
+set via `resolveFestivalTitleArtwork()` (server-safe, in `src/lib/calendar/
+festivalArtwork.ts`): exact token → token-substring → ordered keyword aliases →
+category fallback → generic festival-lights art (never a blank page). Verified
+in SSG output: `shardiya-navratri → navratri.webp`, `dev-deepawali →
+dev_deepawali.webp`, `mahalaya-amavasya → tithi_amavasya.webp`,
+`sharad-purnima → sharad_purnima.webp`, `aja-ekadashi → ekadashi.webp`,
+`bhadr-pradosh → pradosh.webp`.
+
+**Known issue (pre-existing, not part of this image work):** `UPCOMING_EVENTS`
+dates were hand-written and disagree with the corrected engine for some entries
+(e.g. Shardiya Navratri Ghatasthapana is dated 12 Sep 2026 there, while the
+engine — and the real 2026 calendar — place it on 11 Oct 2026). Recommend an
+owner-approved reconciliation of that static file with the engine's output.
+
+### Other gap closed: `public/images/darshan/baidyanath.jpg`
+
+The only genuinely missing referenced image app-wide (full static-path audit of
+`src/` + the event manifest) was Baidyanath Dham for the live-darshan carousel;
+generated at 1376×768 to match its siblings. The audit now reports **0 missing
+referenced images**.
+
 ## Engine corrections this program depends on
 
 Both are pure-astronomy/determinism defects found while building the token

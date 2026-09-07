@@ -15,9 +15,11 @@
 
 import { test, expect } from '@playwright/test';
 import { calculateMonthPanchang } from '../src/engines/monthlyPanchangEngine';
+import { UPCOMING_EVENTS } from '../src/lib/festivals.js';
 import {
   resolveDayArtwork,
   resolveTithiArtKey,
+  resolveFestivalTitleArtwork,
   FESTIVAL_TOKENS,
   CATEGORY_FALLBACKS,
   TITHI_ART,
@@ -136,6 +138,35 @@ test.describe('resolveDayArtwork', () => {
       }
     }
     expect(unresolved).toBe(0);
+  });
+});
+
+test.describe('resolveFestivalTitleArtwork — festival detail pages', () => {
+  test('every UPCOMING_EVENTS festival title resolves to artwork from the 49-file set', () => {
+    expect(UPCOMING_EVENTS.length).toBeGreaterThan(0);
+    for (const ev of UPCOMING_EVENTS) {
+      const art = resolveFestivalTitleArtwork(ev.name);
+      expect(art, `art for "${ev.name}"`).toBeTruthy();
+      expect(ALL_ARTWORK_KEYS.has(art!.key), `"${ev.name}" → ${art!.key} in set`).toBe(true);
+      expect(art!.isFestivalDay).toBe(true);
+    }
+  });
+
+  test('spot mapping: Navratri, Dev Deepawali, Sharad Purnima, Amavasya pick their hero art', () => {
+    expect(resolveFestivalTitleArtwork('Shardiya Navratri Ghatasthapana')!.key).toBe('navratri');
+    expect(resolveFestivalTitleArtwork('Kashi Dev Deepawali (देव दीपावली)')!.key).toBe('dev_deepawali');
+    expect(resolveFestivalTitleArtwork('Sharad Purnima (Kojagiri)')!.key).toBe('sharad_purnima');
+    expect(resolveFestivalTitleArtwork('Sarva Pitru Amavasya (Mahalaya)')!.key).toBe('tithi_amavasya');
+    expect(resolveFestivalTitleArtwork('Aja Ekadashi (अजा एकादशी)')!.key).toBe('ekadashi');
+    expect(resolveFestivalTitleArtwork('Bhadrapada Pradosh Vrat (प्रदोष)')!.key).toBe('pradosh');
+  });
+
+  test('unknown title degrades to the generic festival-lights art, never null', () => {
+    const art = resolveFestivalTitleArtwork('Something Never Seen Before');
+    expect(art).toBeTruthy();
+    expect(art!.key).toBe('diwali_diyas');
+    expect(resolveFestivalTitleArtwork(null)).toBeNull();
+    expect(resolveFestivalTitleArtwork('   ')).toBeNull();
   });
 });
 

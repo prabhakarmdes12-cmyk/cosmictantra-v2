@@ -281,6 +281,75 @@ function categoryByKeyword(name: string): keyof typeof CATEGORY_FALLBACKS | null
   return null;
 }
 
+/**
+ * Ordered keyword → artwork aliases for free-text festival titles (festival
+ * detail pages, alerts, share cards). Checked top-to-bottom; art keys must
+ * stay inside the 49-file artwork set (guarded by a test).
+ */
+const TITLE_ALIASES: Array<[RegExp, string]> = [
+  [/navratri|navaratri|navami|durga|devi|chandi|दुर्गा|नवरात्रि/i, 'navratri'],
+  [/sharad purnima|kojagari|शरद पूर्णिमा/i, 'sharad_purnima'],
+  [/guru purnima|गुरु पूर्णिमा/i, 'guru_purnima'],
+  [/dev deepawali|dev deepavali|देव दीपावली/i, 'dev_deepawali'],
+  [/diwali|deepawali|laxmi puja|lakshmi puja|दीपावली/i, 'diwali'],
+  [/dhanteras|dhanvantari|धनतेरस/i, 'dhanteras'],
+  [/govardhan|annakut|annakoot|अन्नकूट/i, 'annakut'],
+  [/bhai dooj|bhaiya dooj|यम द्वितीया|भाई दूज/i, 'bhai_dooj'],
+  [/karwa|karva chauth|करवा चौथ/i, 'karwa_chauth'],
+  [/raksha bandhan|rakhi|रक्षा बन्धन/i, 'raksha_bandhan'],
+  [/chhath|छठ/i, 'chhath_puja'],
+  [/makar sankranti|sankranti|मकर संक्रान्ति/i, 'makar_sankranti'],
+  [/maha shivaratri|shivaratri|शिवरात्रि/i, 'mahashivaratri'],
+  [/pradosh|प्रदोष/i, 'pradosh'],
+  [/ekadashi|एकादशी/i, 'ekadashi'],
+  [/amavasya|mahalaya|pitru|अमावस्या|पितृ/i, 'tithi_amavasya'],
+  [/purnima|poornima|पूर्णिमा/i, 'tithi_purnima'],
+  [/ganesh chaturthi|vinayaka|ganapati|गणेश चतुर्थी/i, 'ganesh_chaturthi'],
+  [/sankashti|संकष्टी/i, 'ganesh_chaturthi'],
+  [/janmashtami|कृष्ण जन्माष्टमी/i, 'janmashtami'],
+  [/holi|holika|होली/i, 'holi'],
+  [/ram navami|रामनवमी/i, 'ram_navami'],
+  [/hanuman jayanti|हनुमान जयन्ती/i, 'hanuman_jayanti'],
+  [/vasant panchami|saraswati puja|बसंत पञ्चमी/i, 'vasant_panchami'],
+  [/nag panchami|नाग पञ्चमी/i, 'nag_panchami'],
+  [/navavarsh|nav varsh|नववर्ष/i, 'navavarsh'],
+];
+
+/**
+ * Resolve artwork for a free-text festival title (e.g. the `name` field of
+ * `UPCOMING_EVENTS` on `/festivals/[slug]`). Pure and server-safe; never
+ * returns null for a non-empty title — last resort is the festival-lights
+ * category art so festival pages never look broken.
+ */
+export function resolveFestivalTitleArtwork(title: string | null | undefined): DayArtwork | null {
+  if (!title || !title.trim()) return null;
+  const trimmed = title.trim();
+
+  // 1) Exact token hit (normalised to Latin + Devanagari lowercase).
+  const norm = trimmed.toLowerCase();
+  for (const [key, entry] of Object.entries(FESTIVAL_TOKENS)) {
+    if (key.toLowerCase() === norm) {
+      return toArtwork(entry.art, 'festival', trimmed, '', true);
+    }
+  }
+  // 2) Partial: whole token key contained in the title.
+  for (const [key, entry] of Object.entries(FESTIVAL_TOKENS)) {
+    if (norm.includes(key.toLowerCase())) {
+      return toArtwork(entry.art, 'festival', trimmed, '', true);
+    }
+  }
+  // 3) Ordered keyword aliases.
+  for (const [re, art] of TITLE_ALIASES) {
+    if (re.test(norm)) {
+      return toArtwork(art, 'festival', trimmed, '', true);
+    }
+  }
+  // 4) Category fallback via keyword, then a warm generic festival image.
+  const cat = categoryByKeyword(trimmed);
+  if (cat) return toArtwork(CATEGORY_FALLBACKS[cat], 'category', trimmed, '', true);
+  return toArtwork(CATEGORY_FALLBACKS.FESTIVAL_LIGHTS, 'category', trimmed, '', true);
+}
+
 /** All artwork keys referenced by the token/category/tithi tables (for tests). */
 export const ALL_ARTWORK_KEYS: Set<string> = (() => {
   const s = new Set<string>(Object.values(CATEGORY_FALLBACKS));
