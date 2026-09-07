@@ -359,40 +359,6 @@ function normalizeAngle(a: number): number {
   return ((a % 360) + 360) % 360;
 }
 
-/**
- * All tithi indices (0-29) in effect during a day whose elongation runs
- * from elStart to elEnd (either order, wraps handled). A tithi lasts ~12-13h,
- * so a day normally carries 1-2, occasionally 3 (across the 0/360 wrap).
- * A Purnima/Amavasya can be in effect for only part of two days without
- * being the majority on either, so festivals must be evaluated against
- * every tithi present, not just one.
- */
-export function tithisInDay(elStart: number, elEnd: number): number[] {
-  let e = elEnd;
-  if (e < elStart) e += 360;
-  const out: number[] = [];
-  for (let k = Math.floor(elStart / 12); k * 12 < e; k++) {
-    const t = ((k % 30) + 30) % 30;
-    if (!out.includes(t)) out.push(t);
-  }
-  return out;
-}
-
-/**
- * Per-city festival dedupe caches — a tithi that straddles a month boundary
- * must not fire the same festival in both adjacent month computations.
- */
-const festivalDedupeCaches = new Map<string, Map<string, string>>();
-export function getFestivalDedupeCache(lat: number, lng: number, tz: number): Map<string, string> {
-  const key = `${lat},${lng},${tz}`;
-  let c = festivalDedupeCaches.get(key);
-  if (!c) {
-    c = new Map();
-    festivalDedupeCaches.set(key, c);
-  }
-  return c;
-}
-
 function degToRad(d: number): number {
   return (d * Math.PI) / 180;
 }
@@ -426,18 +392,12 @@ function formatHour(h: number): string {
 // -------------------------------------------------------------
 // Dynamic Festival & Vrat Resolver
 // -------------------------------------------------------------
-/**
- * lMonth = canonical Vedic month index (0 Chaitra … 11 Phalguna) for the
- * day, from the Amanta new-moon/Sankranti tracker in calculateMonthPanchang
- * (Shukla tithis named by the month's Sankranti sign, Krishna tithis by the
- * following month's — see tracker comments for the full convention).
- */
 export function resolveFestivals(
   date: Date,
   tithiIdx: number,
   sunSid: number,
   lunarMonthIndex: number,
-  prevSunSid?: number | null
+  prevSunSid?: number
 ): Array<{ name: string; nameHi: string; type: 'Major Festival' | 'Vrat' | 'Jayanti' | 'Panchang Event'; isImportant: boolean }> {
   const list: Array<{ name: string; nameHi: string; type: 'Major Festival' | 'Vrat' | 'Jayanti' | 'Panchang Event'; isImportant: boolean }> = [];
   
@@ -445,13 +405,6 @@ export function resolveFestivals(
   const tithiInPaksha = (tithiIdx % 15) + 1; // 1 to 15
   const isPurnima = tithiIdx === 14;
   const isAmavasya = tithiIdx === 29;
-
-  // Solar festival — Makar Sankranti: the sidereal Sun enters Makara
-  // (sidereal longitude 270°) between the previous and current day.
-  // Computed from ephemeris data — zero hardcoded dates.
-  if (prevSunSid !== null && prevSunSid !== undefined && prevSunSid < 270 && sunSid >= 270 && sunSid - prevSunSid < 10) {
-    list.push({ name: 'Makar Sankranti / Pongal', nameHi: 'मकर संक्रांति', type: 'Major Festival', isImportant: true });
-  }
   
   // Universal Vrats
   if (tithiInPaksha === 11) {
@@ -512,12 +465,12 @@ export function resolveFestivals(
     if (isPurnima) list.push({ name: 'Kartika Purnima / Dev Deepawali', nameHi: 'देव दीपावली', type: 'Major Festival', isImportant: true });
   }
   
-  // Magha (index 10) & Phalguna (index 11)
-  if (lMonth === 10) {
-    if (isShukla && tithiInPaksha === 5) list.push({ name: 'Vasant Panchami / Saraswati Puja', nameHi: 'बसंत पञ्चमी', type: 'Major Festival', isImportant: true });
-    if (!isShukla && tithiInPaksha === 14) list.push({ name: 'Maha Shivaratri', nameHi: 'महाशिवरात्रि', type: 'Major Festival', isImportant: true });
+  // Magha & Phalguna
+  if (lMonth === 10 && isShukla && tithiInPaksha === 5) {
+    list.push({ name: 'Vasant Panchami / Saraswati Puja', nameHi: 'बसंत पञ्चमी', type: 'Major Festival', isImportant: true });
   }
   if (lMonth === 11) {
+    if (!isShukla && tithiInPaksha === 14) list.push({ name: 'Maha Shivaratri', nameHi: 'महाशिवरात्रि', type: 'Major Festival', isImportant: true });
     if (isPurnima) list.push({ name: 'Holika Dahan / Holi', nameHi: 'होली / होलिका दहन', type: 'Major Festival', isImportant: true });
   }
   
@@ -528,9 +481,26 @@ export function resolveFestivals(
     if (isPurnima) list.push({ name: 'Hanuman Jayanti', nameHi: 'हनुमान जयन्ती', type: 'Major Festival', isImportant: true });
   }
 
-  // Ashadha (Month index 3) — Guru Purnima / Vyasa Purnima
+  // Ashadha (Month index 3) — Guru Purnima is the Purnima of Ashadha
+  // (pure astronomy: full moon of the lunar month that begins when the
+  // sidereal Sun enters Cancer). Previously never emitted, leaving the
+  // guru-purnima artwork orphaned.
   if (lMonth === 3 && isPurnima) {
-    list.push({ name: 'Guru Purnima / Vyasa Purnima', nameHi: 'गुरु पूर्णिमा', type: 'Major Festival', isImportant: true });
+    list.push({ name: 'Guru Purnima', nameHi: 'गुरु पूर्णिमा', type: 'Major Festival', isImportant: true });
+  }
+
+  // Makar Sankranti — the civil day on which the sidereal Sun crosses
+  // 270° (enters sidereal Makara/Capricorn). Previously never emitted.
+  // `prevSunSid` is the previous civil day's noon sidereal longitude; the
+  // sidereal Sun advances ~1°/day so exactly one day per year triggers this.
+  // The 0°/360° wrap (~sidereal Meena, mid-March) cannot false-trigger
+  // because the pre-wrap value is near 360°, not below 270°.
+  if (typeof prevSunSid === 'number') {
+    const s = normalizeAngle(sunSid);
+    const p = normalizeAngle(prevSunSid);
+    if (p < 270 && s >= 270) {
+      list.push({ name: 'Makar Sankranti', nameHi: 'मकर संक्रान्ति', type: 'Major Festival', isImportant: true });
+    }
   }
 
   return list;
@@ -545,8 +515,7 @@ export function calculateMonthPanchang(
   lat = 25.5941,
   lng = 85.1376,
   tz = 5.5,
-  profile?: { birthNakshatraIndex?: number | null; birthRasiIndex?: number | null } | null,
-  festivalDedupeCache?: Map<string, string>
+  profile?: { birthNakshatraIndex?: number | null; birthRasiIndex?: number | null } | null
 ): MonthPanchangOverview {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayOfWeek = new Date(year, month, 1).getDay(); // 0 = Sun
@@ -578,85 +547,16 @@ export function calculateMonthPanchang(
     { start: 0.75, end: 0.875 }   // Sat
   ];
 
-  // ---------------------------------------------------------------
-  // True Vedic (Amanta) month tracker — festival month index.
-  //
-  // A Vedic month runs new-moon → new-moon. Its name follows the
-  // Sankranti (sidereal Sun sign entry) that falls inside it:
-  //   • Sankranti in the Krishna paksha (after Purnima): the WHOLE
-  //     month carries that sign's name.
-  //   • Sankranti in the Shukla paksha (before Purnima): Shukla
-  //     tithis carry that sign's name; Krishna tithis carry the name
-  //     of the sign entered in the following month.
-  //   • No in-month Sankranti: the whole month carries the Sun's
-  //     sign at the new moon.
-  // Verified 14/14 against confirmed 2026 observances (Guru Purnima
-  // Jul 29, Raksha Bandhan Aug 28, Dussehra Oct 20, Diwali Nov 8,
-  // Mahashivratri Feb 15, Holi Mar 4, Vasant Panchami Jan 23, …).
-  // Pure ephemeris — zero hardcoded dates.
-  // ---------------------------------------------------------------
-  const msToT = (ms: number) => (ms / 86400000 + 2440587.5 - 2451545.0) / 36525;
-  const sunSidAt = (ms: number): number => {
-    const jd = ms / 86400000 + 2440587.5;
-    const t = (jd - 2451545.0) / 36525;
-    return normalizeAngle(getSunLon(t) - getLahiriAyanamsha(jd));
-  };
-  const elongAt = (ms: number): number => {
-    const t = msToT(ms);
-    return normalizeAngle(getMoonLon(t) - getSunLon(t));
-  };
-
-  const monthStartMs = new Date(year, month, 1).getTime();
-  const monthEndMs = new Date(year, month, daysInMonth, 23, 59, 59).getTime();
-  const astralWindow = (() => {
-    const step = 6 * 3600000; // 6h — Sankranti/NM/Purnima resolved to ±3h
-    const newMoons: number[] = [];
-    const purnimas: number[] = [];
-    const sankrantis: Array<{ ms: number; sign: number }> = [];
-    let prevEl: number | null = null;
-    let prevRasi = -1;
-    for (let ms = monthStartMs - 40 * 86400000; ms <= monthEndMs + 70 * 86400000; ms += step) {
-      const el = elongAt(ms);
-      if (prevEl !== null) {
-        // Elongation advances ~6°/step; a new moon appears as a 35x→0x wrap
-        if (prevEl > 300 && el < 60) newMoons.push(ms);
-        else if (prevEl < 180 && el >= 180) purnimas.push(ms);
-      }
-      const rasi = Math.floor(sunSidAt(ms) / 30);
-      if (prevRasi >= 0 && rasi !== prevRasi) sankrantis.push({ ms, sign: rasi });
-      prevRasi = rasi;
-      prevEl = el;
-    }
-    return { newMoons, purnimas, sankrantis };
+  // Sidereal Sun of the civil day before the 1st of the month — running
+  // previous-day value used to detect the single day on which the Sun crosses
+  // 270° sidereal (Makar Sankranti). Date day 0 = previous month's last day.
+  let prevSunSid: number | undefined = (() => {
+    const prevDateObj = new Date(year, month, 0, 12, 0, 0);
+    const prevJd = toJulianDay(prevDateObj);
+    const prevT = (prevJd - 2451545.0) / 36525;
+    return normalizeAngle(getSunLon(prevT) - getLahiriAyanamsha(prevJd));
   })();
 
-  const nextSankrantiSign = (afterMs: number): number => {
-    const s = astralWindow.sankrantis.find((k) => k.ms > afterMs);
-    return s ? s.sign : Math.floor(sunSidAt(afterMs) / 30);
-  };
-
-  const festivalMonthIdx = (noonMs: number, dayIsShukla: boolean): number => {
-    let nm: number | null = null;
-    let nm2: number | null = null;
-    for (const tm of astralWindow.newMoons) {
-      if (tm <= noonMs) nm = tm;
-      else { nm2 = tm; break; }
-    }
-    if (nm === null) nm = astralWindow.newMoons[0] ?? noonMs - 15 * 86400000;
-    if (nm2 === null) nm2 = nm + 29.5 * 86400000;
-    const pur = astralWindow.purnimas.find((tp) => tp > nm && tp < nm2) ?? (nm + nm2) / 2;
-    const s1 = astralWindow.sankrantis.find((k) => k.ms > nm && k.ms < nm2);
-    if (!s1) return Math.floor(sunSidAt(nm) / 30); // no in-month Sankranti
-    if (s1.ms > pur) return s1.sign; // Sankranti in Krishna paksha: whole month
-    return dayIsShukla ? s1.sign : nextSankrantiSign(nm2); // Sankranti in Shukla paksha
-  };
-
-  let prevSunSid: number | null = null;
-  // A tithi can straddle calendar AND month boundaries; a specific festival
-  // must appear once — keep the first day the tithi is active. The cache is
-  // shared per city across month computations (default) so boundary
-  // straddles dedupe across the month view / festival list as well.
-  const festivalDedupe = festivalDedupeCache ?? getFestivalDedupeCache(lat, lng, tz);
   for (let d = 1; d <= daysInMonth; d++) {
     // Exact noon reference point for stable day evaluation
     const dateObj = new Date(year, month, d, 12, 0, 0);
@@ -757,55 +657,24 @@ export function calculateMonthPanchang(
       phaseName = 'Waning Crescent';
     }
     
-    // Festival tithis — every tithi in effect during local 00:00→24:00.
-    // A ~12h Purnima/Amavasya can slip between two noon samples (or be the
-    // minority on both days), so we evaluate each tithi present and keep the
-    // first day a festival lands on. The displayed day.tithi (below) stays
-    // the noon tithi, unchanged.
-    const dayStartMs = new Date(year, month, d).getTime();
-    const elDayStart = elongAt(dayStartMs);
-    const elDayEnd = elongAt(dayStartMs + 86400000);
-    const elDayDelta = ((elDayEnd - elDayStart) % 360 + 360) % 360;
-    const dayTithis = tithisInDay(elDayStart, elDayEnd);
-
-    // Lunar month index for FESTIVALS — true Amanta month from new-moon /
-    // Sankranti tracking (see tracker above). The day-level lunarMonth label
-    // below remains the sun-sign approximation used by the maas test suite.
-    // (Each tithi carries its own Shukla/Krishna, hence its own month.)
-
-    // Festivals (prevSunSid enables the solar Makar-Sankranti crossing check)
-    let festivals: Array<{ name: string; nameHi: string; type: 'Major Festival' | 'Vrat' | 'Jayanti' | 'Panchang Event'; isImportant: boolean }> = [];
-    for (const festTithiIdx of dayTithis) {
-      // Each tithi is evaluated against the Vedic month of ITS OWN center
-      // time — a tithi slipping between two noons may belong to a different
-      // month than the day's noon.
-      // The tithi's center lies within [dayStart-12deg, dayEnd+12deg]
-      let centerTarget = (festTithiIdx * 12 + 6) % 360;
-      while (centerTarget < elDayStart - 12) centerTarget += 360;
-      while (centerTarget >= elDayStart + elDayDelta + 12) centerTarget -= 360;
-      const centerFrac = elDayDelta > 0 ? (centerTarget - elDayStart) / elDayDelta : 0;
-      const centerMs = dayStartMs + centerFrac * 86400000;
-      const lunarMonthIdx = festivalMonthIdx(centerMs, festTithiIdx < 15);
-      for (const f of resolveFestivals(dateObj, festTithiIdx, sunSid, lunarMonthIdx, prevSunSid)) {
-        if (!festivals.some((x) => x.name === f.name)) festivals.push(f);
-      }
-    }
-    // A tithi can straddle two calendar days (and month boundaries) — keep
-    // the first day only, so a specific festival (Mahashivratri, Dussehra, …)
-    // is not shown twice.
-    festivals = festivals.filter((f) => {
-      const lastKey = festivalDedupe.get(f.name);
-      if (lastKey !== undefined) {
-        const diffDays = Math.round(
-          (new Date(dateString + 'T00:00:00Z').getTime() - new Date(lastKey + 'T00:00:00Z').getTime()) / 86400000
-        );
-        if (diffDays >= 0 && diffDays <= 2) return false;
-      }
-      return true;
-    });
-    for (const f of festivals) festivalDedupe.set(f.name, dateString);
-    prevSunSid = sunSid;
+    // Lunar Month index (approx based on Sun Sidereal sign).
+    // MUST use the same convention as the per-day masa label below
+    // (dayMasaIdx = (daySunRasi + 1) % 12). Previously this was
+    // (sunRasi + 11) % 12 == (sunRasi - 1), i.e. exactly two rasi behind the
+    // file's own day/month labels, which pushed every month-qualified festival
+    // (Raksha Bandhan, Janmashtami, Ganesh Chaturthi, Navaratri, Diwali, Holi,
+    // Guru Purnima, …) roughly two lunar months late while the displayed
+    // "भाद्रपद मास" chip stayed correct. Aligned to +1 so festivals fire on
+    // the month their own day label names.
+    const sunRasi = Math.floor(sunSid / 30);
+    const lunarMonthIdx = (sunRasi + 1) % 12;
+    
+    // Festivals
+    const festivals = resolveFestivals(dateObj, tithiIdx, sunSid, lunarMonthIdx, prevSunSid);
     if (festivals.length > 0) festivalsCount += festivals.length;
+    
+    // Advance the running previous-day sidereal Sun for the next civil day.
+    prevSunSid = sunSid;
     
     // Personal Energy Calculation (Tara Bala + Chandra Bala)
     let personalEnergy: PanchangDayData['personalEnergy'] = undefined;

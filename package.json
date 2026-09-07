@@ -18,6 +18,8 @@
     "granth:audit": "node scripts/audit-granth-inventory.cjs",
     "test:granth": "playwright test tests/granth-canonical-library.spec.ts tests/granth-coverage.spec.ts tests/granth-reading-session.spec.ts tests/granth-interactive-flow.spec.ts",
     "test:granth:http": "playwright test tests/granth-reader-http.spec.ts",
+    "artwork:verify": "npx tsx scripts/verify-artwork-coverage.ts",
+    "artwork:thumbs": "python3 scripts/make-art-thumbs.py",
     "typecheck": "tsc --noEmit",
     "validate:navigation": "npx tsx scripts/validate-navigation.ts",
     "qualify:astronomy": "npx tsx qualification/astronomy-qualification-runner.ts --scenarios 100000 --write-cert-doc",

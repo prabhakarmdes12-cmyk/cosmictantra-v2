@@ -1,38 +1,48 @@
 'use client';
 
-/**
- * AURA MONTHLY CALENDAR — compact first-fold redesign (CALENDAR_UI_PLAN.md)
- * -----------------------------------------------------------------------------
- * Desktop: 7-column grid, rows 1–3 fully visible in the first fold (grid
- * starts ≤ Y=190px from viewport top on 1080p).
- * Mobile:  compact 48px 7-column cells — date number, moon phase dot,
- * event badge dot, today outline. Tap → Day Detail Sheet.
- *
- * Controls:  [सभी पर्व ▾] [सभी तिथि ▾] [सभी नक्षत्र ▾]  +  [माह | सूची | वर्ष]
- * All dates/tithis/festivals come from calculateMonthPanchang — zero
- * hardcoded dates.
- */
-
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import {
-  ChevronLeft, ChevronRight, Sparkles, ShieldAlert, User, X,
-  Languages, ChevronDown, List, LayoutGrid, CalendarRange, Filter
+import React, { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
+import { 
+  Calendar as CalendarIcon, 
+  ChevronLeft, 
+  ChevronRight, 
+  Sparkles, 
+  ShieldAlert, 
+  Share2, 
+  Sun, 
+  Moon, 
+  Clock, 
+  Compass, 
+  User, 
+  X, 
+  Check, 
+  Info,
+  Download,
+  CalendarPlus,
+  Languages
 } from 'lucide-react';
-import {
-  calculateMonthPanchang,
-  PanchangDayData,
-  MonthPanchangOverview,
-  NAKSHATRAS_DATA,
-  TITHIS_DATA,
+import { 
+  calculateMonthPanchang, 
+  PanchangDayData, 
+  MonthPanchangOverview 
 } from '@/engines/monthlyPanchangEngine';
 import { getProfiles } from '@/lib/profileStore';
 import { CITIES } from '@/lib/cities';
 import { playTick } from '@/lib/chitiAudio';
 import { useActiveLocation } from '@/lib/location/useActiveLocation';
 import { persistActiveLocation } from '@/lib/location/activeLocation';
-import { pickDayArtwork } from '@/lib/calendar/eventArtwork';
-import { getWorldCalendarReading, WorldCalendarSystemId } from '@/lib/calendar/worldCalendarEngine';
-import { toHindiDigits } from './DayDetailSheet';
+import { resolveDayArtwork } from '@/lib/calendar/festivalArtwork';
+
+const HINDI_DIGITS = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९'];
+function toHindiDigits(str: string | number): string {
+  return String(str).replace(/[0-9]/g, (d) => HINDI_DIGITS[parseInt(d, 10)]);
+}
+
+const LORD_HI_MAP: Record<string, string> = {
+  'Sun': 'सूर्य देव', 'Moon': 'चन्द्र देव', 'Mars': 'मंगल देव',
+  'Mercury': 'बुध देव', 'Jupiter': 'बृहस्पति देव', 'Venus': 'शुक्र देव',
+  'Saturn': 'शनि देव', 'Rahu': 'राहु देव', 'Ketu': 'केतु देव'
+};
 
 export const ALL_MONTHS = [
   { index: 0, en: 'January', hi: 'जनवरी', shortEn: 'Jan', shortHi: 'जन', vedicMaas: 'पौष - माघ', vedicMaasEn: 'Pausha - Magha' },
@@ -46,143 +56,44 @@ export const ALL_MONTHS = [
   { index: 8, en: 'September', hi: 'सितंबर', shortEn: 'Sep', shortHi: 'सितं', vedicMaas: 'भाद्रपद - आश्विन', vedicMaasEn: 'Bhadrapada - Ashwin' },
   { index: 9, en: 'October', hi: 'अक्टूबर', shortEn: 'Oct', shortHi: 'अक्टू', vedicMaas: 'आश्विन - कार्तिक', vedicMaasEn: 'Ashwin - Kartika' },
   { index: 10, en: 'November', hi: 'नवंबर', shortEn: 'Nov', shortHi: 'नवं', vedicMaas: 'कार्तिक - मार्गशीर्ष', vedicMaasEn: 'Kartika - Margashirsha' },
-  { index: 11, en: 'December', hi: 'दिसंबर', shortEn: 'Dec', shortHi: 'दिसं', vedicMaas: 'मार्गशीर्ष - पौष', vedicMaasEn: 'Margashirsha - Pausha' },
+  { index: 11, en: 'December', hi: 'दिसंबर', shortEn: 'Dec', shortHi: 'दिसं', vedicMaas: 'मार्गशीर्ष - पौष', vedicMaasEn: 'Margashirsha - Pausha' }
 ];
-
-type FestivalFilter = 'all' | 'major' | 'ekadashi' | 'pradosh' | 'purnima' | 'amavasya' | 'vrata';
-type TithiFilter = 'all' | number; // 1..15 within paksha
-type NakshatraFilter = 'all' | number; // 0..26
-type CalendarViewMode = 'month' | 'list' | 'year';
 
 interface AuraMonthlyCalendarProps {
   initialLang?: string;
   onSwitchToToday?: () => void;
-  systemId?: WorldCalendarSystemId;
-  onOpenDay?: (day: PanchangDayData) => void;
-  /** Controlled month context (shared with the other calendar tabs). */
-  year?: number;
-  month?: number;
-  onMonthChange?: (year: number, month: number) => void;
 }
 
-// -------------------------------------------------------------
-// Compact filter dropdown
-// -------------------------------------------------------------
-interface FilterDropdownProps {
-  label: string;
-  options: Array<{ value: string; label: string }>;
-  value: string;
-  onChange: (value: string) => void;
-}
-
-function FilterDropdown({ label, options, value, onChange }: FilterDropdownProps) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const onClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
-    };
-    document.addEventListener('mousedown', onClick);
-    window.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('mousedown', onClick);
-      window.removeEventListener('keydown', onKey);
-    };
-  }, [open]);
-
-  const activeOption = options.find((o) => o.value === value);
-
-  return (
-    <div ref={ref} className="relative shrink-0">
-      <button
-        type="button"
-        onClick={() => { playTick(); setOpen((v) => !v); }}
-        className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl border text-[11px] font-mono-data font-bold transition-all cursor-pointer ${
-          value !== 'all'
-            ? 'bg-[#8E6F1D]/15 dark:bg-[#D4AF37]/20 border-[#8E6F1D]/50 dark:border-[#D4AF37]/50 text-[#8E6F1D] dark:text-[#F0C968]'
-            : 'bg-white dark:bg-[#121522] border-black/10 dark:border-white/10 text-[#57524A] dark:text-[#D1C9BF] hover:border-[#8E6F1D]/40'
-        }`}
-      >
-        <Filter className="w-3 h-3" />
-        <span className="max-w-[110px] truncate">{activeOption?.label || label}</span>
-        <ChevronDown className={`w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`} />
-      </button>
-      {open && (
-        <div className="absolute left-0 top-full mt-1 z-40 w-52 max-h-72 overflow-y-auto rounded-2xl bg-white dark:bg-[#0E101D] border border-[#8E6F1D]/30 dark:border-[#D4AF37]/35 shadow-2xl p-1.5 scrollbar-thin">
-          {options.map((o) => (
-            <button
-              key={o.value}
-              type="button"
-              onClick={() => { playTick(); onChange(o.value); setOpen(false); }}
-              className={`w-full text-left px-2.5 py-1.5 rounded-xl text-[11px] font-mono-data transition-colors cursor-pointer ${
-                o.value === value
-                  ? 'bg-[#8E6F1D]/15 dark:bg-[#D4AF37]/20 text-[#8E6F1D] dark:text-[#F0C968] font-bold'
-                  : 'text-[#57524A] dark:text-[#D1C9BF] hover:bg-black/5 dark:hover:bg-white/5'
-              }`}
-            >
-              {o.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// -------------------------------------------------------------
-// Main component
-// -------------------------------------------------------------
-export default function AuraMonthlyCalendar({
-  initialLang,
-  onSwitchToToday,
-  systemId = 'drik',
-  onOpenDay,
-  year,
-  month,
-  onMonthChange,
-}: AuraMonthlyCalendarProps) {
+export default function AuraMonthlyCalendar({ initialLang, onSwitchToToday }: AuraMonthlyCalendarProps) {
   const now = new Date();
-  const [innerYear, setInnerYear] = useState<number>(now.getFullYear());
-  const [innerMonth, setInnerMonth] = useState<number>(now.getMonth());
-  const currentYear = year ?? innerYear;
-  const currentMonth = month ?? innerMonth;
-  const goToMonth = (y: number, m: number) => {
-    if (onMonthChange) onMonthChange(y, m);
-    else {
-      setInnerYear(y);
-      setInnerMonth(m);
-    }
-  };
+  const [currentYear, setCurrentYear] = useState<number>(now.getFullYear());
+  const [currentMonth, setCurrentMonth] = useState<number>(now.getMonth()); // 0-indexed
   const [selectedCityId, setSelectedCityId] = useState<string>('patna');
   const [profiles, setProfiles] = useState<any[]>([]);
   const [activeProfId, setActiveProfId] = useState<string>('pf_default');
-  const [lang, setLang] = useState<string>(initialLang || 'hi');
-
-  // Compact filters
-  const [festivalFilter, setFestivalFilter] = useState<FestivalFilter>('all');
-  const [tithiFilter, setTithiFilter] = useState<TithiFilter>('all');
-  const [nakshatraFilter, setNakshatraFilter] = useState<NakshatraFilter>('all');
-  // View toggle
-  const [viewMode, setViewMode] = useState<CalendarViewMode>('month');
+  const [lang, setLang] = useState<string>(initialLang || 'en');
+  
+  // Filter states
+  const [energyFilter, setEnergyFilter] = useState<'ALL' | 'POWER' | 'CAUTION' | 'FESTIVALS'>('ALL');
+  
+  // Day Inspector Modal/Drawer state
+  const [inspectedDay, setInspectedDay] = useState<PanchangDayData | null>(null);
 
   const isHi = lang === 'hi';
   const { location } = useActiveLocation();
 
+  // Initialize Profiles — CT_UX_INV_003 no fabricated demo family.
   useEffect(() => {
     const list = getProfiles() || [];
     setProfiles(list);
   }, []);
 
-  const activeProfile = useMemo(
-    () => profiles.find((p) => p.id === activeProfId) || profiles[0] || null,
-    [profiles, activeProfId]
-  );
+  // Active profile object
+  const activeProfile = useMemo(() => {
+    return profiles.find(p => p.id === activeProfId) || profiles[0] || null;
+  }, [profiles, activeProfId]);
 
+  // City Object: Resolve from active location when known, otherwise selectedCityId fallback
   const currentCityObj = useMemo(() => {
     if (location.status === 'KNOWN' && location.lat !== null && location.lng !== null) {
       return {
@@ -193,627 +104,935 @@ export default function AuraMonthlyCalendar({
         tz: location.tz ?? 5.5,
       };
     }
-    const found = CITIES.find((c) => c.id === selectedCityId) || CITIES[0];
+    const found = CITIES.find(c => c.id === selectedCityId) || CITIES[0];
     return { name: found.name, nameHi: (found as any).nameHi || found.name, lat: found.lat, lng: found.lng, tz: found.tz || 5.5 };
   }, [location, selectedCityId]);
 
+  // Compute Full Month Data via calculateMonthPanchang
   const monthData: MonthPanchangOverview | null = useMemo(() => {
-    if (!currentCityObj) return null;
-    const profileParams =
-      activeProfile &&
+    if (!currentCityObj) return null; // never compute for an unstated city
+    // Only personalise with real profile values; no fabricated indices.
+    const profileParams = activeProfile &&
       activeProfile.birthNakshatraIndex !== undefined &&
       activeProfile.birthRasiIndex !== undefined
-        ? {
-            birthNakshatraIndex: activeProfile.birthNakshatraIndex,
-            birthRasiIndex: activeProfile.birthRasiIndex,
-          }
-        : undefined;
-    return calculateMonthPanchang(currentYear, currentMonth, currentCityObj.lat, currentCityObj.lng, currentCityObj.tz, profileParams);
+      ? {
+          birthNakshatraIndex: activeProfile.birthNakshatraIndex,
+          birthRasiIndex: activeProfile.birthRasiIndex,
+        }
+      : undefined;
+
+    return calculateMonthPanchang(
+      currentYear, 
+      currentMonth, 
+      currentCityObj.lat,
+      currentCityObj.lng,
+      currentCityObj.tz,
+      profileParams
+    );
   }, [currentYear, currentMonth, currentCityObj, activeProfile]);
 
-  // Year overview (for वर्ष view)
-  const yearOverview = useMemo(() => {
-    if (!currentCityObj) return null;
-    const months: MonthPanchangOverview[] = [];
-    for (let m = 0; m < 12; m++) {
-      months.push(calculateMonthPanchang(currentYear, m, currentCityObj.lat, currentCityObj.lng, currentCityObj.tz));
-    }
-    return months;
-  }, [currentYear, currentCityObj]);
-
-  // Parallel-date labels for the selected world calendar system
-  const parallelLabels = useMemo(() => {
-    if (!monthData) return [];
-    return monthData.days.map((day) => {
-      try {
-        const [y, m, d] = day.dateString.split('-').map(Number);
-        return getWorldCalendarReading(new Date(y, m - 1, d), systemId, {
-          name: currentCityObj.name,
-          lat: currentCityObj.lat,
-          lng: currentCityObj.lng,
-          tz: currentCityObj.tz,
-        }).compactHi;
-      } catch {
-        return '';
-      }
-    });
-  }, [monthData, systemId, currentCityObj]);
-
+  // Month navigation handlers
   const handlePrevMonth = () => {
     playTick();
-    if (currentMonth === 0) goToMonth(currentYear - 1, 11);
-    else goToMonth(currentYear, currentMonth - 1);
+    if (currentMonth === 0) {
+      setCurrentMonth(11);
+      setCurrentYear(prev => prev - 1);
+    } else {
+      setCurrentMonth(prev => prev - 1);
+    }
   };
 
   const handleNextMonth = () => {
     playTick();
-    if (currentMonth === 11) goToMonth(currentYear + 1, 0);
-    else goToMonth(currentYear, currentMonth + 1);
+    if (currentMonth === 11) {
+      setCurrentMonth(0);
+      setCurrentYear(prev => prev + 1);
+    } else {
+      setCurrentMonth(prev => prev + 1);
+    }
   };
 
   const handleJumpToToday = () => {
     playTick();
     const t = new Date();
-    goToMonth(t.getFullYear(), t.getMonth());
-    if (onSwitchToToday) onSwitchToToday();
+    setCurrentYear(t.getFullYear());
+    setCurrentMonth(t.getMonth());
   };
 
+  // Inspect day handler
+  const handleOpenDayInspector = (day: PanchangDayData) => {
+    playTick();
+    setInspectedDay(day);
+  };
+
+  // WhatsApp Share Handler
+  const handleShareDayWhatsApp = (day: PanchangDayData) => {
+    const abhijitStr = day.timings.abhijitMuhurat 
+      ? `${day.timings.abhijitMuhurat.start} - ${day.timings.abhijitMuhurat.end}`
+      : (isHi ? 'बुधवार को वर्जित' : 'Excluded on Wednesday');
+    const text = isHi 
+      ? `🕉️ CosmicTantra वैदिक पञ्चाङ्ग (${toHindiDigits(day.dateString)})\n\n📅 तिथि: ${day.tithi.nameHi} (${day.tithi.paksha === 'Shukla Paksha' ? 'शुक्ल पक्ष' : 'कृष्ण पक्ष'})\n⭐ नक्षत्र: ${day.nakshatra.nameHi} (पाद ${toHindiDigits(day.nakshatra.pada)})\n🌟 अभिजित मुहूर्त: ${toHindiDigits(abhijitStr)}\n⚠ राहु काल: ${toHindiDigits(day.timings.rahuKaal.start)} - ${toHindiDigits(day.timings.rahuKaal.end)}\n\nऊर्जा स्थिति (${activeProfile?.nameHi || activeProfile?.name || 'आपके लिए'}): ${day.personalEnergy ? day.personalEnergy.badgeLabelHi : 'सन्तुलित'}\n\nमासिक कैलेंडर देखें: https://cosmictantra.chiti.tech/calendar`
+      : `🕉️ CosmicTantra Vedic Panchang (${day.dateString})\n\n📅 Tithi: ${day.tithi.name} (${day.tithi.paksha})\n⭐ Nakshatra: ${day.nakshatra.name} (Pada ${day.nakshatra.pada})\n🌟 Abhijit Muhurat: ${abhijitStr}\n⚠ Rahu Kaal: ${day.timings.rahuKaal.start} - ${day.timings.rahuKaal.end}\n\nPersonal Energy for ${activeProfile?.name || 'You'}: ${day.personalEnergy ? day.personalEnergy.badgeLabel : 'Balanced'}\n\nCheck full month calendar: https://cosmictantra.chiti.tech/calendar`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  // Google Calendar Export Handler
+  const handleAddToGoogleCalendar = (day: PanchangDayData) => {
+    playTick();
+    const cleanDate = day.dateString.replace(/-/g, '');
+    const startTimeIso = `${cleanDate}T060000`;
+    const endTimeIso = `${cleanDate}T073000`;
+    const festName = day.festivals.length > 0 ? (isHi ? day.festivals[0].nameHi : day.festivals[0].name) : (isHi ? day.nakshatra.nameHi : day.nakshatra.name);
+    const abhijitStr = day.timings.abhijitMuhurat 
+      ? `${day.timings.abhijitMuhurat.start} - ${day.timings.abhijitMuhurat.end}`
+      : (isHi ? 'बुधवार को वर्जित' : 'N/A');
+    const title = isHi 
+      ? `वैदिक पञ्चाङ्ग: ${day.tithi.nameHi} • ${festName}`
+      : `Vedic Panchang: ${day.tithi.name} • ${festName}`;
+    const details = isHi
+      ? `🕉️ CosmicTantra वैदिक पञ्चाङ्ग\n\n• तिथि: ${day.tithi.nameHi}\n• नक्षत्र: ${day.nakshatra.nameHi} (पाद ${toHindiDigits(day.nakshatra.pada)})\n• अभिजित मुहूर्त: ${toHindiDigits(abhijitStr)}\n• राहु काल: ${toHindiDigits(day.timings.rahuKaal.start)} - ${toHindiDigits(day.timings.rahuKaal.end)}\n• ऊर्जा स्तर: ${day.personalEnergy?.badgeLabelHi || 'सन्तुलित'}\n• मार्गदर्शन: ${day.personalEnergy?.adviceHi || 'नित्य कर्म'}`
+      : `🕉️ CosmicTantra Vedic Ephemeris\n\n• Tithi: ${day.tithi.name} (${day.tithi.paksha})\n• Nakshatra: ${day.nakshatra.name} (Pada ${day.nakshatra.pada})\n• Abhijit Muhurat: ${abhijitStr}\n• Rahu Kaal: ${day.timings.rahuKaal.start} - ${day.timings.rahuKaal.end}\n• Personal Energy: ${day.personalEnergy?.badgeLabel || 'Balanced'}\n• Guidance: ${day.personalEnergy?.advice || 'N/A'}`;
+    const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startTimeIso}/${endTimeIso}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(currentCityObj?.name || '')}`;
+    window.open(gCalUrl, '_blank');
+  };
+
+  // iCal (.ics) File Export Handler
+  const handleDownloadIcs = (day: PanchangDayData) => {
+    playTick();
+    const cleanDate = day.dateString.replace(/-/g, '');
+    const festName = day.festivals.length > 0 ? (isHi ? day.festivals[0].nameHi : day.festivals[0].name) : (isHi ? day.nakshatra.nameHi : day.nakshatra.name);
+    const abhijitStr = day.timings.abhijitMuhurat 
+      ? `${day.timings.abhijitMuhurat.start} - ${day.timings.abhijitMuhurat.end}`
+      : 'N/A';
+    const title = `Vedic Panchang: ${day.tithi.nameHi} • ${festName}`;
+    const description = `Tithi: ${day.tithi.nameHi} (${day.tithi.paksha})\\nNakshatra: ${day.nakshatra.nameHi} (Pada ${day.nakshatra.pada})\\nAbhijit: ${abhijitStr}\\nRahu Kaal: ${day.timings.rahuKaal.start} - ${day.timings.rahuKaal.end}\\nPersonal Energy: ${day.personalEnergy?.badgeLabel || 'Balanced'}`;
+    
+    const icsContent = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//CosmicTantra//Vedic Panchang//EN',
+      'CALSCALE:GREGORIAN',
+      'BEGIN:VEVENT',
+      `DTSTART;VALUE=DATE:${cleanDate}`,
+      `DTEND;VALUE=DATE:${cleanDate}`,
+      `SUMMARY:${title}`,
+      `DESCRIPTION:${description}`,
+      `LOCATION:${currentCityObj?.name || ''}`,
+      'STATUS:CONFIRMED',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n');
+
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.setAttribute('download', `vedic-panchang-${day.dateString}.ics`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Artwork for the open day inspector (festival art on observance days,
+  // symbolic tithi art otherwise). Pure resolution; safe on every render.
+  const inspectedArt = inspectedDay ? resolveDayArtwork(inspectedDay as any) : null;
+
+  // Today key for indicator
   const todayKey = now.toISOString().slice(0, 10);
 
-  // ---------------- filter predicates ----------------
-  const matchesFestivalFilter = (day: PanchangDayData): boolean => {
-    if (festivalFilter === 'all') return true;
-    if (festivalFilter === 'major') return day.festivals.some((f) => f.isImportant && f.type === 'Major Festival');
-    if (festivalFilter === 'vrata') return day.festivals.some((f) => f.type === 'Vrat');
-    if (festivalFilter === 'ekadashi') return day.festivals.some((f) => f.nameHi.includes('एकादशी'));
-    if (festivalFilter === 'pradosh') return day.festivals.some((f) => f.nameHi.includes('प्रदोष'));
-    if (festivalFilter === 'purnima') return day.tithi.isPurnima;
-    if (festivalFilter === 'amavasya') return day.tithi.isAmavasya;
-    return true;
-  };
-
-  const matchesTithiFilter = (day: PanchangDayData): boolean => {
-    if (tithiFilter === 'all') return true;
-    return ((day.tithi.index - 1) % 15) + 1 === tithiFilter;
-  };
-
-  const matchesNakshatraFilter = (day: PanchangDayData): boolean => {
-    if (nakshatraFilter === 'all') return true;
-    return day.nakshatra.index === nakshatraFilter;
-  };
-
-  const festivalFilterOptions = [
-    { value: 'all', label: isHi ? 'सभी पर्व' : 'All Festivals' },
-    { value: 'major', label: isHi ? 'प्रमुख पर्व' : 'Major Festivals' },
-    { value: 'vrata', label: isHi ? 'सभी व्रत' : 'All Vrats' },
-    { value: 'ekadashi', label: isHi ? 'एकादशी' : 'Ekadashi' },
-    { value: 'pradosh', label: isHi ? 'प्रदोष' : 'Pradosh' },
-    { value: 'purnima', label: isHi ? 'पूर्णिमा' : 'Purnima' },
-    { value: 'amavasya', label: isHi ? 'अमावस्या' : 'Amavasya' },
-  ];
-
-  const tithiFilterOptions = [
-    { value: 'all', label: isHi ? 'सभी तिथि' : 'All Tithis' },
-    ...Array.from({ length: 15 }, (_, i) => {
-      const t = TITHIS_DATA[i];
-      const suffix = i + 1 === 15
-        ? (isHi ? ' (पूर्णिमा/अमावस्या)' : ' (Purnima/Amavasya)')
-        : '';
-      return {
-        value: String(i + 1),
-        label: isHi ? `${t.nameHi}${suffix}` : `${t.name}${suffix}`,
-      };
-    }),
-  ];
-
-  const nakshatraFilterOptions = [
-    { value: 'all', label: isHi ? 'सभी नक्षत्र' : 'All Nakshatras' },
-    ...NAKSHATRAS_DATA.map((n, idx) => ({
-      value: String(idx),
-      label: isHi ? n.nameHi : n.name,
-    })),
-  ];
-
-  const filtersActive = festivalFilter !== 'all' || tithiFilter !== 'all' || nakshatraFilter !== 'all';
-
+  // No silent city — the monthly Panchang is location-based (§10).
   if (!currentCityObj || !monthData) {
     return (
-      <div data-testid="calendar-city-prompt" className="bg-white/90 dark:bg-[#0E101D]/90 backdrop-blur-md rounded-3xl border border-amber-500/40 p-8 text-center shadow-xl">
-        <h2 className="font-editorial text-xl font-bold text-[#1C1917] dark:text-white">
-          Choose a city to see this month&apos;s Panchang
-        </h2>
-        <p className="mt-2 text-xs font-mono-data text-[#696256] dark:text-[#9E988D]">
-          Sunrise, Rahu Kalam and Vedic days depend on location — nothing is calculated for a guessed city.
-        </p>
+      <div className="space-y-8">
+        <div data-testid="calendar-city-prompt"
+             className="bg-white/90 dark:bg-[#0E101D]/90 backdrop-blur-md rounded-3xl border border-amber-500/40 p-8 text-center shadow-xl">
+          <h2 className="font-editorial text-xl font-bold text-[#1C1917] dark:text-white">
+            Choose a city to see this month's Panchang
+          </h2>
+          <p className="mt-2 text-xs font-mono-data text-[#696256] dark:text-[#9E988D]">
+            Sunrise, Rahu Kalam and Vedic days depend on location — nothing is calculated for a guessed city.
+          </p>
+        </div>
       </div>
     );
   }
 
-  // ---------------- month navigation + title ----------------
-  const monthTitle = (
-    <div className="flex items-center gap-1.5">
-      <button
-        type="button"
-        onClick={handlePrevMonth}
-        className="p-1.5 rounded-lg text-[#57524A] dark:text-[#D1C9BF] hover:bg-[#8E6F1D]/10 hover:text-[#8E6F1D] dark:hover:text-[#F0C968] transition-colors cursor-pointer"
-        title={isHi ? 'पिछला मास' : 'Previous month'}
-      >
-        <ChevronLeft className="w-4 h-4" />
-      </button>
-      <span className="font-editorial font-bold text-[13px] sm:text-sm text-[#1C1917] dark:text-white whitespace-nowrap">
-        {ALL_MONTHS[currentMonth].en} {currentYear} <span className="text-[#8E6F1D] dark:text-[#F0C968] font-normal">/ {ALL_MONTHS[currentMonth].hi} {toHindiDigits(currentYear)}</span>
-      </span>
-      <button
-        type="button"
-        onClick={handleNextMonth}
-        className="p-1.5 rounded-lg text-[#57524A] dark:text-[#D1C9BF] hover:bg-[#8E6F1D]/10 hover:text-[#8E6F1D] dark:hover:text-[#F0C968] transition-colors cursor-pointer"
-        title={isHi ? 'अगला मास' : 'Next month'}
-      >
-        <ChevronRight className="w-4 h-4" />
-      </button>
-    </div>
-  );
-
   return (
-    <div className="space-y-2.5">
-      {/* ============ COMPACT CONTROL ROW ============ */}
-      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 bg-white/90 dark:bg-[#0E101D]/90 backdrop-blur-md rounded-2xl border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 px-2.5 sm:px-3 py-2 shadow-sm">
-        {monthTitle}
-
-        <button
-          type="button"
-          onClick={handleJumpToToday}
-          className="px-2.5 py-1.5 rounded-xl border border-[#8E6F1D]/30 dark:border-[#D4AF37]/30 bg-white dark:bg-[#121522] text-[11px] font-mono-data font-bold text-[#8E6F1D] dark:text-[#F0C968] hover:bg-[#8E6F1D] hover:text-white dark:hover:bg-[#D4AF37] dark:hover:text-[#060709] transition-all cursor-pointer shrink-0"
-        >
-          {isHi ? 'आज' : 'Today'}
-        </button>
-
-        <div className="flex-1" />
-
-        {/* Filters (month/list views) */}
-        {viewMode !== 'year' && (
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <FilterDropdown
-              label={isHi ? 'सभी पर्व' : 'All Festivals'}
-              options={festivalFilterOptions}
-              value={String(festivalFilter)}
-              onChange={(v) => setFestivalFilter(v as FestivalFilter)}
-            />
-            <FilterDropdown
-              label={isHi ? 'सभी तिथि' : 'All Tithis'}
-              options={tithiFilterOptions}
-              value={String(tithiFilter)}
-              onChange={(v) => setTithiFilter(v === 'all' ? 'all' : Number(v))}
-            />
-            <FilterDropdown
-              label={isHi ? 'सभी नक्षत्र' : 'All Nakshatras'}
-              options={nakshatraFilterOptions}
-              value={String(nakshatraFilter)}
-              onChange={(v) => setNakshatraFilter(v === 'all' ? 'all' : Number(v))}
-            />
-            {filtersActive && (
+    <div className="space-y-8">
+      
+      {/* 1. Main Calendar Header Card */}
+      <div className="bg-white/90 dark:bg-[#0E101D]/90 backdrop-blur-md rounded-3xl border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 p-5 sm:p-8 shadow-xl space-y-6">
+        
+        {/* 12-Month Quick Selector Bar (Jan to Dec with English + Hindi Month Names) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none border-b border-black/10 dark:border-white/10">
+          {ALL_MONTHS.map((m) => {
+            const isSelected = currentMonth === m.index;
+            return (
               <button
-                type="button"
-                onClick={() => { playTick(); setFestivalFilter('all'); setTithiFilter('all'); setNakshatraFilter('all'); }}
-                className="p-1.5 rounded-lg text-[#78716C] hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
-                title={isHi ? 'फ़िल्टर हटाएँ' : 'Clear filters'}
+                key={m.index}
+                onClick={() => {
+                  playTick();
+                  setCurrentMonth(m.index);
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-mono-data font-bold transition-all cursor-pointer flex-shrink-0 flex items-center gap-1.5 border ${
+                  isSelected
+                    ? 'bg-[#8E6F1D] text-white dark:bg-[#D4AF37] dark:text-[#060709] border-[#8E6F1D] dark:border-[#D4AF37] shadow-md scale-105'
+                    : 'bg-[#FAF7F2] dark:bg-[#161826] border-black/5 dark:border-white/5 text-[#57524A] dark:text-[#D1C9BF] hover:border-[#8E6F1D]/40 hover:text-[#8E6F1D] dark:hover:text-[#F0C968]'
+                }`}
+                title={`${m.en} • ${m.hi} (${m.vedicMaas})`}
               >
-                <X className="w-3.5 h-3.5" />
+                <span>{m.shortEn}</span>
+                <span className="opacity-75 text-[11px] font-normal">/ {m.shortHi}</span>
               </button>
-            )}
+            );
+          })}
+        </div>
+
+        {/* Top Controls: Dual Month Title, Vedic Ephemeris, City Selector, Language Toggle, Month Switcher */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-black/10 dark:border-white/10 pb-5">
+          
+          {/* Month & Lunar Info with Rich Text Hierarchy */}
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-3 py-1 rounded-full bg-[#8E6F1D]/15 dark:bg-[#D4AF37]/20 text-[#8E6F1D] dark:text-[#F0C968] text-xs font-mono-data font-bold uppercase tracking-wider shadow-xs">
+                🕉️ {monthData.lunarMonthHi} मास • {monthData.lunarMonth} Maas
+              </span>
+              <span className="text-xs font-mono-data text-[#78716C] dark:text-[#A8A29E]">
+                {ALL_MONTHS[currentMonth].vedicMaas}
+              </span>
+            </div>
+
+            {/* Primary Month Title */}
+            <h2 className="font-editorial text-3xl sm:text-4xl lg:text-5xl font-bold text-[#1C1917] dark:text-white tracking-tight">
+              <span>{monthData.monthName} {monthData.year}</span>
+              <span className="text-[#8E6F1D] dark:text-[#F0C968] ml-2 font-normal">/ {monthData.monthNameHi} {toHindiDigits(monthData.year)}</span>
+            </h2>
+
+            {/* Sub-Ephemeris Line */}
+            <div className="text-xs sm:text-sm font-mono-data text-[#57524A] dark:text-[#D1C9BF] flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span>📅 <strong>विक्रम संवत् {toHindiDigits(monthData.vikramSamvat)}</strong> (Vikram Samvat {monthData.vikramSamvat})</span>
+              <span>•</span>
+              <span>शक संवत् {toHindiDigits(monthData.shakaSamvat)}</span>
+              <span>•</span>
+              <span>🌿 {monthData.rituHi} ({monthData.ritu})</span>
+              <span>•</span>
+              <span>☀️ {monthData.ayanaHi}</span>
+            </div>
           </div>
-        )}
 
-        {/* View toggle: माह | सूची | वर्ष */}
-        <div className="inline-flex items-center rounded-xl border border-black/10 dark:border-white/10 bg-[#FAF7F2] dark:bg-[#121522] p-0.5 shrink-0">
-          <button
-            type="button"
-            onClick={() => { playTick(); setViewMode('month'); }}
-            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-mono-data font-bold transition-all cursor-pointer ${
-              viewMode === 'month' ? 'bg-white dark:bg-[#0E101D] text-[#8E6F1D] dark:text-[#F0C968] shadow-sm' : 'text-[#78716C] dark:text-[#A8A29E]'
-            }`}
-            title={isHi ? 'माह दृश्य' : 'Month grid'}
-          >
-            <LayoutGrid className="w-3 h-3" /> {isHi ? 'माह' : 'Month'}
-          </button>
-          <button
-            type="button"
-            onClick={() => { playTick(); setViewMode('list'); }}
-            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-mono-data font-bold transition-all cursor-pointer ${
-              viewMode === 'list' ? 'bg-white dark:bg-[#0E101D] text-[#8E6F1D] dark:text-[#F0C968] shadow-sm' : 'text-[#78716C] dark:text-[#A8A29E]'
-            }`}
-            title={isHi ? 'सूची दृश्य' : 'List view'}
-          >
-            <List className="w-3 h-3" /> {isHi ? 'सूची' : 'List'}
-          </button>
-          <button
-            type="button"
-            onClick={() => { playTick(); setViewMode('year'); }}
-            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-mono-data font-bold transition-all cursor-pointer ${
-              viewMode === 'year' ? 'bg-white dark:bg-[#0E101D] text-[#8E6F1D] dark:text-[#F0C968] shadow-sm' : 'text-[#78716C] dark:text-[#A8A29E]'
-            }`}
-            title={isHi ? 'वर्ष दृश्य' : 'Year overview'}
-          >
-            <CalendarRange className="w-3 h-3" /> {isHi ? 'वर्ष' : 'Year'}
-          </button>
+          {/* Navigation Controls & City Switcher */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            
+            {/* Language Switch Pill */}
+            <button
+              onClick={() => {
+                playTick();
+                setLang(prev => prev === 'en' ? 'hi' : 'en');
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#FAF7F2] dark:bg-[#161826] text-xs font-mono-data font-bold text-[#1C1917] dark:text-white hover:border-[#8E6F1D] transition-all cursor-pointer shadow-xs"
+              title={isHi ? 'भाषा बदलें (Switch to English)' : 'Change to Hindi'}
+            >
+              <Languages className="w-3.5 h-3.5 text-[#8E6F1D] dark:text-[#D4AF37]" />
+              <span>{isHi ? 'English' : 'हिन्दी'}</span>
+            </button>
+
+            {/* City Selector */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#FAF7F2] dark:bg-[#161826] text-xs font-mono-data">
+              <Compass className="w-3.5 h-3.5 text-[#8E6F1D] dark:text-[#D4AF37]" />
+              <select
+                value={
+                  location.status === 'KNOWN' && location.name
+                    ? (CITIES.find(c => c.name.toLowerCase() === location.name.toLowerCase())?.id || selectedCityId)
+                    : selectedCityId
+                }
+                onChange={(e) => { 
+                  playTick(); 
+                  const cid = e.target.value;
+                  setSelectedCityId(cid);
+                  const found = CITIES.find(c => c.id === cid);
+                  if (found) {
+                    persistActiveLocation({
+                      id: found.id,
+                      name: found.name,
+                      nameHi: (found as any).nameHi || found.name,
+                      lat: found.lat,
+                      lng: found.lng,
+                      tz: found.tz || 5.5,
+                      isGps: false,
+                    });
+                  }
+                }}
+                className="bg-transparent font-bold text-[#1C1917] dark:text-white outline-none cursor-pointer"
+              >
+                {CITIES.map(c => (
+                  <option key={c.id} value={c.id} className="bg-white dark:bg-[#161826] text-[#1C1917] dark:text-white">
+                    {c.name} ({c.state})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Jump to Today / Today's Panchang Button */}
+            <button
+              onClick={() => {
+                handleJumpToToday();
+                if (onSwitchToToday) {
+                  onSwitchToToday();
+                }
+              }}
+              className="px-3 py-1.5 rounded-xl border border-[#8E6F1D]/30 dark:border-[#D4AF37]/30 bg-white dark:bg-[#161826] text-xs font-mono-data font-bold text-[#8E6F1D] dark:text-[#F0C968] hover:bg-[#8E6F1D] hover:text-white dark:hover:bg-[#D4AF37] dark:hover:text-[#060709] transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
+              title={isHi ? 'आज का पञ्चाङ्ग देखें' : "View Today's Panchang"}
+            >
+              <Sun className="w-3.5 h-3.5" />
+              <span>{isHi ? 'आज का पञ्चाङ्ग' : "Today's Panchang"}</span>
+            </button>
+
+            {/* Prev / Next Month Buttons */}
+            <div className="inline-flex items-center rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#161826] p-0.5">
+              <button
+                onClick={handlePrevMonth}
+                className="p-1.5 rounded-lg text-[#57524A] dark:text-[#D1C9BF] hover:bg-[#8E6F1D]/10 hover:text-[#8E6F1D] dark:hover:text-[#F0C968] transition-colors cursor-pointer"
+                title={isHi ? 'पिछला मास' : 'Previous Month'}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={handleNextMonth}
+                className="p-1.5 rounded-lg text-[#57524A] dark:text-[#D1C9BF] hover:bg-[#8E6F1D]/10 hover:text-[#8E6F1D] dark:hover:text-[#F0C968] transition-colors cursor-pointer"
+                title={isHi ? 'अगला मास' : 'Next Month'}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Profile (personal energy) */}
-        <div className="hidden md:flex items-center gap-1 px-2 py-1.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#FAF7F2] dark:bg-[#121522] text-[11px] font-mono-data">
-          <User className="w-3 h-3 text-[#8E6F1D] dark:text-[#D4AF37]" />
-          <select
-            value={activeProfId}
-            onChange={(e) => { playTick(); setActiveProfId(e.target.value); }}
-            className="bg-transparent font-bold text-[#1C1917] dark:text-white outline-none cursor-pointer max-w-[110px]"
-            title={isHi ? 'परिवार प्रोफ़ाइल' : 'Parivaar profile'}
-          >
-            {profiles.length === 0 && <option value="pf_default">{isHi ? 'कोई प्रोफ़ाइल नहीं' : 'No profile'}</option>}
-            {profiles.map((p) => (
-              <option key={p.id} value={p.id} className="bg-white dark:bg-[#121422] text-[#1C1917] dark:text-white">
-                {isHi ? p.nameHi || p.name : p.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Language */}
-        <button
-          type="button"
-          onClick={() => { playTick(); setLang((prev) => (prev === 'en' ? 'hi' : 'en')); }}
-          className="flex items-center gap-1 px-2 py-1.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#FAF7F2] dark:bg-[#121522] text-[11px] font-mono-data font-bold text-[#1C1917] dark:text-white hover:border-[#8E6F1D] transition-all cursor-pointer shrink-0"
-          title={isHi ? 'भाषा बदलें (Switch to English)' : 'Change to Hindi'}
-        >
-          <Languages className="w-3 h-3 text-[#8E6F1D] dark:text-[#D4AF37]" />
-          <span>{isHi ? 'EN' : 'हिं'}</span>
-        </button>
-      </div>
-
-      {/* ============ MONTH CONTEXT STRIP (compact) ============ */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-[10px] sm:text-[11px] font-mono-data text-[#57524A] dark:text-[#D1C9BF]">
-        <span className="font-bold text-[#8E6F1D] dark:text-[#F0C968]">🕉️ {monthData.lunarMonthHi} मास ({monthData.lunarMonth})</span>
-        <span>•</span>
-        <span>{isHi ? `विक्रम संवत् ${toHindiDigits(monthData.vikramSamvat)}` : `Vikram Samvat ${monthData.vikramSamvat}`}</span>
-        <span>•</span>
-        <span>{monthData.rituHi} ({monthData.ritu})</span>
-        <span>•</span>
-        <span>{monthData.ayanaHi}</span>
-        <span className="flex-1" />
-        <span className="flex items-center gap-2">
-          <span className="flex items-center gap-1">
-            <Sparkles className="w-3 h-3 text-amber-500" />
-            {isHi ? `${toHindiDigits(monthData.powerDaysCount)} शुभ` : `${monthData.powerDaysCount} power`}
-          </span>
-          <span className="flex items-center gap-1">
-            <ShieldAlert className="w-3 h-3 text-red-500" />
-            {isHi ? `${toHindiDigits(monthData.cautionDaysCount)} सावधानी` : `${monthData.cautionDaysCount} caution`}
-          </span>
-          <span className="flex items-center gap-1">
-            🪔 {isHi ? `${toHindiDigits(monthData.festivalsCount)} पर्व` : `${monthData.festivalsCount} festivals`}
-          </span>
-        </span>
-      </div>
-
-      {/* ============ VIEW: MONTH GRID ============ */}
-      {viewMode === 'month' && (
-        <div className="space-y-1.5">
-          {/* Weekday headers */}
-          <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center font-mono-data font-bold text-[10px] sm:text-[11px]">
-            {([
-              ['रवि', 'Sun'], ['सोम', 'Mon'], ['मंगल', 'Tue'], ['बुध', 'Wed'], ['गुरु', 'Thu'], ['शुक्र', 'Fri'], ['शनि', 'Sat'],
-            ] as Array<[string, string]>).map(([hi, en], idx) => (
-              <div key={en} className={`py-0.5 sm:py-1 ${idx === 0 ? 'text-red-500' : 'text-[#1C1917] dark:text-[#EFECE6]'}`}>
-                <span>{isHi ? hi : en}</span>
+        {/* 2. Personal Energy Matrix & Filter Pills */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#FAF7F2] dark:bg-[#121422] p-4 rounded-2xl border border-black/5 dark:border-white/5">
+          
+          {/* Active Profile Switcher */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#8E6F1D]/15 dark:bg-[#D4AF37]/20 border border-[#8E6F1D]/30 flex items-center justify-center flex-shrink-0 text-[#8E6F1D] dark:text-[#F0C968]">
+              <User className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-[10px] font-mono-data uppercase tracking-wider text-[#78716C]">
+                {isHi ? 'सक्रिय परिवार सदस्य:' : 'Active Parivaar Profile:'}
               </div>
-            ))}
+              <div className="flex items-center gap-2">
+                <select
+                  value={activeProfId}
+                  onChange={(e) => { playTick(); setActiveProfId(e.target.value); }}
+                  className="bg-transparent font-bold text-sm text-[#1C1917] dark:text-white outline-none cursor-pointer"
+                >
+                  {profiles.map(p => (
+                    <option key={p.id} value={p.id} className="bg-white dark:bg-[#121422] text-[#1C1917] dark:text-white">
+                      {isHi ? (p.nameHi || p.name) : p.name} ({isHi ? (p.relationHi || p.relation || 'सदस्य') : (p.relation || 'Member')})
+                    </option>
+                  ))}
+                </select>
+                {activeProfile && (
+                  <span className="text-[10px] font-mono-data px-2 py-0.5 rounded-full bg-[#8E6F1D]/10 dark:bg-[#D4AF37]/15 text-[#8E6F1D] dark:text-[#F0C968]">
+                    {isHi 
+                      ? `जन्म नक्षत्र #${toHindiDigits((activeProfile.birthNakshatraIndex !== undefined ? activeProfile.birthNakshatraIndex : 3) + 1)}`
+                      : `Nakshatra #${(activeProfile.birthNakshatraIndex !== undefined ? activeProfile.birthNakshatraIndex : 3) + 1}`}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
 
-          <div className="grid grid-cols-7 gap-1 sm:gap-2">
+          {/* Energy Filter Counters & Pills */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => { playTick(); setEnergyFilter('ALL'); }}
+              className={`px-3 py-1.5 rounded-xl text-xs font-mono-data font-bold transition-all cursor-pointer border ${
+                energyFilter === 'ALL'
+                  ? 'bg-[#8E6F1D] text-white dark:bg-[#D4AF37] dark:text-[#060709] border-[#8E6F1D]'
+                  : 'bg-white dark:bg-[#161826] text-[#78716C] border-black/10 dark:border-white/10 hover:border-[#8E6F1D]'
+              }`}
+            >
+              {isHi ? `समस्त (${toHindiDigits(monthData.daysInMonth)})` : `All (${monthData.daysInMonth})`}
+            </button>
+            <button
+              onClick={() => { playTick(); setEnergyFilter('POWER'); }}
+              className={`px-3 py-1.5 rounded-xl text-xs font-mono-data font-bold transition-all cursor-pointer border flex items-center gap-1 ${
+                energyFilter === 'POWER'
+                  ? 'bg-amber-500 text-white border-amber-500'
+                  : 'bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/30 hover:bg-amber-500/20'
+              }`}
+            >
+              <Sparkles className="w-3 h-3 text-amber-500" />
+              <span>{isHi ? `🌟 ${toHindiDigits(monthData.powerDaysCount)} शुभ ऊर्जा दिवस` : `🌟 ${monthData.powerDaysCount} Power Days`}</span>
+            </button>
+            <button
+              onClick={() => { playTick(); setEnergyFilter('CAUTION'); }}
+              className={`px-3 py-1.5 rounded-xl text-xs font-mono-data font-bold transition-all cursor-pointer border flex items-center gap-1 ${
+                energyFilter === 'CAUTION'
+                  ? 'bg-red-600 text-white border-red-600'
+                  : 'bg-red-500/10 text-red-800 dark:text-red-300 border-red-500/30 hover:bg-red-500/20'
+              }`}
+            >
+              <ShieldAlert className="w-3 h-3 text-red-500" />
+              <span>{isHi ? `⚠️ ${toHindiDigits(monthData.cautionDaysCount)} सावधानी दिवस` : `⚠️ ${monthData.cautionDaysCount} Caution Days`}</span>
+            </button>
+            <button
+              onClick={() => { playTick(); setEnergyFilter('FESTIVALS'); }}
+              className={`px-3 py-1.5 rounded-xl text-xs font-mono-data font-bold transition-all cursor-pointer border flex items-center gap-1 ${
+                energyFilter === 'FESTIVALS'
+                  ? 'bg-purple-600 text-white border-purple-600'
+                  : 'bg-purple-500/10 text-purple-800 dark:text-purple-300 border-purple-500/30 hover:bg-purple-500/20'
+              }`}
+            >
+              <span>{isHi ? `🪔 ${toHindiDigits(monthData.festivalsCount)} प्रमुख पर्व` : `🪔 ${monthData.festivalsCount} Festivals`}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 3. The 7-Column Calendar Grid */}
+        <div className="space-y-2">
+          
+          {/* Weekday Column Headers (Sun to Sat) */}
+          <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center font-mono-data font-bold text-[11px] sm:text-xs">
+            <div className="text-red-500 py-1">
+              <span>{isHi ? 'रवि' : 'SUN'}</span> 
+              <div className="text-[10px] font-mono-data text-[#78716C]">{isHi ? 'रविवार' : 'Sun'}</div>
+            </div>
+            <div className="text-[#1C1917] dark:text-[#EFECE6] py-1">
+              <span>{isHi ? 'सोम' : 'MON'}</span> 
+              <div className="text-[10px] font-mono-data text-[#78716C]">{isHi ? 'सोमवार' : 'Mon'}</div>
+            </div>
+            <div className="text-[#1C1917] dark:text-[#EFECE6] py-1">
+              <span>{isHi ? 'मंगल' : 'TUE'}</span> 
+              <div className="text-[10px] font-mono-data text-[#78716C]">{isHi ? 'मंगलवार' : 'Tue'}</div>
+            </div>
+            <div className="text-[#1C1917] dark:text-[#EFECE6] py-1">
+              <span>{isHi ? 'बुध' : 'WED'}</span> 
+              <div className="text-[10px] font-mono-data text-[#78716C]">{isHi ? 'बुधवार' : 'Wed'}</div>
+            </div>
+            <div className="text-[#1C1917] dark:text-[#EFECE6] py-1">
+              <span>{isHi ? 'गुरु' : 'THU'}</span> 
+              <div className="text-[10px] font-mono-data text-[#78716C]">{isHi ? 'गुरुवार' : 'Thu'}</div>
+            </div>
+            <div className="text-[#1C1917] dark:text-[#EFECE6] py-1">
+              <span>{isHi ? 'शुक्र' : 'FRI'}</span> 
+              <div className="text-[10px] font-mono-data text-[#78716C]">{isHi ? 'शुक्रवार' : 'Fri'}</div>
+            </div>
+            <div className="text-[#1C1917] dark:text-[#EFECE6] py-1">
+              <span>{isHi ? 'शनि' : 'SAT'}</span> 
+              <div className="text-[10px] font-mono-data text-[#78716C]">{isHi ? 'शनिवार' : 'Sat'}</div>
+            </div>
+          </div>
+
+          {/* Days Grid */}
+          <div className="grid grid-cols-7 gap-1.5 sm:gap-2.5">
+            
+            {/* Blank offset padding cells before 1st of month */}
             {Array.from({ length: monthData.firstDayOfWeek }).map((_, idx) => (
-              <div key={`blank-${idx}`} className="h-12 sm:min-h-[118px] rounded-xl sm:rounded-2xl bg-black/[0.02] dark:bg-white/[0.01] border border-dashed border-black/5 dark:border-white/5 opacity-30" />
+              <div key={`blank-${idx}`} className="min-h-[115px] sm:min-h-[135px] rounded-2xl bg-black/[0.02] dark:bg-white/[0.01] border border-dashed border-black/5 dark:border-white/5 opacity-30" />
             ))}
 
-            {monthData.days.map((day, dayIdx) => {
+            {/* Daily Panchang Cards */}
+            {monthData.days.map((day: PanchangDayData) => {
               const isToday = day.dateString === todayKey;
               const isPower = day.personalEnergy?.status === 'POWER';
               const isCaution = day.personalEnergy?.status === 'CAUTION';
               const hasFestival = day.festivals.length > 0;
 
-              const isMatch = matchesFestivalFilter(day) && matchesTithiFilter(day) && matchesNakshatraFilter(day);
-              const artwork = pickDayArtwork(day);
+              // Festival / tithi artwork (see src/lib/calendar/festivalArtwork.ts).
+              const dayArt = resolveDayArtwork(day as any);
 
+              // Filter match check
+              let isMatch = true;
+              if (energyFilter === 'POWER') isMatch = isPower;
+              if (energyFilter === 'CAUTION') isMatch = isCaution;
+              if (energyFilter === 'FESTIVALS') isMatch = hasFestival;
+
+              // Highlight Classes
               let borderClass = 'border-black/10 dark:border-white/10';
               let bgClass = 'bg-white dark:bg-[#121422]';
+
               if (isToday) {
-                borderClass = 'border-[#8E6F1D] dark:border-[#D4AF37] ring-2 ring-[#8E6F1D]/40 dark:ring-[#D4AF37]/40 shadow-md';
+                borderClass = 'border-[#8E6F1D] dark:border-[#D4AF37] ring-2 ring-[#8E6F1D]/40 shadow-md';
                 bgClass = 'bg-[#FAF7F2] dark:bg-[#161828]';
               } else if (isPower) {
-                borderClass = 'border-amber-400/70 dark:border-amber-400/50';
+                borderClass = 'border-amber-400/80 dark:border-amber-400/70 shadow-[0_0_12px_rgba(251,191,36,0.15)]';
                 bgClass = 'bg-gradient-to-br from-amber-500/10 to-transparent dark:bg-[#131718]';
               } else if (isCaution) {
-                borderClass = 'border-red-400/70 dark:border-red-400/50';
+                borderClass = 'border-red-400/80 dark:border-red-400/70 shadow-[0_0_12px_rgba(239,68,68,0.12)]';
                 bgClass = 'bg-gradient-to-br from-red-500/10 to-transparent dark:bg-[#181116]';
               }
 
               if (!isMatch) {
                 return (
-                  <div key={day.dateString} className="h-12 sm:min-h-[118px] p-1.5 sm:p-2 rounded-xl sm:rounded-2xl border border-black/5 dark:border-white/5 bg-black/[0.01] dark:bg-white/[0.01] opacity-25 flex flex-col justify-between">
-                    <span className="font-mono-data text-[10px] sm:text-xs text-[#78716C]">{day.dayNumber}</span>
+                  <div 
+                    key={day.dateString} 
+                    className="min-h-[115px] sm:min-h-[135px] p-2 rounded-2xl border border-black/5 dark:border-white/5 bg-black/[0.01] dark:bg-white/[0.01] opacity-30 flex flex-col justify-between"
+                  >
+                    <span className="font-mono-data text-xs text-[#78716C]">{day.dayNumber}</span>
                   </div>
                 );
               }
 
               return (
-                <button
+                <div
                   key={day.dateString}
-                  type="button"
-                  onClick={() => { playTick(); if (onOpenDay) onOpenDay(day); }}
-                  className={`text-left h-12 sm:min-h-[118px] p-1 sm:p-2 rounded-xl sm:rounded-2xl border transition-all cursor-pointer flex flex-col justify-between relative group overflow-hidden ${borderClass} ${bgClass} hover:scale-[1.02] hover:shadow-lg`}
-                  aria-label={`${day.dateString} — ${day.tithi.nameHi}`}
+                  onClick={() => handleOpenDayInspector(day)}
+                  className={`min-h-[115px] sm:min-h-[135px] p-2 sm:p-2.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between relative group ${borderClass} ${bgClass} hover:scale-[1.02] hover:shadow-lg`}
                 >
-                  {/* ---- MOBILE COMPACT LAYOUT (48px) ---- */}
-                  <div className="sm:hidden flex flex-col justify-between h-full">
-                    <div className="flex items-center justify-between gap-0.5">
-                      <span className={`text-[11px] font-mono-data font-extrabold leading-none ${isToday ? 'text-[#8E6F1D] dark:text-[#F0C968]' : 'text-[#1C1917] dark:text-white'}`}>
-                        {day.dayNumber}
-                      </span>
-                      <span className="flex items-center gap-0.5">
-                        {hasFestival && <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shadow-[0_0_4px_rgba(168,85,247,0.9)]" />}
-                        {isPower && <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />}
-                        {isCaution && <span className="w-1.5 h-1.5 rounded-full bg-red-500" />}
-                        <span className="text-[9px] leading-none">{day.moonPhase.icon}</span>
-                      </span>
+                  {/* Illustrated Artwork Strip — festival art on observance days,
+                      symbolic tithi art otherwise (never a blank cell). Falls
+                      back thumb → full → hidden if an asset is missing. */}
+                  {dayArt && (
+                    <div
+                      className={`relative mb-1.5 rounded-lg overflow-hidden border ${hasFestival ? 'border-[#8E6F1D]/40 dark:border-[#D4AF37]/50 ring-1 ring-[#D4AF37]/20' : 'border-black/5 dark:border-white/10'}`}
+                      data-testid="day-cell-art"
+                    >
+                      <img
+                        src={dayArt.srcThumb}
+                        data-full={dayArt.src}
+                        data-attempts="0"
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-9 sm:h-11 object-cover"
+                        onError={(e) => {
+                          const img = e.currentTarget;
+                          const full = img.getAttribute('data-full');
+                          const attempts = parseInt(img.getAttribute('data-attempts') || '0', 10) + 1;
+                          img.setAttribute('data-attempts', String(attempts));
+                          if (attempts === 1 && full) {
+                            img.src = full;
+                          } else if (attempts >= 2) {
+                            img.style.display = 'none';
+                          }
+                        }}
+                      />
+                      {hasFestival && (
+                        <span className="absolute top-1 right-1 px-1.5 py-px rounded text-[8px] font-mono-data font-black uppercase tracking-wider text-amber-200 bg-black/50 backdrop-blur-[1px] pointer-events-none">
+                          {isHi ? '🪔 पर्व' : '🪔 FEST'}
+                        </span>
+                      )}
                     </div>
-                    <div className="text-[8px] font-mono-data text-[#57524A] dark:text-[#D1C9BF] truncate leading-tight">
-                      {day.tithi.nameHi}
-                    </div>
-                  </div>
+                  )}
 
-                  {/* ---- DESKTOP RICH LAYOUT ---- */}
-                  <div className="hidden sm:flex flex-col justify-between h-full">
-                    {artwork && (
-                      <div className="relative w-full h-12 rounded-lg overflow-hidden mb-1.5 bg-[#14100A]">
-                        <img
-                          src={artwork.imagePath}
-                          alt={artwork.nameHi}
-                          className={`w-full h-full object-cover ${artwork.isMajor ? '' : 'opacity-90'}`}
-                          loading="lazy"
-                          onError={(e) => { const wrap = (e.currentTarget as HTMLImageElement).parentElement; if (wrap) wrap.style.display = 'none'; }}
-                        />
-                        {!artwork.isMajor && (
-                          <span className="absolute bottom-0 right-0 px-1 rounded-tl bg-black/50 text-white text-[7px] font-mono-data">{artwork.nameHi}</span>
+                  {/* Cell Top Bar: Dual Date Header (English Date + Hindi Date & Moon Phase) */}
+                  <div>
+                    {/* Today Glowing Indicator Banner */}
+                    {isToday && (
+                      <div className="flex items-center justify-between gap-1 mb-1.5 px-2 py-0.5 rounded-lg bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#060709] text-[9px] font-mono-data font-black uppercase tracking-wider shadow-xs">
+                        <span className="flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white dark:bg-black animate-ping" />
+                          <span>आज • TODAY</span>
+                        </span>
+                        {onSwitchToToday && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onSwitchToToday();
+                            }}
+                            className="hover:underline opacity-90 cursor-pointer font-bold"
+                            title="आज का पञ्चाङ्ग देखें"
+                          >
+                            पञ्चाङ्ग →
+                          </button>
                         )}
                       </div>
                     )}
-                    <div>
-                      <div className="flex items-center justify-between gap-1">
-                        <span className={`font-editorial font-extrabold text-sm leading-none ${isToday ? 'text-[#8E6F1D] dark:text-[#F0C968]' : 'text-[#1C1917] dark:text-white'}`}>
+
+                    <div className="flex items-center justify-between gap-1 border-b border-black/5 dark:border-white/5 pb-1 mb-1">
+                      {/* Left: English Date Number & Month Abbreviation */}
+                      <div className="flex items-baseline gap-1">
+                        <span className={`font-editorial font-extrabold text-base sm:text-lg leading-none ${
+                          isToday 
+                            ? 'text-[#8E6F1D] dark:text-[#F0C968] underline decoration-2' 
+                            : 'text-[#1C1917] dark:text-white'
+                        }`}>
                           {day.dayNumber}
                         </span>
-                        <span className="flex items-center gap-1">
-                          <span className="text-[9px] font-mono-data font-bold text-[#8E6F1D] dark:text-[#F0C968]">
-                            {toHindiDigits(((day.tithi.index - 1) % 15) + 1)}
-                          </span>
-                          <span className="text-[11px] leading-none" title={day.moonPhase.phaseName}>{day.moonPhase.icon}</span>
+                        <span className="text-[9px] sm:text-[10px] font-mono-data font-bold uppercase text-[#8E6F1D] dark:text-[#F0C968]">
+                          {ALL_MONTHS[currentMonth].shortEn}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-1 mt-1 text-[10px] font-mono-data font-bold line-clamp-1">
-                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${day.tithi.paksha === 'Shukla Paksha' ? 'bg-amber-400' : 'bg-indigo-400'}`} />
-                        <span className="text-[#1C1917] dark:text-[#EFECE6] truncate">{day.tithi.nameHi}</span>
+                      {/* Right: Hindi Date & Tithi Number + Moon Phase Icon */}
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px] sm:text-[11px] font-mono-data font-bold text-[#78716C] dark:text-[#A8A29E]" title="हिन्दी तिथि संख्या">
+                          {toHindiDigits(day.dayNumber)} ({toHindiDigits(day.tithi.index > 15 ? day.tithi.index - 15 : day.tithi.index)})
+                        </span>
+                        <span className="text-xs" title={day.moonPhase.phaseName}>
+                          {day.moonPhase.icon}
+                        </span>
                       </div>
-
-                      <div className="text-[9px] font-mono-data text-[#57524A] dark:text-[#D1C9BF] line-clamp-1 mt-0.5">
-                        ✦ {day.nakshatra.nameHi} (P{toHindiDigits(day.nakshatra.pada)})
-                      </div>
-
-                      {parallelLabels[dayIdx] && (
-                        <div className="text-[8px] font-mono-data text-[#78716C] dark:text-[#A8A29E] line-clamp-1 mt-0.5 opacity-80">
-                          🌍 {parallelLabels[dayIdx]}
-                        </div>
-                      )}
                     </div>
 
-                    <div className="space-y-0.5 mt-1">
-                      {hasFestival && (
-                        <div className="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-800 dark:text-purple-300 text-[8px] font-mono-data font-bold line-clamp-1 border border-purple-500/30">
-                          🪔 {day.festivals[0].nameHi}
-                        </div>
-                      )}
-                      <div className="flex items-center justify-between text-[8px] font-mono-data text-[#78716C] dark:text-[#A8A29E]">
-                        <span className="flex items-center gap-1">
-                          {isPower && <Sparkles className="w-2.5 h-2.5 text-amber-500" />}
-                          {isCaution && <ShieldAlert className="w-2.5 h-2.5 text-red-500" />}
-                          <span>राहु {toHindiDigits(day.timings.rahuKaal.start.split(' ')[0])}</span>
-                        </span>
-                        {day.timings.abhijitMuhurat && <span className="text-emerald-600 dark:text-emerald-400 font-semibold">अभिजित ✓</span>}
-                      </div>
+                    {/* Tithi with Paksha Dot */}
+                    <div className="flex items-center gap-1 mt-0.5 text-[11px] font-mono-data font-bold line-clamp-1">
+                      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                        day.tithi.paksha === 'Shukla Paksha' ? 'bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)]' : 'bg-indigo-400'
+                      }`} />
+                      <span className="text-[#1C1917] dark:text-[#EFECE6] truncate font-bold">
+                        {isHi ? day.tithi.nameHi : `${day.tithi.paksha === 'Shukla Paksha' ? 'Shukla' : 'Krishna'} ${day.tithi.name}`}
+                      </span>
+                    </div>
+
+                    {/* Nakshatra */}
+                    <div className="text-[9px] sm:text-[10px] font-mono-data text-[#57524A] dark:text-[#D1C9BF] line-clamp-1 mt-0.5">
+                      ✦ {isHi ? `${day.nakshatra.nameHi} (पाद ${toHindiDigits(day.nakshatra.pada)})` : `${day.nakshatra.name} (P${day.nakshatra.pada})`}
                     </div>
                   </div>
-                </button>
+
+                  {/* Cell Bottom: Personal Energy Pill & Festival Banner */}
+                  <div className="space-y-1 mt-1">
+                    
+                    {/* Festival Badge */}
+                    {hasFestival && (
+                      <div className="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-800 dark:text-purple-300 text-[8px] sm:text-[9px] font-mono-data font-bold line-clamp-1 border border-purple-500/30">
+                        🪔 {isHi ? day.festivals[0].nameHi : day.festivals[0].name}
+                      </div>
+                    )}
+
+                    {/* Personal Power/Caution Indicator */}
+                    {isPower && (
+                      <div className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-800 dark:text-amber-300 text-[8px] sm:text-[9px] font-mono-data font-bold flex items-center gap-1 line-clamp-1 border border-amber-500/30">
+                        <Sparkles className="w-2.5 h-2.5 flex-shrink-0" />
+                        <span>{isHi ? '🌟 शुभ ऊर्जा' : '🌟 POWER'}</span>
+                      </div>
+                    )}
+                    {isCaution && (
+                      <div className="px-1.5 py-0.5 rounded bg-red-500/20 text-red-800 dark:text-red-300 text-[8px] sm:text-[9px] font-mono-data font-bold flex items-center gap-1 line-clamp-1 border border-red-500/30">
+                        <ShieldAlert className="w-2.5 h-2.5 flex-shrink-0" />
+                        <span>{isHi ? '⚠️ सावधानी' : '⚠️ CAUTION'}</span>
+                      </div>
+                    )}
+
+                    {/* Rahu Kaal Mini Indicator */}
+                    <div className="text-[8px] font-mono-data text-[#78716C] dark:text-[#A8A29E] flex items-center justify-between">
+                      <span>{isHi ? `राहु: ${toHindiDigits(day.timings.rahuKaal.start.split(' ')[0])}` : `Rahu: ${day.timings.rahuKaal.start.split(' ')[0]}`}</span>
+                      {day.timings.abhijitMuhurat && (
+                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{isHi ? 'शुभ' : 'Abhijit'}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
               );
             })}
           </div>
         </div>
-      )}
 
-      {/* ============ MOBILE TODAY PREVIEW BOX (CALENDAR_UI_PLAN §2) ============
-          Shown below the grid on <sm screens: sunrise/sunset, Tithi,
-          Nakshatra, Yoga, Karana + top 3 upcoming festivals. */}
-      {viewMode === 'month' && monthData.days.find((d) => d.dateString === todayKey) && (() => {
-        const todayDay = monthData.days.find((d) => d.dateString === todayKey)!;
-        const upcoming: string[] = [];
-        for (const d of monthData.days) {
-          if (d.dateString < todayKey) continue;
-          for (const f of d.festivals) {
-            if (f.isImportant && !upcoming.includes(f.nameHi)) upcoming.push(f.nameHi);
-            if (upcoming.length >= 3) break;
-          }
-          if (upcoming.length >= 3) break;
-        }
-        return (
-          <div className="sm:hidden mt-3 p-3 rounded-2xl bg-white dark:bg-[#121422] border border-[#8E6F1D]/35 dark:border-[#D4AF37]/35 space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[11px] font-editorial font-bold text-[#1C1917] dark:text-white">
-                🙏 आज — {todayDay.dayNameHi}
-              </span>
-              <span className="text-[10px] font-mono-data text-[#57524A] dark:text-[#D1C9BF]">
-                🌅 {toHindiDigits(todayDay.timings.sunrise)} • 🌇 {toHindiDigits(todayDay.timings.sunset)}
-              </span>
+        {/* 4. Calendar Legend */}
+        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 pt-4 border-t border-black/10 dark:border-white/10 text-xs font-mono-data text-[#78716C] dark:text-[#A8A29E]">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+            <span>{isHi ? 'शुक्ल पक्ष (चान्द्र वृद्धि)' : 'Shukla Paksha (Waxing Moon)'}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-400" />
+            <span>{isHi ? 'कृष्ण पक्ष (चान्द्र क्षय)' : 'Krishna Paksha (Waning Moon)'}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-md bg-amber-500/20 border border-amber-400" />
+            <span>{isHi ? '🌟 शुभ ऊर्जा दिवस (सम्पत्, क्षेम, साधना, मित्र)' : '🌟 Power Day (Sampat, Kshema, Sadhana, Mitra)'}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-md bg-red-500/20 border border-red-400" />
+            <span>{isHi ? '⚠️ सावधानी दिवस (विपत्, प्रत्यक्, निधन, अष्टम चन्द्र)' : '⚠️ Caution Day (Vipat, Pratyak, Naidhana, Ashtama Chandra)'}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span>{isHi ? '🪔 प्रमुख व्रत एवं पर्व' : '🪔 Major Festivals & Vrats'}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 5. Deep-Dive Day Inspector Modal / Drawer */}
+      {inspectedDay && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-[#0E101D] rounded-3xl border border-[#8E6F1D]/40 dark:border-[#D4AF37]/45 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 space-y-6 scrollbar-thin">
+            
+            {/* Modal Top Bar */}
+            <div className="flex items-start justify-between gap-4 border-b border-black/10 dark:border-white/10 pb-4">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#8E6F1D]/15 dark:bg-[#D4AF37]/20 text-[#8E6F1D] dark:text-[#F0C968] text-xs font-mono-data font-bold flex-wrap">
+                  <span>{isHi ? inspectedDay.dayNameHi : inspectedDay.dayName}</span>
+                  <span>•</span>
+                  <span>{inspectedDay.dayNumber} {ALL_MONTHS[currentMonth].en} {currentYear}</span>
+                  <span>•</span>
+                  <span>दिनांक: {toHindiDigits(inspectedDay.dayNumber)} {ALL_MONTHS[currentMonth].hi}</span>
+                </div>
+                <h3 className="font-editorial text-2xl sm:text-3xl font-bold text-[#1C1917] dark:text-white mt-1">
+                  {isHi ? 'दैनिक पञ्चाङ्ग व ऊर्जा विश्लेषण' : 'Daily Panchang & Personal Energy Matrix'}
+                </h3>
+                <div className="text-xs font-mono-data text-[#8E6F1D] dark:text-[#F0C968] font-bold mt-1">
+                  🕉️ {monthData.lunarMonthHi} मास ({monthData.lunarMonth}) • {inspectedDay.tithi.paksha === 'Shukla Paksha' ? (isHi ? 'शुक्ल पक्ष' : 'Shukla Paksha') : (isHi ? 'कृष्ण पक्ष' : 'Krishna Paksha')} {inspectedDay.tithi.nameHi} • विक्रम संवत् {toHindiDigits(monthData.vikramSamvat)}
+                </div>
+              </div>
+
+              <button
+                onClick={() => setInspectedDay(null)}
+                className="p-2 rounded-xl text-[#78716C] hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
-            <div className="grid grid-cols-4 gap-1.5 text-center text-[9px] font-mono-data">
-              <div className="p-1.5 rounded-lg bg-[#FAF7F2] dark:bg-[#161826] border border-black/5 dark:border-white/5">
-                <div className="text-[8px] text-[#8E6F1D] dark:text-[#F0C968] font-bold">तिथि</div>
-                <div className="font-bold text-[#1C1917] dark:text-white leading-tight">{todayDay.tithi.nameHi}</div>
-              </div>
-              <div className="p-1.5 rounded-lg bg-[#FAF7F2] dark:bg-[#161826] border border-black/5 dark:border-white/5">
-                <div className="text-[8px] text-[#8E6F1D] dark:text-[#F0C968] font-bold">नक्षत्र</div>
-                <div className="font-bold text-[#1C1917] dark:text-white leading-tight">{todayDay.nakshatra.nameHi}</div>
-              </div>
-              <div className="p-1.5 rounded-lg bg-[#FAF7F2] dark:bg-[#161826] border border-black/5 dark:border-white/5">
-                <div className="text-[8px] text-[#8E6F1D] dark:text-[#F0C968] font-bold">योग</div>
-                <div className="font-bold text-[#1C1917] dark:text-white leading-tight">{todayDay.yoga.nameHi}</div>
-              </div>
-              <div className="p-1.5 rounded-lg bg-[#FAF7F2] dark:bg-[#161826] border border-black/5 dark:border-white/5">
-                <div className="text-[8px] text-[#8E6F1D] dark:text-[#F0C968] font-bold">करण</div>
-                <div className="font-bold text-[#1C1917] dark:text-white leading-tight">{todayDay.karana.nameHi}</div>
-              </div>
-            </div>
-            {upcoming.length > 0 && (
-              <div className="flex items-center gap-1.5 flex-wrap text-[10px] font-mono-data">
-                <span className="font-bold text-[#78716C] dark:text-[#A8A29E]">अगले पर्व:</span>
-                {upcoming.map((n, i) => (
-                  <span key={i} className="px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-800 dark:text-purple-300 border border-purple-500/25 font-bold">
-                    🪔 {n}
-                  </span>
-                ))}
+
+            {/* Day Hero Artwork — 16:9 festival/tithi art with warm scrim and title */}
+            {inspectedArt && (
+              <div
+                data-testid="day-hero-art"
+                className="relative w-full aspect-video rounded-2xl overflow-hidden border border-[#8E6F1D]/30 dark:border-[#D4AF37]/40 shadow-lg bg-[#160C05]"
+              >
+                <img
+                  src={inspectedArt.src}
+                  alt={isHi ? inspectedArt.labelHi : inspectedArt.label}
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#160C05]/95 via-[#160C05]/20 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5 flex items-end justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-[10px] sm:text-[11px] font-mono-data font-black uppercase tracking-widest text-[#F0C968]">
+                      {inspectedArt.isFestivalDay
+                        ? (isHi ? '🪔 आज का पर्व' : '🪔 FESTIVAL DAY')
+                        : (isHi ? '🙏 आज की तिथि' : '🙏 TITHI ART')}
+                    </div>
+                    <div className="font-editorial font-bold text-white text-lg sm:text-2xl leading-tight drop-shadow-md mt-0.5 line-clamp-2">
+                      {isHi ? inspectedArt.labelHi : inspectedArt.label}
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0 text-right">
+                    <div className="px-2.5 py-1 rounded-lg bg-[#8E6F1D] text-white text-[10px] sm:text-xs font-mono-data font-bold shadow-md">
+                      {isHi
+                        ? `${ALL_MONTHS[currentMonth].shortHi} ${toHindiDigits(inspectedDay.dayNumber)}`
+                        : `${ALL_MONTHS[currentMonth].shortEn} ${inspectedDay.dayNumber}`}
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
-          </div>
-        );
-      })()}
 
-      {/* ============ VIEW: LIST (सूची) ============ */}
-      {viewMode === 'list' && (
-        <div className="space-y-1.5">
-          {monthData.days.map((day, dayIdx) => {
-            const isToday = day.dateString === todayKey;
-            const isMatch = matchesFestivalFilter(day) && matchesTithiFilter(day) && matchesNakshatraFilter(day);
-            const artwork = pickDayArtwork(day);
-            if (!isMatch) return null;
-            return (
-              <button
-                key={day.dateString}
-                type="button"
-                onClick={() => { playTick(); if (onOpenDay) onOpenDay(day); }}
-                className={`w-full flex items-center gap-2.5 sm:gap-3 p-2 sm:p-2.5 rounded-2xl border text-left transition-all cursor-pointer ${
-                  isToday
-                    ? 'bg-[#FAF7F2] dark:bg-[#161828] border-[#8E6F1D] dark:border-[#D4AF37] ring-1 ring-[#8E6F1D]/30'
-                    : 'bg-white dark:bg-[#121422] border-black/10 dark:border-white/10 hover:border-[#8E6F1D]/50'
-                }`}
-              >
-                <div className={`w-10 sm:w-12 shrink-0 text-center rounded-xl border px-1 py-1 ${isToday ? 'border-[#8E6F1D]/40 bg-[#8E6F1D]/10' : 'border-black/5 dark:border-white/5 bg-[#FAF7F2] dark:bg-[#161826]'}`}>
-                  <div className={`text-sm font-editorial font-extrabold leading-none ${isToday ? 'text-[#8E6F1D] dark:text-[#F0C968]' : 'text-[#1C1917] dark:text-white'}`}>
-                    {day.dayNumber}
-                  </div>
-                  <div className="text-[8px] font-mono-data text-[#78716C] dark:text-[#A8A29E] mt-0.5">
-                    {ALL_MONTHS[currentMonth].shortEn} {day.dayOfWeek === 0 ? 'रवि' : day.dayOfWeek === 1 ? 'सोम' : day.dayOfWeek === 2 ? 'मंग' : day.dayOfWeek === 3 ? 'बुध' : day.dayOfWeek === 4 ? 'गुरु' : day.dayOfWeek === 5 ? 'शुक्र' : 'शनि'}
-                  </div>
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    {day.moonPhase.icon}
-                    <span className="text-[11px] sm:text-xs font-mono-data font-bold text-[#1C1917] dark:text-white truncate">
-                      {day.tithi.paksha === 'Shukla Paksha' ? 'शुक्ल' : 'कृष्ण'} {day.tithi.nameHi}
-                    </span>
-                    <span className="text-[10px] font-mono-data text-[#78716C] dark:text-[#A8A29E] truncate">
-                      • {day.nakshatra.nameHi} (P{toHindiDigits(day.nakshatra.pada)}) • {day.yoga.nameHi}
-                    </span>
-                  </div>
-                  {day.festivals.length > 0 && (
-                    <div className="flex items-center gap-1 mt-0.5">
-                      {day.festivals.slice(0, 2).map((f, i) => (
-                        <span key={i} className="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-800 dark:text-purple-300 text-[9px] font-mono-data font-bold border border-purple-500/30 truncate max-w-[180px]">
-                          🪔 {f.nameHi}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {parallelLabels[dayIdx] && (
-                    <div className="text-[9px] font-mono-data text-[#78716C] dark:text-[#A8A29E] mt-0.5">🌍 {parallelLabels[dayIdx]}</div>
-                  )}
-                </div>
-
-                {artwork && (
-                  <img
-                    src={artwork.imagePath}
-                    alt={artwork.nameHi}
-                    className="hidden sm:block w-20 h-11 object-cover rounded-lg shrink-0"
-                    loading="lazy"
-                    onError={(e) => { const wrap = (e.currentTarget as HTMLImageElement).parentElement; if (wrap) wrap.style.display = 'none'; }}
-                  />
-                )}
-
-                <div className="hidden md:block text-right shrink-0 text-[10px] font-mono-data space-y-0.5">
-                  <div className="text-emerald-700 dark:text-emerald-400 font-bold">
-                    {day.timings.abhijitMuhurat ? `⏱ ${day.timings.abhijitMuhurat.start}` : 'बुध — वर्जित'}
-                  </div>
-                  <div className="text-rose-700 dark:text-rose-400">
-                    ☄ {day.timings.rahuKaal.start}
-                  </div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {/* ============ VIEW: YEAR (वर्ष) ============ */}
-      {viewMode === 'year' && yearOverview && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-          {yearOverview.map((m) => {
-            const isActive = m.month === currentMonth;
-            return (
-              <button
-                key={m.month}
-                type="button"
-                onClick={() => { playTick(); goToMonth(currentYear, m.month); setViewMode('month'); }}
-                className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
-                  isActive
-                    ? 'bg-[#FAF7F2] dark:bg-[#161828] border-[#8E6F1D] dark:border-[#D4AF37] ring-1 ring-[#8E6F1D]/40'
-                    : 'bg-white dark:bg-[#121422] border-black/10 dark:border-white/10 hover:border-[#8E6F1D]/50'
-                }`}
-              >
+            {/* Personal Energy Status Banner */}
+            {inspectedDay.personalEnergy && (
+              <div className={`p-4 rounded-2xl border ${
+                inspectedDay.personalEnergy.status === 'POWER'
+                  ? 'bg-amber-500/10 border-amber-400/50 text-amber-900 dark:text-amber-200'
+                  : inspectedDay.personalEnergy.status === 'CAUTION'
+                  ? 'bg-red-500/10 border-red-400/50 text-red-900 dark:text-red-200'
+                  : 'bg-[#8E6F1D]/10 border-[#8E6F1D]/30 text-[#1C1917] dark:text-white'
+              } space-y-1.5`}>
                 <div className="flex items-center justify-between">
-                  <span className="font-editorial font-bold text-sm text-[#1C1917] dark:text-white">
-                    {isHi ? ALL_MONTHS[m.month].hi : ALL_MONTHS[m.month].en}
+                  <div className="font-editorial font-bold text-base flex items-center gap-1.5">
+                    {inspectedDay.personalEnergy.status === 'POWER' && <Sparkles className="w-4 h-4 text-amber-500" />}
+                    {inspectedDay.personalEnergy.status === 'CAUTION' && <ShieldAlert className="w-4 h-4 text-red-500" />}
+                    <span>
+                      {isHi 
+                        ? `${inspectedDay.personalEnergy.badgeLabelHi} (${activeProfile?.nameHi || activeProfile?.name || 'आपके लिए'})` 
+                        : `${inspectedDay.personalEnergy.badgeLabel} for ${activeProfile?.name || 'You'}`}
+                    </span>
+                  </div>
+                  <span className="text-xs font-mono-data font-bold">
+                    {isHi ? `तारा: ${inspectedDay.personalEnergy.taraNameHi}` : `Tara: ${inspectedDay.personalEnergy.taraName}`}
                   </span>
-                  <span className="text-[10px] font-mono-data text-[#8E6F1D] dark:text-[#F0C968] font-bold">
-                    {isHi ? toHindiDigits(m.year) : m.year}
-                  </span>
                 </div>
-                <div className="text-[10px] font-mono-data text-[#78716C] dark:text-[#A8A29E] mt-1 truncate">
-                  🕉️ {m.lunarMonthHi} मास
+                <p className="text-xs font-mono-data leading-relaxed">
+                  {isHi 
+                    ? `${inspectedDay.personalEnergy.taraDescHi} ${inspectedDay.personalEnergy.chandraHouseDescHi}` 
+                    : `${inspectedDay.personalEnergy.taraDesc} ${inspectedDay.personalEnergy.chandraHouseDesc}`}
+                </p>
+                <div className="text-xs font-mono-data font-bold pt-1 border-t border-black/5 dark:border-white/5">
+                  {isHi ? `मार्गदर्शन: ${inspectedDay.personalEnergy.adviceHi}` : `Guidance: ${inspectedDay.personalEnergy.advice}`}
                 </div>
-                <div className="flex items-center gap-2 mt-1.5 text-[10px] font-mono-data">
-                  <span className="text-purple-700 dark:text-purple-300 font-bold">🪔 {toHindiDigits(m.festivalsCount)}</span>
-                  <span className="text-amber-700 dark:text-amber-300 font-bold">🌟 {toHindiDigits(m.powerDaysCount)}</span>
-                  <span className="text-red-700 dark:text-red-300 font-bold">⚠ {toHindiDigits(m.cautionDaysCount)}</span>
+              </div>
+            )}
+
+            {/* Festivals on this day */}
+            {inspectedDay.festivals.length > 0 && (
+              <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30 space-y-2">
+                <div className="text-xs font-mono-data font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <span>{isHi ? '🪔 प्रमुख व्रत एवं पर्व' : '🪔 Festivals & Vrats'}</span>
                 </div>
+                <div className="space-y-1.5">
+                  {inspectedDay.festivals.map((f, idx) => (
+                    <div key={idx} className="text-xs font-mono-data">
+                      <strong className="text-[#1C1917] dark:text-white font-bold">{isHi ? f.nameHi : `${f.nameHi} (${f.name})`}</strong>: {f.type}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* The 5 Limbs of Panchanga (पञ्चाङ्ग) */}
+            <div className="space-y-3">
+              <h4 className="font-editorial font-bold text-lg text-[#1C1917] dark:text-white">
+                {isHi ? 'पञ्चाङ्ग के पाँच अंग' : 'The 5 Astronomical Limbs (पञ्चाङ्ग)'}
+              </h4>
+              <div className="grid sm:grid-cols-2 gap-3 text-xs font-mono-data">
+                {/* 1. Tithi */}
+                <div className="p-3.5 rounded-xl bg-[#FAF7F2] dark:bg-[#161826] border border-black/5 dark:border-white/5 space-y-1">
+                  <span className="text-[#8E6F1D] dark:text-[#F0C968] font-bold">{isHi ? '१. तिथि:' : '1. Tithi:'}</span>
+                  <div className="text-[#1C1917] dark:text-white font-bold text-sm">
+                    {isHi ? inspectedDay.tithi.nameHi : `${inspectedDay.tithi.nameHi} (${inspectedDay.tithi.name})`}
+                  </div>
+                  <div className="text-[11px] text-[#78716C]">
+                    {inspectedDay.tithi.paksha === 'Shukla Paksha' ? (isHi ? 'शुक्ल पक्ष' : 'Shukla Paksha') : (isHi ? 'कृष्ण पक्ष' : 'Krishna Paksha')} • {inspectedDay.tithi.meaning}
+                  </div>
+                </div>
+
+                {/* 2. Nakshatra */}
+                <div className="p-3.5 rounded-xl bg-[#FAF7F2] dark:bg-[#161826] border border-black/5 dark:border-white/5 space-y-1">
+                  <span className="text-[#8E6F1D] dark:text-[#F0C968] font-bold">{isHi ? '२. नक्षत्र:' : '2. Nakshatra:'}</span>
+                  <div className="text-[#1C1917] dark:text-white font-bold text-sm">
+                    {isHi ? inspectedDay.nakshatra.nameHi : `${inspectedDay.nakshatra.nameHi} (${inspectedDay.nakshatra.name})`}
+                  </div>
+                  <div className="text-[11px] text-[#78716C]">
+                    {isHi 
+                      ? `पाद ${toHindiDigits(inspectedDay.nakshatra.pada)} • स्वामी: ${LORD_HI_MAP[inspectedDay.nakshatra.lord] || inspectedDay.nakshatra.lord} • देवता: ${inspectedDay.nakshatra.deity}`
+                      : `Pada ${inspectedDay.nakshatra.pada} • Lord: ${inspectedDay.nakshatra.lord} • Deity: ${inspectedDay.nakshatra.deity}`}
+                  </div>
+                </div>
+
+                {/* 3. Yoga */}
+                <div className="p-3.5 rounded-xl bg-[#FAF7F2] dark:bg-[#161826] border border-black/5 dark:border-white/5 space-y-1">
+                  <span className="text-[#8E6F1D] dark:text-[#F0C968] font-bold">{isHi ? '३. योग:' : '3. Yoga:'}</span>
+                  <div className="text-[#1C1917] dark:text-white font-bold text-sm">
+                    {isHi ? inspectedDay.yoga.nameHi : `${inspectedDay.yoga.nameHi} (${inspectedDay.yoga.name})`}
+                  </div>
+                  <div className="text-[11px] text-[#78716C]">
+                    {isHi ? `गुण: ${inspectedDay.yoga.qualityHi}` : `Quality: ${inspectedDay.yoga.quality}`}
+                  </div>
+                </div>
+
+                {/* 4. Karana */}
+                <div className="p-3.5 rounded-xl bg-[#FAF7F2] dark:bg-[#161826] border border-black/5 dark:border-white/5 space-y-1">
+                  <span className="text-[#8E6F1D] dark:text-[#F0C968] font-bold">{isHi ? '४. करण:' : '4. Karana:'}</span>
+                  <div className="text-[#1C1917] dark:text-white font-bold text-sm">
+                    {isHi ? inspectedDay.karana.nameHi : `${inspectedDay.karana.nameHi} (${inspectedDay.karana.name})`}
+                  </div>
+                  <div className="text-[11px] text-[#78716C]">
+                    {isHi ? `प्रकार: ${inspectedDay.karana.typeHi}` : `Type: ${inspectedDay.karana.type}`}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Muhurats Grid: Shubh vs Ashubh */}
+            <div className="grid sm:grid-cols-2 gap-4">
+              
+              {/* Auspicious Muhurats */}
+              <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-2">
+                <div className="font-editorial font-bold text-emerald-800 dark:text-emerald-300 text-sm flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-emerald-600" />
+                  <span>{isHi ? 'शुभ मुहूर्त' : 'Auspicious Windows (शुभ मुहूर्त)'}</span>
+                </div>
+                <div className="space-y-1.5 text-xs font-mono-data">
+                  <div className="flex justify-between text-emerald-700 dark:text-emerald-400 font-bold">
+                    <span>{isHi ? 'अभिजित मुहूर्त:' : 'Abhijit Muhurat:'}</span>
+                    <span>
+                      {inspectedDay.timings.abhijitMuhurat 
+                        ? (isHi 
+                            ? `${toHindiDigits(inspectedDay.timings.abhijitMuhurat.start)} - ${toHindiDigits(inspectedDay.timings.abhijitMuhurat.end)}`
+                            : `${inspectedDay.timings.abhijitMuhurat.start} - ${inspectedDay.timings.abhijitMuhurat.end}`)
+                        : (isHi ? 'बुधवार को वर्जित' : 'Excluded on Wed')}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>{isHi ? 'ब्रह्म मुहूर्त:' : 'Brahma Muhurat:'}</span>
+                    <span>{isHi ? `${toHindiDigits(inspectedDay.timings.brahmaMuhurat.start)} - ${toHindiDigits(inspectedDay.timings.brahmaMuhurat.end)}` : `${inspectedDay.timings.brahmaMuhurat.start} - ${inspectedDay.timings.brahmaMuhurat.end}`}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>{isHi ? 'अमृत काल:' : 'Amrit Kaal:'}</span>
+                    <span>{isHi ? `${toHindiDigits(inspectedDay.timings.amritKaal.start)} - ${toHindiDigits(inspectedDay.timings.amritKaal.end)}` : `${inspectedDay.timings.amritKaal.start} - ${inspectedDay.timings.amritKaal.end}`}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Inauspicious Caution Windows */}
+              <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 space-y-2">
+                <div className="font-editorial font-bold text-red-800 dark:text-red-300 text-sm flex items-center gap-1.5">
+                  <ShieldAlert className="w-4 h-4 text-red-600" />
+                  <span>{isHi ? 'अशुभ काल (वर्ज्य काल)' : 'Caution Windows (अशुभ काल)'}</span>
+                </div>
+                <div className="space-y-1.5 text-xs font-mono-data">
+                  <div className="flex justify-between text-red-700 dark:text-red-400 font-bold">
+                    <span>{isHi ? 'राहुकाल:' : 'Rahu Kaal:'}</span>
+                    <span>{isHi ? `${toHindiDigits(inspectedDay.timings.rahuKaal.start)} - ${toHindiDigits(inspectedDay.timings.rahuKaal.end)}` : `${inspectedDay.timings.rahuKaal.start} - ${inspectedDay.timings.rahuKaal.end}`}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>{isHi ? 'यमगण्ड:' : 'Yamaganda:'}</span>
+                    <span>{isHi ? `${toHindiDigits(inspectedDay.timings.yamaganda.start)} - ${toHindiDigits(inspectedDay.timings.yamaganda.end)}` : `${inspectedDay.timings.yamaganda.start} - ${inspectedDay.timings.yamaganda.end}`}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>{isHi ? 'गुलिक काल:' : 'Gulika Kaal:'}</span>
+                    <span>{isHi ? `${toHindiDigits(inspectedDay.timings.gulikaKaal.start)} - ${toHindiDigits(inspectedDay.timings.gulikaKaal.end)}` : `${inspectedDay.timings.gulikaKaal.start} - ${inspectedDay.timings.gulikaKaal.end}`}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sun & Moon Astronomy */}
+            <div className="p-4 rounded-2xl bg-[#FAF7F2] dark:bg-[#161826] border border-black/5 dark:border-white/5 flex flex-wrap items-center justify-between gap-4 text-xs font-mono-data">
+              <div className="flex items-center gap-2">
+                <Sun className="w-4 h-4 text-amber-500" />
+                <span>
+                  {isHi 
+                    ? `सूर्योदय: ${toHindiDigits(inspectedDay.timings.sunrise)} • सूर्यास्त: ${toHindiDigits(inspectedDay.timings.sunset)}`
+                    : `Sunrise: ${inspectedDay.timings.sunrise} • Sunset: ${inspectedDay.timings.sunset}`}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Moon className="w-4 h-4 text-indigo-400" />
+                <span>
+                  {isHi 
+                    ? `चन्द्रोदय: ${toHindiDigits(inspectedDay.timings.moonrise)} • चन्द्रास्त: ${toHindiDigits(inspectedDay.timings.moonset)}`
+                    : `Moonrise: ${inspectedDay.timings.moonrise} • Moonset: ${inspectedDay.timings.moonset}`}
+                </span>
+              </div>
+            </div>
+
+            {/* Modal Actions: 1-Click WhatsApp, Google Calendar, Apple iCal Download */}
+            <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2 border-t border-black/10 dark:border-white/10">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => handleShareDayWhatsApp(inspectedDay)}
+                  className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-mono-data font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-md"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span>WhatsApp</span>
+                </button>
+
+                <button
+                  onClick={() => handleAddToGoogleCalendar(inspectedDay)}
+                  className="px-3.5 py-2 rounded-xl bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-[#060709] text-xs font-mono-data font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-md"
+                  title="Add this day and Shubh Muhurat to Google Calendar"
+                >
+                  <CalendarPlus className="w-3.5 h-3.5" />
+                  <span>Google Calendar</span>
+                </button>
+
+                <button
+                  onClick={() => handleDownloadIcs(inspectedDay)}
+                  className="px-3.5 py-2 rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#161826] text-xs font-mono-data font-bold text-[#57524A] dark:text-[#D1C9BF] hover:border-[#8E6F1D] flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                  title="Download .ics file for Apple iCal and Outlook"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>.ics Export</span>
+                </button>
+              </div>
+
+              <button
+                onClick={() => setInspectedDay(null)}
+                className="px-4 py-2 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#161826] text-xs font-mono-data font-bold hover:bg-black/5 transition-all cursor-pointer"
+              >
+                {isHi ? 'बन्द करें' : 'Close'}
               </button>
-            );
-          })}
+            </div>
+          </div>
         </div>
       )}
-
-      {/* ============ LEGEND ============ */}
-      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 pt-1 text-[10px] sm:text-[11px] font-mono-data text-[#78716C] dark:text-[#A8A29E]">
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400" /> {isHi ? 'शुक्ल पक्ष' : 'Shukla Paksha'}</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-indigo-400" /> {isHi ? 'कृष्ण पक्ष' : 'Krishna Paksha'}</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-purple-500" /> {isHi ? 'पर्व/व्रत' : 'Festival/Vrat'}</span>
-        <span className="flex items-center gap-1"><Sparkles className="w-3 h-3 text-amber-500" /> {isHi ? 'शुभ ऊर्जा' : 'Power day'}</span>
-        <span className="flex items-center gap-1"><ShieldAlert className="w-3 h-3 text-red-500" /> {isHi ? 'सावधानी' : 'Caution day'}</span>
-      </div>
     </div>
   );
 }
+
