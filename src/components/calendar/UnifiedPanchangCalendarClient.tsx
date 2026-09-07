@@ -181,20 +181,36 @@ function UnifiedPanchangCalendarClientInner({ defaultView = 'month' }: UnifiedPa
         /* TODAY'S PANCHANG DEEP DIVE */
         <div className="space-y-8 animate-fadeIn">
           
-          {/* Sacred City & Vikram Samvat Summary Banner */}
-          <div className="relative rounded-3xl p-6 sm:p-8 border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 bg-white dark:bg-[#101221] shadow-xl overflow-hidden">
-            <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-amber-500/10 via-rose-500/5 to-transparent rounded-full pointer-events-none blur-2xl" />
+          {/* Sacred City & Vikram Samvat Summary Banner (Paksha Hero Mood & Gold-Leaf Seal) */}
+          <div className={`relative rounded-3xl p-6 sm:p-8 border shadow-xl overflow-hidden transition-all duration-500 ${
+            tithiName.toLowerCase().includes('krishna') || tithiName.toLowerCase().includes('कृष्ण')
+              ? 'bg-[#0A0E24] dark:bg-[#070A1A] border-indigo-500/30 dark:border-indigo-400/40'
+              : 'bg-white dark:bg-[#101221] border-[#8E6F1D]/25 dark:border-[#D4AF37]/30'
+          }`}>
+            <div className={`absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl rounded-full pointer-events-none blur-2xl ${
+              tithiName.toLowerCase().includes('krishna') || tithiName.toLowerCase().includes('कृष्ण')
+                ? 'from-indigo-600/20 via-purple-600/10 to-transparent'
+                : 'from-amber-500/10 via-rose-500/5 to-transparent'
+            }`} />
             
             <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
               <div className="space-y-1">
-                <div className="text-[11px] font-mono-data font-bold text-[#8E6F1D] dark:text-[#F0C968] tracking-widest uppercase">
-                  सिद्धान्त गणितीय पञ्चाङ्ग • Siddhanta Astronomical Math
+                <div className="flex items-center gap-2">
+                  <div className="text-[11px] font-mono-data font-bold text-[#8E6F1D] dark:text-[#F0C968] tracking-widest uppercase">
+                    सिद्धान्त गणितीय पञ्चाङ्ग • Siddhanta Astronomical Math
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono-data font-bold bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] shadow-xs">
+                    {tithiName.toLowerCase().includes('krishna') || tithiName.toLowerCase().includes('कृष्ण')
+                      ? '🪔 शुभ रात्रि 🙏 (कृष्ण पक्ष)'
+                      : '☀️ शुभ दिवस 🙏 (शुक्ल पक्ष)'}
+                  </span>
                 </div>
-                <div className="text-xl sm:text-2xl font-bold text-[#1C1917] dark:text-white">
+                {/* Gold-Leaf Gradient Headline */}
+                <div className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-[#D4AF37] via-[#F0C968] to-[#8E6F1D] bg-clip-text text-transparent drop-shadow-xs">
                   {now.toLocaleDateString('hi-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                 </div>
                 <div className="text-xs text-[#57524A] dark:text-[#A8A29E] font-mono-data">
-                  सूर्योदय कालीन तिथि व नक्षत्र गणना · मानक समय (IST)
+                  सूर्योदय कालीन तिथि व नक्षत्र गणना · मानक समय (IST) · {tithiName}
                 </div>
               </div>
 
