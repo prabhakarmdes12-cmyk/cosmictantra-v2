@@ -53,7 +53,7 @@ Expected final output (once all 49 assets exist):
 Each file also has a `-sm.webp` (384×216) thumb for the month-grid strips —
 regenerate all thumbs with `npm run artwork:thumbs` after adding artwork.
 
-**Generated so far (20):** the 8 category fallbacks, `ganesh_chaturthi`, `janmashtami`, and the 10 core-manifest festivals `navratri`, `durga_ashtami`, `vijayadashami`, `diwali`, `mahashivaratri`, `chhath_puja`, `sharad_purnima`, `karwa_chauth`, `raksha_bandhan`, `guru_purnima`. Remaining 19: `dev_deepawali`, `vasant_panchami`, `nag_panchami` + the 16-file tithi series are queued for follow-up turns (per-turn image-generation cap), then `npm run artwork:verify` flips green. The UI degrades gracefully (art hidden on 404) until all files exist.
+**Generated so far (30):** the 8 category fallbacks; `ganesh_chaturthi`, `janmashtami`; the 10 core-manifest festivals `navratri`, `durga_ashtami`, `vijayadashami`, `diwali`, `mahashivaratri`, `chhath_puja`, `sharad_purnima`, `karwa_chauth`, `raksha_bandhan`, `guru_purnima`, `makar_sankranti`, `pradosh`, `ekadashi`; and the expanded `holi`, `ram_navami`, `hanuman_jayanti`, `navavarsh`, `dhanteras`, `annakut`, `bhai_dooj`. Remaining 19: `dev_deepawali`, `vasant_panchami`, `nag_panchami` + the 16-file tithi series are queued for follow-up turns (per-turn image-generation cap), then `npm run artwork:verify` flips green. The UI degrades gracefully (art hidden on 404) until all files exist.
 
 ## Engine corrections this program depends on
 
