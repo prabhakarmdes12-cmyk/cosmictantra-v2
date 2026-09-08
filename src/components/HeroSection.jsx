@@ -31,7 +31,22 @@ const CALC_STEPS = ['calcStep1', 'calcStep2', 'calcStep3', 'calcStep4', 'calcSte
 
 const HERO_BANNERS = [
   {
+    id: "hero-vid-01",
+    type: "video",
+    titleHi: "काशी गंगा आरती एवं दिव्य वातावरण",
+    titleEn: "Live Varanasi Ganga Aarti Experience",
+    mediaPath: "/assets/hero/hero-video-1.mp4",
+  },
+  {
+    id: "hero-vid-02",
+    type: "video",
+    titleHi: "काशी धाम • पवित्र वैदिक संध्या",
+    titleEn: "Kashi Temple Twilight Sanctuary",
+    mediaPath: "/assets/hero/hero-video-2.mp4",
+  },
+  {
     id: "hero-01-cosmic-now-dial",
+    type: "image",
     titleHi: "कालचक्र • प्रत्यक्ष वैदिक समय",
     titleEn: "The Cosmic Now Digital Dial",
     imagePath: "/assets/hero/banners/hero_cosmic_now_dial.webp",
@@ -39,6 +54,7 @@ const HERO_BANNERS = [
   },
   {
     id: "hero-02-janma-kundli-blueprint",
+    type: "image",
     titleHi: "प्रमाणित जन्म कुण्डली",
     titleEn: "Hand-Inscribed Janma Patrika Blueprint",
     imagePath: "/assets/hero/banners/hero_janma_kundli_blueprint.webp",
@@ -46,6 +62,7 @@ const HERO_BANNERS = [
   },
   {
     id: "hero-03-kashi-sahayak-ai",
+    type: "image",
     titleHi: "AI काशी सहायक",
     titleEn: "Kashi Sahayak Conversational AI Surface",
     imagePath: "/assets/hero/banners/hero_kashi_sahayak_ai.webp",
@@ -53,6 +70,7 @@ const HERO_BANNERS = [
   },
   {
     id: "hero-04-drik-panchang-observatory",
+    type: "image",
     titleHi: "सिद्धान्त गणितीय पञ्चाङ्ग",
     titleEn: "Drik Panchang Astronomical Observatory",
     imagePath: "/assets/hero/banners/hero_drik_panchang_observatory.webp",
@@ -60,6 +78,7 @@ const HERO_BANNERS = [
   },
   {
     id: "hero-05-kashi-scholars",
+    type: "image",
     titleHi: "विद्वत्-विमर्श • पण्डित परामर्श",
     titleEn: "Verified Kashi Vidwat Scholar Counsel",
     imagePath: "/assets/hero/banners/hero_kashi_scholars.webp",
@@ -67,6 +86,7 @@ const HERO_BANNERS = [
   },
   {
     id: "hero-06-vimshottari-dasha-river",
+    type: "image",
     titleHi: "विंशोत्तरी दशा प्रवाह",
     titleEn: "120-Year Vimshottari Dasha Timeline River",
     imagePath: "/assets/hero/banners/hero_vimshottari_dasha_river.webp",
@@ -74,6 +94,7 @@ const HERO_BANNERS = [
   },
   {
     id: "hero-07-guna-milan-matchmaking",
+    type: "image",
     titleHi: "अष्टकूट गुण मिलान",
     titleEn: "Ashtakoota Guna Milan Matchmaking",
     imagePath: "/assets/hero/banners/hero_guna_milan_matchmaking.webp",
@@ -81,6 +102,7 @@ const HERO_BANNERS = [
   },
   {
     id: "hero-08-kashi-ghats-darshan",
+    type: "image",
     titleHi: "२४x७ काशी घाट व सन्ध्या आरती",
     titleEn: "24x7 Live Kashi Ghats & Ganga Aarti Darshan",
     imagePath: "/assets/hero/banners/hero_kashi_ghats_darshan.webp",
@@ -88,6 +110,7 @@ const HERO_BANNERS = [
   },
   {
     id: "hero-09-vedic-muhurat-finder",
+    type: "image",
     titleHi: "शुभ मुहूर्त अन्वेषण",
     titleEn: "Vedic Auspicious Muhurat Finder",
     imagePath: "/assets/hero/banners/hero_vedic_muhurat_finder.webp",
@@ -95,6 +118,7 @@ const HERO_BANNERS = [
   },
   {
     id: "hero-10-granth-stotra-sanctuary",
+    type: "image",
     titleHi: "आरती, स्तोत्र व ग्रन्थ भण्डार",
     titleEn: "Sacred Granth, Aarti & Stotra Library",
     imagePath: "/assets/hero/banners/hero_granth_stotra_sanctuary.webp",
@@ -375,34 +399,45 @@ export default function HeroSection({
     <section id="hero-section" className="relative pt-16 pb-16 sm:pt-20 lg:pt-20 lg:pb-24 border-b border-black/[0.1] dark:border-white/[0.08] transition-colors duration-250 overflow-hidden">
       {/* Clean Edge-to-Edge Background Layer with Auto-Rotating Hero Banner Suite */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        {/* Hero Banner WebP Images with Cross-fade Slideshow & Ken Burns Slow Zoom Effect */}
+        {/* Hero Banner WebP Images & MP4 Videos with Cross-fade Slideshow */}
         {HERO_BANNERS.map((banner, index) => (
           <div
             key={banner.id}
             className={`absolute inset-0 transition-opacity duration-1500 ease-in-out ${
-              index === activeBannerIndex ? 'opacity-60 dark:opacity-75 z-0' : 'opacity-0 -z-10 pointer-events-none'
+              index === activeBannerIndex ? 'opacity-85 dark:opacity-90 z-0' : 'opacity-0 -z-10 pointer-events-none'
             }`}
           >
-            <img
-              src={banner.imagePath}
-              alt={isHi ? banner.titleHi : banner.titleEn}
-              className={`w-full h-full object-cover object-center transform transition-transform duration-[6000ms] ease-out ${
-                index === activeBannerIndex ? 'scale-105' : 'scale-100'
-              }`}
-              loading={index === 0 ? 'eager' : 'lazy'}
-              onError={(e) => {
-                if (e.currentTarget.src !== banner.smallImagePath) {
-                  e.currentTarget.src = banner.smallImagePath;
-                }
-              }}
-            />
+            {banner.type === 'video' ? (
+              <video
+                src={banner.mediaPath}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover object-center"
+              />
+            ) : (
+              <img
+                src={banner.imagePath}
+                alt={isHi ? banner.titleHi : banner.titleEn}
+                className={`w-full h-full object-cover object-center transform transition-transform duration-[6000ms] ease-out ${
+                  index === activeBannerIndex ? 'scale-105' : 'scale-100'
+                }`}
+                loading={index === 0 ? 'eager' : 'lazy'}
+                onError={(e) => {
+                  if (e.currentTarget.src !== banner.smallImagePath) {
+                    e.currentTarget.src = banner.smallImagePath;
+                  }
+                }}
+              />
+            )}
           </div>
         ))}
 
-        {/* Ambient Radial Glow & Left Text Scrim Gradient */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(212,175,55,0.25),transparent_65%)]" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#FAF7F2]/95 via-[#FAF7F2]/80 to-[#FAF7F2]/20 dark:from-[#06070B]/95 dark:via-[#06070B]/85 dark:to-[#06070B]/30 lg:w-4/5" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#FAF7F2] via-transparent to-transparent dark:from-[#06070B] dark:via-transparent to-transparent h-28 bottom-0" />
+        {/* Minimal 5% Ultra-light Liquid Glass Scrim */}
+        <div className="absolute inset-0 bg-white/5 dark:bg-black/5 backdrop-blur-[2px]" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#FAF7F2]/40 via-transparent to-transparent dark:from-[#06070B]/40 dark:via-transparent to-transparent lg:w-2/3" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#FAF7F2]/60 via-transparent to-transparent dark:from-[#06070B]/60 dark:via-transparent to-transparent h-16 bottom-0" />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
