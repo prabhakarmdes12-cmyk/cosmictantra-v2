@@ -11,10 +11,14 @@ import {
 import { useActiveLocation } from '@/lib/location/useActiveLocation';
 import { persistActiveLocation } from '@/lib/location/activeLocation';
 import { calculatePanchang } from '@/lib/panchang';
+import { calculateMonthPanchang } from '@/engines/monthlyPanchangEngine';
 import { resolvePakshaMood, resolveTithiDisplayName } from '@/lib/panchang/pakshaTheme';
+import { getUpcomingFestivalDays } from '@/lib/calendar/upcomingFestivals';
+import { getProfiles, getActiveProfileId } from '@/lib/profileStore';
+import { toHindiDigits, hindiCountdown } from '@/lib/hindiNumerals';
 import { CITIES } from '@/lib/cities';
 import { playTick } from '@/lib/chitiAudio';
-import AuraMonthlyCalendar from '@/components/calendar/AuraMonthlyCalendar';
+import AuraMonthlyCalendar, { ALL_MONTHS } from '@/components/calendar/AuraMonthlyCalendar';
 
 export const MAJOR_CITIES = [
   { id: 'varanasi', name: 'Varanasi', nameHi: 'वाराणसी', lat: 25.3176, lng: 82.9739, tz: 5.5 },
@@ -99,6 +103,82 @@ function UnifiedPanchangCalendarClientInner({ defaultView = 'month' }: UnifiedPa
   const nakshatraPada = typeof panchang.nakshatra === 'object' ? (panchang.nakshatra as any)?.pada ?? 1 : 1;
   const yogaName = typeof panchang.yoga === 'object' ? (panchang.yoga as any)?.name : (panchang.yoga || 'Siddhi');
   const karanaName = typeof panchang.karana === 'object' ? (panchang.karana as any)?.name : (panchang.karana || 'Bava');
+
+  // ── Civil-day festival & energy context (D1 unify) ─────────────────────────
+  // The live limbs above come from `calculatePanchang(now)` — "right at this
+  // moment". Festivals, vrats and personal energy are *civil-day* properties
+  // (a day has one festival roster), so those come from the same monthly
+  // engine that paints the मासिक grid (`calculateMonthPanchang`). One shared
+  // day model: a date's festivals/energy on the आज tab can never disagree
+  // with its grid cell below.
+  const todayKey = now.toISOString().slice(0, 10);
+  const ty = Number(todayKey.slice(0, 4));
+  const tm = Number(todayKey.slice(5, 7));
+  const todayUtc = useMemo(
+    () => new Date(Date.UTC(ty, tm - 1, Number(todayKey.slice(8, 10)))),
+    [todayKey, ty, tm]
+  );
+
+  const [profiles, setProfiles] = useState<any[]>([]);
+  useEffect(() => {
+    setProfiles(getProfiles() || []);
+  }, []);
+  const activeProfile = useMemo(() => {
+    const activeId = getActiveProfileId();
+    return (
+      profiles.find((p: any) => p.id === (activeId || 'pf_default')) ||
+      profiles[0] ||
+      null
+    );
+  }, [profiles]);
+  const profileParams = useMemo(() => {
+    if (
+      activeProfile &&
+      activeProfile.birthNakshatraIndex !== undefined &&
+      activeProfile.birthNakshatraIndex !== null &&
+      activeProfile.birthRasiIndex !== undefined &&
+      activeProfile.birthRasiIndex !== null
+    ) {
+      return {
+        birthNakshatraIndex: activeProfile.birthNakshatraIndex,
+        birthRasiIndex: activeProfile.birthRasiIndex,
+      };
+    }
+    return undefined;
+  }, [activeProfile]);
+
+  const todayEngineDay = useMemo(() => {
+    const overview = calculateMonthPanchang(
+      ty,
+      tm - 1,
+      activeCity.lat,
+      activeCity.lng,
+      activeCity.tz ?? 5.5,
+      profileParams
+    );
+    return overview.days.find((d) => d.dateString === todayKey) || null;
+  }, [ty, tm, todayKey, activeCity, profileParams]);
+
+  const todayFestivals = todayEngineDay?.festivals ?? [];
+  const todayEnergy = todayEngineDay?.personalEnergy ?? null;
+
+  // अगले प्रमुख पर्व — forward-only feed of the next major observances
+  // (fortnightly universal vrats excluded), each with its countdown.
+  const upcomingEvents = useMemo(() => {
+    return getUpcomingFestivalDays(
+      todayUtc,
+      { lat: activeCity.lat, lng: activeCity.lng, tz: activeCity.tz ?? 5.5 },
+      { months: 4, max: 6 }
+    ).filter((e) => e.daysAway > 0);
+  }, [todayUtc, activeCity]);
+
+  // Deep-link: focus the month grid on one of the upcoming observances.
+  const [focusDate, setFocusDate] = useState<string | null>(null);
+  const handleFocusFestival = (dateString: string) => {
+    playTick();
+    setFocusDate(dateString);
+    handleSwitchView('month');
+  };
 
   // Solar Arc / Daylight Progress calculation
   const sunProgress = useMemo(() => {
@@ -287,6 +367,211 @@ function UnifiedPanchangCalendarClientInner({ defaultView = 'month' }: UnifiedPa
                 })}
               </div>
             </div>
+          </div>
+
+          {/* आज का व्रत एवं पर्व — civil-day festivals from the shared engine
+              (same roster as the date's grid cell on the मासिक tab). */}
+          {todayFestivals.length > 0 && (
+            <div
+              data-testid="today-festival-card"
+              className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#101221] border border-[#8E6F1D]/20 dark:border-[#D4AF37]/25 shadow-sm"
+            >
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <span className="text-base leading-none">🪔</span>
+                  <div>
+                    <div className="text-[11px] font-mono-data font-bold uppercase tracking-[2px] text-[#8E6F1D] dark:text-[#F0C968]">
+                      आज का व्रत एवं पर्व · Today's Festival
+                    </div>
+                    <div className="text-xs font-mono-data text-[#78716C] dark:text-[#A8A29E] mt-0.5">
+                      {now.toLocaleDateString('hi-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
+                    </div>
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono-data px-2.5 py-1 rounded-full bg-[#8E6F1D]/10 dark:bg-[#D4AF37]/15 text-[#8E6F1D] dark:text-[#F0C968] border border-[#8E6F1D]/20 dark:border-[#D4AF37]/25">
+                  {toHindiDigits(todayFestivals.length)} व्रत-पर्व
+                </span>
+              </div>
+              <div className="mt-4 space-y-2.5">
+                {todayFestivals.map((f, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-start gap-3 px-4 py-3 rounded-2xl bg-[#FAF7F2] dark:bg-[#161828] border border-black/5 dark:border-white/5"
+                  >
+                    <span
+                      className={`mt-1 w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                        f.isImportant
+                          ? 'bg-[#8E6F1D] dark:bg-[#D4AF37] shadow-[0_0_6px_rgba(142,111,29,0.5)]'
+                          : 'bg-[#78716C]/50'
+                      }`}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-bold text-[#1C1917] dark:text-white leading-snug">
+                        {f.nameHi}
+                        <span className="ml-2 text-xs font-mono-data font-normal text-[#57524A] dark:text-[#D1C9BF]">
+                          {f.name}
+                        </span>
+                      </div>
+                      <div className="text-[11px] font-mono-data text-[#8E6F1D] dark:text-[#F0C968] mt-0.5 uppercase tracking-wider font-bold">
+                        {f.type}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* आज की वैयक्तिक ऊर्जा — Tara Bala + Chandra Bala for the active
+              Parivaar profile (same computation as the grid's day cell). No
+              fabricated profile: without one we show an honest add-profile
+              note instead of guessing an energy. */}
+          {todayEnergy ? (
+            <div
+              data-testid="today-energy-card"
+              className={`p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#101221] shadow-sm border-l-4 ${
+                todayEnergy.status === 'POWER'
+                  ? 'border-amber-500/70 dark:border-[#D4AF37]/70'
+                  : todayEnergy.status === 'CAUTION'
+                    ? 'border-red-600/60 dark:border-red-500/60'
+                    : 'border-[#8E6F1D]/40 dark:border-[#D4AF37]/40'
+              } border border-black/5 dark:border-white/5`}
+            >
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div>
+                  <div className="text-[11px] font-mono-data font-bold uppercase tracking-[2px] text-[#78716C] dark:text-[#A8A29E]">
+                    आज की वैयक्तिक ऊर्जा · Personal Energy
+                  </div>
+                  <div
+                    className={`font-editorial text-xl sm:text-2xl font-bold mt-1 ${
+                      todayEnergy.status === 'POWER'
+                        ? 'text-amber-800 dark:text-amber-300'
+                        : todayEnergy.status === 'CAUTION'
+                          ? 'text-red-800 dark:text-red-300'
+                          : 'text-[#1C1917] dark:text-white'
+                    }`}
+                  >
+                    {todayEnergy.badgeLabelHi}
+                  </div>
+                </div>
+                {activeProfile && (
+                  <div className="text-right">
+                    <div className="text-[10px] font-mono-data text-[#78716C] dark:text-[#A8A29E]">
+                      के लिए (for)
+                    </div>
+                    <div className="text-xs font-mono-data font-bold text-[#1C1917] dark:text-white">
+                      {activeProfile.nameHi || activeProfile.name || '—'}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <p className="mt-3 text-xs font-mono-data leading-relaxed text-[#57524A] dark:text-[#D1C9BF]">
+                {todayEnergy.taraDescHi} {todayEnergy.chandraHouseDescHi || ''}
+              </p>
+              <div className="mt-3 pt-3 border-t border-black/5 dark:border-white/5 flex items-start gap-2 text-xs font-mono-data font-bold text-[#1C1917] dark:text-white">
+                <span className="text-[#8E6F1D] dark:text-[#F0C968]">मार्गदर्शन:</span>
+                <span className="font-normal text-[#57524A] dark:text-[#D1C9BF]">{todayEnergy.adviceHi}</span>
+              </div>
+            </div>
+          ) : (
+            <div className="p-5 rounded-3xl bg-white dark:bg-[#101221] border border-dashed border-[#8E6F1D]/30 dark:border-[#D4AF37]/30 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <span className="text-base leading-none mt-0.5">✨</span>
+                  <div>
+                    <div className="text-sm font-bold text-[#1C1917] dark:text-white">
+                      वैयक्तिक ऊर्जा — परिवार प्रोफ़ाइल जोड़ें (Add profile)
+                    </div>
+                    <p className="text-xs font-mono-data text-[#57524A] dark:text-[#D1C9BF] mt-1 leading-relaxed">
+                      तारा-बल व चन्द्र-बल (शुभ ऊर्जा / सावधानी दिवस) जन्म नक्षत्र पर आधारित हैं। अपनी परिवार प्रोफ़ाइल जोड़कर आज का वैयक्तिक पञ्चाङ्ग देखें — बिना प्रोफ़ाइल के कोई ऊर्जा नहीं दिखाई जाती। (Tara & Chandra Bala need your birth nakshatra; nothing is shown without a profile.)
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href="/profile"
+                  className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#8E6F1D]/10 dark:bg-[#D4AF37]/15 border border-[#8E6F1D]/30 dark:border-[#D4AF37]/35 text-xs font-mono-data font-bold text-[#8E6F1D] dark:text-[#F0C968] hover:bg-[#8E6F1D] hover:text-white dark:hover:bg-[#D4AF37] dark:hover:text-[#060709] transition-all cursor-pointer"
+                >
+                  <span>प्रोफ़ाइल जोड़ें</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {/* अगले प्रमुख पर्व — forward-looking observance rail with countdowns.
+              Tap any row to open that date in the monthly calendar grid. */}
+          <div
+            data-testid="today-upcoming-list"
+            className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#101221] border border-[#8E6F1D]/20 dark:border-[#D4AF37]/25 shadow-sm"
+          >
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div>
+                <div className="text-[11px] font-mono-data font-bold uppercase tracking-[2px] text-[#8E6F1D] dark:text-[#F0C968]">
+                  अगले प्रमुख पर्व · Next Major Observances
+                </div>
+                <p className="text-xs font-mono-data text-[#78716C] dark:text-[#A8A29E] mt-1">
+                  आगामी व्रत-पर्व — तिथि पर टैप करके मासिक कैलेण्डर में खुलता है (tap a date to open it in the month calendar)
+                </p>
+              </div>
+              <span className="text-[10px] font-mono-data px-2.5 py-1 rounded-full bg-[#8E6F1D]/10 dark:bg-[#D4AF37]/15 text-[#8E6F1D] dark:text-[#F0C968] border border-[#8E6F1D]/20 dark:border-[#D4AF37]/25">
+                मासिक कैलेण्डर
+              </span>
+            </div>
+
+            {upcomingEvents.length === 0 ? (
+              <p className="mt-4 text-xs font-mono-data text-[#78716C] dark:text-[#A8A29E]">
+                आगामी चार मास में कोई प्रमुख पर्व नहीं। (No major observances in the coming four months.)
+              </p>
+            ) : (
+              <ul className="mt-3 divide-y divide-black/5 dark:divide-white/5">
+                {upcomingEvents.map((ev) => {
+                  const monthInfo = ALL_MONTHS[ev.month0] || ALL_MONTHS[0];
+                  const urgent = ev.daysAway <= 3;
+                  return (
+                    <li key={ev.dateString}>
+                      <button
+                        type="button"
+                        onClick={() => handleFocusFestival(ev.dateString)}
+                        className="w-full flex items-center gap-3 py-3 text-left hover:bg-[#FAF7F2] dark:hover:bg-[#161828] px-2 -mx-2 rounded-xl transition-colors cursor-pointer group"
+                      >
+                        {/* Date column (Devanagari) */}
+                        <div className="w-14 flex-shrink-0 text-center leading-tight">
+                          <div className="font-editorial text-lg font-extrabold text-[#1C1917] dark:text-white group-hover:text-[#8E6F1D] dark:group-hover:text-[#F0C968] transition-colors">
+                            {toHindiDigits(ev.day.dayNumber)}
+                          </div>
+                          <div className="text-[10px] font-mono-data font-bold uppercase text-[#8E6F1D] dark:text-[#F0C968]">
+                            {monthInfo.shortHi}
+                          </div>
+                          <div className="text-[9px] font-mono-data text-[#78716C] dark:text-[#A8A29E]">
+                            {ev.dayNameHi}
+                          </div>
+                        </div>
+                        {/* Festival names */}
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-bold text-[#1C1917] dark:text-white truncate">
+                            {ev.namesHi.join(' • ')}
+                          </div>
+                          <div className="text-[11px] font-mono-data text-[#57524A] dark:text-[#D1C9BF] truncate">
+                            {ev.names.join(' • ')}
+                          </div>
+                        </div>
+                        {/* Countdown */}
+                        <span
+                          className={`shrink-0 text-[10px] font-mono-data font-bold px-2.5 py-1 rounded-full border ${
+                            urgent
+                              ? 'bg-[#8E6F1D]/15 dark:bg-[#D4AF37]/20 text-[#8E6F1D] dark:text-[#F0C968] border-[#8E6F1D]/40 dark:border-[#D4AF37]/40'
+                              : 'text-[#57524A] dark:text-[#D1C9BF] border-black/10 dark:border-white/10'
+                          }`}
+                        >
+                          {hindiCountdown(ev.daysAway)}
+                        </span>
+                        <ChevronRight className="w-4 h-4 flex-shrink-0 text-[#78716C] dark:text-[#A8A29E] group-hover:text-[#8E6F1D] dark:group-hover:text-[#F0C968] transition-colors" />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
 
           {/* Live Sun Arc & Daylight Gauge */}
@@ -526,8 +811,13 @@ function UnifiedPanchangCalendarClientInner({ defaultView = 'month' }: UnifiedPa
             </button>
           </div>
 
-          {/* Aura Monthly Calendar Component with onSwitchToToday callback */}
-          <AuraMonthlyCalendar onSwitchToToday={() => handleSwitchView('today')} />
+          {/* Aura Monthly Calendar Component with onSwitchToToday callback and
+              अगले-पर्व deep-link focus (opens the requested date's inspector). */}
+          <AuraMonthlyCalendar
+            onSwitchToToday={() => handleSwitchView('today')}
+            focusDate={focusDate}
+            onFocusHandled={() => setFocusDate(null)}
+          />
         </div>
       )}
 

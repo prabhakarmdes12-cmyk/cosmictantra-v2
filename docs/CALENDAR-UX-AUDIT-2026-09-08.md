@@ -1,6 +1,8 @@
 # Calendar UX Audit — /calendar vs "mobile-first, best-in-class" (2026-09-08)
 
-> **⚠️ Concept image status.** The user attached a concept image *("ChatGPT Image … 09_22_19 PM.png", described as an optimised mobile-view calendar UI)* but the file did **not** arrive in this environment — `/home/user/uploads/` does not exist and no image newer than 2026-09-06 is present anywhere under `/home/user`. This session also has no vision capability, so even a re-upload placed at a readable path can only be judged from its alt-text/file placement unless the user pastes its key layout points. **Until then, nothing in this audit claims to reproduce that concept** — it is a code-level audit of the shipped calendar plus a concrete "supporting features" manifest that will let us adapt quickly once the concept is readable.
+> **⚠️ Concept image status.** The attached PNG *("ChatGPT Image … 09_22_19 PM.png")* did **not** arrive in this environment, and this session has no vision — but on 2026-09-08 the user supplied the concept as a **written design brief** (excerpted in §1A), which we can implement against directly. Nothing in this audit claims pixel fidelity to the image; it is the code-level baseline plus the design-brief-driven roadmap.
+>
+> **Progress:** Phase D1 (Today-tab unify: festivals + personal energy + अगले-पर्व rail, in the ivory/antique-gold system) is implemented and pushed; see §4.
 
 ---
 
@@ -20,6 +22,12 @@
 **Architectural split worth naming up front:** the two tabs compute "today" from *two different engines*. The आज tab uses `calculatePanchang` (limbs + muhurats only); the मासिक tab uses `calculateMonthPanchang` (same limbs **plus** festivals + personal energy). Consequences: today's festival/vrat is invisible on the आज screen even though the very same date 30 rows below carries a festival banner; and "personal energy" never appears on the screen named for personal use. This is the single deepest inconsistency to fix while adopting the concept.
 
 ---
+
+## 1A. The concept — user's written design brief (2026-09-08)
+
+> *"Implement the CosmicTantra Vedic Calendar visual system… quiet editorial composition, warm ivory base, antique-gold emphasis, restrained sacred imagery, compact information-dense calendar, strong novice readability, scholar depth available on demand, premium Indian visual identity, mobile-first responsive behaviour, calendar visible in the first fold. A refined Indian astronomical almanac translated into a modern digital product — NOT a generic SaaS dashboard, NOT AstroTalk, NOT a neon astrology app, NOT a religious poster, NOT a dense enterprise table. CALM · EDITORIAL · PRECISE · PREMIUM · sacred but not ornamental · Indian without folklore · modern without generic. Light mode primary on warm parchment #FAF7F2; near-black primary text; antique muted gold only for active state, selected date, primary CTA and important sacred emphasis — never everywhere. Desktop = a centred editorial canvas ~1180–1280 px, generous side margins, a carefully typeset publication."*
+
+That brief is the yardstick for every change in this roadmap. Note its tension points against the current code, tracked in the W-table: today's marigold-gradient hero headline and gold-flooded chips are louder than "restrained gold"; the month grid is denser than "compact editorial"; the desktop page is `max-w-7xl` (1280) which fits the brief's 1180–1280 bracket.
 
 ## 2. Mobile layout as it actually renders (measured from classes)
 
@@ -66,25 +74,39 @@ The आज view fares better (it is genuinely `flex-col`, full-bleed cards) but 
 
 ---
 
-## 4. Supporting-features groundwork delivered this session (pure data layer — zero visual change)
+## 4. Delivered this session
 
-Shipped, typechecked (`npx tsc --noEmit` clean), and covered by a 12-test regression spec `tests/calendar-ux-support-features.spec.ts` (12/12 passing):
+**4a. Pure data layer** — typechecked, covered by `tests/calendar-ux-support-features.spec.ts` (12/12):
 
-| File | Purpose | Consumed by (planned UI) |
+| File | Purpose | Consumed by |
 |---|---|---|
-| `src/lib/calendar/upcomingFestivals.ts` | Forward-only scan of the real engine for the next major observances (4-month window, cap, universal-vrat exclusion — fortnightly Ekadashi/Pradosha/Purnima/Amavasya/Chaturthi never drown the majors). Returns date, names en/hi, weekday, `daysAway`, full panchang snapshot + resolved art per event | "अगले प्रमुख पर्व" rail on आज + month view; 90-day planner; festival chips in a future list view. Anchor-proven: from Tue 2026-09-08 → Ganesh Chaturthi Mon 09-14 (6 days), Karwa Chauth 10-29, Dhanteras 11-06 … |
-| `src/lib/calendar/weekAndGrid.ts` | Monday-start week math, ISO week numbers (oracle-verified against Python `isocalendar`), leading-blank computation, deterministic one-screen month stepping (swipe/edge rules) | Week numbers in month grid; horizontal swipe; "आज" jump button; week-start preference |
-| `src/lib/calendar/vedicDayChips.ts` | 2–3 chip summary of a day (तिथि • नक्षत्र), text-duplicate-safe against festival banners | आज-strip chips, list view rows, compact cells |
+| `src/lib/calendar/upcomingFestivals.ts` | Forward-only scan of the real engine for the next major observances (4-month window, cap, universal-vrat exclusion — fortnightly Ekadashi/Pradosha/Purnima/Amavasya/Chaturthi never drown the majors). Returns date, names en/hi, weekday, `daysAway`, full panchang snapshot + resolved art per event | अगले-पर्व rail (shipped, 4b); 90-day planner; list view |
+| `src/lib/calendar/weekAndGrid.ts` | Monday-start week math, ISO week numbers (oracle-verified against Python `isocalendar`), leading-blank computation, deterministic one-screen month stepping (swipe/edge rules) | D2: week numbers, month swipe, "आज" jump |
+| `src/lib/calendar/vedicDayChips.ts` | 2–3 chip summary of a day (तिथि • नक्षत्र), text-duplicate-safe against festival banners | आज-strip chips; list rows |
+| `src/lib/hindiNumerals.ts` | Shared Devanagari numeral converter + countdown words | All new surfaces |
 
-These are pure additions: no existing file was modified, no visible UI changed, nothing pinned (labels, artwork manifest, engine outputs) was touched.
+**4b. Phase D1 (Today tab, authorised by user)** — the आज tab now draws its festival roster and personal energy from the **same monthly engine that paints the मासिक grid** (W7 unified for day-level data), while live limbs keep `calculatePanchang(now)` semantics:
+
+- **आज का व्रत एवं पर्व** card — the civil day's engine festival roster (major/minor split), absent before (`data-testid="today-festival-card"`).
+- **आज की वैयक्तिक ऊर्जा** — Tara Bala + Chandra Bala card computed from the active Parivaar profile exactly as the grid does; honest add-profile note instead of any fabricated energy when no profile exists (`today-energy-card`).
+- **अगले प्रमुख पर्व** rail — the upcoming-festivals feed with Devanagari countdowns (आज/कल/६ दिन); tapping a row deep-links into the month grid at that date and opens its day inspector (scholar depth on demand) (`today-upcoming-list`).
+- Styling follows the brief: ivory panels, hairline borders, gold only for emphasis; Devanagari-primary bilingual text.
+
+Files changed: `src/components/calendar/UnifiedPanchangCalendarClient.tsx` (new state/hooks + three panels + `focusDate` wiring), `src/components/calendar/AuraMonthlyCalendar.tsx` (optional `focusDate`/`onFocusHandled` deep-link props — default behaviour unchanged). 43/43 calendar regression tests pass (`festival-artwork` 20, `ux-support-features` 12, `paksha-hero-mood` + `panchang-maas-verification` + `panchang-precision`), `tsc` clean, production `next build` clean.
+
+**4c. Status of the W-table** — W1, W6, W7 = implemented on the आज tab by 4b; W8/W9 partially (no new duplication added; new controls are labelled buttons with text); **W2–W5 + full-tab editorial restyle remain open as Phase D2**.
 
 ---
 
-## 5. Proposed next step once the concept is readable (scope gate)
+## 5. Phase D2 scope (next increment, awaiting authorisation)
 
-Do **not** implement visible UI until the concept is confirmed — two open questions gate the work:
+D2 restructures the **मासिक** surface per the brief and the W-table:
 
-1. **Concept reading** — re-upload the PNG (path) or paste its layout points: home-screen structure (hero art? today header? month grid?), which screen it shows, chips/colors/badges, gesture hints, and the "supporting features" it implies. The audit above is the baseline we then diff against.
-2. **Scope authorisation** — the natural first increment is **Phase D1 (Today-first mobile)** implementing W1 + W6 + W7 (shared engine day → आज festival + energy + next-festivals rail) and **D2 (month grid mobile)** implementing W2–W5 (responsive grid/list mode, swipe, week numbers, sheet inspector). D1 is low-risk and touches the आज tab only; D2 restructures the month grid.
+1. **Fold-first mobile month** — collapse the intro stack so the calendar grid starts above the fold on phones; compact sticky month header while scrolling.
+2. **Mobile density** (W2) — below `sm`, replace the 7-column × 6-layer cells with a readable pattern: either a wide-format week/row layout or a **list view** (day row: Devanagari date, तिथि/नक्षत्र chips via `vedicDayChips`, festival name, art thumb only on festival/power days); keep the dense 7-column grid from `md` up.
+3. **Week numbers + week-start setting** (W4) — ISO week number (१…५३) at each Monday-start row; Sunday/Monday preference.
+4. **Swipe & today affordances** (W3) — horizontal swipe between months using `weekAndGrid.cellScreenStep`; ≥44 px touch targets; persistent "आज" control.
+5. **Bottom-sheet inspector on mobile, modal on desktop** (W5) — with Esc/backdrop dismissal and focus management (W9).
+6. **Editorial restyle pass** — quiet ivory cards, restrained gold, calmer hero (per §1A), applied across both tabs; `prefers-reduced-motion`.
 
-Regression contract that stays standing through any UI work: `npm run artwork:verify` 100 %, the 20-test festival-artwork spec, the 31-test maas/paksha/precision suites, byte-identical pinned day labels, Devanagari-first labels, real panchang dates as ground truth, and no unaudited `UPCOMING_EVENTS` edits. Visual/browser QA (incl. any real screenshot comparison against the concept) runs in the release-review environment (no Chromium in this sandbox).
+Regression contract that stays standing through any UI work: `npm run artwork:verify` 100 %, the 20-test festival-artwork spec, the 43-test calendar set above, byte-identical pinned day labels, Devanagari-first labels, real panchang dates as ground truth, and no unaudited `UPCOMING_EVENTS` edits. Visual/browser QA (incl. real screenshot comparison against the concept image) runs in the release-review environment (no Chromium in this sandbox).

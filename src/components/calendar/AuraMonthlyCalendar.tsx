@@ -62,9 +62,15 @@ export const ALL_MONTHS = [
 interface AuraMonthlyCalendarProps {
   initialLang?: string;
   onSwitchToToday?: () => void;
+  /** YYYY-MM-DD civil date to jump the grid to and open in the day inspector
+   *  (deep link from the "अगले प्रमुख पर्व" rail on the आज tab). Optional —
+   *  when absent the calendar keeps its own current-month behaviour. */
+  focusDate?: string | null;
+  /** Fired once the requested focus date has been opened (parent clears it). */
+  onFocusHandled?: () => void;
 }
 
-export default function AuraMonthlyCalendar({ initialLang, onSwitchToToday }: AuraMonthlyCalendarProps) {
+export default function AuraMonthlyCalendar({ initialLang, onSwitchToToday, focusDate, onFocusHandled }: AuraMonthlyCalendarProps) {
   const now = new Date();
   const [currentYear, setCurrentYear] = useState<number>(now.getFullYear());
   const [currentMonth, setCurrentMonth] = useState<number>(now.getMonth()); // 0-indexed
@@ -78,6 +84,9 @@ export default function AuraMonthlyCalendar({ initialLang, onSwitchToToday }: Au
   
   // Day Inspector Modal/Drawer state
   const [inspectedDay, setInspectedDay] = useState<PanchangDayData | null>(null);
+
+  // Deep-link focus (अगले प्रमुख पर्व → jump to that month + day inspector).
+  const [pendingFocusDate, setPendingFocusDate] = useState<string | null>(null);
 
   const isHi = lang === 'hi';
   const { location } = useActiveLocation();
@@ -158,6 +167,31 @@ export default function AuraMonthlyCalendar({ initialLang, onSwitchToToday }: Au
     setCurrentYear(t.getFullYear());
     setCurrentMonth(t.getMonth());
   };
+
+  // Deep-link focus: a parent (the आज tab's अगले प्रमुख पर्व rail) asks this
+  // grid to show a specific civil date. Jump the month cursor there and open
+  // the day inspector once that month's data is available.
+  useEffect(() => {
+    if (!focusDate) return;
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(focusDate);
+    if (!m) {
+      onFocusHandled?.();
+      return;
+    }
+    setCurrentYear(parseInt(m[1], 10));
+    setCurrentMonth(parseInt(m[2], 10) - 1);
+    setPendingFocusDate(focusDate);
+  }, [focusDate, onFocusHandled]);
+
+  useEffect(() => {
+    if (!pendingFocusDate || !monthData) return;
+    const day = monthData.days.find((d) => d.dateString === pendingFocusDate);
+    if (day) {
+      setInspectedDay(day);
+    }
+    setPendingFocusDate(null);
+    onFocusHandled?.();
+  }, [pendingFocusDate, monthData, onFocusHandled]);
 
   // Inspect day handler
   const handleOpenDayInspector = (day: PanchangDayData) => {
