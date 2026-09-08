@@ -116,7 +116,6 @@ export default function HeroSection({
   const router = useRouter();
   const [hydrated, setHydrated] = useState(false);
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
-  const [showDial, setShowDial] = useState(false);
 
   // Auto-rotate hero banners every 6 seconds
   useEffect(() => {
@@ -374,10 +373,34 @@ export default function HeroSection({
 
   return (
     <section id="hero-section" className="relative pt-16 pb-16 sm:pt-20 lg:pt-20 lg:pb-24 border-b border-black/[0.1] dark:border-white/[0.08] transition-colors duration-250 overflow-hidden">
-      {/* Clean Edge-to-Edge Background Layer (no autoplay video — fast first paint §23) */}
+      {/* Clean Edge-to-Edge Background Layer with Auto-Rotating Hero Banner Suite */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="w-full h-full bg-[radial-gradient(ellipse_at_top_left,rgba(212,175,55,0.14),transparent_55%)]" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#FAF7F2]/95 via-[#FAF7F2]/75 to-transparent dark:from-[#06070B]/95 dark:via-[#06070B]/80 dark:to-transparent lg:w-3/4" />
+        {/* Hero Banner WebP Images with Cross-fade */}
+        {HERO_BANNERS.map((banner, index) => (
+          <div
+            key={banner.id}
+            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+              index === activeBannerIndex ? 'opacity-30 dark:opacity-40' : 'opacity-0'
+            }`}
+          >
+            <img
+              src={banner.imagePath}
+              alt={isHi ? banner.titleHi : banner.titleEn}
+              className="w-full h-full object-cover object-center transform scale-105"
+              loading={index === 0 ? 'eager' : 'lazy'}
+              onError={(e) => {
+                if (e.currentTarget.src !== banner.smallImagePath) {
+                  e.currentTarget.src = banner.smallImagePath;
+                }
+              }}
+            />
+          </div>
+        ))}
+
+        {/* Ambient Radial & High-contrast Left Scrim Protection */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(212,175,55,0.18),transparent_60%)]" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#FAF7F2] via-[#FAF7F2]/90 to-[#FAF7F2]/40 dark:from-[#06070B] dark:via-[#06070B]/90 dark:to-[#06070B]/50 lg:w-4/5" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#FAF7F2] via-transparent to-transparent dark:from-[#06070B] dark:via-transparent to-transparent h-24 bottom-0" />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
@@ -726,93 +749,38 @@ export default function HeroSection({
             </div>
           </div>
 
-          {/* Right: Hero Banner Image Carousel with Cosmic Now Dial toggle */}
+          {/* Right: Cosmic Now factual dial (time-dependent — mounted after
+              hydration to keep the server HTML stable; static teaser + promise
+              is what search engines see, §23/§24) */}
           <div className="lg:col-span-5 w-full mt-4 lg:mt-0">
-            {/* Banner Carousel Display */}
-            <div className="relative rounded-3xl overflow-hidden border border-[#8E6F1D]/30 dark:border-[#D4AF37]/40 shadow-2xl bg-[#090A10]">
-              {/* Active Hero Image Banner with Cross-fade Transition */}
-              <div className="relative aspect-[16/9] sm:aspect-[16/9] w-full overflow-hidden group">
-                {HERO_BANNERS.map((banner, index) => (
-                  <div
-                    key={banner.id}
-                    className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-                      index === activeBannerIndex ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
-                    }`}
-                  >
-                    <img
-                      src={banner.imagePath}
-                      alt={isHi ? banner.titleHi : banner.titleEn}
-                      className="w-full h-full object-cover transform scale-105 transition-transform duration-10000 ease-out"
-                      loading={index === 0 ? 'eager' : 'lazy'}
-                      onError={(e) => {
-                        // Fallback to small webp if main fails
-                        if (e.currentTarget.src !== banner.smallImagePath) {
-                          e.currentTarget.src = banner.smallImagePath;
-                        }
-                      }}
-                    />
-                    {/* Dark gradient overlay for text readability & luxury aesthetic */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#060709] via-transparent to-black/30" />
-                    
-                    {/* Banner Title Badge */}
-                    <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between z-20">
-                      <span className="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-[#D4AF37]/40 text-white text-[11px] font-mono-data font-medium flex items-center gap-1.5 shadow-lg">
-                        <Sparkles className="w-3.5 h-3.5 text-[#E5C378]" />
-                        {isHi ? banner.titleHi : banner.titleEn}
-                      </span>
-                      <span className="text-[10px] font-mono-data text-[#D4AF37] font-bold bg-black/70 px-2 py-0.5 rounded border border-[#8E6F1D]/40">
-                        {String(index + 1).padStart(2, '0')} / {HERO_BANNERS.length}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+            {dialReady ? (
+              <CosmicNowDial
+                panchangData={panchangData}
+                currentCity={currentCity}
+                onOpenCitySelector={onOpenCitySelector}
+                lang={lang}
+              />
+            ) : (
+              <div
+                data-testid="cosmic-dial-static-teaser"
+                className="rounded-3xl bg-[#FBF6EC] dark:bg-[#0E101D]/90 border border-[#8E6F1D]/30 dark:border-[#D4AF37]/40 p-6 sm:p-8 shadow-xl"
+              >
+                <p className="text-[10px] font-mono-data font-bold uppercase tracking-[0.2em] text-[#8E6F1D] dark:text-[#F0C968]">
+                  {isHi ? 'प्रत्यक्ष खगोल चक्र' : 'COSMIC NOW'}
+                </p>
+                <h2 className="mt-2 font-editorial text-xl font-bold text-[#1C1917] dark:text-white">
+                  {isHi ? 'आज, वैदिक समय में' : 'Today, in Vedic time'}
+                </h2>
+                <p className="mt-2 text-xs leading-6 text-[#57524A] dark:text-[#B3ADA3]">
+                  {isHi
+                    ? 'सूर्योदय–सूर्यास्त, तिथि, नक्षत्र, योग-करण और राहुकाल — आपके स्थान के अनुसार गणना।'
+                    : 'Sunrise–sunset, Tithi, Nakshatra, Yoga–Karana and Rahu Kaal — calculated for your location.'}
+                </p>
+                <p className="mt-3 text-[10px] font-mono-data text-[#696256] dark:text-[#9E988D]">
+                  {isHi ? 'पृष्ठ लोड होते ही वेध सक्रिय होगा।' : 'The dial activates as the page loads.'}
+                </p>
               </div>
-
-              {/* Carousel Indicators / Controls */}
-              <div className="p-3 bg-[#0A0C14] border-t border-[#8E6F1D]/20 flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-1.5 overflow-x-auto py-1 max-w-full">
-                  {HERO_BANNERS.map((banner, index) => (
-                    <button
-                      key={banner.id}
-                      type="button"
-                      onClick={() => {
-                        chitiSensory.playTick();
-                        setActiveBannerIndex(index);
-                      }}
-                      className={`h-2 rounded-full transition-all duration-300 ${
-                        index === activeBannerIndex
-                          ? 'w-6 bg-[#D4AF37]'
-                          : 'w-2 bg-[#D4AF37]/30 hover:bg-[#D4AF37]/60'
-                      }`}
-                      title={isHi ? banner.titleHi : banner.titleEn}
-                      aria-label={`Go to slide ${index + 1}`}
-                    />
-                  ))}
-                </div>
-
-                {/* Dial Toggle Button */}
-                <button
-                  type="button"
-                  onClick={() => setShowDial((prev) => !prev)}
-                  className="text-[11px] font-mono-data text-[#E5C378] hover:text-white font-semibold flex items-center gap-1 min-h-8 px-2.5 py-1 rounded-lg bg-[#8E6F1D]/20 hover:bg-[#8E6F1D]/40 border border-[#D4AF37]/30 transition-colors"
-                >
-                  <Clock className="w-3.5 h-3.5" />
-                  <span>{showDial ? (isHi ? 'बैनर देखें' : 'View Banner') : (isHi ? 'प्रत्यक्ष घड़ी देखें' : 'View Live Dial')}</span>
-                </button>
-              </div>
-
-              {/* Expanded CosmicNowDial view when toggled */}
-              {showDial && dialReady && (
-                <div className="p-4 border-t border-[#8E6F1D]/30 bg-[#0C0E18]">
-                  <CosmicNowDial
-                    panchangData={panchangData}
-                    currentCity={currentCity}
-                    onOpenCitySelector={onOpenCitySelector}
-                    lang={lang}
-                  />
-                </div>
-              )}
-            </div>
+            )}
           </div>
         </div>
       </div>
