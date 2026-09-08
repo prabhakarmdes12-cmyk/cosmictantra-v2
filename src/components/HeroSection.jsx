@@ -29,6 +29,79 @@ import CosmicNowDial from './visual/CosmicNowDial';
 
 const CALC_STEPS = ['calcStep1', 'calcStep2', 'calcStep3', 'calcStep4', 'calcStep5'];
 
+const HERO_BANNERS = [
+  {
+    id: "hero-01-cosmic-now-dial",
+    titleHi: "कालचक्र • प्रत्यक्ष वैदिक समय",
+    titleEn: "The Cosmic Now Digital Dial",
+    imagePath: "/assets/hero/banners/hero_cosmic_now_dial.webp",
+    smallImagePath: "/assets/hero/banners/hero_cosmic_now_dial-sm.webp",
+  },
+  {
+    id: "hero-02-janma-kundli-blueprint",
+    titleHi: "प्रमाणित जन्म कुण्डली",
+    titleEn: "Hand-Inscribed Janma Patrika Blueprint",
+    imagePath: "/assets/hero/banners/hero_janma_kundli_blueprint.webp",
+    smallImagePath: "/assets/hero/banners/hero_janma_kundli_blueprint-sm.webp",
+  },
+  {
+    id: "hero-03-kashi-sahayak-ai",
+    titleHi: "AI काशी सहायक",
+    titleEn: "Kashi Sahayak Conversational AI Surface",
+    imagePath: "/assets/hero/banners/hero_kashi_sahayak_ai.webp",
+    smallImagePath: "/assets/hero/banners/hero_kashi_sahayak_ai-sm.webp",
+  },
+  {
+    id: "hero-04-drik-panchang-observatory",
+    titleHi: "सिद्धान्त गणितीय पञ्चाङ्ग",
+    titleEn: "Drik Panchang Astronomical Observatory",
+    imagePath: "/assets/hero/banners/hero_drik_panchang_observatory.webp",
+    smallImagePath: "/assets/hero/banners/hero_drik_panchang_observatory-sm.webp",
+  },
+  {
+    id: "hero-05-kashi-scholars",
+    titleHi: "विद्वत्-विमर्श • पण्डित परामर्श",
+    titleEn: "Verified Kashi Vidwat Scholar Counsel",
+    imagePath: "/assets/hero/banners/hero_kashi_scholars.webp",
+    smallImagePath: "/assets/hero/banners/hero_kashi_scholars-sm.webp",
+  },
+  {
+    id: "hero-06-vimshottari-dasha-river",
+    titleHi: "विंशोत्तरी दशा प्रवाह",
+    titleEn: "120-Year Vimshottari Dasha Timeline River",
+    imagePath: "/assets/hero/banners/hero_vimshottari_dasha_river.webp",
+    smallImagePath: "/assets/hero/banners/hero_vimshottari_dasha_river-sm.webp",
+  },
+  {
+    id: "hero-07-guna-milan-matchmaking",
+    titleHi: "अष्टकूट गुण मिलान",
+    titleEn: "Ashtakoota Guna Milan Matchmaking",
+    imagePath: "/assets/hero/banners/hero_guna_milan_matchmaking.webp",
+    smallImagePath: "/assets/hero/banners/hero_guna_milan_matchmaking-sm.webp",
+  },
+  {
+    id: "hero-08-kashi-ghats-darshan",
+    titleHi: "२४x७ काशी घाट व सन्ध्या आरती",
+    titleEn: "24x7 Live Kashi Ghats & Ganga Aarti Darshan",
+    imagePath: "/assets/hero/banners/hero_kashi_ghats_darshan.webp",
+    smallImagePath: "/assets/hero/banners/hero_kashi_ghats_darshan-sm.webp",
+  },
+  {
+    id: "hero-09-vedic-muhurat-finder",
+    titleHi: "शुभ मुहूर्त अन्वेषण",
+    titleEn: "Vedic Auspicious Muhurat Finder",
+    imagePath: "/assets/hero/banners/hero_vedic_muhurat_finder.webp",
+    smallImagePath: "/assets/hero/banners/hero_vedic_muhurat_finder-sm.webp",
+  },
+  {
+    id: "hero-10-granth-stotra-sanctuary",
+    titleHi: "आरती, स्तोत्र व ग्रन्थ भण्डार",
+    titleEn: "Sacred Granth, Aarti & Stotra Library",
+    imagePath: "/assets/hero/banners/hero_granth_stotra_sanctuary.webp",
+    smallImagePath: "/assets/hero/banners/hero_granth_stotra_sanctuary-sm.webp",
+  },
+];
+
 export default function HeroSection({
   panchangData,
   currentCity,
@@ -42,6 +115,17 @@ export default function HeroSection({
 }) {
   const router = useRouter();
   const [hydrated, setHydrated] = useState(false);
+  const [activeBannerIndex, setActiveBannerIndex] = useState(0);
+  const [showDial, setShowDial] = useState(false);
+
+  // Auto-rotate hero banners every 6 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveBannerIndex((prevIndex) => (prevIndex + 1) % HERO_BANNERS.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, []);
+
   // Interaction gate: the progressive form must hydrate before any click
   // advances a step (Sprint C.1 §20 hydration race).
   useEffect(() => setHydrated(true), []);
@@ -642,38 +726,93 @@ export default function HeroSection({
             </div>
           </div>
 
-          {/* Right: Cosmic Now factual dial (time-dependent — mounted after
-              hydration to keep the server HTML stable; static teaser + promise
-              is what search engines see, §23/§24) */}
+          {/* Right: Hero Banner Image Carousel with Cosmic Now Dial toggle */}
           <div className="lg:col-span-5 w-full mt-4 lg:mt-0">
-            {dialReady ? (
-              <CosmicNowDial
-                panchangData={panchangData}
-                currentCity={currentCity}
-                onOpenCitySelector={onOpenCitySelector}
-                lang={lang}
-              />
-            ) : (
-              <div
-                data-testid="cosmic-dial-static-teaser"
-                className="rounded-3xl bg-[#FBF6EC] dark:bg-[#0E101D]/90 border border-[#8E6F1D]/30 dark:border-[#D4AF37]/40 p-6 sm:p-8 shadow-xl"
-              >
-                <p className="text-[10px] font-mono-data font-bold uppercase tracking-[0.2em] text-[#8E6F1D] dark:text-[#F0C968]">
-                  {isHi ? 'प्रत्यक्ष खगोल चक्र' : 'COSMIC NOW'}
-                </p>
-                <h2 className="mt-2 font-editorial text-xl font-bold text-[#1C1917] dark:text-white">
-                  {isHi ? 'आज, वैदिक समय में' : 'Today, in Vedic time'}
-                </h2>
-                <p className="mt-2 text-xs leading-6 text-[#57524A] dark:text-[#B3ADA3]">
-                  {isHi
-                    ? 'सूर्योदय–सूर्यास्त, तिथि, नक्षत्र, योग-करण और राहुकाल — आपके स्थान के अनुसार गणना।'
-                    : 'Sunrise–sunset, Tithi, Nakshatra, Yoga–Karana and Rahu Kaal — calculated for your location.'}
-                </p>
-                <p className="mt-3 text-[10px] font-mono-data text-[#696256] dark:text-[#9E988D]">
-                  {isHi ? 'पृष्ठ लोड होते ही वेध सक्रिय होगा।' : 'The dial activates as the page loads.'}
-                </p>
+            {/* Banner Carousel Display */}
+            <div className="relative rounded-3xl overflow-hidden border border-[#8E6F1D]/30 dark:border-[#D4AF37]/40 shadow-2xl bg-[#090A10]">
+              {/* Active Hero Image Banner with Cross-fade Transition */}
+              <div className="relative aspect-[16/9] sm:aspect-[16/9] w-full overflow-hidden group">
+                {HERO_BANNERS.map((banner, index) => (
+                  <div
+                    key={banner.id}
+                    className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                      index === activeBannerIndex ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+                    }`}
+                  >
+                    <img
+                      src={banner.imagePath}
+                      alt={isHi ? banner.titleHi : banner.titleEn}
+                      className="w-full h-full object-cover transform scale-105 transition-transform duration-10000 ease-out"
+                      loading={index === 0 ? 'eager' : 'lazy'}
+                      onError={(e) => {
+                        // Fallback to small webp if main fails
+                        if (e.currentTarget.src !== banner.smallImagePath) {
+                          e.currentTarget.src = banner.smallImagePath;
+                        }
+                      }}
+                    />
+                    {/* Dark gradient overlay for text readability & luxury aesthetic */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#060709] via-transparent to-black/30" />
+                    
+                    {/* Banner Title Badge */}
+                    <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between z-20">
+                      <span className="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-[#D4AF37]/40 text-white text-[11px] font-mono-data font-medium flex items-center gap-1.5 shadow-lg">
+                        <Sparkles className="w-3.5 h-3.5 text-[#E5C378]" />
+                        {isHi ? banner.titleHi : banner.titleEn}
+                      </span>
+                      <span className="text-[10px] font-mono-data text-[#D4AF37] font-bold bg-black/70 px-2 py-0.5 rounded border border-[#8E6F1D]/40">
+                        {String(index + 1).padStart(2, '0')} / {HERO_BANNERS.length}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
-            )}
+
+              {/* Carousel Indicators / Controls */}
+              <div className="p-3 bg-[#0A0C14] border-t border-[#8E6F1D]/20 flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-1.5 overflow-x-auto py-1 max-w-full">
+                  {HERO_BANNERS.map((banner, index) => (
+                    <button
+                      key={banner.id}
+                      type="button"
+                      onClick={() => {
+                        chitiSensory.playTick();
+                        setActiveBannerIndex(index);
+                      }}
+                      className={`h-2 rounded-full transition-all duration-300 ${
+                        index === activeBannerIndex
+                          ? 'w-6 bg-[#D4AF37]'
+                          : 'w-2 bg-[#D4AF37]/30 hover:bg-[#D4AF37]/60'
+                      }`}
+                      title={isHi ? banner.titleHi : banner.titleEn}
+                      aria-label={`Go to slide ${index + 1}`}
+                    />
+                  ))}
+                </div>
+
+                {/* Dial Toggle Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowDial((prev) => !prev)}
+                  className="text-[11px] font-mono-data text-[#E5C378] hover:text-white font-semibold flex items-center gap-1 min-h-8 px-2.5 py-1 rounded-lg bg-[#8E6F1D]/20 hover:bg-[#8E6F1D]/40 border border-[#D4AF37]/30 transition-colors"
+                >
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>{showDial ? (isHi ? 'बैनर देखें' : 'View Banner') : (isHi ? 'प्रत्यक्ष घड़ी देखें' : 'View Live Dial')}</span>
+                </button>
+              </div>
+
+              {/* Expanded CosmicNowDial view when toggled */}
+              {showDial && dialReady && (
+                <div className="p-4 border-t border-[#8E6F1D]/30 bg-[#0C0E18]">
+                  <CosmicNowDial
+                    panchangData={panchangData}
+                    currentCity={currentCity}
+                    onOpenCitySelector={onOpenCitySelector}
+                    lang={lang}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
