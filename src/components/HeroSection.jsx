@@ -375,18 +375,20 @@ export default function HeroSection({
     <section id="hero-section" className="relative pt-16 pb-16 sm:pt-20 lg:pt-20 lg:pb-24 border-b border-black/[0.1] dark:border-white/[0.08] transition-colors duration-250 overflow-hidden">
       {/* Clean Edge-to-Edge Background Layer with Auto-Rotating Hero Banner Suite */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        {/* Hero Banner WebP Images with Cross-fade */}
+        {/* Hero Banner WebP Images with Cross-fade Slideshow & Ken Burns Slow Zoom Effect */}
         {HERO_BANNERS.map((banner, index) => (
           <div
             key={banner.id}
-            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-              index === activeBannerIndex ? 'opacity-30 dark:opacity-40' : 'opacity-0'
+            className={`absolute inset-0 transition-opacity duration-1500 ease-in-out ${
+              index === activeBannerIndex ? 'opacity-60 dark:opacity-75 z-0' : 'opacity-0 -z-10 pointer-events-none'
             }`}
           >
             <img
               src={banner.imagePath}
               alt={isHi ? banner.titleHi : banner.titleEn}
-              className="w-full h-full object-cover object-center transform scale-105"
+              className={`w-full h-full object-cover object-center transform transition-transform duration-[6000ms] ease-out ${
+                index === activeBannerIndex ? 'scale-105' : 'scale-100'
+              }`}
               loading={index === 0 ? 'eager' : 'lazy'}
               onError={(e) => {
                 if (e.currentTarget.src !== banner.smallImagePath) {
@@ -397,10 +399,10 @@ export default function HeroSection({
           </div>
         ))}
 
-        {/* Ambient Radial & High-contrast Left Scrim Protection */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(212,175,55,0.18),transparent_60%)]" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#FAF7F2] via-[#FAF7F2]/90 to-[#FAF7F2]/40 dark:from-[#06070B] dark:via-[#06070B]/90 dark:to-[#06070B]/50 lg:w-4/5" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#FAF7F2] via-transparent to-transparent dark:from-[#06070B] dark:via-transparent to-transparent h-24 bottom-0" />
+        {/* Ambient Radial Glow & Left Text Scrim Gradient */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(212,175,55,0.25),transparent_65%)]" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#FAF7F2]/95 via-[#FAF7F2]/80 to-[#FAF7F2]/20 dark:from-[#06070B]/95 dark:via-[#06070B]/85 dark:to-[#06070B]/30 lg:w-4/5" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#FAF7F2] via-transparent to-transparent dark:from-[#06070B] dark:via-transparent to-transparent h-28 bottom-0" />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
