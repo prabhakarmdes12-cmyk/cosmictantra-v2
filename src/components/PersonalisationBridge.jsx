@@ -41,7 +41,7 @@ export default function PersonalisationBridge({
     : '';
 
   return (
-    <div className="sticky top-16 sm:top-20 z-30 w-full font-mono-data text-xs transition-colors duration-300 pointer-events-auto">
+    <div className="relative w-full font-mono-data text-xs transition-colors duration-300 pointer-events-auto">
       {/* 1. Active chart identity bar (only when a real chart is active) */}
       {hasChart && (
         <div className="w-full bg-[#FFFFFF] dark:bg-[#0B0D12] border-b border-[#8E6F1D]/30 dark:border-[#D4AF37]/30 py-2 px-4 sm:px-6 shadow-sm">
