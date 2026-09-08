@@ -2,13 +2,15 @@
 
 **Date**: 8 September 2026 · **Branch audited**: `arena/01a07d75-cosmictantra-v2` (`8e77019` + later festival-page/baidyanath commit)
 
+**Progress (2026-09-08 follow-up · session `arena/01a07e89-cosmictantra-v2`)**: Phase A (Amanta astronomy) ✅, Phase B (Paksha hero-mood + seal) ✅ merged earlier. **D1 (mobile Today Preview) + D2 (forward-only Festival filter) now implemented** in `src/components/calendar/AuraMonthlyCalendar.tsx` — see **§4e**. Phase C D3–D6 still ⏳. The two features were originally left as **local-only, un-merged commits** (`c143773` = D2; `24c6c80` on top = D1) on the prior `arena/01a07d75` session whose PR was closed; this is a fresh equivalent implementation on the current `main`. Owner follow-up on the re-uploaded concept PNGs added the **today-hero artwork background** + **mobile tile compaction** — see **§4f**.
+
 ## Status of the plan
 
 | Phase | Scope | Status |
 |---|---|---|
 | **A — Astronomy correctness** | Amanta month tracker (festival months, Adhika-correct), sunrise skip-rescue + cross-month dedupe, Janmashtami Smarta duplicate removed, real-date anchors, spec fixes, 3-year sweep | ✅ **implemented & verified** — see `CALENDAR-ARTWORK-2026-09-08.md` §"Engine corrections" and the new spec suite. 23/23 web-confirmed 2026 observances within ±1 d (20 exact); every yearly festival fires exactly 3× over 2026–2028; pinned maas tests green (labels untouched); `artwork:verify` 100%; typecheck + build PASS. Caveat ±1 trio documented (Holi 2 vs 3 Mar, Raksha Bandhan tithi-day 27 vs observance 28 Aug — a real 2026 public debate, Bhai Dooj 10 vs 11 Nov). One note vs the other agent's report: their spot-check "Diwali 2028 = 15 Nov" does not match drik panchang (2028 Lakshmi Puja = **17 Oct**, exactly what this engine emits); their Navratri 2027 = 30 Sep and Dussehra 2027 = 9 Oct match exactly. |
 | **B — Framed-Thangka आज hero + `heroMood` + gold-leaf headline + शुभ seal** | — | ⏳ not started |
-| **C — Month-surface features** (mobile Today preview, forward-only festival tab, पूजा विधि button, instant Choghadiya, world-calendar modal, list/90-day planner) | — | ⏳ not started |
+| **C — Month-surface features** (mobile Today preview, forward-only festival tab, पूजा विधि button, instant Choghadiya, world-calendar modal, list/90-day planner) | D1 ✅ + D2 ✅ (this session, see §4e); D3–D6 ⏳ | ⏳ partial |
 **Source of comparison**: the other session's notes (branch `arena/01a07c9f`, never pushed) covering the full Vedic-calendar programme: Amanta month tracker, Paksha `heroMood` + "Framed Thangka" आज hero, festival gold-leaf headline + शुभ seal, Choghadiya, mobile Today preview, world-calendar modal, list/planner views, 49-asset artwork program.
 
 This audit is evidence-based: every "present/absent" claim below was checked by grep/probe on this branch. It does **not** rebuild their code (unreachable); it plans an equivalent re-implementation where the gap matters.
@@ -68,8 +70,8 @@ Their festival-day **gold-leaf gradient headline** (pale→antique gold `bg-clip
 
 | # | Feature (their work) | Grep evidence here |
 |---|---|---|
-| D1 | Mobile **Today Preview box** (`sm:hidden`) below grid: sunrise/sunset, Tithi/Nakshatra/Yoga/Karana, next-3 festivals | no `sm:hidden` preview block |
-| D2 | **Festival tab forward-only**: past observances hidden when browsing earlier months | only filter pills (ALL/POWER/CAUTION/FESTIVALS) |
+| D1 | Mobile **Today Preview box** (`sm:hidden`) below grid: sunrise/sunset, Tithi/Nakshatra/Yoga/Karana, next-3 festivals | ✅ implemented this session — `AuraMonthlyCalendar.tsx` (`today-preview-box`, `data-testid="today-preview-box"`) |
+| D2 | **Festival tab forward-only**: past observances hidden when browsing earlier months | ✅ implemented this session — FESTIVALS filter is now forward-only (`hasFestival && day.dateString >= todayKey`) |
 | D3 | **पूजा विधि** button always visible, tithi-based sankalp fallback on non-festival days | 0 hits for `पूजा विधि` |
 | D4 | **Quick Choghadiya** (instant 8-kala row from sunrise/sunset) + scholar bundle lazy-loads only on Scholar tab | Choghadiya exists elsewhere (TodayAtAGlance/regional) but not as the sheet's instant row |
 | D5 | **World-calendar modal** with live era years per system (आज: 2083 अश्विन / 1448 AH / 1433 …) | no such modal |
@@ -118,3 +120,98 @@ D1 Mobile Today preview · D2 forward-only festival tab · D3 पूजा व�
 
 ## 4. Suggested order
 **A → B → C** (A unblocks truthful artwork placement everywhere; B is the user-visible centrepiece; C is polish). Each phase lands as its own commit with the acceptance evidence above.
+
+---
+
+## §4e · Implemented this session — D1 (mobile Today Preview) + D2 (forward-only Festival filter)
+
+**Session**: `arena/01a07e89-cosmictantra-v2` (2026-09-08). Re-implements the two
+month-surface features that were left as **local-only, un-merged commits**
+(`c143773` = D2; `24c6c80` on top = D1) on the prior `arena/01a07d75` session
+whose PR was closed. This is a fresh, equivalent implementation against the
+current `main` (the original commits are unrecoverable in this checkout).
+
+### D1 — Mobile "Today Preview" box (`src/components/calendar/AuraMonthlyCalendar.tsx`)
+- `sm:hidden` compact card rendered directly below the month grid (mobile-first; the
+  आज tab already carries this detail on `sm+`).
+- Computes **today's full panchang independently of the browsed month**
+  (`calculateMonthPanchang` for today's month → `todayDay`), so it stays correct
+  after the user navigates to another month — it is not a copy of the visible grid.
+- Shows sunrise/sunset, the four limbs (तिथि / नक्षत्र / योग / करण), and the next
+  3 major observances from `getUpcomingFestivalDays(now, city, { max: 3 })`
+  (forward-only, universal vrats excluded by default).
+- Each upcoming-observance row jumps the grid to that month on tap; a
+  `पञ्चाङ्ग →` button hands off to the आज tab.
+- Reuses existing libs `src/lib/calendar/upcomingFestivals.ts` (12-test spec green
+  in the prior session) and `src/engines/monthlyPanchangEngine.ts` — no new engine code.
+
+### D2 — Forward-only Festival filter (`AuraMonthlyCalendar.tsx`)
+- The existing **FESTIVALS** filter pill now matches only
+  `hasFestival && day.dateString >= todayKey`, so past observances fade out via the
+  existing `!isMatch` branch — the festival view is forward-looking. Browsing an
+  earlier month therefore surfaces no stale festivals, matching gap-audit D2.
+- The "Festivals" count pill still reports the full month total (unchanged).
+
+### Verification
+- `npm run typecheck` → **PASS** (0 errors).
+- Dev server (`npm run dev:network`) → `/calendar?view=month` **HTTP 200**; SSR HTML
+  contains `today-preview-box` with real sunrise/sunset, the four-limb labels, and
+  the `अगले प्रमुख पर्व` rail. `/calendar?view=today` also **HTTP 200** (Paksha
+  hero-mood banner intact).
+- **Visual confirmation on a real phone is the release-machine step** (no Chromium in
+  this sandbox): the two mobile issues the prior agent fixed in code — **(1)** D1 box
+  legibility / overflow at 360–430 px, and **(2)** D2 forward-only behaviour when
+  toggling the FESTIVALS pill on a past month — still want a real-device pass. If
+  either persists on your device after this preview, share the phone width (or a
+  screenshot) and it will be iterated on that exact case.
+
+### Not in this pass (Phase C still open)
+D3 पूजा विधि button (a `पूजा विधि देखें` button already exists in
+`DayDetailSheet.tsx`), D4 instant Choghadiya, D5 world-calendar modal, D6 list/90-day
+planner.
+
+---
+
+## §4f · Implemented this session (owner follow-up) — today hero art background + mobile tile compaction
+
+**Session**: `arena/01a07e89-cosmictantra-v2` (2026-09-08), responding to the owner's two
+requests on the re-uploaded concept PNGs. Note: this agent has **no vision** in the
+sandbox, so the work is implemented against the documented design reference
+(`COSMIC_TANTRA_DESIGN_CASE_STUDY_V2.md §6` "Flagship Vedic Calendar", mobile first-fold)
+plus the explicit asks — the concept PNGs themselves could not be read.
+
+### Request 1 — Today (आज) view: day artwork as the first card's background
+- `src/components/calendar/UnifiedPanchangCalendarClient.tsx`: the Paksha hero banner now
+  renders **today's resolved day-artwork** (`resolveDayArtwork` over `calculateMonthPanchang`
+  for today's month) as a **full-bleed background `<img>`**, with a **mood-tinted dark
+  scrim** (Krishna: indigo `#070A1A`→`#0A0E24`; Shukla: warm `#160C05`→`#2A1A08`) so the
+  gold-leaf headline + seal + Samvat chips stay legible — i.e. the "Framed Thangka"
+  treatment from gap-audit Phase B / the day-inspector hero.
+- When art is present the hero flips its inner text/chips/city rail to **light tones**
+  (`heroOnArt` guard) so nothing lands on a low-contrast background; `onError` collapses
+  the image to the mood colour (existing fallback). Prior Paksha hero-mood classes + seal
+  text are preserved, so `tests/calendar-paksha-hero-mood.spec.ts` still holds.
+
+### Request 2 — Small screens: date tiles were stretched vertically / ugly
+- `AuraMonthlyCalendar.tsx` month-grid cells: `min-h-[115px] → min-h-[80px]` on phones
+  (blank + filtered-fade cells matched for uniform height). The **7-column grid is kept**
+  per the design reference's mobile first-fold (no 5–6 column change).
+- On `<sm` the cells drop the heavy layers that caused the stretch — the artwork strip
+  (`hidden sm:block`), the nakshatra line (`hidden sm:block`), and the full
+  festival/power/caution badges + Rahu line (`hidden sm:flex`). In their place a single
+  **compact dot row** (purple = festival, amber = power, red = caution, paksha
+  indigo/amber otherwise) summarises the day: date + तिथि + dots only. From `sm+` the rich
+  desktop cell (art strip, nakshatra, badges, Rahu) is unchanged.
+- Net: a phone month view is ~6 short rows instead of ~800 px of 115 px cells; tap-to-
+  inspect still carries the full detail.
+
+### Verification
+- `npm run typecheck` → **PASS** (0 errors).
+- Dev server → `/calendar?view=today` HTTP 200 with the hero art `<img>` + scrim in SSR;
+  `/calendar?view=month` HTTP 200 with `min-h-[80px]` cells and the `sm:hidden` dot row.
+  (Browser/Playwright specs can't run here — no Chromium.)
+
+### Still wants a real-device pass (release machine)
+The owner's two asks — hero-art legibility/composition at 360–430 px, and the compact
+tile look vs the concept PNG — need a real-phone check. Share phone width / screenshot and
+it will be iterated on that exact case.

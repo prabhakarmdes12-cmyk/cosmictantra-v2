@@ -11,6 +11,8 @@ import {
 import { useActiveLocation } from '@/lib/location/useActiveLocation';
 import { persistActiveLocation } from '@/lib/location/activeLocation';
 import { calculatePanchang } from '@/lib/panchang';
+import { calculateMonthPanchang } from '@/engines/monthlyPanchangEngine';
+import { resolveDayArtwork } from '@/lib/calendar/festivalArtwork';
 import { resolvePakshaMood, resolveTithiDisplayName } from '@/lib/panchang/pakshaTheme';
 import { CITIES } from '@/lib/cities';
 import { playTick } from '@/lib/chitiAudio';
@@ -83,6 +85,17 @@ function UnifiedPanchangCalendarClientInner({ defaultView = 'month' }: UnifiedPa
       name: activeCity.name,
     });
   }, [now, activeCity]);
+
+  // Today's day artwork for the आज hero background (request: map the day's
+  // art as the full-bleed background of the first card). Resolved from the
+  // month engine so it matches the grid + day-inspector artwork exactly.
+  const todayArtwork = useMemo(() => {
+    const t = now;
+    const ov = calculateMonthPanchang(t.getFullYear(), t.getMonth(), activeCity.lat, activeCity.lng, activeCity.tz);
+    const day = ov.days.find((d) => d.dateString === now.toISOString().slice(0, 10));
+    return day ? resolveDayArtwork(day as any) : null;
+  }, [now, activeCity]);
+  const heroOnArt = !!todayArtwork;
 
   // Today's Panchang details extraction
   // NOTE: the engine's tithi object carries paksha on `.paksha`/`.fullName`,
@@ -191,7 +204,10 @@ function UnifiedPanchangCalendarClientInner({ defaultView = 'month' }: UnifiedPa
         /* TODAY'S PANCHANG DEEP DIVE */
         <div className="space-y-8 animate-fadeIn">
           
-          {/* Sacred City & Vikram Samvat Summary Banner (Paksha Hero Mood & Gold-Leaf Seal) */}
+          {/* Sacred City & Vikram Samvat Summary Banner — Paksha hero-mood + gold-leaf
+              seal + (per request) today's day-artwork as a full-bleed background, styled
+              like the "Framed Thangka" hero in the day inspector. A mood-tinted dark
+              scrim keeps the gold headline + seal legible over the photo. */}
           <div className={`relative rounded-3xl p-6 sm:p-8 border shadow-xl overflow-hidden transition-all duration-500 ${
             pakshaMood.isKrishna
               ? 'bg-[#0A0E24] dark:bg-[#070A1A] border-indigo-500/30 dark:border-indigo-400/40'
@@ -202,7 +218,24 @@ function UnifiedPanchangCalendarClientInner({ defaultView = 'month' }: UnifiedPa
                 ? 'from-indigo-600/20 via-purple-600/10 to-transparent'
                 : 'from-amber-500/10 via-rose-500/5 to-transparent'
             }`} />
-            
+
+            {todayArtwork && (
+              <>
+                <img
+                  src={todayArtwork.src}
+                  alt=""
+                  aria-hidden
+                  className="absolute inset-0 w-full h-full object-cover"
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                />
+                <div className={`absolute inset-0 pointer-events-none ${
+                  pakshaMood.isKrishna
+                    ? 'bg-gradient-to-t from-[#070A1A]/95 via-[#0A0E24]/75 to-[#0A0E24]/45'
+                    : 'bg-gradient-to-t from-[#160C05]/92 via-[#2A1A08]/70 to-[#160C05]/40'
+                }`} />
+              </>
+            )}
+
             <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
@@ -221,27 +254,27 @@ function UnifiedPanchangCalendarClientInner({ defaultView = 'month' }: UnifiedPa
                 <div className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-[#D4AF37] via-[#F0C968] to-[#8E6F1D] bg-clip-text text-transparent drop-shadow-xs">
                   {now.toLocaleDateString('hi-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                 </div>
-                <div className="text-xs text-[#57524A] dark:text-[#A8A29E] font-mono-data">
+                <div className={`text-xs font-mono-data ${heroOnArt ? 'text-white/80' : 'text-[#57524A] dark:text-[#A8A29E]'}`}>
                   सूर्योदय कालीन तिथि व नक्षत्र गणना · मानक समय (IST) · {tithiName}
                 </div>
               </div>
 
-              {/* Samvat & Quick Milan / Kundli Links */}
+              {/* Samvat & Quick Month Links */}
               <div className="flex flex-wrap items-center gap-3">
-                <div className="px-4 py-2.5 rounded-2xl bg-[#FAF7F2] dark:bg-[#161828] border border-[#8E6F1D]/20 dark:border-[#D4AF37]/25 text-center">
+                <div className={`px-4 py-2.5 rounded-2xl border text-center ${heroOnArt ? 'bg-white/15 border-white/25' : 'bg-[#FAF7F2] dark:bg-[#161828] border border-[#8E6F1D]/20 dark:border-[#D4AF37]/25'}`}>
                   <div className="text-[10px] font-mono-data font-bold uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968]">
                     संवत्सर
                   </div>
-                  <div className="text-sm font-bold text-[#1C1917] dark:text-white">
+                  <div className={`text-sm font-bold ${heroOnArt ? 'text-white' : 'text-[#1C1917] dark:text-white'}`}>
                     विक्रम संवत् २०८३
                   </div>
                 </div>
 
-                <div className="px-4 py-2.5 rounded-2xl bg-[#FAF7F2] dark:bg-[#161828] border border-[#8E6F1D]/20 dark:border-[#D4AF37]/25 text-center">
+                <div className={`px-4 py-2.5 rounded-2xl border text-center ${heroOnArt ? 'bg-white/15 border-white/25' : 'bg-[#FAF7F2] dark:bg-[#161828] border border-[#8E6F1D]/20 dark:border-[#D4AF37]/25'}`}>
                   <div className="text-[10px] font-mono-data font-bold uppercase tracking-wider text-[#8E6F1D] dark:text-[#F0C968]">
                     शक संवत्
                   </div>
-                  <div className="text-sm font-bold text-[#1C1917] dark:text-white">
+                  <div className={`text-sm font-bold ${heroOnArt ? 'text-white' : 'text-[#1C1917] dark:text-white'}`}>
                     १९४८ (Shaka 1948)
                   </div>
                 </div>
@@ -249,7 +282,11 @@ function UnifiedPanchangCalendarClientInner({ defaultView = 'month' }: UnifiedPa
                 <button
                   type="button"
                   onClick={() => handleSwitchView('month')}
-                  className="px-4 py-2.5 rounded-2xl bg-[#FAF7F2] dark:bg-[#161828] border border-[#8E6F1D]/40 dark:border-[#D4AF37]/40 text-xs font-mono-data font-bold text-[#8E6F1D] dark:text-[#F0C968] hover:bg-[#8E6F1D] hover:text-white dark:hover:bg-[#D4AF37] dark:hover:text-[#060709] transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
+                  className={`px-4 py-2.5 rounded-2xl border text-xs font-mono-data font-bold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer ${
+                    heroOnArt
+                      ? 'bg-white/15 border-white/30 text-white hover:bg-white/25'
+                      : 'bg-[#FAF7F2] dark:bg-[#161828] border border-[#8E6F1D]/40 dark:border-[#D4AF37]/40 text-[#8E6F1D] dark:text-[#F0C968] hover:bg-[#8E6F1D] hover:text-white dark:hover:bg-[#D4AF37] dark:hover:text-[#060709]'
+                  }`}
                 >
                   <Calendar className="w-4 h-4" />
                   <span>पूरा मास देखें →</span>
@@ -259,7 +296,7 @@ function UnifiedPanchangCalendarClientInner({ defaultView = 'month' }: UnifiedPa
 
             {/* Quick City Selector Rails */}
             <div className="mt-6 pt-5 border-t border-black/5 dark:border-white/5">
-              <div className="text-[11px] font-mono-data uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E] font-bold mb-2.5 flex items-center gap-1.5">
+              <div className={`text-[11px] font-mono-data uppercase tracking-wider font-bold mb-2.5 flex items-center gap-1.5 ${heroOnArt ? 'text-white/70' : 'text-[#78716C] dark:text-[#A8A29E]'}`}>
                 <MapPin className="w-3.5 h-3.5 text-[#8E6F1D] dark:text-[#F0C968]" />
                 <span>स्थान बदलें (Change City for Local Sunrise & Muhurat):</span>
               </div>
@@ -278,7 +315,9 @@ function UnifiedPanchangCalendarClientInner({ defaultView = 'month' }: UnifiedPa
                       className={`px-3.5 py-1.5 rounded-xl text-xs font-mono-data font-bold transition-all shrink-0 cursor-pointer border ${
                         isSelected
                           ? 'bg-[#8E6F1D] dark:bg-[#D4AF37] text-white dark:text-black border-[#8E6F1D] dark:border-[#D4AF37] shadow-sm'
-                          : 'bg-[#FAF7F2] dark:bg-[#161828] text-[#57524A] dark:text-[#A8A29E] border-[#E5D7BC] dark:border-white/10 hover:border-[#8E6F1D]/50 hover:text-[#1C1917] dark:hover:text-white'
+                          : heroOnArt
+                            ? 'bg-white/15 text-white border-white/25 hover:border-white/50'
+                            : 'bg-[#FAF7F2] dark:bg-[#161828] text-[#57524A] dark:text-[#A8A29E] border-[#E5D7BC] dark:border-white/10 hover:border-[#8E6F1D]/50 hover:text-[#1C1917] dark:hover:text-white'
                       }`}
                     >
                       {c.nameHi} ({c.name})
