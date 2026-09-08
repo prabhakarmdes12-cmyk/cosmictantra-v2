@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { UPCOMING_EVENTS } from '@/lib/festivals';
+import { resolveFestivalTitleArtwork } from '@/lib/calendar/festivalArtwork';
 import AmbientAdSlot from '@/components/AmbientAdSlot';
 
 export const revalidate = 86400;
@@ -34,13 +35,49 @@ export default function FestivalPage({ params }: { params: { slug: string } }) {
 
   const hint = CATEGORY_HINTS[e.category] || CATEGORY_HINTS.MAJOR_FESTIVAL;
 
+  // Festival artwork from the 49-file calendar art set (see
+  // src/lib/calendar/festivalArtwork.ts). Server-safe: public assets are
+  // bundled at build/SSG time; plain <img> avoids client hydration issues.
+  const art = resolveFestivalTitleArtwork(e.name);
+
   return (
     <main className="min-h-screen bg-[#FAF7F2] dark:bg-[#07080C] text-[#1C1917] dark:text-[#EFECE6] py-14 px-4 sm:px-6">
       <article className="max-w-3xl mx-auto space-y-8">
-        <header>
-          <div className="text-[10px] font-mono-data text-[#4848A8] dark:text-[#8B8BF5] uppercase tracking-[0.24em] font-bold">{e.category}</div>
-          <h1 className="font-editorial text-4xl sm:text-5xl font-bold mt-2">{e.name}</h1>
-          <p className="text-sm font-mono-data text-[#8E6F1D] dark:text-[#D4AF37] mt-2">{e.dateStr} · {e.tithi}</p>
+        {art && (
+          <div className="relative w-full aspect-video rounded-3xl overflow-hidden border border-[#8E6F1D]/30 dark:border-[#D4AF37]/40 shadow-xl bg-[#160C05]">
+            <img
+              src={art.src}
+              alt={e.name}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#160C05]/95 via-[#160C05]/25 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7 flex items-end justify-between gap-3">
+              <div className="min-w-0">
+                <div className="text-[10px] sm:text-[11px] font-mono-data font-black uppercase tracking-widest text-[#F0C968]">
+                  {e.category}
+                </div>
+                <h1 className="font-editorial font-bold text-white text-2xl sm:text-4xl leading-tight drop-shadow-md mt-1">
+                  {e.name}
+                </h1>
+                <p className="text-xs sm:text-sm font-mono-data text-[#EFECE6]/90 mt-1.5">
+                  {e.dateStr} · {e.tithi}
+                </p>
+              </div>
+              <div className="flex-shrink-0 px-3 py-1.5 rounded-lg bg-[#8E6F1D] text-white text-[10px] sm:text-xs font-mono-data font-bold shadow-md">
+                🪔 पर्व
+              </div>
+            </div>
+          </div>
+        )}
+
+        <header className={art ? '' : undefined}>
+          {!art && (
+            <>
+              <div className="text-[10px] font-mono-data text-[#4848A8] dark:text-[#8B8BF5] uppercase tracking-[0.24em] font-bold">{e.category}</div>
+              <h1 className="font-editorial text-4xl sm:text-5xl font-bold mt-2">{e.name}</h1>
+              <p className="text-sm font-mono-data text-[#8E6F1D] dark:text-[#D4AF37] mt-2">{e.dateStr} · {e.tithi}</p>
+            </>
+          )}
         </header>
 
         <div className="p-6 rounded-2xl bg-[#FFFFFF] dark:bg-[#090B14] border border-black/[0.08] dark:border-white/[0.08] shadow-sm space-y-4">
