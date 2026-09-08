@@ -288,7 +288,7 @@ export default function AuraMonthlyCalendar({ initialLang, onSwitchToToday }: Au
       <div className="bg-white/90 dark:bg-[#0E101D]/90 backdrop-blur-md rounded-3xl border border-[#8E6F1D]/25 dark:border-[#D4AF37]/30 p-5 sm:p-8 shadow-xl space-y-6">
         
         {/* 12-Month Quick Selector Bar (Jan to Dec with English + Hindi Month Names) */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none border-b border-black/10 dark:border-white/10">
+        <div className="sticky top-16 z-30 flex items-center gap-1.5 overflow-x-auto pb-2 pt-2 scrollbar-none border-b border-black/5 dark:border-white/5 bg-[#FAF7F2]/95 dark:bg-[#090B14]/95 backdrop-blur-md px-1 -mx-1">
           {ALL_MONTHS.map((m) => {
             const isSelected = currentMonth === m.index;
             return (
