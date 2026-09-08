@@ -91,7 +91,7 @@ export default function PersonalisationBridge({
           href="/panchang"
           data-testid="vedic-day-strip"
           onClick={() => chitiSensory.playTick()}
-          className="group block w-full bg-[#FAF7F2] dark:bg-[#0B0D12] border-b border-[#8E6F1D]/20 dark:border-[#D4AF37]/20 py-1.5 px-3 sm:px-6 hover:bg-[#F6EFE0] dark:hover:bg-[#10131D] transition-all overflow-hidden shadow-xs select-none"
+          className="group block w-full bg-[#FAF7F2] dark:bg-[#0B0D12] py-1.5 px-3 sm:px-6 hover:bg-[#F6EFE0] dark:hover:bg-[#10131D] transition-all overflow-hidden shadow-xs select-none"
         >
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
             <span className="flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-[#8E6F1D]/10 dark:bg-[#D4AF37]/10 border border-[#8E6F1D]/30 dark:border-[#D4AF37]/30 text-[#8E6F1D] dark:text-[#F0C968] text-[10px] font-bold tracking-wider uppercase shrink-0">

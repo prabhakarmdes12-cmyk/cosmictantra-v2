@@ -396,7 +396,7 @@ export default function HeroSection({
   ];
 
   return (
-    <section id="hero-section" className="relative pt-16 pb-16 sm:pt-20 lg:pt-20 lg:pb-24 border-b border-black/[0.1] dark:border-white/[0.08] transition-colors duration-250 overflow-hidden">
+    <section id="hero-section" className="relative pt-16 pb-16 sm:pt-20 lg:pt-20 lg:pb-24 transition-colors duration-250 overflow-hidden">
       {/* Clean Edge-to-Edge Background Layer with Auto-Rotating Hero Banner Suite */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         {/* Hero Banner WebP Images & MP4 Videos with Cross-fade Slideshow */}
@@ -437,7 +437,6 @@ export default function HeroSection({
         {/* Minimal 5% Ultra-light Liquid Glass Scrim */}
         <div className="absolute inset-0 bg-white/5 dark:bg-black/5 backdrop-blur-[2px]" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#FAF7F2]/40 via-transparent to-transparent dark:from-[#06070B]/40 dark:via-transparent to-transparent lg:w-2/3" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#FAF7F2]/60 via-transparent to-transparent dark:from-[#06070B]/60 dark:via-transparent to-transparent h-16 bottom-0" />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
