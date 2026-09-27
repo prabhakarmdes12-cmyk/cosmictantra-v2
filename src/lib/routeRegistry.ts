@@ -283,6 +283,32 @@ export const ROUTE_REGISTRY: Record<string, RouteConfig> = {
     status: 'LIVE',
     roomCharacter: 'presentation'
   },
+  '/login': {
+    path: '/login',
+    title: 'Sign In to the CosmicTantra Demo',
+    description: 'Local-only demo entry for the CosmicTantra three-concept prototype.',
+    category: 'Account',
+    breadcrumbs: [],
+    shellMode: 'minimal',
+    footerMode: 'none',
+    indexable: false,
+    authRequired: false,
+    status: 'BETA',
+    roomCharacter: 'instrument'
+  },
+  '/demo': {
+    path: '/demo',
+    title: 'CosmicTantra Demo Observatory',
+    description: 'A focused prototype for understanding today, understanding your chart, and asking an expert.',
+    category: 'Observatory',
+    breadcrumbs: [],
+    shellMode: 'minimal',
+    footerMode: 'none',
+    indexable: false,
+    authRequired: false,
+    status: 'BETA',
+    roomCharacter: 'observatory'
+  },
   '/pandit/workspace': {
     path: '/pandit/workspace',
     title: 'Pandit Verification Workbench | CosmicTantra',

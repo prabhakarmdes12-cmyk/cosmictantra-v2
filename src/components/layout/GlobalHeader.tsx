@@ -444,6 +444,17 @@ export default function GlobalHeader({
               </button>
             )}
 
+            {/* Demo sign-in entry point */}
+            <Link
+              href="/login"
+              className="flex items-center gap-1.5 rounded-xl border border-[#8E6F1D]/30 dark:border-[#D4AF37]/40 bg-[#8E6F1D]/10 dark:bg-[#D4AF37]/10 px-2.5 py-1.5 text-xs font-bold text-[#735A17] dark:text-[#F0C968] transition-all hover:border-[#8E6F1D] dark:hover:border-[#D4AF37] hover:bg-[#8E6F1D]/20 dark:hover:bg-[#D4AF37]/20"
+              aria-label="Open CosmicTantra demo sign in"
+              title="Open demo sign in"
+            >
+              <User className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Sign in</span>
+            </Link>
+
             {/* Language Selector Trigger */}
             {onLangToggle && (
               <button

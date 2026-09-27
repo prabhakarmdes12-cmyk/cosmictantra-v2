@@ -69,6 +69,16 @@ CosmicTantra is an atmospheric digital observatory and vertical consultation ope
 
 ---
 
+## 🎬 Demo Prototype
+
+The focused three-concept prototype is available at `/login` and is designed for a live product demo:
+
+1. **Understand today** — location-aware Vedic timing and daily guidance.
+2. **Understand my chart** — a sample sidereal Kundli path with a route into the full chart intake.
+3. **Ask an expert** — a focused scholar-consultation handoff.
+
+Use the **Use demo account** button on the login screen. Demo access is intentionally local-only: it stores a sample session in browser `localStorage` and does not create an account or send credentials anywhere. The prototype hub is also available directly at `/demo`.
+
 ## 🧪 Testing & Verification
 
 ```bash
