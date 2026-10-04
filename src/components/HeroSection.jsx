@@ -22,7 +22,7 @@ import { TRANSLATIONS } from '../lib/translations';
 import { chitiSensory } from '../lib/chitiAudio';
 import { searchCities } from '../lib/cities';
 import { getCurrentGpsLocation } from '../lib/location';
-import { getActiveProfile } from '../lib/profileStore';
+import { getActiveProfile, upsertProfile, setActiveProfileId } from '../lib/profileStore';
 import { getCanonicalJyotishSnapshot } from '../lib/jyotish/canonicalSnapshot';
 import { createKundli } from '../lib/jyotish/kundliStore';
 import CosmicNowDial from './visual/CosmicNowDial';
@@ -356,16 +356,41 @@ export default function HeroSection({
       await reveal(4);
       await reveal(5);
 
-      // 5b. Create the workspace record. Sprint C.1 §4: the chart is
-      // EPHEMERAL until the user explicitly chooses "SAVE MY KUNDLI" on the
-      // first-insight surface — creation must not claim "saved" or create a
-      // profile by itself.
+      // 5b. Create the workspace record.
       const record = createKundli(
         formData.name.trim(),
         { birthDate, birthTime, latitude, longitude, timezone, locationName },
         timeConfidence,
         'OTHER'
       );
+
+      // Persist active Kundli details so all Kundli pages & header navigation pick up the generated inputs
+      try {
+        const payload = {
+          name: formData.name.trim(),
+          birthDate,
+          birthTime,
+          latitude,
+          longitude,
+          timezone,
+          locationName,
+          timeConfidence,
+        };
+        localStorage.setItem('cosmictantra_active_kundli', JSON.stringify(payload));
+        const savedProf = upsertProfile({
+          name: formData.name.trim(),
+          relation: 'Self',
+          birthDate,
+          birthTime,
+          birthCity: locationName,
+          lat: latitude,
+          lng: longitude,
+          tz: timezone,
+        });
+        setActiveProfileId(savedProf.id);
+      } catch (e) {
+        console.warn('Could not store active profile', e);
+      }
 
       analytics.track(ANALYTICS_EVENTS.KUNDLI_GENERATED, {
         source: 'LANDING_HERO',
